@@ -1,31 +1,31 @@
 package lemon.engine.render;
 
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.lwjgl.BufferUtils;
 
 public class ModelDataBuffer implements ModelData {
-	private FloatBuffer data;
+	private List<DataArray> dataArrays;
 	private IntBuffer indices;
-	private int dataSize;
 	private int indicesSize;
-	public ModelDataBuffer(int dataSize, int indicesSize){
-		data = BufferUtils.createFloatBuffer(dataSize);
+	public ModelDataBuffer(int indicesSize){
+		dataArrays = new ArrayList<DataArray>();
 		indices = BufferUtils.createIntBuffer(indicesSize);
-		this.dataSize = dataSize;
 		this.indicesSize = indicesSize;
 	}
-	@Override
-	public void addData(float... data) {
-		this.data.put(data);
+	public void addDataArray(DataArray array) {
+		dataArrays.add(array);
 	}
-	@Override
 	public void addIndices(int... indices) {
 		this.indices.put(indices);
 	}
 	public void flip(){
-		data.flip();
+		for(DataArray array: dataArrays){
+			array.getFloatBuffer().flip();
+		}
 		indices.flip();
 	}
 	@Override
@@ -33,11 +33,8 @@ public class ModelDataBuffer implements ModelData {
 		return indices;
 	}
 	@Override
-	public FloatBuffer getDataBuffer() {
-		return data;
-	}
-	public int getDataSize(){
-		return dataSize;
+	public List<DataArray> getDataArrays() {
+		return Collections.unmodifiableList(dataArrays);
 	}
 	@Override
 	public int getVertexCount() {

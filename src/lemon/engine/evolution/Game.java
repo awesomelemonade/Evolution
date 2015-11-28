@@ -1,47 +1,45 @@
 package lemon.engine.evolution;
 
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 
 import lemon.engine.control.InitEvent;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
+import lemon.engine.render.AttributePointer;
+import lemon.engine.render.DataArray;
 import lemon.engine.render.ModelDataBuffer;
+import lemon.engine.render.RawModel;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
-import lemon.engine.render.VertexArray;
 import lemon.engine.toolbox.Toolbox;
 
 public enum Game implements Listener {
 	INSTANCE;
 	
-	private VertexArray vao;
 	private ShaderProgram program;
-	private ModelDataBuffer data;
+	
+	private RawModel model;
 	
 	@Subscribe
 	public void init(InitEvent event){
-		data = new ModelDataBuffer(4*5, 6);
+		ModelDataBuffer data = new ModelDataBuffer(6);
 		data.addIndices(0, 1, 2, 0, 3, 2);
-		data.addData(-0.5f, -0.5f, 0, 0, 1);
-		data.addData(0.5f, -0.5f, 1, 0, 1);
-		data.addData(0.5f, 0.5f, 0, 0, 1);
-		data.addData(-0.5f, 0.5f, 0, 1, 0);
+		DataArray array = new DataArray(4*5,
+				new AttributePointer(0, 2, 5*4, 0),
+				new AttributePointer(1, 3, 5*4, 2*4)
+		);
+		array.addData(-0.5f, -0.5f, 0, 0, 1);
+		array.addData(0.5f, -0.5f, 1, 0, 1);
+		array.addData(0.5f, 0.5f, 0, 0, 1);
+		array.addData(-0.5f, 0.5f, 0, 1, 0);
+		data.addDataArray(array);
 		data.flip();
-		vao = new VertexArray();
-		GL30.glBindVertexArray(vao.getId());
-		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vao.generateVbo().getId());
-		GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, data.getIndicesBuffer(), GL15.GL_STATIC_DRAW);
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vao.generateVbo().getId());
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, data.getDataBuffer(), GL15.GL_STATIC_DRAW);
-		GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 5*4, 0); //5 floats, 4 bytes per float
-		GL20.glVertexAttribPointer(1, 3, GL11.GL_FLOAT, false, 5*4, 2*4); //2 floats, 4 bytes per float
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-		GL30.glBindVertexArray(0);
+		model = new RawModel(data);
+		
+		
 		program = new ShaderProgram(
 			new int[]{0, 1},
 			new String[]{"position", "color"},
@@ -62,13 +60,9 @@ public enum Game implements Listener {
 		//GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		
 		GL20.glUseProgram(program.getId());
-		GL30.glBindVertexArray(vao.getId());
-		GL20.glEnableVertexAttribArray(0);
-		GL20.glEnableVertexAttribArray(1);
-		GL11.glDrawElements(GL11.GL_TRIANGLES, data.getVertexCount(), GL11.GL_UNSIGNED_INT, 0);
-		GL20.glDisableVertexAttribArray(1);
-		GL20.glDisableVertexAttribArray(0);
-		GL30.glBindVertexArray(0);
+		
+		model.render();
+		
 		GL20.glUseProgram(0);
 		
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
