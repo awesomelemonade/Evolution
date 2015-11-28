@@ -8,18 +8,23 @@ import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
+import lemon.engine.math.Matrix;
 import lemon.engine.render.AttributePointer;
 import lemon.engine.render.DataArray;
 import lemon.engine.render.ModelDataBuffer;
 import lemon.engine.render.RawModel;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
+import lemon.engine.render.UniformVariable;
 import lemon.engine.toolbox.Toolbox;
 
 public enum Game implements Listener {
 	INSTANCE;
 	
 	private ShaderProgram program;
+	private UniformVariable uniform_modelMatrix;
+	private UniformVariable uniform_viewMatrix;
+	private UniformVariable uniform_projectionMatrix;
 	
 	private RawModel model;
 	
@@ -27,14 +32,14 @@ public enum Game implements Listener {
 	public void init(InitEvent event){
 		ModelDataBuffer data = new ModelDataBuffer(6);
 		data.addIndices(0, 1, 2, 0, 3, 2);
-		DataArray array = new DataArray(4*5,
-				new AttributePointer(0, 2, 5*4, 0),
-				new AttributePointer(1, 3, 5*4, 2*4)
+		DataArray array = new DataArray(4*7,
+				new AttributePointer(0, 3, 7*4, 0),
+				new AttributePointer(1, 4, 7*4, 3*4)
 		);
-		array.addData(-0.5f, -0.5f, 0, 0, 1);
-		array.addData(0.5f, -0.5f, 1, 0, 1);
-		array.addData(0.5f, 0.5f, 0, 0, 1);
-		array.addData(-0.5f, 0.5f, 0, 1, 0);
+		array.addData(-0.5f, -0.5f, 0f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
+		array.addData(0.5f, -0.5f, 0f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
+		array.addData(0.5f, 0.5f, 0f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
+		array.addData(-0.5f, 0.5f, 0f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
 		data.addDataArray(array);
 		data.flip();
 		model = new RawModel(data);
@@ -46,7 +51,14 @@ public enum Game implements Listener {
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/vertexShader")),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/fragmentShader"))
 		);
-		//uniform_test = program.getUniformVariable("Test");
+		uniform_modelMatrix = program.getUniformVariable("modelMatrix");
+		uniform_viewMatrix = program.getUniformVariable("viewMatrix");
+		uniform_projectionMatrix = program.getUniformVariable("projectionMatrix");
+		GL20.glUseProgram(program.getId());
+		uniform_modelMatrix.loadMatrix(Matrix.getIdentity(4));
+		uniform_viewMatrix.loadMatrix(Matrix.getIdentity(4));
+		uniform_projectionMatrix.loadMatrix(Matrix.getIdentity(4));
+		GL20.glUseProgram(0);
 	}
 	@Subscribe
 	public void update(UpdateEvent event){
