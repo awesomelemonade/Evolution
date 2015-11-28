@@ -5,6 +5,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.IntBuffer;
+
+import org.lwjgl.BufferUtils;
+import org.lwjgl.glfw.GLFW;
 
 public class Toolbox {
 	private Toolbox(){}
@@ -26,5 +30,11 @@ public class Toolbox {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	public static float getAspectRatio(long window){
+		IntBuffer width = BufferUtils.createIntBuffer(1);
+		IntBuffer height = BufferUtils.createIntBuffer(1);
+		GLFW.glfwGetWindowSize(window, width, height);
+		return ((float)width.get())/((float)height.get());
 	}
 }
