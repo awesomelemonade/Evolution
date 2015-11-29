@@ -29,7 +29,7 @@ public class Matrix {
 	public FloatBuffer toFloatBuffer(){
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length*data[0].length);
 		for(int j=0;j<this.getColumns();++j){
-			for(int i=0;i<this.getColumns();++i){
+			for(int i=0;i<this.getRows();++i){
 				buffer.put(this.get(i, j));
 			}
 		}
