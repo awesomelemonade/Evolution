@@ -8,6 +8,7 @@ import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
+import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.render.AttributePointer;
 import lemon.engine.render.DataArray;
@@ -36,10 +37,10 @@ public enum Game implements Listener {
 				new AttributePointer(0, 3, 7*4, 0),
 				new AttributePointer(1, 4, 7*4, 3*4)
 		);
-		array.addData(-0.5f, -0.5f, 0f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
-		array.addData(0.5f, -0.5f, 0f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
-		array.addData(0.5f, 0.5f, 0f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
-		array.addData(-0.5f, 0.5f, 0f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
+		array.addData(-0.5f, -0.5f, -1f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
+		array.addData(0.5f, -0.5f, -1f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
+		array.addData(0.5f, 0.5f, -1f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
+		array.addData(-0.5f, 0.5f, -1f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
 		data.addDataArray(array);
 		data.flip();
 		model = new RawModel(data);
@@ -57,7 +58,7 @@ public enum Game implements Listener {
 		GL20.glUseProgram(program.getId());
 		uniform_modelMatrix.loadMatrix(Matrix.getIdentity(4));
 		uniform_viewMatrix.loadMatrix(Matrix.getIdentity(4));
-		uniform_projectionMatrix.loadMatrix(Matrix.getIdentity(4));
+		uniform_projectionMatrix.loadMatrix(MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.1f, 100f));
 		GL20.glUseProgram(0);
 	}
 	@Subscribe
