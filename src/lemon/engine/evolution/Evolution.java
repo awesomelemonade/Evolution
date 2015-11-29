@@ -6,11 +6,11 @@ import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryUtil;
 
+import lemon.engine.control.GLFWWindow;
+import lemon.engine.control.GLFWWindowSettings;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
-import lemon.engine.game.GLFWWindow;
-import lemon.engine.game.GLFWWindowSettings;
 import lemon.engine.input.KeyEvent;
 
 public class Evolution {

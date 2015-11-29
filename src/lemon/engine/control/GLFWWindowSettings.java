@@ -1,4 +1,4 @@
-package lemon.engine.game;
+package lemon.engine.control;
 
 public interface GLFWWindowSettings {
 	public long createWindow();

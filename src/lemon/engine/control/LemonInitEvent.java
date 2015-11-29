@@ -1,6 +1,4 @@
-package lemon.engine.game;
-
-import lemon.engine.control.InitEvent;
+package lemon.engine.control;
 
 public class LemonInitEvent implements InitEvent {
 	private long window;

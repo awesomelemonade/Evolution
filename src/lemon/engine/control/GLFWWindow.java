@@ -1,4 +1,4 @@
-package lemon.engine.game;
+package lemon.engine.control;
 
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
