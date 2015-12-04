@@ -24,7 +24,7 @@ public class ShaderProgram implements Listener {
 		}
 		GL20.glLinkProgram(id);
 		if(GL20.glGetProgrami(id, GL20.GL_LINK_STATUS)==GL11.GL_FALSE){
-			throw new IllegalArgumentException("Shader Program Link Fail: "+GL20.glGetShaderInfoLog(id));
+			throw new IllegalArgumentException("Shader Program Link Fail: "+GL20.glGetProgramInfoLog(id));
 		}
 		if(shaders!=null){
 			for(Shader shader: shaders){
@@ -34,7 +34,7 @@ public class ShaderProgram implements Listener {
 		}
 		GL20.glValidateProgram(id);
 		if(GL20.glGetProgrami(id, GL20.GL_VALIDATE_STATUS)==GL11.GL_FALSE){
-			throw new IllegalArgumentException("Shader Program Validation Fail: "+GL20.glGetShaderInfoLog(id));
+			throw new IllegalArgumentException("Shader Program Validation Fail: "+GL20.glGetProgramInfoLog(id));
 		}
 		EventManager.INSTANCE.registerListener(this);
 	}
