@@ -4,6 +4,7 @@ import java.util.Random;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 
 import lemon.engine.control.InitEvent;
@@ -61,7 +62,6 @@ public enum Game implements Listener {
 	
 	@Subscribe
 	public void init(InitEvent event){
-		System.out.println(noise.getSeed());
 		heights = new float[ARRAY_SIZE][ARRAY_SIZE];
 		
 		heights[0][0] = (float) (Math.random()*10);
@@ -92,13 +92,14 @@ public enum Game implements Listener {
 			}
 		}
 		
-		DataArray array = new DataArray(ARRAY_SIZE*ARRAY_SIZE*7,
+		DataArray array = new DataArray(ARRAY_SIZE*ARRAY_SIZE*7, GL15.GL_STATIC_DRAW,
 				new AttributePointer(0, 3, 7*4, 0),
 				new AttributePointer(1, 4, 7*4, 3*4)
 		);
 		for(int i=0;i<heights.length;++i){
 			for(int j=0;j<heights[0].length;++j){
-				array.addData((i*TILE_SIZE)-((TILE_SIZE*heights.length)/2), heights[i][j], (j*TILE_SIZE)-((TILE_SIZE*heights[0].length)/2), (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
+				array.addData((i*TILE_SIZE)-((TILE_SIZE*heights.length)/2), heights[i][j], (j*TILE_SIZE)-((TILE_SIZE*heights[0].length)/5f), ((float)i)/((float)heights.length), ((float)j)/((float)heights[0].length), (heights[i][j])/2f, 1f);
+				//array.addData((i*TILE_SIZE)-((TILE_SIZE*heights.length)/2), heights[i][j], (j*TILE_SIZE)-((TILE_SIZE*heights[0].length)/2), (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
 				//array.addData(((float)Math.random())-0.5f, ((float)Math.random())-0.5f, -1f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
 			}
 		}
@@ -138,7 +139,7 @@ public enum Game implements Listener {
 		controls.bindKey(GLFW.GLFW_KEY_SPACE, GLFW.GLFW_KEY_SPACE);
 		controls.bindKey(GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_LEFT_SHIFT);
 	}
-	private static final float PLAYER_SPEED = 0.05f;
+	private static final float PLAYER_SPEED = 0.15f;
 	@Subscribe
 	public void update(UpdateEvent event){
 		if(controls.hasStates()){
@@ -226,18 +227,16 @@ public enum Game implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event){
-		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
+		//GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		//GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		
 		GL20.glUseProgram(program.getId());
 		
 		model.render();
 		
 		GL20.glUseProgram(0);
-		
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
