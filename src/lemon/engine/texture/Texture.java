@@ -5,12 +5,15 @@ import java.nio.ByteBuffer;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
+import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
+import lemon.engine.event.Subscribe;
 
 public class Texture implements Listener {
 	private int id;
 	public Texture(){
 		id = GL11.glGenTextures();
+		EventManager.INSTANCE.registerListener(this);
 	}
 	public void loadByteBuffer(int width, int height, ByteBuffer buffer){
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, id);
@@ -26,5 +29,9 @@ public class Texture implements Listener {
 	}
 	public int getId(){
 		return id;
+	}
+	@Subscribe
+	public void cleanUp(){
+		GL11.glDeleteTextures(id);
 	}
 }
