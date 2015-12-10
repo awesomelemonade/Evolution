@@ -193,9 +193,9 @@ public enum Game implements Listener {
 		);
 		uniform_textureModelMatrix = textureProgram.getUniformVariable("modelMatrix");
 		uniform_textureViewMatrix = textureProgram.getUniformVariable("viewMatrix");
-		uniform_textureProjectionMatrix = textureProgram.getUniformVariable("ProjectionMatrix");
+		uniform_textureProjectionMatrix = textureProgram.getUniformVariable("projectionMatrix");
 		GL20.glUseProgram(textureProgram.getId());
-		uniform_textureModelMatrix.loadMatrix(MathUtil.getScalar(new Vector(1.2f, 1.2f, 1.2f)));
+		uniform_textureModelMatrix.loadMatrix(MathUtil.getTranslation(new Vector(0f, 10f, 0f)).multiply(MathUtil.getScalar(new Vector(1.2f, 1.2f, 1.2f))));
 		uniform_textureProjectionMatrix.loadMatrix(MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.01f, 100f));
 		GL20.glUseProgram(0);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
@@ -339,7 +339,6 @@ public enum Game implements Listener {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
 		
@@ -348,7 +347,6 @@ public enum Game implements Listener {
 		GL20.glUseProgram(0);
 		
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
