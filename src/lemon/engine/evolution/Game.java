@@ -75,16 +75,8 @@ public enum Game implements Listener {
 	private RawModel quad;
 	private Texture texture;
 	
-	public float[][] diamondSquareAlgorithm(float[][] grid, float... points){
-		for(int i=0;i<points.length;i+=8){
-			//diamond step
-			
-			//square step
-		}
-		return grid;
-	}
-
 	OpenSimplexNoise noise = new OpenSimplexNoise(new Random().nextLong());
+	OpenSimplexNoise noise2 = new OpenSimplexNoise(new Random().nextLong());
 	
 	@Subscribe
 	public void init(InitEvent event){
@@ -98,16 +90,10 @@ public enum Game implements Listener {
 		
 		heights = new float[ARRAY_SIZE][ARRAY_SIZE];
 		
-		heights[0][0] = (float) (Math.random()*10);
-		heights[0][ARRAY_SIZE-1] = (float) (Math.random()*10);
-		heights[ARRAY_SIZE-1][0] = (float) (Math.random()*10);
-		heights[ARRAY_SIZE-1][ARRAY_SIZE-1] = (float) (Math.random()*10);
-		
-		heights = diamondSquareAlgorithm(heights, (ARRAY_SIZE+1)/2);
-		
 		for(int i=0;i<heights.length;++i){
 			for(int j=0;j<heights[0].length;++j){
-				heights[i][j] = (float) noise.eval(((double)i)/(5.0/TILE_SIZE), ((double)j)/(5.0/TILE_SIZE))*5f;
+				heights[i][j] = Math.max((float)noise.eval(((double)i)/(10.0/TILE_SIZE), ((double)j)/(10.0/TILE_SIZE))*5f, 0f)+
+						((float)noise2.eval(((double)i)/(30.0/TILE_SIZE), ((double)j)/(30.0/TILE_SIZE)))*8f;
 				//heights[i][j] = (float) (((float)i)/((float)heights.length)*8f*Math.random());
 			}
 		}
@@ -132,7 +118,7 @@ public enum Game implements Listener {
 		);
 		for(int i=0;i<heights.length;++i){
 			for(int j=0;j<heights[0].length;++j){
-				array.addData((i*TILE_SIZE)-((TILE_SIZE*heights.length)/2), heights[i][j], (j*TILE_SIZE)-((TILE_SIZE*heights[0].length)/5f), ((float)i)/((float)heights.length), ((float)j)/((float)heights[0].length), (heights[i][j])/2f, 1f);
+				array.addData((i*TILE_SIZE)-((TILE_SIZE*heights.length)/2), heights[i][j], (j*TILE_SIZE)-((TILE_SIZE*heights[0].length)/5f), ((float)i)/((float)heights.length), ((float)j)/((float)heights[0].length), 1f-(heights[i][j])/0.8f, 1f);
 				//array.addData((i*TILE_SIZE)-((TILE_SIZE*heights.length)/2), heights[i][j], (j*TILE_SIZE)-((TILE_SIZE*heights[0].length)/2), (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
 				//array.addData(((float)Math.random())-0.5f, ((float)Math.random())-0.5f, -1f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
 			}
