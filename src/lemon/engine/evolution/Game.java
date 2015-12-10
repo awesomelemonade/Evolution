@@ -59,9 +59,9 @@ public enum Game implements Listener {
 	private RawModel model;
 	
 	private float[][] heights;
-	private static final int SIZE = 40;
+	private static final int SIZE = 9;
 	private static final int ARRAY_SIZE = SIZE*SIZE+1;
-	private static final float TILE_SIZE = 0.2f;
+	private static final float TILE_SIZE = 1f; //0.2f
 	
 	private FrameBuffer frameBuffer;
 	private Texture colorTexture;
@@ -83,8 +83,8 @@ public enum Game implements Listener {
 		}
 		return grid;
 	}
-	
-	OpenSimplexNoise noise = new OpenSimplexNoise(new Random().nextLong()); //12094
+
+	OpenSimplexNoise noise = new OpenSimplexNoise(new Random().nextLong());
 	
 	@Subscribe
 	public void init(InitEvent event){
@@ -107,7 +107,7 @@ public enum Game implements Listener {
 		
 		for(int i=0;i<heights.length;++i){
 			for(int j=0;j<heights[0].length;++j){
-				heights[i][j] = (float) noise.eval(((double)i)/25.0, ((double)j)/25.0)*5f;
+				heights[i][j] = (float) noise.eval(((double)i)/(5.0/TILE_SIZE), ((double)j)/(5.0/TILE_SIZE))*5f;
 				//heights[i][j] = (float) (((float)i)/((float)heights.length)*8f*Math.random());
 			}
 		}
@@ -167,7 +167,6 @@ public enum Game implements Listener {
 		quadData.flip();
 		quad = new RawModel(quadData);
 		
-		
 		program = new ShaderProgram(
 			new int[]{0, 1},
 			new String[]{"position", "color"},
@@ -195,7 +194,7 @@ public enum Game implements Listener {
 		uniform_textureViewMatrix = textureProgram.getUniformVariable("viewMatrix");
 		uniform_textureProjectionMatrix = textureProgram.getUniformVariable("projectionMatrix");
 		GL20.glUseProgram(textureProgram.getId());
-		uniform_textureModelMatrix.loadMatrix(MathUtil.getTranslation(new Vector(0f, 10f, 0f)).multiply(MathUtil.getScalar(new Vector(1.2f, 1.2f, 1.2f))));
+		uniform_textureModelMatrix.loadMatrix(MathUtil.getTranslation(new Vector(0f, 10f, 0f)).multiply(MathUtil.getScalar(new Vector(12f, 12f, 12f))));
 		uniform_textureProjectionMatrix.loadMatrix(MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.01f, 100f));
 		GL20.glUseProgram(0);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
@@ -329,12 +328,15 @@ public enum Game implements Listener {
 	public void render(RenderEvent event){
 		
 		renderModel();
+		renderTexture();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		renderModel();
+		renderTexture();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		
-		
+	}
+	public void renderTexture(){
 		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
