@@ -3,7 +3,7 @@
 in vec3 position;
 in vec4 color;
 
-flat out vec4 passColor;
+out vec4 passColor;
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;

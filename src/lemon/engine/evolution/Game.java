@@ -74,7 +74,7 @@ public enum Game implements Listener {
 	
 	private RawModel quad;
 	private Texture texture;
-	
+
 	OpenSimplexNoise noise = new OpenSimplexNoise(new Random().nextLong());
 	OpenSimplexNoise noise2 = new OpenSimplexNoise(new Random().nextLong());
 	
@@ -92,7 +92,7 @@ public enum Game implements Listener {
 		
 		for(int i=0;i<heights.length;++i){
 			for(int j=0;j<heights[0].length;++j){
-				heights[i][j] = Math.max((float)noise.eval(((double)i)/(10.0/TILE_SIZE), ((double)j)/(10.0/TILE_SIZE))*5f, 0f)+
+				heights[i][j] = Math.max((float)noise.eval(((double)i)/(10.0/TILE_SIZE), ((double)j)/(10.0/TILE_SIZE))*3.2f, 0f)+
 						((float)noise2.eval(((double)i)/(30.0/TILE_SIZE), ((double)j)/(30.0/TILE_SIZE)))*8f;
 				//heights[i][j] = (float) (((float)i)/((float)heights.length)*8f*Math.random());
 			}
@@ -100,14 +100,15 @@ public enum Game implements Listener {
 		
 		ModelDataBuffer data = new ModelDataBuffer(6*(ARRAY_SIZE-1)*(ARRAY_SIZE-1));
 		
+		//Defined Counter-Clock-Wise
 		for(int i=0;i<ARRAY_SIZE-1;++i){
 			for(int j=0;j<ARRAY_SIZE-1;++j){
 				if((i+j)%2==0){
-					data.addIndices(j*ARRAY_SIZE+i, j*ARRAY_SIZE+i+1, (j+1)*ARRAY_SIZE+i);
-					data.addIndices(j*ARRAY_SIZE+i+1, (j+1)*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i+1);
+					data.addIndices(j*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i);
+					data.addIndices((j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i+1, (j+1)*ARRAY_SIZE+i);
 				}else{
-					data.addIndices(j*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i+1, (j+1)*ARRAY_SIZE+i);
-					data.addIndices(j*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i+1);
+					data.addIndices((j+1)*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i);
+					data.addIndices((j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i);
 				}
 			}
 		}
