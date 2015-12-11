@@ -22,7 +22,7 @@ public class RawModel {
 		GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, data.getIndicesBuffer(), GL15.GL_STATIC_DRAW);
 		for(DataArray array: data.getDataArrays()){
 			GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vao.generateVbo().getId());
-			GL15.glBufferData(GL15.GL_ARRAY_BUFFER, array.getFloatBuffer(), GL15.GL_STATIC_DRAW);
+			GL15.glBufferData(GL15.GL_ARRAY_BUFFER, array.getFloatBuffer(), array.getUsage());
 			for(AttributePointer pointer: array.getAttributePointers()){
 				GL20.glVertexAttribPointer(pointer.getIndex(), pointer.getSize(), GL11.GL_FLOAT, false, pointer.getStride(), pointer.getPointerOffset());
 				attributes.add(pointer.getIndex());
