@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.Random;
 
 import javax.imageio.ImageIO;
 
@@ -25,7 +24,6 @@ import lemon.engine.control.UpdateEvent;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
-import lemon.engine.game.OpenSimplexNoise;
 import lemon.engine.game.PlayerControls;
 import lemon.engine.input.CursorPositionEvent;
 import lemon.engine.input.KeyEvent;
@@ -40,6 +38,7 @@ import lemon.engine.render.RawModel;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.render.UniformVariable;
+import lemon.engine.terrain.TerrainGenerator;
 import lemon.engine.texture.Texture;
 import lemon.engine.toolbox.Toolbox;
 
@@ -74,9 +73,8 @@ public enum Game implements Listener {
 	
 	private RawModel quad;
 	private Texture texture;
-
-	OpenSimplexNoise noise = new OpenSimplexNoise(new Random().nextLong());
-	OpenSimplexNoise noise2 = new OpenSimplexNoise(new Random().nextLong());
+	
+	private TerrainGenerator terrainGenerator;
 	
 	@Subscribe
 	public void init(InitEvent event){
@@ -88,13 +86,14 @@ public enum Game implements Listener {
 		
 		GL11.glViewport(0, 0, window_width, window_height);
 		
+		terrainGenerator = new TerrainGenerator(TILE_SIZE);
+		
 		heights = new float[ARRAY_SIZE][ARRAY_SIZE];
 		
 		for(int i=0;i<heights.length;++i){
 			for(int j=0;j<heights[0].length;++j){
-				heights[i][j] = Math.max((float)noise.eval(((double)i)/(10.0/TILE_SIZE), ((double)j)/(10.0/TILE_SIZE))*3.2f, 0f)+
-						((float)noise2.eval(((double)i)/(30.0/TILE_SIZE), ((double)j)/(30.0/TILE_SIZE)))*8f;
 				//heights[i][j] = (float) (((float)i)/((float)heights.length)*8f*Math.random());
+				heights[i][j] = terrainGenerator.generate(i, j);
 			}
 		}
 		
