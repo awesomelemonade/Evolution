@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.imageio.ImageIO;
 
@@ -58,9 +59,9 @@ public enum Game implements Listener {
 	private RawModel model;
 	
 	private float[][] heights;
-	private static final int SIZE = 9;
+	private static final int SIZE = 9; //   9
 	private static final int ARRAY_SIZE = SIZE*SIZE+1;
-	private static final float TILE_SIZE = 1f; //0.2f
+	private static final float TILE_SIZE = 1f; //0.2f 1f
 	
 	private FrameBuffer frameBuffer;
 	private Texture colorTexture;
@@ -75,6 +76,18 @@ public enum Game implements Listener {
 	private Texture texture;
 	
 	private TerrainGenerator terrainGenerator;
+	
+	public void addRandomIndices(ModelDataBuffer dataBuffer, int... data){
+		for(int i=data.length-1;i>0;i--){
+			int index = ThreadLocalRandom.current().nextInt(i+1);
+			int a = data[index];
+			data[index] = data[i];
+			data[i] = a;
+		}
+		for(int i: data){
+			dataBuffer.addIndices(i);
+		}
+	}
 	
 	@Subscribe
 	public void init(InitEvent event){
@@ -100,7 +113,7 @@ public enum Game implements Listener {
 		ModelDataBuffer data = new ModelDataBuffer(6*(ARRAY_SIZE-1)*(ARRAY_SIZE-1));
 		
 		//Defined Counter-Clock-Wise
-		for(int i=0;i<ARRAY_SIZE-1;++i){
+		/*for(int i=0;i<ARRAY_SIZE-1;++i){
 			for(int j=0;j<ARRAY_SIZE-1;++j){
 				if((i+j)%2==0){
 					data.addIndices(j*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i);
@@ -108,6 +121,24 @@ public enum Game implements Listener {
 				}else{
 					data.addIndices((j+1)*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i);
 					data.addIndices((j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i);
+				}
+			}
+		}*/
+
+		for(int i=0;i<ARRAY_SIZE-1;++i){
+			for(int j=0;j<ARRAY_SIZE-1;++j){
+				if((i+j)%2==0){
+					//this.addRandomIndices(data, (j+1)*ARRAY_SIZE+i, j*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i);
+					//this.addRandomIndices(data, j*ARRAY_SIZE+i+1, (j+1)*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i+1);
+					
+					data.addIndices((j+1)*ARRAY_SIZE+i, j*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i);
+					data.addIndices(j*ARRAY_SIZE+i+1, (j+1)*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i+1);
+				}else{
+				//	this.addRandomIndices(data, (j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i);
+				//	this.addRandomIndices(data, j*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i+1);
+					
+					data.addIndices((j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i);
+					data.addIndices(j*ARRAY_SIZE+i, (j+1)*ARRAY_SIZE+i+1, j*ARRAY_SIZE+i+1);
 				}
 			}
 		}

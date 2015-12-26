@@ -1,7 +1,7 @@
 package lemon.engine.terrain;
 
 public class PerlinNoise {
-	public float lerp(float a0, float a1, float w){
+	/*public float lerp(float a0, float a1, float w){
 		return (1f-w)*a0+w*a1;
 	}
 	public float dotGridGradient(int ix, int iy, float x, float y){
@@ -23,5 +23,18 @@ public class PerlinNoise {
 		n1 = dotGridGradient(x1, y1, x, y);
 		float ix1 = lerp(n0, n1, sx);
 		return lerp(ix0, ix1, sy);
+	}*/
+	//hash functions
+	public static int hash32shift(int key){
+		key = ~key+(key<<15);
+		key = key^(key>>>12);
+		key = key+(key<<2);
+		key = key^(key>>>4);
+		key = key*2057;
+		key = key^(key>>>16);
+		return key;
+	}
+	public static int noise(int x, int y, int seed){
+		return hash32shift(seed+hash32shift(x+hash32shift(y)));
 	}
 }
