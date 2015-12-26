@@ -1,5 +1,6 @@
 package lemon.engine.event;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -58,7 +59,11 @@ public enum EventManager {
 			preload(event.getClass());
 		}
 		for(ListenerMethod lm: preloaded.get(event.getClass())){
-			ReflectionUtil.invokePrivateMethod(lm.getMethod(), lm.getListener(), event);
+			try {
+				ReflectionUtil.invokePrivateMethod(lm.getMethod(), lm.getListener(), event);
+			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+				callListeners(new LemonExceptionEvent(ex));
+			}
 		}
 	}
 	private class ListenerMethod{
