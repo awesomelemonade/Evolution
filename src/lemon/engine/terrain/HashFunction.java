@@ -1,5 +1,7 @@
 package lemon.engine.terrain;
 
-public class HashFunction {
-
+public interface HashFunction {
+	public int hash(int value);
+	public void setSeed(int seed);
+	public int getSeed();
 }
