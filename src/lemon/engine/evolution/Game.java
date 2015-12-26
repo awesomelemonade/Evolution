@@ -254,9 +254,9 @@ public enum Game implements Listener {
 			if(controls.getState(GLFW.GLFW_KEY_LEFT_SHIFT)){
 				translation.setY(translation.getY()-((float)(PLAYER_SPEED)));
 			}
-			updateViewMatrix(program, uniform_viewMatrix);
-			updateViewMatrix(textureProgram, uniform_textureViewMatrix);
 		}
+		updateViewMatrix(program, uniform_viewMatrix);
+		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
 	}
 	@Subscribe
 	public void onKey(KeyEvent event){
