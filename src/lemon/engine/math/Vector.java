@@ -12,6 +12,9 @@ public class Vector {
 		this.y = y;
 		this.z = z;
 	}
+	public Vector(Vector vector){
+		this(vector.getX(), vector.getY(), vector.getZ());
+	}
 	public void setX(float x){
 		this.x = x;
 	}
