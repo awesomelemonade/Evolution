@@ -18,9 +18,9 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
-import lemon.engine.control.InitEvent;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
+import lemon.engine.control.WindowInitEvent;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
@@ -77,7 +77,7 @@ public enum Game implements Listener {
 	private TerrainGenerator terrainGenerator;
 	
 	@Subscribe
-	public void init(InitEvent event){
+	public void init(WindowInitEvent event){
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(event.getWindow(), width, height);
