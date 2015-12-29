@@ -34,7 +34,6 @@ import lemon.engine.math.Vector;
 import lemon.engine.render.AttributePointer;
 import lemon.engine.render.DataArray;
 import lemon.engine.render.ModelDataBuffer;
-import lemon.engine.render.RawModel;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.render.UniformVariable;
