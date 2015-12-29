@@ -14,7 +14,7 @@ import lemon.engine.render.VertexArrayWatcher;
 import lemon.engine.toolbox.Toolbox;
 
 public enum TestEntities implements EntityType, Listener, VertexArrayWatcher {
-	QUAD, TEST{
+	TEST, QUAD{
 		private VertexArray vertexArray;
 		@Override
 		public void init(){
@@ -41,6 +41,10 @@ public enum TestEntities implements EntityType, Listener, VertexArrayWatcher {
 		public VertexArray getVertexArray(){
 			return vertexArray;
 		}
+		@Override
+		public int getVertexCount(){
+			return 6;
+		}
 		//Some Random Event for Demonstration Purposes
 		@Subscribe
 		public void update(UpdateEvent event){
@@ -54,6 +58,9 @@ public enum TestEntities implements EntityType, Listener, VertexArrayWatcher {
 	@Override
 	public VertexArray getVertexArray(){
 		return null;
+	}
+	public int getVertexCount(){
+		return 0;
 	}
 	@Override
 	public String getName(){

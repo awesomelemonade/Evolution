@@ -21,6 +21,9 @@ import org.lwjgl.opengl.GL32;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.control.WindowInitEvent;
+import lemon.engine.entity.Entity;
+import lemon.engine.entity.Quad;
+import lemon.engine.entity.TestEntities;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
@@ -54,7 +57,7 @@ public enum Game implements Listener {
 	
 	private PlayerControls<Integer, Integer> controls;
 	
-	private RawModel model;
+	//private RawModel model;
 	
 	private float[][] heights;
 	private static final int SIZE = 9;
@@ -70,7 +73,8 @@ public enum Game implements Listener {
 	private UniformVariable uniform_textureViewMatrix;
 	private UniformVariable uniform_textureProjectionMatrix;
 	
-	private RawModel quad;
+	//private RawModel quad;
+	private Entity quadEntity;
 	private Texture texture;
 	
 	private TerrainGenerator terrainGenerator;
@@ -128,7 +132,7 @@ public enum Game implements Listener {
 		//array.addData(-0.5f, 0.5f, -1f, (float)Math.random(), (float)Math.random(), (float)Math.random(), (float)Math.random());
 		data.addDataArray(array);
 		data.flip();
-		model = new RawModel(data);
+		//model = new RawModel(data);
 		
 		ModelDataBuffer quadData = new ModelDataBuffer(6);
 		quadData.addIndices(0, 1, 2, 1, 2, 3);
@@ -150,7 +154,9 @@ public enum Game implements Listener {
 		);*/
 		quadData.addDataArray(quadDataArray);
 		quadData.flip();
-		quad = new RawModel(quadData);
+		TestEntities.QUAD.init();
+		quadEntity = new Quad();
+		//quad = new RawModel(quadData);
 		
 		program = new ShaderProgram(
 			new int[]{0, 1},
@@ -311,49 +317,21 @@ public enum Game implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event){
-		
-		renderModel();
-		renderTexture();
+		renderQuad();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		renderModel();
-		renderTexture();
+		renderQuad();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-		
 	}
-	public void renderTexture(){
-		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
+	public void renderQuad(){
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
-		
 		GL20.glUseProgram(textureProgram.getId());
-		quad.render();
+		quadEntity.render();
 		GL20.glUseProgram(0);
-		
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
-	}
-	public void renderModel(){
-		//GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		//GL11.glEnable(GL11.GL_TEXTURE_2D);
-		//GL13.glActiveTexture(GL13.GL_TEXTURE0);
-		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getId());
-		
-		GL20.glUseProgram(program.getId());
-		
-		model.render();
-		
-		GL20.glUseProgram(0);
-		
-		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-		//GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
