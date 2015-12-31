@@ -8,7 +8,7 @@ public class SzudzikPair implements PairingFunction {
 		long c = ((a>=b?a*a+a+b:a+b*b)/2);
 		long l = x<0&&y<0||x>=0&&y>=0?c:-c-1;
 		if(l<Integer.MIN_VALUE||l>Integer.MAX_VALUE){
-			throw new IllegalArgumentException(l+" is too large to cast into int");
+			throw new IllegalArgumentException("Out of Range: "+l);
 		}
 		return (int)l;
 	}
