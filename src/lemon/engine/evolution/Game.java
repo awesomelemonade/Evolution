@@ -99,7 +99,7 @@ public enum Game implements Listener {
 		
 		GL11.glViewport(0, 0, window_width, window_height);
 		
-		terrainGenerator = new TerrainGenerator(TILE_SIZE);
+		terrainGenerator = new TerrainGenerator(0);
 		
 		heights = new float[ARRAY_SIZE][ARRAY_SIZE];
 		
