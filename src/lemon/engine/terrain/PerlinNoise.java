@@ -1,40 +1,42 @@
 package lemon.engine.terrain;
 
 public class PerlinNoise {
-	/*public float lerp(float a0, float a1, float w){
-		return (1f-w)*a0+w*a1;
+	private HashFunction hasher;
+	private PairingFunction pairer;
+	private float persistence;
+	private int iterations;
+	
+	public PerlinNoise(HashFunction hasher, PairingFunction pairer, float persistence, int iterations){
+		this.hasher = hasher;
+		this.pairer = pairer;
+		this.persistence = persistence;
+		this.iterations = iterations;
 	}
-	public float dotGridGradient(int ix, int iy, float x, float y){
-		float dx = x-(float)ix;
-		float dy = y-(float)iy;
-		return (dx*gradient[iy][ix][0]+dy*gradient[iy][ix][1]);
+	public float noise(float x){
+		float output = 0;
+		for(int i=0;i<iterations;++i){
+			float frequency = (float)Math.pow(2, i); //pow too slow?
+			float amplitude = (float)Math.pow(persistence, i); //pow too slow?
+			output+=get(x*frequency)*amplitude;
+		}
+		return output;
 	}
-	public float perlin(float x, float y){
-		int x0 = (x>0?(int)x:(int)x-1);
-		int x1 = x0+1;
-		int y0 = (y>0?(int)y:(int)y-1);
-		int y1 = y0+1;
-		float sx = x-(float)x0;
-		float sy = y-(float)y0;
-		float n0 = dotGridGradient(x0, y0, x, y);
-		float n1 = dotGridGradient(x1, y0, x, y);
-		float ix0 = lerp(n0, n1, sx);
-		n0 = dotGridGradient(x0, y1, x, y);
-		n1 = dotGridGradient(x1, y1, x, y);
-		float ix1 = lerp(n0, n1, sx);
-		return lerp(ix0, ix1, sy);
-	}*/
-	//hash functions
-	public static int hash32shift(int key){
-		key = ~key+(key<<15);
-		key = key^(key>>>12);
-		key = key+(key<<2);
-		key = key^(key>>>4);
-		key = key*2057;
-		key = key^(key>>>16);
-		return key;
+	public float get(float x){
+		int intX = (int)x;
+		float fractionalX = x-intX;
+		float v1 = hash(intX);
+		float v2 = hash(intX+1);
+		return interpolate(v1, v2, fractionalX);
 	}
-	public static int noise(int x, int y, int seed){
-		return hash32shift(seed+hash32shift(x+hash32shift(y)));
+	public float interpolate(float a, float b, float x){ //linear
+		return a*(1-x)+b*x;
+	}
+	/**
+	 * 
+	 * @param x
+	 * @return [-1 -> 1]
+	 */
+	public float hash(int x){
+		return ((float)hasher.hash(x))/((float)(Integer.MAX_VALUE));
 	}
 }
