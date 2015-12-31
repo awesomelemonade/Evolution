@@ -1,7 +1,7 @@
 package lemon.engine.entity;
 
-import lemon.engine.render.RawModel;
+import lemon.engine.control.Initializable;
 
-public interface EntityType {
-	public RawModel getModel();
+public interface EntityType extends Initializable {
+	public String getName();
 }

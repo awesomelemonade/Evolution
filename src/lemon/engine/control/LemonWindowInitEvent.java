@@ -1,8 +1,8 @@
 package lemon.engine.control;
 
-public class LemonInitEvent implements InitEvent {
+public class LemonWindowInitEvent implements WindowInitEvent {
 	private long window;
-	public LemonInitEvent(long window){
+	public LemonWindowInitEvent(long window){
 		this.window = window;
 	}
 	@Override

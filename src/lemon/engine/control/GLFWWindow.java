@@ -39,7 +39,7 @@ public class GLFWWindow {
 		GLFW.glfwMakeContextCurrent(window);
 		GLFW.glfwShowWindow(window);
 		GL.createCapabilities(); //GLContext.createFromCurrent();
-		EventManager.INSTANCE.callListeners(new LemonInitEvent(window));
+		EventManager.INSTANCE.callListeners(new LemonWindowInitEvent(window));
 	}
 	public void run(){
 		EventManager.INSTANCE.preload(LemonUpdateEvent.class);
