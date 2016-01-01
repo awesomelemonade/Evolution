@@ -29,7 +29,9 @@ public class PerlinNoise {
 		return interpolate(v1, v2, fractionalX);
 	}
 	public float interpolate(float a, float b, float x){ //linear
-		return a*(1-x)+b*x;
+		float ft = (float)(x*Math.PI);
+		float f = (float) ((1.0-Math.cos(ft)) * 0.5f);
+		return a*(1-f)+b*f;
 	}
 	/**
 	 * 
