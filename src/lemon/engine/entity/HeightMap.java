@@ -28,19 +28,19 @@ public class HeightMap implements Entity {
 		for(int i=0;i<map.length-1;++i){
 			for(int j=0;j<map[0].length-1;++j){
 				if((i+j)%2==0){
-					indicesBuffer.put(j*map[0].length+i+1);
-					indicesBuffer.put(j*map[0].length+i);
-					indicesBuffer.put((j+1)*map[0].length+i);
-					indicesBuffer.put((j+1)*map[0].length+i+1);
-					indicesBuffer.put(j*map[0].length+i+1);
-					indicesBuffer.put((j+1)*map[0].length+i);
+					indicesBuffer.put(i*map[0].length+j+1);
+					indicesBuffer.put(i*map[0].length+j);
+					indicesBuffer.put((i+1)*map[0].length+j);
+					indicesBuffer.put((i+1)*map[0].length+j+1);
+					indicesBuffer.put(i*map[0].length+j+1);
+					indicesBuffer.put((i+1)*map[0].length+j);
 				}else{
-					indicesBuffer.put((j+1)*map[0].length+i);
-					indicesBuffer.put((j+1)*map[0].length+i+1);
-					indicesBuffer.put(j*map[0].length+i);
-					indicesBuffer.put((j+1)*map[0].length+i+1);
-					indicesBuffer.put(j*map[0].length+i+1);
-					indicesBuffer.put(j*map[0].length+i);
+					indicesBuffer.put((i+1)*map[0].length+j);
+					indicesBuffer.put((i+1)*map[0].length+j+1);
+					indicesBuffer.put(i*map[0].length+j);
+					indicesBuffer.put((i+1)*map[0].length+j+1);
+					indicesBuffer.put(i*map[0].length+j+1);
+					indicesBuffer.put(i*map[0].length+j);
 				}
 			}
 		}
@@ -50,9 +50,9 @@ public class HeightMap implements Entity {
 		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer(map.length*map[0].length*7);
 		for(int i=0;i<map.length;++i){
 			for(int j=0;j<map[0].length;++j){
-				dataBuffer.put((i*tileSize)-((tileSize*map.length)/2));
+				dataBuffer.put(i*tileSize);
 				dataBuffer.put(map[i][j]);
-				dataBuffer.put((j*tileSize)-((tileSize*map[0].length)/5f));
+				dataBuffer.put(j*tileSize);
 				dataBuffer.put(((float)i)/((float)map.length));
 				dataBuffer.put(((float)j)/((float)map[0].length));
 				dataBuffer.put(1f-(map[i][j])/0.8f);
