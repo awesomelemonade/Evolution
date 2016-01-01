@@ -87,7 +87,7 @@ public enum Game implements Listener {
 		
 		terrainGenerator = new TerrainGenerator(0);
 		
-		heights = new float[ARRAY_SIZE][2];
+		heights = new float[ARRAY_SIZE][Math.max((int) (1f/TILE_SIZE), 2)];
 		
 		for(int i=0;i<heights.length;++i){
 			heights[i][0] = terrainGenerator.generate(i, 0);
