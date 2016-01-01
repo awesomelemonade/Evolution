@@ -1,10 +1,23 @@
 package lemon.engine.terrain;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MurmurHash implements HashFunction {
 	private int seed;
 	private static final int c1 = 0xcc9e2d51;
 	private static final int c2 = 0x1b873593;
-	public MurmurHash(int seed){
+	private static Map<Integer, MurmurHash> murmurHashes;
+	static{
+		murmurHashes = new HashMap<Integer, MurmurHash>();
+	}
+	public static MurmurHash createWithSeed(int seed){
+		if(!murmurHashes.containsKey(seed)){
+			murmurHashes.put(seed, new MurmurHash(seed));
+		}
+		return murmurHashes.get(seed);
+	}
+	private MurmurHash(int seed){
 		this.seed = seed;
 	}
 	@Override
@@ -40,6 +53,10 @@ public class MurmurHash implements HashFunction {
 	}
 	@Override
 	public int getSeed() {
+		return seed;
+	}
+	@Override
+	public int hashCode(){
 		return seed;
 	}
 }
