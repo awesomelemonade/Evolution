@@ -90,9 +90,9 @@ public enum Game implements Listener {
 		heights = new float[ARRAY_SIZE][2];
 		
 		for(int i=0;i<heights.length;++i){
-			for(int j=0;j<heights[0].length;++j){
-				//heights[i][j] = (float) (((float)i)/((float)heights.length)*8f*Math.random());
-				heights[i][j] = terrainGenerator.generate(i, j);
+			heights[i][0] = terrainGenerator.generate(i, 0);
+			for(int j=1;j<heights[0].length;++j){
+				heights[i][j] = heights[i][0];
 			}
 		}
 		
