@@ -281,6 +281,7 @@ public enum Game implements Listener {
 		GL20.glUseProgram(postProcessingProgram.getId());
 		screen.render();
 		GL20.glUseProgram(0);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 	}
 	public void renderQuad(){
 		GL11.glEnable(GL11.GL_BLEND);
@@ -291,6 +292,7 @@ public enum Game implements Listener {
 		GL20.glUseProgram(textureProgram.getId());
 		quadEntity.render();
 		GL20.glUseProgram(0);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
