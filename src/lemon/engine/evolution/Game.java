@@ -20,11 +20,11 @@ import org.lwjgl.opengl.GL32;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.control.WindowInitEvent;
+import lemon.engine.entity.BasicType;
 import lemon.engine.entity.Entity;
 import lemon.engine.entity.HeightMap;
 import lemon.engine.entity.Quad;
 import lemon.engine.entity.TerrainType;
-import lemon.engine.entity.TestEntities;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
@@ -100,8 +100,9 @@ public enum Game implements Listener {
 		}
 		
 		TerrainType.HEIGHT_MAP.init();
+		BasicType.QUAD.init();
+		
 		terrain = new HeightMap(heights, TILE_SIZE);
-		TestEntities.QUAD.init();
 		quadEntity = new Quad();
 		
 		program = new ShaderProgram(

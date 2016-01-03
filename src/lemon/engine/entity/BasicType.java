@@ -13,8 +13,8 @@ import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexArrayWatcher;
 import lemon.engine.toolbox.Toolbox;
 
-public enum TestEntities implements EntityType, Listener, VertexArrayWatcher {
-	TEST, QUAD{
+public enum BasicType implements EntityType, Listener, VertexArrayWatcher {
+	QUAD{
 		private VertexArray vertexArray;
 		@Override
 		public void init(){
