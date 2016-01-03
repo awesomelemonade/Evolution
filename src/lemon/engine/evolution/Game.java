@@ -65,6 +65,9 @@ public enum Game implements Listener {
 	private Texture colorTexture;
 	private Texture depthTexture;
 	
+	private ShaderProgram postProcessingProgram;
+	private Entity screen;
+	
 	private ShaderProgram textureProgram;
 	private UniformVariable uniform_textureModelMatrix;
 	private UniformVariable uniform_textureViewMatrix;
@@ -132,6 +135,14 @@ public enum Game implements Listener {
 		uniform_textureProjectionMatrix.loadMatrix(MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.01f, 100f));
 		GL20.glUseProgram(0);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
+		
+		postProcessingProgram = new ShaderProgram(
+				new int[]{0, 1},
+				new String[]{"position", "textureCoords"},
+				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/postVertexShader")),
+				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/postFragmentShader"))
+		);
+		screen = new Quad();
 		
 		texture = new Texture();
 		try {
@@ -260,13 +271,16 @@ public enum Game implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event){
-		renderQuad();
-		renderHeightMap();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		renderQuad();
 		renderHeightMap();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
+		GL20.glUseProgram(postProcessingProgram.getId());
+		screen.render();
+		GL20.glUseProgram(0);
 	}
 	public void renderQuad(){
 		GL11.glEnable(GL11.GL_BLEND);
