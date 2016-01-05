@@ -64,16 +64,14 @@ public class HeightMap implements Entity {
 		GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 7*4, 0);
 		GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 7*4, 3*4);
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+		GL20.glEnableVertexAttribArray(0);
+		GL20.glEnableVertexAttribArray(1);
 		GL30.glBindVertexArray(0);
 	}
 	@Override
 	public void render() {
 		GL30.glBindVertexArray(vertexArray.getId());
-		GL20.glEnableVertexAttribArray(0);
-		GL20.glEnableVertexAttribArray(1);
 		GL11.glDrawElements(GL11.GL_TRIANGLES, 6*(map.length-1)*(map[0].length-1), GL11.GL_UNSIGNED_INT, 0);
-		GL20.glDisableVertexAttribArray(1);
-		GL20.glDisableVertexAttribArray(0);
 		GL30.glBindVertexArray(0);
 	}
 	@Override

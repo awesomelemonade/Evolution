@@ -35,6 +35,8 @@ public enum BasicType implements EntityType, Listener, VertexArrayWatcher {
 			GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 5*4, 0);
 			GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 5*4, 3*4);
 			GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+			GL20.glEnableVertexAttribArray(0);
+			GL20.glEnableVertexAttribArray(1);
 			GL30.glBindVertexArray(0);
 		}
 		@Override
