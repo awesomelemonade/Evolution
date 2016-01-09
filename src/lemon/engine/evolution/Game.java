@@ -274,7 +274,6 @@ public enum Game implements Listener {
 	public void render(RenderEvent event){
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		renderQuad();
 		renderHeightMap();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL13.glActiveTexture(GL13.GL_TEXTURE0);
