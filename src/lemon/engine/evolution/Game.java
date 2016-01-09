@@ -58,8 +58,7 @@ public enum Game implements Listener {
 	private Entity terrain;
 	
 	private float[][] heights;
-	private static final int ARRAY_SIZE = 9000;
-	private static final float TILE_SIZE = 0.02f; //0.2f 1f
+	private static final float TILE_SIZE = 0.2f; //0.2f 1f
 	
 	private FrameBuffer frameBuffer;
 	private Texture colorTexture;
@@ -90,12 +89,11 @@ public enum Game implements Listener {
 		
 		terrainGenerator = new TerrainGenerator(0);
 		
-		heights = new float[ARRAY_SIZE][Math.max((int) (1f/TILE_SIZE), 2)];
+		heights = new float[Math.max((int) (10f/TILE_SIZE), 2)][Math.max((int) (10f/TILE_SIZE), 2)];
 		
 		for(int i=0;i<heights.length;++i){
-			heights[i][0] = terrainGenerator.generate(i, 0);
-			for(int j=1;j<heights[0].length;++j){
-				heights[i][j] = heights[i][0];
+			for(int j=0;j<heights[0].length;++j){
+				heights[i][j] = terrainGenerator.generate(i, j);
 			}
 		}
 		
