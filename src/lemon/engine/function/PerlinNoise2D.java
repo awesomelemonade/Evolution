@@ -1,6 +1,6 @@
-package lemon.engine.terrain;
+package lemon.engine.function;
 
-public class PerlinNoise2D {
+public class PerlinNoise2D implements Function2D<Float, Float> {
 	private HashFunction hasher;
 	private PairingFunction pairer;
 	private float persistence;
@@ -12,7 +12,8 @@ public class PerlinNoise2D {
 		this.persistence = persistence;
 		this.iterations = iterations;
 	}
-	public float noise(float x, float y){
+	@Override
+	public Float resolve(Float x, Float y){
 		float output = 0;
 		for(int i=0;i<iterations;++i){
 			float frequency = (float)Math.pow(2, i);
@@ -48,9 +49,9 @@ public class PerlinNoise2D {
 				hash2D(x, y)/4;
 	}
 	public float hash2D(int x, int y){
-		return hash(pairer.pair(x, y));
+		return hash(pairer.resolve(x, y));
 	}
 	public float hash(int x){
-		return ((float)hasher.hash(x))/((float)(Integer.MAX_VALUE));
+		return ((float)hasher.resolve(x))/((float)(Integer.MAX_VALUE));
 	}
 }

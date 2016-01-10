@@ -1,4 +1,4 @@
-package lemon.engine.terrain;
+package lemon.engine.function;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +21,7 @@ public class MurmurHash implements HashFunction {
 		this.seed = seed;
 	}
 	@Override
-	public int hash(int value) {
+	public Integer resolve(Integer value) {
 		int k1 = mixK1(value);
 		int h1 = mixH1(seed, k1);
 		return fmix(h1, 32);

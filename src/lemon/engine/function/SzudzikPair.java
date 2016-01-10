@@ -1,8 +1,8 @@
-package lemon.engine.terrain;
+package lemon.engine.function;
 
 public class SzudzikPair implements PairingFunction {
 	@Override
-	public int pair(int x, int y) {
+	public Integer resolve(Integer x, Integer y) {
 		if(x<0||y<0){
 			throw new IllegalArgumentException("Out of Range: "+x+" "+y);
 		}

@@ -1,6 +1,6 @@
-package lemon.engine.terrain;
+package lemon.engine.function;
 
-public class PerlinNoise {
+public class PerlinNoise implements Function<Float, Float> {
 	private HashFunction hasher;
 	private float persistence;
 	private int iterations;
@@ -10,7 +10,8 @@ public class PerlinNoise {
 		this.persistence = persistence;
 		this.iterations = iterations;
 	}
-	public float noise(float x){
+	@Override
+	public Float resolve(Float x){
 		float output = 0;
 		for(int i=0;i<iterations;++i){
 			float frequency = (float)Math.pow(2, i);
@@ -35,6 +36,6 @@ public class PerlinNoise {
 		return hash(x)/2f+hash(x-1)/4f+hash(x+1)/4f;
 	}
 	public float hash(int x){
-		return ((float)hasher.hash(x))/((float)(Integer.MAX_VALUE));
+		return ((float)hasher.resolve(x))/((float)(Integer.MAX_VALUE));
 	}
 }
