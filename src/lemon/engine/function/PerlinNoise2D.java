@@ -3,12 +3,14 @@ package lemon.engine.function;
 public class PerlinNoise2D implements Function2D<Float, Float> {
 	private HashFunction hasher;
 	private PairingFunction pairer;
+	private AbsoluteValue abs;
 	private float persistence;
 	private int iterations;
 	
 	public PerlinNoise2D(HashFunction hasher, PairingFunction pairer, float persistence, int iterations){
 		this.hasher = hasher;
 		this.pairer = pairer;
+		abs = new AbsoluteValue();
 		this.persistence = persistence;
 		this.iterations = iterations;
 	}
@@ -49,7 +51,7 @@ public class PerlinNoise2D implements Function2D<Float, Float> {
 				hash2D(x, y)/4;
 	}
 	public float hash2D(int x, int y){
-		return hash(pairer.resolve(x, y));
+		return hash(pairer.resolve(abs.resolve(x), abs.resolve(y)));
 	}
 	public float hash(int x){
 		return ((float)hasher.resolve(x))/((float)(Integer.MAX_VALUE));

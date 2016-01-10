@@ -11,6 +11,6 @@ public class TerrainGenerator {
 		noise = new PerlinNoise2D(MurmurHash.createWithSeed(seed), new SzudzikPair(), (float)(1.0/Math.sqrt(2)), 6);
 	}
 	public float generate(float x, float y){
-		return noise.resolve(x, y);
+		return noise.resolve(x/20f, y/20f)*2f;
 	}
 }
