@@ -89,7 +89,7 @@ public enum Game implements Listener {
 		
 		terrainGenerator = new TerrainGenerator(0);
 		
-		heights = new float[Math.max((int) (10f/TILE_SIZE), 2)][Math.max((int) (10f/TILE_SIZE), 2)];
+		heights = new float[Math.max((int) (50f/TILE_SIZE), 2)][Math.max((int) (50f/TILE_SIZE), 2)];
 		
 		for(int i=0;i<heights.length;++i){
 			for(int j=0;j<heights[0].length;++j){
@@ -295,6 +295,7 @@ public enum Game implements Listener {
 		GL11.glDisable(GL11.GL_BLEND);
 	}
 	public void renderHeightMap(){
+		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -303,5 +304,6 @@ public enum Game implements Listener {
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
+		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
 	}
 }
