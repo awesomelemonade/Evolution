@@ -165,20 +165,21 @@ public enum Game implements Listener {
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
 		colorTexture = new Texture();
+		GL13.glActiveTexture(TextureBank.COLOR.getBind());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, window_width, window_height, 0, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, (ByteBuffer)null);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		depthTexture = new Texture();
+		GL13.glActiveTexture(TextureBank.DEPTH.getBind());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
 		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, window_width, window_height, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer)null);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		
 		controls = new PlayerControls<Integer, Integer>();
 		controls.bindKey(GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_MOUSE_BUTTON_LEFT);
@@ -283,8 +284,6 @@ public enum Game implements Listener {
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		renderHeightMap();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-		GL13.glActiveTexture(TextureBank.COLOR.getBind());
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
 		GL20.glUseProgram(postProcessingProgram.getId());
 		screen.render();
 		GL20.glUseProgram(0);
@@ -304,7 +303,6 @@ public enum Game implements Listener {
 		GL11.glDisable(GL11.GL_BLEND);
 	}
 	public void renderHeightMap(){
-		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -313,6 +311,5 @@ public enum Game implements Listener {
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
 	}
 }

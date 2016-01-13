@@ -1,5 +1,7 @@
 #version 400 core
 
+const vec4 BLACK = vec4(0, 0, 0, 1); //Black
+
 in vec2 passTextureCoords;
 
 out vec4 outColor;
@@ -8,5 +10,7 @@ uniform sampler2D colorSampler;
 uniform sampler2D depthSampler;
 
 void main(void){
-	outColor = texture(colorSampler, passTextureCoords);
+	float depth = pow(texture(depthSampler, passTextureCoords).x, 2048);
+	vec4 color = texture(colorSampler, passTextureCoords);
+	outColor = mix(color, BLACK, depth);
 }
