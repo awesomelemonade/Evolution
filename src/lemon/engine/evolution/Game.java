@@ -41,6 +41,7 @@ import lemon.engine.render.UniformVariable;
 import lemon.engine.terrain.TerrainGenerator;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
+import lemon.engine.texture.TextureData;
 import lemon.engine.toolbox.Toolbox;
 
 public enum Game implements Listener {
@@ -155,7 +156,7 @@ public enum Game implements Listener {
 		texture = new Texture();
 		try {
 			BufferedImage image = ImageIO.read(new File("res/FTL.jpg"));
-			texture.loadByteBuffer(image.getWidth(), image.getHeight(), Toolbox.toByteBuffer(image));
+			texture.load(new TextureData(image));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

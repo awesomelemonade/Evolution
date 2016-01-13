@@ -1,7 +1,5 @@
 package lemon.engine.texture;
 
-import java.nio.ByteBuffer;
-
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 
@@ -15,7 +13,7 @@ public class Texture implements Listener {
 		id = GL11.glGenTextures();
 		EventManager.INSTANCE.registerListener(this);
 	}
-	public void loadByteBuffer(int width, int height, ByteBuffer buffer){
+	public void load(TextureData data){
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, id);
 		//Wrap
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
@@ -24,7 +22,7 @@ public class Texture implements Listener {
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		//Send to OpenGL
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, width, height, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, buffer);
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, data.getWidth(), data.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data.getData());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 	}
 	public int getId(){
