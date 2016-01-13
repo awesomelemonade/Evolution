@@ -12,6 +12,9 @@ public class UniformVariable {
 		this.id = id;
 		this.name = name;
 	}
+	public void loadInt(int value){
+		GL20.glUniform1i(id, value);
+	}
 	public void loadFloat(float value){
 		GL20.glUniform1f(id, value);
 	}

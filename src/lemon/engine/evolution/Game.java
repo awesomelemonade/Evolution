@@ -40,6 +40,7 @@ import lemon.engine.render.ShaderProgram;
 import lemon.engine.render.UniformVariable;
 import lemon.engine.terrain.TerrainGenerator;
 import lemon.engine.texture.Texture;
+import lemon.engine.texture.TextureBank;
 import lemon.engine.toolbox.Toolbox;
 
 public enum Game implements Listener {
@@ -65,6 +66,8 @@ public enum Game implements Listener {
 	private Texture depthTexture;
 	
 	private ShaderProgram postProcessingProgram;
+	private UniformVariable uniform_colorSampler;
+	private UniformVariable uniform_depthSampler;
 	private Entity screen;
 	
 	private ShaderProgram textureProgram;
@@ -141,6 +144,12 @@ public enum Game implements Listener {
 				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/postVertexShader")),
 				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/postFragmentShader"))
 		);
+		uniform_colorSampler = postProcessingProgram.getUniformVariable("colorSampler");
+		uniform_depthSampler = postProcessingProgram.getUniformVariable("depthSampler");
+		GL20.glUseProgram(postProcessingProgram.getId());
+		uniform_colorSampler.loadInt(TextureBank.COLOR.getId());
+		uniform_depthSampler.loadInt(TextureBank.DEPTH.getId());
+		GL20.glUseProgram(0);
 		screen = new Quad();
 		
 		texture = new Texture();
@@ -274,7 +283,7 @@ public enum Game implements Listener {
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		renderHeightMap();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		GL13.glActiveTexture(TextureBank.COLOR.getBind());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
 		GL20.glUseProgram(postProcessingProgram.getId());
 		screen.render();
@@ -285,7 +294,7 @@ public enum Game implements Listener {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL13.glActiveTexture(GL13.GL_TEXTURE0);
+		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
 		GL20.glUseProgram(textureProgram.getId());
 		quadEntity.render();
