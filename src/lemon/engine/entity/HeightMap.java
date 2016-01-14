@@ -50,9 +50,9 @@ public class HeightMap implements Entity {
 		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer(map.length*map[0].length*7);
 		for(int i=0;i<map.length;++i){
 			for(int j=0;j<map[0].length;++j){
-				dataBuffer.put(i*tileSize);
+				dataBuffer.put(i*tileSize-(map.length*tileSize/2));
 				dataBuffer.put(map[i][j]);
-				dataBuffer.put(j*tileSize);
+				dataBuffer.put(j*tileSize-(map[0].length*tileSize/2));
 				dataBuffer.put(map[i][j]+0.3f);
 				dataBuffer.put(map[i][j]-0.4f);
 				dataBuffer.put(0f);
