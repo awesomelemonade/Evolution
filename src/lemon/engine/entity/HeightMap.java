@@ -53,9 +53,9 @@ public class HeightMap implements Entity {
 				dataBuffer.put(i*tileSize);
 				dataBuffer.put(map[i][j]);
 				dataBuffer.put(j*tileSize);
-				dataBuffer.put(((float)i)/((float)map.length));
-				dataBuffer.put(((float)j)/((float)map[0].length));
-				dataBuffer.put(1f-(map[i][j])/0.8f);
+				dataBuffer.put(map[i][j]+0.3f);
+				dataBuffer.put(map[i][j]-0.4f);
+				dataBuffer.put(0f);
 				dataBuffer.put(1f);
 			}
 		}

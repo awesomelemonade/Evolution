@@ -1,12 +1,7 @@
 package lemon.engine.entity;
 
-public enum TerrainType implements EntityType {
-	HEIGHT_MAP{
-		@Override
-		public void init(){
-			
-		}
-	};
+public enum SkyboxType implements EntityType {
+	AME_ASH;
 	@Override
 	public void init() {
 		

@@ -24,6 +24,8 @@ import lemon.engine.entity.BasicType;
 import lemon.engine.entity.Entity;
 import lemon.engine.entity.HeightMap;
 import lemon.engine.entity.Quad;
+import lemon.engine.entity.Skybox;
+import lemon.engine.entity.SkyboxType;
 import lemon.engine.entity.TerrainType;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -39,6 +41,7 @@ import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.render.UniformVariable;
 import lemon.engine.terrain.TerrainGenerator;
+import lemon.engine.texture.CubeMapData;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
 import lemon.engine.texture.TextureData;
@@ -66,6 +69,9 @@ public enum Game implements Listener {
 	private Texture colorTexture;
 	private Texture depthTexture;
 	
+	private Entity skybox;
+	private Texture skyboxTexture;
+	
 	private ShaderProgram postProcessingProgram;
 	private UniformVariable uniform_colorSampler;
 	private UniformVariable uniform_depthSampler;
@@ -75,6 +81,11 @@ public enum Game implements Listener {
 	private UniformVariable uniform_textureModelMatrix;
 	private UniformVariable uniform_textureViewMatrix;
 	private UniformVariable uniform_textureProjectionMatrix;
+	
+	private ShaderProgram cubemapProgram;
+	private UniformVariable uniform_cubemapViewMatrix;
+	private UniformVariable uniform_cubemapProjectionMatrix;
+	private UniformVariable uniform_cubemapSampler;
 	
 	private Entity quadEntity;
 	private Texture texture;
@@ -103,9 +114,14 @@ public enum Game implements Listener {
 		
 		TerrainType.HEIGHT_MAP.init();
 		BasicType.QUAD.init();
+		SkyboxType.AME_ASH.init();
+		Skybox.init();
 		
 		terrain = new HeightMap(heights, TILE_SIZE);
 		quadEntity = new Quad();
+		skybox = new Skybox();
+		
+		Matrix projectionMatrix = MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.01f, 100f);
 		
 		program = new ShaderProgram(
 			new int[]{0, 1},
@@ -120,7 +136,7 @@ public enum Game implements Listener {
 		uniform_modelMatrix.loadMatrix(Matrix.getIdentity(4));
 		translation = new Vector(0f, 0f, 0f);
 		rotation = new Vector(0f, 0f, 0f);
-		uniform_projectionMatrix.loadMatrix(MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.01f, 100f));
+		uniform_projectionMatrix.loadMatrix(projectionMatrix);
 		GL20.glUseProgram(0);
 		updateViewMatrix(program, uniform_viewMatrix);
 		
@@ -135,9 +151,24 @@ public enum Game implements Listener {
 		uniform_textureProjectionMatrix = textureProgram.getUniformVariable("projectionMatrix");
 		GL20.glUseProgram(textureProgram.getId());
 		uniform_textureModelMatrix.loadMatrix(MathUtil.getTranslation(new Vector(0f, 10f, 0f)).multiply(MathUtil.getScalar(new Vector(12f, 12f, 12f))));
-		uniform_textureProjectionMatrix.loadMatrix(MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.01f, 100f));
+		uniform_textureProjectionMatrix.loadMatrix(projectionMatrix);
 		GL20.glUseProgram(0);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
+		
+		cubemapProgram = new ShaderProgram(
+			new int[]{0},
+			new String[]{"position"},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/cubemapVertexShader")),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/cubemapFragmentShader"))
+		);
+		uniform_cubemapViewMatrix = cubemapProgram.getUniformVariable("viewMatrix");
+		uniform_cubemapProjectionMatrix = cubemapProgram.getUniformVariable("projectionMatrix");
+		uniform_cubemapSampler = cubemapProgram.getUniformVariable("cubemapSampler");
+		GL20.glUseProgram(cubemapProgram.getId());
+		uniform_cubemapProjectionMatrix.loadMatrix(projectionMatrix);
+		uniform_cubemapSampler.loadInt(TextureBank.SKYBOX.getId());
+		GL20.glUseProgram(0);
+		updateViewMatrix(cubemapProgram, uniform_cubemapViewMatrix);
 		
 		postProcessingProgram = new ShaderProgram(
 				new int[]{0, 1},
@@ -180,6 +211,22 @@ public enum Game implements Listener {
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+		skyboxTexture = new Texture();
+		GL13.glActiveTexture(TextureBank.SKYBOX.getBind());
+		BufferedImage[] skyboxTextures = new BufferedImage[6];
+		for(int i=0;i<skyboxTextures.length;++i){
+			try {
+				skyboxTextures[i] = ImageIO.read(new File("res/ame_ash/skybox"+i+".png"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		ByteBuffer[] skyboxData = new ByteBuffer[6];
+		for(int i=0;i<skyboxData.length;++i){
+			skyboxData[i] = Toolbox.toByteBuffer(skyboxTextures[i]);
+		}
+		skyboxTexture.load(new CubeMapData(skyboxTextures[0].getWidth(), skyboxTextures[0].getHeight(), skyboxData));
+		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		
 		controls = new PlayerControls<Integer, Integer>();
@@ -226,6 +273,7 @@ public enum Game implements Listener {
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
+		updateViewMatrix(cubemapProgram, uniform_cubemapViewMatrix);
 	}
 	@Subscribe
 	public void onKey(KeyEvent event){
@@ -268,6 +316,7 @@ public enum Game implements Listener {
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
+		updateViewMatrix(cubemapProgram, uniform_cubemapViewMatrix);
 	}
 	public void updateViewMatrix(ShaderProgram program, UniformVariable variable){
 		GL20.glUseProgram(program.getId());
@@ -284,11 +333,11 @@ public enum Game implements Listener {
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		renderHeightMap();
+		renderSkybox();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL20.glUseProgram(postProcessingProgram.getId());
 		screen.render();
 		GL20.glUseProgram(0);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 	}
 	public void renderQuad(){
 		GL11.glEnable(GL11.GL_BLEND);
@@ -309,6 +358,16 @@ public enum Game implements Listener {
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(program.getId());
 		terrain.render();
+		GL20.glUseProgram(0);
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glDisable(GL11.GL_BLEND);
+	}
+	public void renderSkybox(){
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL20.glUseProgram(cubemapProgram.getId());
+		skybox.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
