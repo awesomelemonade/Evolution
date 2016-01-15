@@ -121,7 +121,7 @@ public enum Game implements Listener {
 		quadEntity = new Quad();
 		skybox = new Skybox();
 		
-		Matrix projectionMatrix = MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.01f, 100f);
+		Matrix projectionMatrix = MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.01f, 1000f);
 		
 		program = new ShaderProgram(
 			new int[]{0, 1},
