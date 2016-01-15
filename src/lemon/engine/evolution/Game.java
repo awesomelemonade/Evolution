@@ -333,7 +333,9 @@ public enum Game implements Listener {
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		renderHeightMap();
+		GL11.glDepthMask(false);
 		renderSkybox();
+		GL11.glDepthMask(true);
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL20.glUseProgram(postProcessingProgram.getId());
 		screen.render();
