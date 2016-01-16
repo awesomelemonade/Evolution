@@ -34,6 +34,7 @@ import lemon.engine.game.PlayerControls;
 import lemon.engine.input.CursorPositionEvent;
 import lemon.engine.input.KeyEvent;
 import lemon.engine.input.MouseButtonEvent;
+import lemon.engine.loader.SkyboxLoader;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector;
@@ -41,7 +42,6 @@ import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.render.UniformVariable;
 import lemon.engine.terrain.TerrainGenerator;
-import lemon.engine.texture.CubeMapData;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
 import lemon.engine.texture.TextureData;
@@ -213,19 +213,7 @@ public enum Game implements Listener {
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		skyboxTexture = new Texture();
 		GL13.glActiveTexture(TextureBank.SKYBOX.getBind());
-		BufferedImage[] skyboxTextures = new BufferedImage[6];
-		for(int i=0;i<skyboxTextures.length;++i){
-			try {
-				skyboxTextures[i] = ImageIO.read(new File("res/ame_ash/skybox"+i+".png"));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		ByteBuffer[] skyboxData = new ByteBuffer[6];
-		for(int i=0;i<skyboxData.length;++i){
-			skyboxData[i] = Toolbox.toByteBuffer(skyboxTextures[i]);
-		}
-		skyboxTexture.load(new CubeMapData(skyboxTextures[0].getWidth(), skyboxTextures[0].getHeight(), skyboxData));
+		skyboxTexture.load(new SkyboxLoader(new File("res/darkskies/"), new File("res/darkskies/darkskies.cfg")).load());
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		
