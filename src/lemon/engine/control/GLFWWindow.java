@@ -37,6 +37,7 @@ public class GLFWWindow {
 		glfwInput = new GLFWInput(window);
 		glfwInput.init();
 		GLFW.glfwMakeContextCurrent(window);
+		GLFW.glfwSwapInterval(0);
 		GLFW.glfwShowWindow(window);
 		GL.createCapabilities(); //GLContext.createFromCurrent();
 		EventManager.INSTANCE.callListeners(new LemonWindowInitEvent(window));
