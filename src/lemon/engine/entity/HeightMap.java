@@ -78,8 +78,4 @@ public class HeightMap implements Entity {
 	public VertexArray getVertexArray() {
 		return vertexArray;
 	}
-	@Override
-	public EntityType getType() {
-		return TerrainType.HEIGHT_MAP;
-	}
 }

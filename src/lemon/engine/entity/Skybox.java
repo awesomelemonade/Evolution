@@ -51,8 +51,4 @@ public class Skybox implements Entity {
 	public VertexArray getVertexArray() {
 		return vertexArray;
 	}
-	@Override
-	public EntityType getType() {
-		return SkyboxType.AME_ASH;
-	}
 }
