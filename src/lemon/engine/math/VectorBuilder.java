@@ -1,17 +1,23 @@
 package lemon.engine.math;
 
 public class VectorBuilder {
-	private Vector vector;
-	private VectorBuilder(Vector vector){
-		this.vector = vector;
+	private float x;
+	private float y;
+	private float z;
+	public VectorBuilder(){
+		this.x = 0;
+		this.y = 0;
+		this.z = 0;
 	}
-	public static VectorBuilder get(Vector vector){
-		return new VectorBuilder(new Vector(vector));
+	public VectorBuilder(Vector vector){
+		this.x = vector.getX();
+		this.y = vector.getY();
+		this.z = vector.getZ();
 	}
 	public VectorBuilder add(float x, float y, float z){
-		vector.setX(vector.getX()+x);
-		vector.setY(vector.getY()+y);
-		vector.setZ(vector.getZ()+z);
+		this.x+=x;
+		this.y+=y;
+		this.z+=z;
 		return this;
 	}
 	public VectorBuilder add(Vector vector){
@@ -24,24 +30,24 @@ public class VectorBuilder {
 		return add(-vector.getX(), -vector.getY(), -vector.getZ());
 	}
 	public VectorBuilder multiply(float x, float y, float z){
-		vector.setX(vector.getX()*x);
-		vector.setY(vector.getY()*y);
-		vector.setZ(vector.getZ()*z);
+		this.x*=x;
+		this.y*=y;
+		this.z*=z;
 		return this;
 	}
 	public VectorBuilder multiply(Vector vector){
 		return multiply(vector.getX(), vector.getY(), vector.getZ());
 	}
 	public VectorBuilder divide(float x, float y, float z){
-		vector.setX(vector.getX()/x);
-		vector.setY(vector.getY()/y);
-		vector.setZ(vector.getZ()/z);
+		this.x/=x;
+		this.y/=y;
+		this.z/=z;
 		return this;
 	}
 	public VectorBuilder divide(Vector vector){
 		return divide(vector.getX(), vector.getY(), vector.getZ());
 	}
 	public Vector toVector(){
-		return vector;
+		return new Vector(x, y, z);
 	}
 }

@@ -1,9 +1,9 @@
 package lemon.engine.math;
 
 public class Vector {
-	private float x;
-	private float y;
-	private float z;
+	private final float x;
+	private final float y;
+	private final float z;
 	public Vector(){
 		this(0f, 0f, 0f);
 	}
@@ -15,15 +15,6 @@ public class Vector {
 	public Vector(Vector vector){
 		this(vector.getX(), vector.getY(), vector.getZ());
 	}
-	public void setX(float x){
-		this.x = x;
-	}
-	public void setY(float y){
-		this.y = y;
-	}
-	public void setZ(float z){
-		this.z = z;
-	}
 	public float getX(){
 		return x;
 	}
@@ -33,7 +24,7 @@ public class Vector {
 	public float getZ(){
 		return z;
 	}
-	public Vector invert(){
+	public Vector getInvert(){
 		return new Vector(-x, -y, -z);
 	}
 	public float getDistance(Vector vector){
