@@ -1,9 +1,9 @@
 package lemon.engine.math;
 
 public class Vector {
-	private final float x;
-	private final float y;
-	private final float z;
+	private float x;
+	private float y;
+	private float z;
 	public Vector(){
 		this(0f, 0f, 0f);
 	}
@@ -15,11 +15,20 @@ public class Vector {
 	public Vector(Vector vector){
 		this(vector.getX(), vector.getY(), vector.getZ());
 	}
+	public void setX(float x){
+		this.x = x;
+	}
 	public float getX(){
 		return x;
 	}
+	public void setY(float y){
+		this.y = y;
+	}
 	public float getY(){
 		return y;
+	}
+	public void setZ(float z){
+		this.z = z;
 	}
 	public float getZ(){
 		return z;
@@ -36,7 +45,9 @@ public class Vector {
 	}
 	@Override
 	public boolean equals(Object object){
-		if(object==null){return false;}
+		if(object==null){
+			return false;
+		}
 		if(object instanceof Vector){
 			Vector vector = (Vector)object;
 			if(vector.getX()==x&&vector.getY()==y&&vector.getZ()==z){
