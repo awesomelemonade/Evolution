@@ -65,7 +65,7 @@ public enum Game implements Listener {
 	private Renderable terrain;
 	
 	private float[][] heights;
-	private static final float TILE_SIZE = 0.2f; //0.2f 1f
+	private static final float TILE_SIZE = 1f; //0.2f 1f
 	
 	private FrameBuffer frameBuffer;
 	private Texture colorTexture;
