@@ -37,16 +37,15 @@ public enum Skybox implements Renderable {
 			return INDICES_COUNT;
 		}
 	};
-	private static final float SIZE = 50f;
 	private static final FloatBuffer VERTICES = Toolbox.toFloatBuffer(
-			-SIZE, -SIZE, -SIZE,
-			-SIZE, -SIZE, SIZE,
-			-SIZE, SIZE, -SIZE,
-			-SIZE, SIZE, SIZE,
-			SIZE, -SIZE, -SIZE,
-			SIZE, -SIZE, SIZE,
-			SIZE, SIZE, -SIZE,
-			SIZE, SIZE, SIZE
+			-1, -1, -1,
+			-1, -1, 1,
+			-1, 1, -1,
+			-1, 1, 1,
+			1, -1, -1,
+			1, -1, 1,
+			1, 1, -1,
+			1, 1, 1
 	);
 	private static final IntBuffer INDICES = Toolbox.toIntBuffer(
 			2, 0, 4, 4, 6, 2,
