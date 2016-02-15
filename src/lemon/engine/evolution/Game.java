@@ -266,7 +266,7 @@ public enum Game implements Listener {
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
-		updateViewMatrix(cubemapProgram, uniform_cubemapViewMatrix);
+		updateCubeMapMatrix(cubemapProgram, uniform_cubemapViewMatrix);
 	}
 	@Subscribe
 	public void onKey(KeyEvent event){
@@ -309,7 +309,7 @@ public enum Game implements Listener {
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
-		updateViewMatrix(cubemapProgram, uniform_cubemapViewMatrix);
+		updateCubeMapMatrix(cubemapProgram, uniform_cubemapViewMatrix);
 	}
 	public void updateViewMatrix(ShaderProgram program, UniformVariable variable){
 		GL20.glUseProgram(program.getId());
@@ -321,14 +321,22 @@ public enum Game implements Listener {
 		variable.loadMatrix(rotationMatrix.multiply(translationMatrix));
 		GL20.glUseProgram(0);
 	}
+	public void updateCubeMapMatrix(ShaderProgram program, UniformVariable variable){
+		GL20.glUseProgram(program.getId());
+		Vector rotation = this.rotation.getInvert();
+		
+		Matrix rotationMatrix = MathUtil.getRotationX(rotation.getX()).multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
+		variable.loadMatrix(rotationMatrix);
+		GL20.glUseProgram(0);
+	}
 	@Subscribe
 	public void render(RenderEvent event){
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		renderHeightMap();
 		GL11.glDepthMask(false);
 		renderSkybox();
 		GL11.glDepthMask(true);
+		renderHeightMap();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL20.glUseProgram(postProcessingProgram.getId());
 		renderer.render(quad);
@@ -360,11 +368,9 @@ public enum Game implements Listener {
 	public void renderSkybox(){
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(cubemapProgram.getId());
 		renderer.render(skybox);
 		GL20.glUseProgram(0);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
 }

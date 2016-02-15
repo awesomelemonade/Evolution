@@ -59,9 +59,9 @@ public class HeightMap implements Renderable {
 				dataBuffer.put(i*tileSize-(map.length*tileSize/2));
 				dataBuffer.put(map[i][j]);
 				dataBuffer.put(j*tileSize-(map[0].length*tileSize/2));
-				dataBuffer.put(map[i][j]+0.3f);
-				dataBuffer.put(map[i][j]-0.4f);
-				dataBuffer.put(0f);
+				dataBuffer.put((float)Math.random());
+				dataBuffer.put((float)Math.random());
+				dataBuffer.put((float)Math.random());
 				dataBuffer.put(1f);
 			}
 		}
