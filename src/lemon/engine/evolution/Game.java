@@ -31,6 +31,7 @@ import lemon.engine.game.PlayerControls;
 import lemon.engine.input.CursorPositionEvent;
 import lemon.engine.input.KeyEvent;
 import lemon.engine.input.MouseButtonEvent;
+import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.loader.SkyboxLoader;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
@@ -231,7 +232,7 @@ public enum Game implements Listener {
 		controls.bindKey(GLFW.GLFW_KEY_SPACE, GLFW.GLFW_KEY_SPACE);
 		controls.bindKey(GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_LEFT_SHIFT);
 	}
-	private static final float PLAYER_SPEED = 0.15f;
+	private static float playerSpeed = 0.15f;
 	@Subscribe
 	public void update(UpdateEvent event){
 		if(controls.hasStates()){
@@ -239,29 +240,29 @@ public enum Game implements Listener {
 			float sin = (float)Math.sin(angle);
 			float cos = (float)Math.cos(angle);
 			if(controls.getState(GLFW.GLFW_KEY_A)){
-				translation.setX(translation.getX()-((float)(PLAYER_SPEED))*sin);
-				translation.setZ(translation.getZ()-((float)(PLAYER_SPEED))*cos);
+				translation.setX(translation.getX()-((float)(playerSpeed))*sin);
+				translation.setZ(translation.getZ()-((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_D)){
-				translation.setX(translation.getX()+((float)(PLAYER_SPEED))*sin);
-				translation.setZ(translation.getZ()+((float)(PLAYER_SPEED))*cos);
+				translation.setX(translation.getX()+((float)(playerSpeed))*sin);
+				translation.setZ(translation.getZ()+((float)(playerSpeed))*cos);
 			}
 			angle = rotation.getY()*(((float)Math.PI)/180f);
 			sin = (float)Math.sin(angle);
 			cos = (float)Math.cos(angle);
 			if(controls.getState(GLFW.GLFW_KEY_W)){
-				translation.setX(translation.getX()-((float)(PLAYER_SPEED))*sin);
-				translation.setZ(translation.getZ()-((float)(PLAYER_SPEED))*cos);
+				translation.setX(translation.getX()-((float)(playerSpeed))*sin);
+				translation.setZ(translation.getZ()-((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_S)){
-				translation.setX(translation.getX()+((float)(PLAYER_SPEED))*sin);
-				translation.setZ(translation.getZ()+((float)(PLAYER_SPEED))*cos);
+				translation.setX(translation.getX()+((float)(playerSpeed))*sin);
+				translation.setZ(translation.getZ()+((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_SPACE)){
-				translation.setY(translation.getY()+((float)(PLAYER_SPEED)));
+				translation.setY(translation.getY()+((float)(playerSpeed)));
 			}
 			if(controls.getState(GLFW.GLFW_KEY_LEFT_SHIFT)){
-				translation.setY(translation.getY()-((float)(PLAYER_SPEED)));
+				translation.setY(translation.getY()-((float)(playerSpeed)));
 			}
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
@@ -284,6 +285,13 @@ public enum Game implements Listener {
 		}
 		if(event.getAction()==GLFW.GLFW_RELEASE){
 			controls.setKeyState(event.getButton(), false);
+		}
+	}
+	@Subscribe
+	public void onMouseScroll(MouseScrollEvent event){
+		playerSpeed+=(float)(event.getYOffset()/100f);
+		if(playerSpeed<0){
+			playerSpeed = 0;
 		}
 	}
 	private double lastMouseX;
