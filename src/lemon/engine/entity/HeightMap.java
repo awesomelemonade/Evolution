@@ -9,18 +9,24 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
+import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 
-public class HeightMap implements Entity {
+public class HeightMap implements Renderable {
 	private VertexArray vertexArray;
 	private float[][] map;
+	private float tileSize;
 	public HeightMap(float[][] map, float tileSize){
 		this.map = new float[map.length][map[0].length];
+		this.tileSize = tileSize;
 		for(int i=0;i<map.length;++i){
 			for(int j=0;j<map[0].length;++j){
 				this.map[i][j] = map[i][j];
 			}
 		}
+	}
+	@Override
+	public void init() {
 		vertexArray = new VertexArray();
 		GL30.glBindVertexArray(vertexArray.getId());
 		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vertexArray.generateVbo().getId());
@@ -69,13 +75,11 @@ public class HeightMap implements Entity {
 		GL30.glBindVertexArray(0);
 	}
 	@Override
-	public void render() {
-		GL30.glBindVertexArray(vertexArray.getId());
-		GL11.glDrawElements(GL11.GL_TRIANGLES, 6*(map.length-1)*(map[0].length-1), GL11.GL_UNSIGNED_INT, 0);
-		GL30.glBindVertexArray(0);
-	}
-	@Override
 	public VertexArray getVertexArray() {
 		return vertexArray;
+	}
+	@Override
+	public int getIndices(){
+		return 6*(map.length-1)*(map[0].length-1);
 	}
 }

@@ -1,5 +1,8 @@
 package lemon.engine.render;
 
-public interface Renderable {
-	public void render();
+import lemon.engine.control.Initializable;
+
+public interface Renderable extends Initializable {
+	public VertexArray getVertexArray();
+	public int getIndices();
 }
