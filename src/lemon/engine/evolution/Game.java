@@ -7,6 +7,8 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
@@ -51,6 +53,7 @@ import lemon.engine.toolbox.Toolbox;
 
 public enum Game implements Listener {
 	INSTANCE;
+	private static final Logger logger = Logger.getLogger(Game.class.getName());
 	
 	private Renderer renderer;
 	
@@ -119,7 +122,7 @@ public enum Game implements Listener {
 		for(int i=0;i<heights.length;++i){
 			for(int j=0;j<heights[0].length;++j){
 				if(Math.random()<0.001){
-					System.out.println(((((float)(i*heights.length+j))/((float)(heights.length*heights[0].length)))*100f)+"%");
+					logger.log(Level.INFO, ((((float)(i*heights.length+j))/((float)(heights.length*heights[0].length)))*100f)+"%");
 				}
 				heights[i][j] = terrainGenerator.generate(i, j);
 			}

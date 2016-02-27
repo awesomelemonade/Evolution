@@ -7,12 +7,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import lemon.engine.event.Event;
 import lemon.engine.reflection.ReflectionUtil;
 
 public enum EventManager {
 	INSTANCE;
+	private static final Logger logger = Logger.getLogger(EventManager.class.getName());
+	
 	private Map<Class<? extends Event>, List<ListenerMethod>> methods;
 	private Map<Class<? extends Event>, List<ListenerMethod>> preloaded;
 	private EventManager(){
@@ -54,15 +58,16 @@ public enum EventManager {
 		}
 	}
 	public void callListeners(Event event){
-		//System.out.println("Calling Event Type: "+event.getClass().getCanonicalName());
 		if(!preloaded.containsKey(event.getClass())){
 			preload(event.getClass());
 		}
 		for(ListenerMethod lm: preloaded.get(event.getClass())){
 			try {
 				ReflectionUtil.invokePrivateMethod(lm.getMethod(), lm.getListener(), event);
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-				callListeners(new LemonExceptionEvent(ex));
+			} catch (IllegalAccessException | IllegalArgumentException ex) {
+				logger.log(Level.SEVERE, ex.getMessage(), ex);
+			} catch (InvocationTargetException ex){
+				logger.log(Level.WARNING, ex.getCause().getMessage(), ex.getCause());
 			}
 		}
 	}

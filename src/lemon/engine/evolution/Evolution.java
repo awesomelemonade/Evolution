@@ -1,5 +1,11 @@
 package lemon.engine.evolution;
 
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -14,7 +20,13 @@ import lemon.engine.event.Subscribe;
 import lemon.engine.input.KeyEvent;
 
 public class Evolution {
+	private static final Logger logger = Logger.getLogger("");
 	public static void main(String[] args){
+		LogManager.getLogManager().reset();
+		logger.setLevel(Level.ALL);
+		ConsoleHandler consoleHandler = new ConsoleHandler();
+		consoleHandler.setFormatter(new SimpleFormatter());
+		logger.addHandler(consoleHandler);
 		GLFWWindowSettings settings = new GLFWWindowSettings(){
 			@Override
 			public long createWindow() {
