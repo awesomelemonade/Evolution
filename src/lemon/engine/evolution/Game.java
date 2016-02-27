@@ -26,7 +26,9 @@ import lemon.engine.control.UpdateEvent;
 import lemon.engine.control.WindowInitEvent;
 import lemon.engine.entity.ElementsRenderer;
 import lemon.engine.entity.HeightMap;
+import lemon.engine.entity.LineRenderer;
 import lemon.engine.entity.Quad;
+import lemon.engine.entity.Segment;
 import lemon.engine.entity.Skybox;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -56,6 +58,7 @@ public enum Game implements Listener {
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 	
 	private Renderer renderer;
+	private Renderer lineRenderer;
 	
 	private ShaderProgram program;
 	private UniformVariable uniform_modelMatrix;
@@ -103,6 +106,8 @@ public enum Game implements Listener {
 	
 	private List<Vector> entities;
 	
+	private List<Renderable> segments;
+	
 	@Subscribe
 	public void init(WindowInitEvent event){
 		IntBuffer width = BufferUtils.createIntBuffer(1);
@@ -114,6 +119,7 @@ public enum Game implements Listener {
 		GL11.glViewport(0, 0, window_width, window_height);
 		
 		renderer = new ElementsRenderer();
+		lineRenderer = new LineRenderer();
 		
 		terrainGenerator = new TerrainGenerator(0);
 		
@@ -131,7 +137,7 @@ public enum Game implements Listener {
 		Skybox.INSTANCE.init();
 		Quad.INSTANCE.init();
 		terrain = new HeightMap(heights, TILE_SIZE);
-		terrain.init();
+		segments = new ArrayList<Renderable>();
 		
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
@@ -295,6 +301,7 @@ public enum Game implements Listener {
 					//terrain.set(x, y, terrain.get(x, y)+((float)Math.random()));
 					//terrain.update();
 				}
+				segments.add(new Segment(new Vector(0, 0, 0), translation));
 			}
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
@@ -452,6 +459,9 @@ public enum Game implements Listener {
 		for(Vector vector: entities){
 			renderQuad(vector);
 		}
+		for(Renderable renderable: segments){
+			renderSegment(renderable);
+		}
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL20.glUseProgram(postProcessingProgram.getId());
 		renderer.render(quad);
@@ -470,6 +480,17 @@ public enum Game implements Listener {
 		renderer.render(quad);
 		GL20.glUseProgram(0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glDisable(GL11.GL_BLEND);
+	}
+	public void renderSegment(Renderable renderable){
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL20.glUseProgram(program.getId());
+		uniform_modelMatrix.loadMatrix(Matrix.getIdentity(4));
+		lineRenderer.render(renderable);
+		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}

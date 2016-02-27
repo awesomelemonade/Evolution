@@ -26,9 +26,6 @@ public class HeightMap implements Renderable {
 				this.map[i][j] = map[i][j];
 			}
 		}
-	}
-	@Override
-	public void init() {
 		vertexArray = new VertexArray();
 		GL30.glBindVertexArray(vertexArray.getId());
 		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vertexArray.generateVbo().getId());
