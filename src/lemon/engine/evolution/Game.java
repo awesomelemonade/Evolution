@@ -488,7 +488,6 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(program.getId());
-		uniform_modelMatrix.loadMatrix(Matrix.getIdentity(4));
 		lineRenderer.render(renderable);
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
