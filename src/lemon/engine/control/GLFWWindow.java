@@ -53,8 +53,15 @@ public class GLFWWindow {
 			}
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			//Event Driven
+			long updateTime = System.nanoTime();
 			EventManager.INSTANCE.callListeners(new LemonUpdateEvent());
+			updateTime = System.nanoTime()-updateTime;
+			long renderTime = System.nanoTime();
 			EventManager.INSTANCE.callListeners(new LemonRenderEvent());
+			renderTime = System.nanoTime()-renderTime;
+			if(updateTime+renderTime>=200000000){
+				System.out.println(updateTime+" - "+renderTime);
+			}
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());
