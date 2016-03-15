@@ -24,9 +24,7 @@ import org.lwjgl.opengl.GL32;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.control.WindowInitEvent;
-import lemon.engine.entity.ElementsRenderer;
 import lemon.engine.entity.HeightMap;
-import lemon.engine.entity.LineRenderer;
 import lemon.engine.entity.Quad;
 import lemon.engine.entity.Segment;
 import lemon.engine.entity.Skybox;
@@ -43,7 +41,6 @@ import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector;
 import lemon.engine.render.Renderable;
-import lemon.engine.render.Renderer;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.render.UniformVariable;
@@ -56,9 +53,6 @@ import lemon.engine.toolbox.Toolbox;
 public enum Game implements Listener {
 	INSTANCE;
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
-	
-	private Renderer renderer;
-	private Renderer lineRenderer;
 	
 	private ShaderProgram program;
 	private UniformVariable uniform_modelMatrix;
@@ -117,9 +111,6 @@ public enum Game implements Listener {
 		int window_height = height.get();
 		
 		GL11.glViewport(0, 0, window_width, window_height);
-		
-		renderer = new ElementsRenderer();
-		lineRenderer = new LineRenderer();
 		
 		terrainGenerator = new TerrainGenerator(0);
 		
@@ -464,7 +455,7 @@ public enum Game implements Listener {
 		}
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL20.glUseProgram(postProcessingProgram.getId());
-		renderer.render(quad);
+		quad.render();
 		GL20.glUseProgram(0);
 		num+=1f;
 	}
@@ -477,7 +468,7 @@ public enum Game implements Listener {
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
 		GL20.glUseProgram(textureProgram.getId());
 		uniform_textureModelMatrix.loadMatrix(MathUtil.getTranslation(vector).multiply(MathUtil.getRotationY(num)).multiply(MathUtil.getScalar(new Vector(1f, 1f, 1f))));
-		renderer.render(quad);
+		quad.render();
 		GL20.glUseProgram(0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -488,7 +479,7 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(program.getId());
-		lineRenderer.render(renderable);
+		renderable.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
@@ -498,7 +489,7 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(program.getId());
-		renderer.render(terrain);
+		terrain.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
@@ -507,7 +498,7 @@ public enum Game implements Listener {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL20.glUseProgram(cubemapProgram.getId());
-		renderer.render(skybox);
+		skybox.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_BLEND);
 	}

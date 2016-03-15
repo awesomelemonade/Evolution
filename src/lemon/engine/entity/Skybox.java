@@ -30,12 +30,10 @@ public enum Skybox implements Renderable, Initializable {
 			GL30.glBindVertexArray(0);
 		}
 		@Override
-		public VertexArray getVertexArray() {
-			return vertexArray;
-		}
-		@Override
-		public int getIndices() {
-			return INDICES_COUNT;
+		public void render(){
+			GL30.glBindVertexArray(vertexArray.getId());
+			GL11.glDrawElements(GL11.GL_TRIANGLES, INDICES_COUNT, GL11.GL_UNSIGNED_INT, 0);
+			GL30.glBindVertexArray(0);
 		}
 	};
 	private static final FloatBuffer VERTICES = Toolbox.toFloatBuffer(

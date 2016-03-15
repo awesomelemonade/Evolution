@@ -1,7 +1,6 @@
 package lemon.engine.entity;
 
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -28,16 +27,8 @@ public class HeightMap implements Renderable {
 		}
 		vertexArray = new VertexArray();
 		GL30.glBindVertexArray(vertexArray.getId());
-		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vertexArray.generateVbo().getId());
-		int vertices = 6*(map.length-1)*(map[0].length-1);
-		IntBuffer indicesBuffer = BufferUtils.createIntBuffer(vertices);
-		for(int i=0;i<vertices;++i){
-			indicesBuffer.put(i);
-		}
-		indicesBuffer.flip();
-		GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW);
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, (dataBuffer=vertexArray.generateVbo()).getId());
-		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer(vertices*7);
+		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer((6*(map.length-1)*(map[0].length-1))*7);
 		for(int i=0;i<map.length-1;++i){
 			for(int j=0;j<map[0].length-1;++j){
 				float avgHeight = (map[i][j]+map[i+1][j]+map[i+1][j+1])/3;
@@ -102,11 +93,9 @@ public class HeightMap implements Renderable {
 		dataBuffer.put(1f);
 	}
 	@Override
-	public VertexArray getVertexArray() {
-		return vertexArray;
-	}
-	@Override
-	public int getIndices(){
-		return 6*(map.length-1)*(map[0].length-1);
+	public void render(){
+		GL30.glBindVertexArray(vertexArray.getId());
+		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6*(map.length-1)*(map[0].length-1));
+		GL30.glBindVertexArray(0);
 	}
 }

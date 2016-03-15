@@ -1,7 +1,6 @@
 package lemon.engine.entity;
 
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -15,19 +14,12 @@ import lemon.engine.render.VertexArray;
 
 public class Segment implements Renderable {
 	private VertexArray vertexArray;
+	private static final int VERTICES = 2;
 	public Segment(Vector point, Vector point2){
 		vertexArray = new VertexArray();
 		GL30.glBindVertexArray(vertexArray.getId());
-		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vertexArray.generateVbo().getId());
-		int vertices = 2;
-		IntBuffer indicesBuffer = BufferUtils.createIntBuffer(vertices);
-		for(int i=0;i<vertices;++i){
-			indicesBuffer.put(i);
-		}
-		indicesBuffer.flip();
-		GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW);
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vertexArray.generateVbo().getId());
-		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer(vertices*7);
+		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer(VERTICES*7);
 		plotVertex(dataBuffer, point);
 		plotVertex(dataBuffer, point2);
 		dataBuffer.flip();
@@ -49,11 +41,9 @@ public class Segment implements Renderable {
 		dataBuffer.put(1f);
 	}
 	@Override
-	public VertexArray getVertexArray() {
-		return vertexArray;
-	}
-	@Override
-	public int getIndices() {
-		return 2;
+	public void render(){
+		GL30.glBindVertexArray(vertexArray.getId());
+		GL11.glDrawArrays(GL11.GL_LINES, 0, VERTICES);
+		GL30.glBindVertexArray(0);
 	}
 }
