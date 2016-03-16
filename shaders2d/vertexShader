@@ -1,0 +1,18 @@
+#version 400 core
+
+in float id;
+in float value;
+
+out vec4 passColor;
+
+uniform vec3 color;
+uniform float spacing;
+uniform int index;
+uniform int total;
+uniform float alpha;
+
+void main(void){
+	gl_Position = vec4(id * spacing - 1f, value, 0, 1);
+	passColor = vec4(1f, 0f, 0f, 1f);
+	//passColor = vec4(color.rgb, alphaFactor*int(gl_InstanceID/total)
+}

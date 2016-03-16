@@ -24,6 +24,7 @@ import org.lwjgl.opengl.GL32;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.control.WindowInitEvent;
+import lemon.engine.entity.FpsData;
 import lemon.engine.entity.HeightMap;
 import lemon.engine.entity.Quad;
 import lemon.engine.entity.Segment;
@@ -93,6 +94,15 @@ public enum Game implements Listener {
 	private UniformVariable uniform_cubemapProjectionMatrix;
 	private UniformVariable uniform_cubemapSampler;
 	
+	private ShaderProgram lineProgram;
+	private UniformVariable uniform_lineColor;
+	private UniformVariable uniform_lineSpacing;
+	private UniformVariable uniform_lineIndex;
+	private UniformVariable uniform_lineTotal;
+	private UniformVariable uniform_lineAlpha;
+	
+	public FpsData fpsData;
+	
 	//private Entity quadEntity;
 	private Texture texture;
 	
@@ -129,6 +139,8 @@ public enum Game implements Listener {
 		Quad.INSTANCE.init();
 		terrain = new HeightMap(heights, TILE_SIZE);
 		segments = new ArrayList<Renderable>();
+		
+		fpsData = new FpsData(1000);
 		
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
@@ -181,6 +193,25 @@ public enum Game implements Listener {
 		uniform_cubemapSampler.loadInt(TextureBank.SKYBOX.getId());
 		GL20.glUseProgram(0);
 		updateViewMatrix(cubemapProgram, uniform_cubemapViewMatrix);
+		
+		lineProgram = new ShaderProgram(
+				new int[]{0, 1},
+				new String[]{"id", "value"},
+				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/vertexShader")),
+				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/fragmentShader"))
+		);
+		uniform_lineColor = lineProgram.getUniformVariable("color");
+		uniform_lineSpacing = lineProgram.getUniformVariable("spacing");
+		uniform_lineIndex = lineProgram.getUniformVariable("index");
+		uniform_lineTotal = lineProgram.getUniformVariable("total");
+		uniform_lineAlpha = lineProgram.getUniformVariable("alpha");
+		GL20.glUseProgram(lineProgram.getId());
+		uniform_lineColor.loadVector(new Vector(1f, 0f, 0f));
+		uniform_lineSpacing.loadFloat(2f/(fpsData.getSize()-1));
+		uniform_lineIndex.loadInt(0);
+		uniform_lineTotal.loadInt(0);
+		uniform_lineAlpha.loadFloat(1f);
+		GL20.glUseProgram(0);
 		
 		postProcessingProgram = new ShaderProgram(
 				new int[]{0, 1},
@@ -457,6 +488,7 @@ public enum Game implements Listener {
 		GL20.glUseProgram(postProcessingProgram.getId());
 		quad.render();
 		GL20.glUseProgram(0);
+		renderFPS();
 		num+=1f;
 	}
 	float num = 0;
@@ -499,6 +531,14 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL20.glUseProgram(cubemapProgram.getId());
 		skybox.render();
+		GL20.glUseProgram(0);
+		GL11.glDisable(GL11.GL_BLEND);
+	}
+	public void renderFPS(){
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL20.glUseProgram(lineProgram.getId());
+		fpsData.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
