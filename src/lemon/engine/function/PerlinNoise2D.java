@@ -4,10 +4,13 @@ public class PerlinNoise2D implements Function2D<Float, Float> {
 	private HashFunction hasher;
 	private PairingFunction pairer;
 	private AbsoluteValue abs;
-	private float persistence;
+	private Function2D<Float, Float> persistence;
 	private int iterations;
-	
+
 	public PerlinNoise2D(HashFunction hasher, PairingFunction pairer, float persistence, int iterations){
+		this(hasher, pairer, new ConstantFunction2D<Float, Float>(persistence), iterations);
+	}
+	public PerlinNoise2D(HashFunction hasher, PairingFunction pairer, Function2D<Float, Float> persistence, int iterations){
 		this.hasher = hasher;
 		this.pairer = pairer;
 		abs = new AbsoluteValue();
@@ -19,7 +22,7 @@ public class PerlinNoise2D implements Function2D<Float, Float> {
 		float output = 0;
 		for(int i=0;i<iterations;++i){
 			float frequency = (float)Math.pow(2, i);
-			float amplitude = (float)Math.pow(persistence, i);
+			float amplitude = (float)Math.pow(persistence.resolve(x, y), i);
 			output+=interpolatedNoise(x*frequency, y*frequency)*amplitude;
 		}
 		return output;
