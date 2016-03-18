@@ -60,7 +60,8 @@ public class GLFWWindow {
 			long renderTime = System.nanoTime();
 			EventManager.INSTANCE.callListeners(new LemonRenderEvent());
 			renderTime = System.nanoTime()-renderTime;
-			Game.INSTANCE.fpsData.add((float)(updateTime+renderTime));
+			Game.INSTANCE.updateData.add((float)(updateTime));
+			Game.INSTANCE.renderData.add((float)(renderTime));
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());

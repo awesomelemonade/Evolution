@@ -13,6 +13,5 @@ uniform float alpha;
 
 void main(void){
 	gl_Position = vec4(id * spacing - 1f, value, 0, 1);
-	passColor = vec4(1f, 0f, 0f, 1f);
-	//passColor = vec4(color.rgb, alphaFactor*int(gl_InstanceID/total)
+	passColor = vec4(color.rgb, 1f);
 }
