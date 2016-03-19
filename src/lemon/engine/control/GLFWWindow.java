@@ -62,6 +62,7 @@ public class GLFWWindow {
 			renderTime = System.nanoTime()-renderTime;
 			Game.INSTANCE.updateData.add((float)(updateTime));
 			Game.INSTANCE.renderData.add((float)(renderTime));
+			Game.INSTANCE.fpsData.add(settings.getTargetFrameRate()-timeSync.getFps());
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());

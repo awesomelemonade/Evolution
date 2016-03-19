@@ -19,9 +19,9 @@ public class FpsData implements Renderable {
 	private float max;
 	private VertexArray vertexArray;
 	private VertexBuffer vertexBuffer;
-	public FpsData(int size, float... values){
+	public FpsData(int size, float max, float... values){
 		this.size = size;
-		this.max = 100000000;
+		this.max = max;
 		this.values = new LinkedList<Float>();
 		for(float f: values){
 			this.values.add(f);
@@ -60,6 +60,7 @@ public class FpsData implements Renderable {
 		}
 		dataBuffer.flip();
 		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, dataBuffer, GL15.GL_STREAM_DRAW);
+		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 	}
 	private void ensureCapacity(){
 		while(this.values.size()>size){

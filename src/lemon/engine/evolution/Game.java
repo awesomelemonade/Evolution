@@ -101,6 +101,7 @@ public enum Game implements Listener {
 	private UniformVariable uniform_lineTotal;
 	private UniformVariable uniform_lineAlpha;
 	
+	public FpsData fpsData;
 	public FpsData updateData;
 	public FpsData renderData;
 	
@@ -140,9 +141,10 @@ public enum Game implements Listener {
 		Quad.INSTANCE.init();
 		terrain = new HeightMap(heights, TILE_SIZE);
 		segments = new ArrayList<Renderable>();
-
-		updateData = new FpsData(1000);
-		renderData = new FpsData(1000);
+		
+		fpsData = new FpsData(1000, 100);
+		updateData = new FpsData(1000, 100000000);
+		renderData = new FpsData(1000, 100000000);
 		
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
@@ -209,7 +211,7 @@ public enum Game implements Listener {
 		uniform_lineAlpha = lineProgram.getUniformVariable("alpha");
 		GL20.glUseProgram(lineProgram.getId());
 		uniform_lineColor.loadVector(new Vector(1f, 0f, 0f));
-		uniform_lineSpacing.loadFloat(2f/(updateData.getSize()-1));
+		uniform_lineSpacing.loadFloat(2f/(fpsData.getSize()-1));
 		uniform_lineIndex.loadInt(0);
 		uniform_lineTotal.loadInt(0);
 		uniform_lineAlpha.loadFloat(1f);
@@ -541,9 +543,14 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL20.glUseProgram(lineProgram.getId());
 		uniform_lineColor.loadVector(new Vector(1f, 0f, 0f));
+		uniform_lineSpacing.loadFloat(2f/(updateData.getSize()-1));
 		updateData.render();
 		uniform_lineColor.loadVector(new Vector(1f, 1f, 0f));
+		uniform_lineSpacing.loadFloat(2f/(renderData.getSize()-1));
 		renderData.render();
+		uniform_lineColor.loadVector(new Vector(1f, 0f, 1f));
+		uniform_lineSpacing.loadFloat(2f/(fpsData.getSize()-1));
+		fpsData.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
