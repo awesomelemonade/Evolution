@@ -87,9 +87,14 @@ public class HeightMap implements Renderable {
 		dataBuffer.put((i+offsetX)*tileSize-(map.length*tileSize/2)+tileSize/2);
 		dataBuffer.put(map[i+offsetX][j+offsetZ]);
 		dataBuffer.put((j+offsetZ)*tileSize-(map[0].length*tileSize/2)+tileSize/2);
-		dataBuffer.put(avgHeight/20f+0.2f);
-		dataBuffer.put(avgHeight/5f+2f);
-		dataBuffer.put(1-(avgHeight)-5f);
+		//dataBuffer.put(avgHeight/20f+0.2f);
+		//dataBuffer.put(avgHeight/5f+2f);
+		//dataBuffer.put(1-(avgHeight)-5f);
+		dataBuffer.put((avgHeight+12f)/20f);
+		dataBuffer.put((avgHeight+12f)/20f);
+		dataBuffer.put((avgHeight+12f)/20f);
+		//dataBuffer.put(avgHeight);
+		//dataBuffer.put(avgHeight);
 		dataBuffer.put(1f);
 	}
 	@Override
