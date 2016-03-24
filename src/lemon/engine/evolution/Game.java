@@ -126,16 +126,53 @@ public enum Game implements Listener {
 		
 		terrainGenerator = new TerrainGenerator(0);
 		
-		float[][] heights = new float[Math.max((int) (100f/TILE_SIZE), 2)][Math.max((int) (100f/TILE_SIZE), 2)];
+		final float[][] heights = new float[Math.max((int) (100f/TILE_SIZE), 2)][Math.max((int) (100f/TILE_SIZE), 2)];
 		
-		for(int i=0;i<heights.length;++i){
-			for(int j=0;j<heights[0].length;++j){
-				if(Math.random()<0.001){
-					logger.log(Level.INFO, ((((float)(i*heights.length+j))/((float)(heights.length*heights[0].length)))*100f)+"%");
+		final int THREADS = 4;
+		
+		final boolean[] threads = new boolean[THREADS-1];
+		
+		final int size = heights.length/(threads.length+1);
+		
+		long time = System.nanoTime();
+		
+		for(int i=0;i<threads.length;++i){
+			final int index = i;
+			new Thread(new Runnable(){
+				@Override
+				public void run() {
+					for(int j=index*size;j<index*size+size;j++){
+						for(int k=0;k<heights[0].length;++k){
+							heights[j][k] = terrainGenerator.generate(j, k);
+						}
+					}
+					threads[index] = true;
 				}
-				heights[i][j] = terrainGenerator.generate(i, j);
+			}).start();
+		}
+		for(int j=threads.length*size;j<heights.length;j++){
+			for(int k=0;k<heights[0].length;++k){
+				heights[j][k] = terrainGenerator.generate(j, k);
 			}
 		}
+		while(true){
+			boolean br = true;
+			for(boolean b: threads){
+				if(!b){
+					br = false;
+				}
+			}
+			if(br){
+				break;
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		logger.log(Level.INFO, "Completed in "+((System.nanoTime()-time)/1000000000.0)+"s");
 		
 		Skybox.INSTANCE.init();
 		Quad.INSTANCE.init();
