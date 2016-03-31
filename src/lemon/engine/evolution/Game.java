@@ -107,13 +107,21 @@ public enum Game implements Listener {
 	//private Entity quadEntity;
 	private Texture texture;
 	
-	private TerrainGenerator terrainGenerator;
+	private TerrainLoader terrainLoader;
 	
 	private List<Vector> entities;
 	
 	private List<Renderable> segments;
 	
+	public TerrainLoader getTerrainLoader(){
+		if(terrainLoader==null){
+			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (500f/TILE_SIZE), 2), Math.max((int) (500f/TILE_SIZE), 2));
+		}
+		return terrainLoader;
+	}
+	
 	public void init(long window){
+		logger.log(Level.FINE, "Initializing");
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(window, width, height);
@@ -122,59 +130,9 @@ public enum Game implements Listener {
 		
 		GL11.glViewport(0, 0, window_width, window_height);
 		
-		terrainGenerator = new TerrainGenerator(0);
-		
-		final float[][] heights = new float[Math.max((int) (500f/TILE_SIZE), 2)][Math.max((int) (500f/TILE_SIZE), 2)];
-		
-		final int THREADS = 4;
-		
-		final boolean[] threads = new boolean[THREADS-1];
-		
-		final int size = heights.length/(threads.length+1);
-		
-		long time = System.nanoTime();
-		
-		for(int i=0;i<threads.length;++i){
-			final int index = i;
-			new Thread(new Runnable(){
-				@Override
-				public void run() {
-					for(int j=index*size;j<index*size+size;j++){
-						for(int k=0;k<heights[0].length;++k){
-							heights[j][k] = terrainGenerator.generate(j, k);
-						}
-					}
-					threads[index] = true;
-				}
-			}).start();
-		}
-		for(int j=threads.length*size;j<heights.length;j++){
-			for(int k=0;k<heights[0].length;++k){
-				heights[j][k] = terrainGenerator.generate(j, k);
-			}
-		}
-		while(true){
-			boolean br = true;
-			for(boolean b: threads){
-				if(!b){
-					br = false;
-				}
-			}
-			if(br){
-				break;
-			}
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		logger.log(Level.INFO, "Completed in "+((System.nanoTime()-time)/1000000000.0)+"s");
-		
 		Skybox.INSTANCE.init();
 		Quad.INSTANCE.init();
-		terrain = new HeightMap(heights, TILE_SIZE);
+		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 		segments = new ArrayList<Renderable>();
 		
 		fpsData = new FpsData(1000, 100);
