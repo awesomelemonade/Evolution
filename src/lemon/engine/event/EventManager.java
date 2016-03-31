@@ -47,6 +47,7 @@ public enum EventManager {
 		}
 	}
 	public void callListeners(Event event){
+		boolean nestedInEvent = inEvent;
 		inEvent = true;
 		if(!preloaded.containsKey(event.getClass())){
 			preload(event.getClass());
@@ -60,11 +61,13 @@ public enum EventManager {
 				logger.log(Level.WARNING, ex.getCause().getMessage(), ex.getCause());
 			}
 		}
-		inEvent = false;
-		if(!registrationQueue.isEmpty()){
-			Listener listener;
-			while((listener=registrationQueue.poll())!=null){
-				internalRegisterListener(listener);
+		if(!nestedInEvent){
+			inEvent = false;
+			if(!registrationQueue.isEmpty()){
+				Listener listener;
+				while((listener=registrationQueue.poll())!=null){
+					internalRegisterListener(listener);
+				}
 			}
 		}
 	}
