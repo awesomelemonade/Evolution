@@ -23,7 +23,6 @@ import org.lwjgl.opengl.GL32;
 
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
-import lemon.engine.control.WindowInitEvent;
 import lemon.engine.entity.FpsData;
 import lemon.engine.entity.HeightMap;
 import lemon.engine.entity.Quad;
@@ -114,11 +113,10 @@ public enum Game implements Listener {
 	
 	private List<Renderable> segments;
 	
-	@Subscribe
-	public void init(WindowInitEvent event){
+	public void init(long window){
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
-		GLFW.glfwGetWindowSize(event.getWindow(), width, height);
+		GLFW.glfwGetWindowSize(window, width, height);
 		int window_width = width.get();
 		int window_height = height.get();
 		
@@ -186,7 +184,7 @@ public enum Game implements Listener {
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
 		skybox = Skybox.INSTANCE;
-		Matrix projectionMatrix = MathUtil.getPerspective(60f, MathUtil.getAspectRatio(event.getWindow()), 0.01f, 1000f);
+		Matrix projectionMatrix = MathUtil.getPerspective(60f, MathUtil.getAspectRatio(window), 0.01f, 1000f);
 		
 		program = new ShaderProgram(
 			new int[]{0, 1},

@@ -42,7 +42,7 @@ public class Evolution {
 		};
 		final GLFWWindow window = new GLFWWindow(settings);
 		try{
-			EventManager.INSTANCE.registerListener(Game.INSTANCE);
+			EventManager.INSTANCE.registerListener(Loading.INSTANCE);
 			EventManager.INSTANCE.registerListener(new Listener(){
 				@Subscribe
 				public void onKeyPress(KeyEvent event){
