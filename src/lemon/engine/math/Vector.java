@@ -33,6 +33,12 @@ public class Vector {
 	public float getZ(){
 		return z;
 	}
+	public void normalize(){
+		float magnitude = (float)Math.sqrt(Math.pow(x, 2)+Math.pow(y, 2)+Math.pow(z, 2));
+		this.x = x/magnitude;
+		this.y = y/magnitude;
+		this.z = z/magnitude;
+	}
 	public Vector getInvert(){
 		return new Vector(-x, -y, -z);
 	}
