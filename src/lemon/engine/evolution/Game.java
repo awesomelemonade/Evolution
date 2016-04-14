@@ -23,6 +23,7 @@ import org.lwjgl.opengl.GL32;
 
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
+import lemon.engine.entity.Camera;
 import lemon.engine.entity.FpsData;
 import lemon.engine.entity.HeightMap;
 import lemon.engine.entity.Quad;
@@ -59,8 +60,7 @@ public enum Game implements Listener {
 	private UniformVariable uniform_viewMatrix;
 	private UniformVariable uniform_projectionMatrix;
 	
-	private Vector translation;
-	private Vector rotation;
+	private Camera camera;
 	
 	private PlayerControls<Integer, Integer> controls;
 	
@@ -142,6 +142,7 @@ public enum Game implements Listener {
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
 		skybox = Skybox.INSTANCE;
+		camera = new Camera();
 		Matrix projectionMatrix = MathUtil.getPerspective(60f, MathUtil.getAspectRatio(window), 0.01f, 1000f);
 		
 		program = new ShaderProgram(
@@ -155,8 +156,6 @@ public enum Game implements Listener {
 		uniform_projectionMatrix = program.getUniformVariable("projectionMatrix");
 		GL20.glUseProgram(program.getId());
 		uniform_modelMatrix.loadMatrix(Matrix.getIdentity(4));
-		translation = new Vector(0f, 0f, 0f);
-		rotation = new Vector(0f, 0f, 0f);
 		uniform_projectionMatrix.loadMatrix(projectionMatrix);
 		GL20.glUseProgram(0);
 		updateViewMatrix(program, uniform_viewMatrix);
@@ -278,49 +277,49 @@ public enum Game implements Listener {
 	@Subscribe
 	public void update(UpdateEvent event){
 		if(controls.hasStates()){
-			float angle = (rotation.getY()+90)*(((float)Math.PI)/180f);
+			float angle = (camera.getRotation().getY()+90)*(((float)Math.PI)/180f);
 			float sin = (float)Math.sin(angle);
 			float cos = (float)Math.cos(angle);
 			if(controls.getState(GLFW.GLFW_KEY_A)){
-				translation.setX(translation.getX()-((float)(playerSpeed))*sin);
-				translation.setZ(translation.getZ()-((float)(playerSpeed))*cos);
+				camera.getPosition().setX(camera.getPosition().getX()-((float)(playerSpeed))*sin);
+				camera.getPosition().setZ(camera.getPosition().getZ()-((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_D)){
-				translation.setX(translation.getX()+((float)(playerSpeed))*sin);
-				translation.setZ(translation.getZ()+((float)(playerSpeed))*cos);
+				camera.getPosition().setX(camera.getPosition().getX()+((float)(playerSpeed))*sin);
+				camera.getPosition().setZ(camera.getPosition().getZ()+((float)(playerSpeed))*cos);
 			}
-			angle = rotation.getY()*(((float)Math.PI)/180f);
+			angle = camera.getRotation().getY()*(((float)Math.PI)/180f);
 			sin = (float)Math.sin(angle);
 			cos = (float)Math.cos(angle);
 			if(controls.getState(GLFW.GLFW_KEY_W)){
-				translation.setX(translation.getX()-((float)(playerSpeed))*sin);
-				translation.setZ(translation.getZ()-((float)(playerSpeed))*cos);
+				camera.getPosition().setX(camera.getPosition().getX()-((float)(playerSpeed))*sin);
+				camera.getPosition().setZ(camera.getPosition().getZ()-((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_S)){
-				translation.setX(translation.getX()+((float)(playerSpeed))*sin);
-				translation.setZ(translation.getZ()+((float)(playerSpeed))*cos);
+				camera.getPosition().setX(camera.getPosition().getX()+((float)(playerSpeed))*sin);
+				camera.getPosition().setZ(camera.getPosition().getZ()+((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_SPACE)){
-				translation.setY(translation.getY()+((float)(playerSpeed)));
+				camera.getPosition().setY(camera.getPosition().getY()+((float)(playerSpeed)));
 			}
 			if(controls.getState(GLFW.GLFW_KEY_LEFT_SHIFT)){
-				translation.setY(translation.getY()-((float)(playerSpeed)));
+				camera.getPosition().setY(camera.getPosition().getY()-((float)(playerSpeed)));
 			}
 			if(controls.getState(GLFW.GLFW_KEY_T)){
 				/*int x = (int)(Math.random()*terrain.getWidth());
 				int y = (int)(Math.random()*terrain.getHeight());*/
-				float x = toArrayCoord(translation.getX(), terrain.getWidth());
-				float z = toArrayCoord(translation.getZ(), terrain.getHeight());
+				float x = toArrayCoord(camera.getPosition().getX(), terrain.getWidth());
+				float z = toArrayCoord(camera.getPosition().getZ(), terrain.getHeight());
 				int intX = (int)x;
 				int intZ = (int)z;
 				if(intX>0&&intZ>0&&intX<terrain.getWidth()&&intZ<terrain.getHeight()){
-					Vector vector = new Vector(translation);
+					Vector vector = new Vector(camera.getPosition());
 					vector.setY(getHeight(x, z));
 					entities.add(vector);
 					//terrain.set(x, y, terrain.get(x, y)+((float)Math.random()));
 					//terrain.update();
 				}
-				segments.add(new Segment(new Vector(0, 0, 0), translation));
+				segments.add(new Segment(new Vector(0, 0, 0), camera.getPosition()));
 			}
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
@@ -436,13 +435,13 @@ public enum Game implements Listener {
 		mouseX = event.getX();
 		mouseY = event.getY();
 		if(controls.getState(GLFW.GLFW_MOUSE_BUTTON_1)){
-			rotation.setY((float) (rotation.getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY));
-			rotation.setX((float) (rotation.getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
-			if(rotation.getX()<-90){
-				rotation.setX(-90);
+			camera.getRotation().setY((float) (camera.getRotation().getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY));
+			camera.getRotation().setX((float) (camera.getRotation().getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
+			if(camera.getRotation().getX()<-90){
+				camera.getRotation().setX(-90);
 			}
-			if(rotation.getX()>90){
-				rotation.setX(90);
+			if(camera.getRotation().getX()>90){
+				camera.getRotation().setX(90);
 			}
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
@@ -451,20 +450,12 @@ public enum Game implements Listener {
 	}
 	public void updateViewMatrix(ShaderProgram program, UniformVariable variable){
 		GL20.glUseProgram(program.getId());
-		Vector translation = this.translation.getInvert();
-		Vector rotation = this.rotation.getInvert();
-		
-		Matrix translationMatrix = MathUtil.getTranslation(translation);
-		Matrix rotationMatrix = MathUtil.getRotationX(rotation.getX()).multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
-		variable.loadMatrix(rotationMatrix.multiply(translationMatrix));
+		variable.loadMatrix(camera.getInvertedRotationMatrix().multiply(camera.getInvertedTranslationMatrix()));
 		GL20.glUseProgram(0);
 	}
 	public void updateCubeMapMatrix(ShaderProgram program, UniformVariable variable){
 		GL20.glUseProgram(program.getId());
-		Vector rotation = this.rotation.getInvert();
-		
-		Matrix rotationMatrix = MathUtil.getRotationX(rotation.getX()).multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
-		variable.loadMatrix(rotationMatrix);
+		variable.loadMatrix(camera.getInvertedRotationMatrix());
 		GL20.glUseProgram(0);
 	}
 	@Subscribe
