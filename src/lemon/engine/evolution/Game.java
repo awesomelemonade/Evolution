@@ -142,8 +142,8 @@ public enum Game implements Listener {
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
 		skybox = Skybox.INSTANCE;
-		camera = new Camera();
-		Matrix projectionMatrix = MathUtil.getPerspective(60f, MathUtil.getAspectRatio(window), 0.01f, 1000f);
+		camera = new Camera(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f);
+		Matrix projectionMatrix = camera.getProjectionMatrix();
 		
 		program = new ShaderProgram(
 			new int[]{0, 1},

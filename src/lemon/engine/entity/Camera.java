@@ -7,12 +7,20 @@ import lemon.engine.math.Vector;
 public class Camera {
 	private Vector position;
 	private Vector rotation;
-	public Camera(){
-		this(new Vector(), new Vector());
+	private float fov;
+	private float aspectRatio;
+	private float nearPlane;
+	private float farPlane;
+	public Camera(float fov, float aspectRatio, float nearPlane, float farPlane){
+		this(new Vector(), new Vector(), fov, aspectRatio, nearPlane, farPlane);
 	}
-	public Camera(Vector position, Vector rotation){
+	public Camera(Vector position, Vector rotation, float fov, float aspectRatio, float nearPlane, float farPlane){
 		this.position = position;
 		this.rotation = rotation;
+		this.fov = fov;
+		this.aspectRatio = aspectRatio;
+		this.nearPlane = nearPlane;
+		this.farPlane = farPlane;
 	}
 	public Vector getPosition(){
 		return position;
@@ -27,5 +35,8 @@ public class Camera {
 	public Matrix getInvertedRotationMatrix(){
 		Vector rotation = this.rotation.getInvert();
 		return MathUtil.getRotationX(rotation.getX()).multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
+	}
+	public Matrix getProjectionMatrix(){
+		return MathUtil.getPerspective(fov, aspectRatio, nearPlane, farPlane);
 	}
 }
