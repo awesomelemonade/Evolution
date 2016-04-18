@@ -422,6 +422,10 @@ public enum Game implements Listener {
 		if(playerSpeed<0){
 			playerSpeed = 0;
 		}
+		camera.setZoom(camera.getZoom()+((float)(event.getYOffset()/100f)));
+		updateProjectionMatrix(program, uniform_projectionMatrix);
+		updateProjectionMatrix(textureProgram, uniform_textureProjectionMatrix);
+		updateProjectionMatrix(cubemapProgram, uniform_cubemapProjectionMatrix);
 	}
 	private double lastMouseX;
 	private double lastMouseY;
@@ -456,6 +460,11 @@ public enum Game implements Listener {
 	public void updateCubeMapMatrix(ShaderProgram program, UniformVariable variable){
 		GL20.glUseProgram(program.getId());
 		variable.loadMatrix(camera.getInvertedRotationMatrix());
+		GL20.glUseProgram(0);
+	}
+	public void updateProjectionMatrix(ShaderProgram program, UniformVariable variable){
+		GL20.glUseProgram(program.getId());
+		variable.loadMatrix(camera.getProjectionMatrix());
 		GL20.glUseProgram(0);
 	}
 	@Subscribe
