@@ -23,7 +23,6 @@ import org.lwjgl.opengl.GL32;
 
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
-import lemon.engine.entity.Camera;
 import lemon.engine.entity.FpsData;
 import lemon.engine.entity.HeightMap;
 import lemon.engine.entity.Quad;
@@ -38,8 +37,10 @@ import lemon.engine.input.KeyEvent;
 import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.loader.SkyboxLoader;
+import lemon.engine.math.Camera;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Projection;
 import lemon.engine.math.Vector;
 import lemon.engine.render.Renderable;
 import lemon.engine.render.Shader;
@@ -142,7 +143,7 @@ public enum Game implements Listener {
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
 		skybox = Skybox.INSTANCE;
-		camera = new Camera(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f);
+		camera = new Camera(new Projection(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f));
 		Matrix projectionMatrix = camera.getProjectionMatrix();
 		
 		program = new ShaderProgram(
@@ -422,7 +423,7 @@ public enum Game implements Listener {
 		if(playerSpeed<0){
 			playerSpeed = 0;
 		}
-		camera.setZoom(camera.getZoom()+((float)(event.getYOffset()/100f)));
+		camera.getProjection().setFov(camera.getProjection().getFov()+((float)(event.getYOffset()/100f)));
 		updateProjectionMatrix(program, uniform_projectionMatrix);
 		updateProjectionMatrix(textureProgram, uniform_textureProjectionMatrix);
 		updateProjectionMatrix(cubemapProgram, uniform_cubemapProjectionMatrix);
