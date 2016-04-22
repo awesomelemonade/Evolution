@@ -1,14 +1,10 @@
 package lemon.engine.evolution;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import lemon.engine.control.Loader;
 import lemon.engine.math.Percentage;
 import lemon.engine.terrain.TerrainGenerator;
 
 public class TerrainLoader implements Loader {
-	private static final Logger logger = Logger.getLogger(TerrainLoader.class.getName());
 	private TerrainGenerator terrainGenerator;
 	private float[][] terrain;
 	private Percentage percentage;
@@ -23,13 +19,11 @@ public class TerrainLoader implements Loader {
 		
 		final boolean[] threads = new boolean[THREADS];
 		
-		percentage.setWhole(threads.length);
+		percentage.setWhole(terrain.length*terrain[0].length);
 		
 		final int size = terrain.length/(threads.length);
 		
-		long time = System.nanoTime();
-		
-		for(int i=0;i<threads.length;++i){
+		for(int i=0;i<threads.length-1;++i){
 			final int index = i;
 			new Thread(new Runnable(){
 				@Override
@@ -37,14 +31,28 @@ public class TerrainLoader implements Loader {
 					for(int j=index*size;j<index*size+size;j++){
 						for(int k=0;k<terrain[0].length;++k){
 							terrain[j][k] = terrainGenerator.generate(j, k);
+							synchronized(percentage){
+								percentage.setPart(percentage.getPart()+1);
+							}
 						}
 					}
 					threads[index] = true;
-					percentage.setPart(percentage.getPart()+1);
 				}
 			}).start();
 		}
-		logger.log(Level.INFO, "Completed in "+((System.nanoTime()-time)/1000000000.0)+"s");
+		new Thread(new Runnable(){
+			@Override
+			public void run() {
+				for(int i=(threads.length-1)*size;i<terrain.length;++i){
+					for(int j=0;j<terrain[0].length;++j){
+						terrain[i][j] = terrainGenerator.generate(i, j);
+						synchronized(percentage){
+							percentage.setPart(percentage.getPart()+1);
+						}
+					}
+				}
+			}
+		}).start();
 	}
 	@Override
 	public Percentage getPercentage() {
