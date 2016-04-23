@@ -31,13 +31,13 @@ import lemon.engine.entity.Skybox;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
+import lemon.engine.game.Player;
 import lemon.engine.game.PlayerControls;
 import lemon.engine.input.CursorPositionEvent;
 import lemon.engine.input.KeyEvent;
 import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.loader.SkyboxLoader;
-import lemon.engine.math.Camera;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
@@ -61,7 +61,7 @@ public enum Game implements Listener {
 	private UniformVariable uniform_viewMatrix;
 	private UniformVariable uniform_projectionMatrix;
 	
-	private Camera camera;
+	private Player player;
 	
 	private PlayerControls<Integer, Integer> controls;
 	
@@ -143,8 +143,8 @@ public enum Game implements Listener {
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
 		skybox = Skybox.INSTANCE;
-		camera = new Camera(new Projection(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f));
-		Matrix projectionMatrix = camera.getProjectionMatrix();
+		player = new Player(new Projection(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f));
+		Matrix projectionMatrix = player.getCamera().getProjectionMatrix();
 		
 		program = new ShaderProgram(
 			new int[]{0, 1},
@@ -278,49 +278,49 @@ public enum Game implements Listener {
 	@Subscribe
 	public void update(UpdateEvent event){
 		if(controls.hasStates()){
-			float angle = (camera.getRotation().getY()+90)*(((float)Math.PI)/180f);
+			float angle = (player.getCamera().getRotation().getY()+90)*(((float)Math.PI)/180f);
 			float sin = (float)Math.sin(angle);
 			float cos = (float)Math.cos(angle);
 			if(controls.getState(GLFW.GLFW_KEY_A)){
-				camera.getPosition().setX(camera.getPosition().getX()-((float)(playerSpeed))*sin);
-				camera.getPosition().setZ(camera.getPosition().getZ()-((float)(playerSpeed))*cos);
+				player.getCamera().getPosition().setX(player.getCamera().getPosition().getX()-((float)(playerSpeed))*sin);
+				player.getCamera().getPosition().setZ(player.getCamera().getPosition().getZ()-((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_D)){
-				camera.getPosition().setX(camera.getPosition().getX()+((float)(playerSpeed))*sin);
-				camera.getPosition().setZ(camera.getPosition().getZ()+((float)(playerSpeed))*cos);
+				player.getCamera().getPosition().setX(player.getCamera().getPosition().getX()+((float)(playerSpeed))*sin);
+				player.getCamera().getPosition().setZ(player.getCamera().getPosition().getZ()+((float)(playerSpeed))*cos);
 			}
-			angle = camera.getRotation().getY()*(((float)Math.PI)/180f);
+			angle = player.getCamera().getRotation().getY()*(((float)Math.PI)/180f);
 			sin = (float)Math.sin(angle);
 			cos = (float)Math.cos(angle);
 			if(controls.getState(GLFW.GLFW_KEY_W)){
-				camera.getPosition().setX(camera.getPosition().getX()-((float)(playerSpeed))*sin);
-				camera.getPosition().setZ(camera.getPosition().getZ()-((float)(playerSpeed))*cos);
+				player.getCamera().getPosition().setX(player.getCamera().getPosition().getX()-((float)(playerSpeed))*sin);
+				player.getCamera().getPosition().setZ(player.getCamera().getPosition().getZ()-((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_S)){
-				camera.getPosition().setX(camera.getPosition().getX()+((float)(playerSpeed))*sin);
-				camera.getPosition().setZ(camera.getPosition().getZ()+((float)(playerSpeed))*cos);
+				player.getCamera().getPosition().setX(player.getCamera().getPosition().getX()+((float)(playerSpeed))*sin);
+				player.getCamera().getPosition().setZ(player.getCamera().getPosition().getZ()+((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_SPACE)){
-				camera.getPosition().setY(camera.getPosition().getY()+((float)(playerSpeed)));
+				player.getCamera().getPosition().setY(player.getCamera().getPosition().getY()+((float)(playerSpeed)));
 			}
 			if(controls.getState(GLFW.GLFW_KEY_LEFT_SHIFT)){
-				camera.getPosition().setY(camera.getPosition().getY()-((float)(playerSpeed)));
+				player.getCamera().getPosition().setY(player.getCamera().getPosition().getY()-((float)(playerSpeed)));
 			}
 			if(controls.getState(GLFW.GLFW_KEY_T)){
 				/*int x = (int)(Math.random()*terrain.getWidth());
 				int y = (int)(Math.random()*terrain.getHeight());*/
-				float x = toArrayCoord(camera.getPosition().getX(), terrain.getWidth());
-				float z = toArrayCoord(camera.getPosition().getZ(), terrain.getHeight());
+				float x = toArrayCoord(player.getCamera().getPosition().getX(), terrain.getWidth());
+				float z = toArrayCoord(player.getCamera().getPosition().getZ(), terrain.getHeight());
 				int intX = (int)x;
 				int intZ = (int)z;
 				if(intX>0&&intZ>0&&intX<terrain.getWidth()&&intZ<terrain.getHeight()){
-					Vector vector = new Vector(camera.getPosition());
+					Vector vector = new Vector(player.getCamera().getPosition());
 					vector.setY(getHeight(x, z));
 					entities.add(vector);
 					//terrain.set(x, y, terrain.get(x, y)+((float)Math.random()));
 					//terrain.update();
 				}
-				segments.add(new Segment(new Vector(0, 0, 0), camera.getPosition()));
+				segments.add(new Segment(new Vector(0, 0, 0), player.getCamera().getPosition()));
 			}
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
@@ -423,7 +423,7 @@ public enum Game implements Listener {
 		if(playerSpeed<0){
 			playerSpeed = 0;
 		}
-		camera.getProjection().setFov(camera.getProjection().getFov()+((float)(event.getYOffset()/100f)));
+		player.getCamera().getProjection().setFov(player.getCamera().getProjection().getFov()+((float)(event.getYOffset()/100f)));
 		updateProjectionMatrix(program, uniform_projectionMatrix);
 		updateProjectionMatrix(textureProgram, uniform_textureProjectionMatrix);
 		updateProjectionMatrix(cubemapProgram, uniform_cubemapProjectionMatrix);
@@ -440,13 +440,13 @@ public enum Game implements Listener {
 		mouseX = event.getX();
 		mouseY = event.getY();
 		if(controls.getState(GLFW.GLFW_MOUSE_BUTTON_1)){
-			camera.getRotation().setY((float) (camera.getRotation().getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY));
-			camera.getRotation().setX((float) (camera.getRotation().getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
-			if(camera.getRotation().getX()<-90){
-				camera.getRotation().setX(-90);
+			player.getCamera().getRotation().setY((float) (player.getCamera().getRotation().getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY));
+			player.getCamera().getRotation().setX((float) (player.getCamera().getRotation().getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
+			if(player.getCamera().getRotation().getX()<-90){
+				player.getCamera().getRotation().setX(-90);
 			}
-			if(camera.getRotation().getX()>90){
-				camera.getRotation().setX(90);
+			if(player.getCamera().getRotation().getX()>90){
+				player.getCamera().getRotation().setX(90);
 			}
 		}
 		updateViewMatrix(program, uniform_viewMatrix);
@@ -455,17 +455,17 @@ public enum Game implements Listener {
 	}
 	public void updateViewMatrix(ShaderProgram program, UniformVariable variable){
 		GL20.glUseProgram(program.getId());
-		variable.loadMatrix(camera.getInvertedRotationMatrix().multiply(camera.getInvertedTranslationMatrix()));
+		variable.loadMatrix(player.getCamera().getInvertedRotationMatrix().multiply(player.getCamera().getInvertedTranslationMatrix()));
 		GL20.glUseProgram(0);
 	}
 	public void updateCubeMapMatrix(ShaderProgram program, UniformVariable variable){
 		GL20.glUseProgram(program.getId());
-		variable.loadMatrix(camera.getInvertedRotationMatrix());
+		variable.loadMatrix(player.getCamera().getInvertedRotationMatrix());
 		GL20.glUseProgram(0);
 	}
 	public void updateProjectionMatrix(ShaderProgram program, UniformVariable variable){
 		GL20.glUseProgram(program.getId());
-		variable.loadMatrix(camera.getProjectionMatrix());
+		variable.loadMatrix(player.getCamera().getProjectionMatrix());
 		GL20.glUseProgram(0);
 	}
 	@Subscribe
