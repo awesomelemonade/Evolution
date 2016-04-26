@@ -46,6 +46,7 @@ public class GLFWWindow {
 	public void run(){
 		EventManager.INSTANCE.preload(LemonUpdateEvent.class);
 		EventManager.INSTANCE.preload(LemonRenderEvent.class);
+		long deltaTime = System.nanoTime();
 		while(GLFW.glfwWindowShouldClose(window)==GL11.GL_FALSE){
 			int error = GL11.glGetError();
 			while(error!=GL11.GL_NO_ERROR){
@@ -55,14 +56,16 @@ public class GLFWWindow {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			//Event Driven
 			long updateTime = System.nanoTime();
-			EventManager.INSTANCE.callListeners(new LemonUpdateEvent());
+			long delta = updateTime-deltaTime;
+			EventManager.INSTANCE.callListeners(new LemonUpdateEvent(delta));
+			deltaTime = updateTime;
 			updateTime = System.nanoTime()-updateTime;
 			long renderTime = System.nanoTime();
 			EventManager.INSTANCE.callListeners(new LemonRenderEvent());
 			renderTime = System.nanoTime()-renderTime;
 			Game.INSTANCE.updateData.add((float)(updateTime));
 			Game.INSTANCE.renderData.add((float)(renderTime));
-			Game.INSTANCE.fpsData.add(settings.getTargetFrameRate()-timeSync.getFps());
+			Game.INSTANCE.fpsData.add(((float)delta)/1000000f);
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());
