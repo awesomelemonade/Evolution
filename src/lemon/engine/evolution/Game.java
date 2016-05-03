@@ -274,7 +274,7 @@ public enum Game implements Listener {
 			}
 		}
 	}
-	private static float playerSpeed = 0.15f;
+	private static float playerSpeed = 0.01f;
 	@Subscribe
 	public void update(UpdateEvent event){
 		if(controls.hasStates()){
@@ -282,29 +282,29 @@ public enum Game implements Listener {
 			float sin = (float)Math.sin(angle);
 			float cos = (float)Math.cos(angle);
 			if(controls.getState(GLFW.GLFW_KEY_A)){
-				player.getCamera().getPosition().setX(player.getCamera().getPosition().getX()-((float)(playerSpeed))*sin);
-				player.getCamera().getPosition().setZ(player.getCamera().getPosition().getZ()-((float)(playerSpeed))*cos);
+				player.getVelocity().setX(player.getVelocity().getX()-((float)(playerSpeed))*sin);
+				player.getVelocity().setZ(player.getVelocity().getZ()-((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_D)){
-				player.getCamera().getPosition().setX(player.getCamera().getPosition().getX()+((float)(playerSpeed))*sin);
-				player.getCamera().getPosition().setZ(player.getCamera().getPosition().getZ()+((float)(playerSpeed))*cos);
+				player.getVelocity().setX(player.getVelocity().getX()+((float)(playerSpeed))*sin);
+				player.getVelocity().setZ(player.getVelocity().getZ()+((float)(playerSpeed))*cos);
 			}
 			angle = player.getCamera().getRotation().getY()*(((float)Math.PI)/180f);
 			sin = (float)Math.sin(angle);
 			cos = (float)Math.cos(angle);
 			if(controls.getState(GLFW.GLFW_KEY_W)){
-				player.getCamera().getPosition().setX(player.getCamera().getPosition().getX()-((float)(playerSpeed))*sin);
-				player.getCamera().getPosition().setZ(player.getCamera().getPosition().getZ()-((float)(playerSpeed))*cos);
+				player.getVelocity().setX(player.getVelocity().getX()-((float)(playerSpeed))*sin);
+				player.getVelocity().setZ(player.getVelocity().getZ()-((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_S)){
-				player.getCamera().getPosition().setX(player.getCamera().getPosition().getX()+((float)(playerSpeed))*sin);
-				player.getCamera().getPosition().setZ(player.getCamera().getPosition().getZ()+((float)(playerSpeed))*cos);
+				player.getVelocity().setX(player.getVelocity().getX()+((float)(playerSpeed))*sin);
+				player.getVelocity().setZ(player.getVelocity().getZ()+((float)(playerSpeed))*cos);
 			}
 			if(controls.getState(GLFW.GLFW_KEY_SPACE)){
-				player.getCamera().getPosition().setY(player.getCamera().getPosition().getY()+((float)(playerSpeed)));
+				player.getVelocity().setY(player.getVelocity().getY()+((float)(playerSpeed)));
 			}
 			if(controls.getState(GLFW.GLFW_KEY_LEFT_SHIFT)){
-				player.getCamera().getPosition().setY(player.getCamera().getPosition().getY()-((float)(playerSpeed)));
+				player.getVelocity().setY(player.getVelocity().getY()-((float)(playerSpeed)));
 			}
 			if(controls.getState(GLFW.GLFW_KEY_T)){
 				/*int x = (int)(Math.random()*terrain.getWidth());
@@ -323,6 +323,7 @@ public enum Game implements Listener {
 				segments.add(new Segment(new Vector(0, 0, 0), player.getCamera().getPosition()));
 			}
 		}
+		player.update(event);
 		updateViewMatrix(program, uniform_viewMatrix);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
 		updateCubeMapMatrix(cubemapProgram, uniform_cubemapViewMatrix);
