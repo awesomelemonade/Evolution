@@ -274,7 +274,9 @@ public enum Game implements Listener {
 			}
 		}
 	}
-	private static float playerSpeed = 0.01f;
+	private static float friction = 0.98f;
+	private static float maxSpeed = 0.03f;
+	private static float playerSpeed = maxSpeed-maxSpeed*friction;
 	@Subscribe
 	public void update(UpdateEvent event){
 		if(controls.hasStates()){
@@ -323,6 +325,9 @@ public enum Game implements Listener {
 				segments.add(new Segment(new Vector(0, 0, 0), player.getCamera().getPosition()));
 			}
 		}
+		player.getVelocity().setX(player.getVelocity().getX()*friction);
+		player.getVelocity().setY(player.getVelocity().getY()*friction);
+		player.getVelocity().setZ(player.getVelocity().getZ()*friction);
 		player.update(event);
 		updateViewMatrix(program, uniform_viewMatrix);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
