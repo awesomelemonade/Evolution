@@ -13,7 +13,7 @@ public class GLFWFileDropEvent implements FileDropEvent, GLFWEvent {
 		this.files = new String[count];
 		PointerBuffer nameBuffer = MemoryUtil.memPointerBuffer(files, count);
 		for(int i=0;i<count;++i){
-			this.files[i] = MemoryUtil.memDecodeUTF8(MemoryUtil.memByteBufferNT1(nameBuffer.get(i)));
+			this.files[i] = MemoryUtil.memUTF8(MemoryUtil.memByteBufferNT1(nameBuffer.get(i)));
 		}
 	}
 	@Override

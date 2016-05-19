@@ -15,7 +15,6 @@ import org.lwjgl.glfw.GLFWWindowIconifyCallback;
 import org.lwjgl.glfw.GLFWWindowPosCallback;
 import org.lwjgl.glfw.GLFWWindowRefreshCallback;
 import org.lwjgl.glfw.GLFWWindowSizeCallback;
-import org.lwjgl.opengl.GL11;
 
 import lemon.engine.event.EventManager;
 
@@ -48,8 +47,8 @@ public class GLFWInput {
 		});
 		GLFW.glfwSetCursorEnterCallback(window, cursorEnterCallback = new GLFWCursorEnterCallback(){
 			@Override
-			public void invoke(long window, int entered){
-				EventManager.INSTANCE.callListeners(new GLFWCursorEnterEvent(window, entered==GL11.GL_TRUE));
+			public void invoke(long window, boolean entered){
+				EventManager.INSTANCE.callListeners(new GLFWCursorEnterEvent(window, entered));
 			}
 		});
 		GLFW.glfwSetCursorPosCallback(window, cursorPosCallback = new GLFWCursorPosCallback(){
@@ -96,14 +95,14 @@ public class GLFWInput {
 		});
 		GLFW.glfwSetWindowFocusCallback(window, windowFocusCallback = new GLFWWindowFocusCallback(){
 			@Override
-			public void invoke(long window, int focused){
-				EventManager.INSTANCE.callListeners(new GLFWWindowFocusEvent(window, focused==GL11.GL_TRUE));
+			public void invoke(long window, boolean focused){
+				EventManager.INSTANCE.callListeners(new GLFWWindowFocusEvent(window, focused));
 			}
 		});
 		GLFW.glfwSetWindowIconifyCallback(window, windowIconifyCallback = new GLFWWindowIconifyCallback(){
 			@Override
-			public void invoke(long window, int iconified){
-				EventManager.INSTANCE.callListeners(new GLFWWindowMinimizeEvent(window, iconified==GL11.GL_TRUE));
+			public void invoke(long window, boolean iconified){
+				EventManager.INSTANCE.callListeners(new GLFWWindowMinimizeEvent(window, iconified));
 			}
 		});
 		GLFW.glfwSetWindowPosCallback(window, windowPosCallback = new GLFWWindowPosCallback(){

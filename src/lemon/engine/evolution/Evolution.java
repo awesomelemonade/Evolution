@@ -47,7 +47,7 @@ public class Evolution {
 				@Subscribe
 				public void onKeyPress(KeyEvent event){
 					if(event.getKey()==GLFW.GLFW_KEY_ESCAPE){
-						GLFW.glfwSetWindowShouldClose(window.getId(), GL11.GL_TRUE);
+						GLFW.glfwSetWindowShouldClose(window.getId(), true);
 					}
 				}
 			});

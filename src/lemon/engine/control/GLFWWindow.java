@@ -26,7 +26,7 @@ public class GLFWWindow {
 	
 	public void init(){
 		GLFW.glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
-		if(GLFW.glfwInit()!=GL11.GL_TRUE){
+		if(!GLFW.glfwInit()){
 			throw new IllegalStateException("GLFW not initialized");
 		}
 		GLFW.glfwDefaultWindowHints();
@@ -47,7 +47,7 @@ public class GLFWWindow {
 		EventManager.INSTANCE.preload(LemonUpdateEvent.class);
 		EventManager.INSTANCE.preload(LemonRenderEvent.class);
 		long deltaTime = System.nanoTime();
-		while(GLFW.glfwWindowShouldClose(window)==GL11.GL_FALSE){
+		while(!GLFW.glfwWindowShouldClose(window)){
 			int error = GL11.glGetError();
 			while(error!=GL11.GL_NO_ERROR){
 				System.out.println(error);
@@ -75,9 +75,9 @@ public class GLFWWindow {
 	public void dump(){
 		EventManager.INSTANCE.callListeners(new LemonCleanUpEvent());
 		GLFW.glfwDestroyWindow(window);
-		Callbacks.glfwReleaseCallbacks(window);
+		Callbacks.glfwFreeCallbacks(window);
 		GLFW.glfwTerminate();
-		errorCallback.release();
+		errorCallback.free();
 	}
 	public long getId(){
 		return window;
