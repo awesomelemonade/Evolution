@@ -13,13 +13,13 @@ import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
 
-public class FpsData implements Renderable {
+public class LineGraph implements Renderable {
 	private LinkedList<Float> values;
 	private int size;
 	private float max;
 	private VertexArray vertexArray;
 	private VertexBuffer vertexBuffer;
-	public FpsData(int size, float max, float... values){
+	public LineGraph(int size, float max, float... values){
 		this.size = size;
 		this.max = max;
 		this.values = new LinkedList<Float>();

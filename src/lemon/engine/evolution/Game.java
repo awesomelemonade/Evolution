@@ -23,8 +23,8 @@ import org.lwjgl.opengl.GL32;
 
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
-import lemon.engine.entity.FpsData;
 import lemon.engine.entity.HeightMap;
+import lemon.engine.entity.LineGraph;
 import lemon.engine.entity.Quad;
 import lemon.engine.entity.Segment;
 import lemon.engine.entity.Skybox;
@@ -101,9 +101,9 @@ public enum Game implements Listener {
 	private UniformVariable uniform_lineTotal;
 	private UniformVariable uniform_lineAlpha;
 	
-	public FpsData fpsData;
-	public FpsData updateData;
-	public FpsData renderData;
+	public LineGraph fpsData;
+	public LineGraph updateData;
+	public LineGraph renderData;
 	
 	//private Entity quadEntity;
 	private Texture texture;
@@ -136,9 +136,9 @@ public enum Game implements Listener {
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 		segments = new ArrayList<Renderable>();
 		
-		fpsData = new FpsData(1000, 100);
-		updateData = new FpsData(1000, 100000000);
-		renderData = new FpsData(1000, 100000000);
+		fpsData = new LineGraph(1000, 100);
+		updateData = new LineGraph(1000, 100000000);
+		renderData = new LineGraph(1000, 100000000);
 		
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
