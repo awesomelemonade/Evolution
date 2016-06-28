@@ -8,8 +8,9 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryUtil;
 
 import lemon.engine.event.EventManager;
-import lemon.engine.evolution.Game;
 import lemon.engine.glfw.GLFWInput;
+import lemon.engine.time.Benchmark;
+import lemon.engine.time.LemonBenchmarkEvent;
 import lemon.engine.time.TimeSync;
 
 public class GLFWWindow {
@@ -63,9 +64,7 @@ public class GLFWWindow {
 			long renderTime = System.nanoTime();
 			EventManager.INSTANCE.callListeners(new LemonRenderEvent());
 			renderTime = System.nanoTime()-renderTime;
-			Game.INSTANCE.updateData.add((float)(updateTime));
-			Game.INSTANCE.renderData.add((float)(renderTime));
-			Game.INSTANCE.fpsData.add(((float)delta)/1000000f);
+			EventManager.INSTANCE.callListeners(new LemonBenchmarkEvent(new Benchmark(this, (float)(updateTime), (float)(renderTime), ((float)delta)/1000000f)));
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());

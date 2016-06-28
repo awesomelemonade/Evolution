@@ -50,6 +50,8 @@ import lemon.engine.terrain.TerrainGenerator;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
 import lemon.engine.texture.TextureData;
+import lemon.engine.time.BenchmarkEvent;
+import lemon.engine.time.Benchmarker;
 import lemon.engine.toolbox.Toolbox;
 
 public enum Game implements Listener {
@@ -101,9 +103,7 @@ public enum Game implements Listener {
 	private UniformVariable uniform_lineTotal;
 	private UniformVariable uniform_lineAlpha;
 	
-	public LineGraph fpsData;
-	public LineGraph updateData;
-	public LineGraph renderData;
+	private Benchmarker benchmarker;
 	
 	//private Entity quadEntity;
 	private Texture texture;
@@ -136,9 +136,10 @@ public enum Game implements Listener {
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 		segments = new ArrayList<Renderable>();
 		
-		fpsData = new LineGraph(1000, 100);
-		updateData = new LineGraph(1000, 100000000);
-		renderData = new LineGraph(1000, 100000000);
+		benchmarker = new Benchmarker();
+		benchmarker.put("updateData", new LineGraph(1000, 100000000));
+		benchmarker.put("renderData", new LineGraph(1000, 100000000));
+		benchmarker.put("fpsData", new LineGraph(1000, 100));
 		
 		//terrain = new HeightMap(heights, TILE_SIZE);
 		//quadEntity = new Quad();
@@ -203,8 +204,6 @@ public enum Game implements Listener {
 		uniform_lineTotal = lineProgram.getUniformVariable("total");
 		uniform_lineAlpha = lineProgram.getUniformVariable("alpha");
 		GL20.glUseProgram(lineProgram.getId());
-		uniform_lineColor.loadVector(new Vector(1f, 0f, 0f));
-		uniform_lineSpacing.loadFloat(2f/(fpsData.getSize()-1));
 		uniform_lineIndex.loadInt(0);
 		uniform_lineTotal.loadInt(0);
 		uniform_lineAlpha.loadFloat(1f);
@@ -543,15 +542,19 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL20.glUseProgram(lineProgram.getId());
 		uniform_lineColor.loadVector(new Vector(1f, 0f, 0f));
-		uniform_lineSpacing.loadFloat(2f/(updateData.getSize()-1));
-		updateData.render();
+		uniform_lineSpacing.loadFloat(2f/(benchmarker.getLineGraph("updateData").getSize()-1));
+		benchmarker.getLineGraph("updateData").render();
 		uniform_lineColor.loadVector(new Vector(1f, 1f, 0f));
-		uniform_lineSpacing.loadFloat(2f/(renderData.getSize()-1));
-		renderData.render();
+		uniform_lineSpacing.loadFloat(2f/(benchmarker.getLineGraph("renderData").getSize()-1));
+		benchmarker.getLineGraph("renderData").render();
 		uniform_lineColor.loadVector(new Vector(1f, 0f, 1f));
-		uniform_lineSpacing.loadFloat(2f/(fpsData.getSize()-1));
-		fpsData.render();
+		uniform_lineSpacing.loadFloat(2f/(benchmarker.getLineGraph("fpsData").getSize()-1));
+		benchmarker.getLineGraph("fpsData").render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_BLEND);
+	}
+	@Subscribe
+	public void onBenchmark(BenchmarkEvent event){
+		benchmarker.benchmark(event.getBenchmark());
 	}
 }
