@@ -85,8 +85,8 @@ public enum EventManager {
 							ListenerMethod lm = new ListenerMethod(listener, method);
 							methods.get(parameter).add(lm);
 							for(Class<? extends Event> clazz: preloaded.keySet()){
-								if(clazz.isAssignableFrom(parameter)){
-									 preloaded.get(clazz).add(lm);
+								if(parameter.isAssignableFrom(clazz)){
+									preloaded.get(clazz).add(lm);
 								}
 							}
 						}
