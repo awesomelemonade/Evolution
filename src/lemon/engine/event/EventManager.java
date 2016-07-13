@@ -73,11 +73,13 @@ public enum EventManager {
 	}
 	@SuppressWarnings("unchecked") //It's actually checked!
 	private void internalRegisterListener(Listener listener){
+		boolean registered = false;
 		for(Method method: listener.getClass().getMethods()){
 			if(!Modifier.isStatic(method.getModifiers())){
 				if(method.getAnnotation(Subscribe.class)!=null){
 					if(method.getParameterTypes().length==1){
 						if(Event.class.isAssignableFrom(method.getParameterTypes()[0])){
+							registered = true;
 							Class<?> parameter = method.getParameterTypes()[0];
 							if(methods.get(parameter)==null){
 								methods.put((Class<? extends Event>) parameter, new ArrayList<ListenerMethod>());
@@ -93,6 +95,9 @@ public enum EventManager {
 					}
 				}
 			}
+		}
+		if(!registered){
+			logger.log(Level.WARNING, String.format("Registered listener with no valid methods: %s", listener.getClass().getName()));
 		}
 	}
 	private class ListenerMethod{

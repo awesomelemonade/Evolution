@@ -1,5 +1,6 @@
 package lemon.engine.render;
 
+import lemon.engine.control.CleanUpEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -31,7 +32,7 @@ public class VertexArray implements Listener {
 		return Collections.unmodifiableList(vbos);
 	}
 	@Subscribe
-	public void cleanUp(){
+	public void cleanUp(CleanUpEvent event){
 		GL30.glDeleteVertexArrays(id);
 		for(VertexBuffer vbo: vbos){
 			GL15.glDeleteBuffers(vbo.getId());

@@ -2,6 +2,7 @@ package lemon.engine.frameBuffer;
 
 import org.lwjgl.opengl.GL30;
 
+import lemon.engine.control.CleanUpEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -16,7 +17,7 @@ public class FrameBuffer implements Listener {
 		return id;
 	}
 	@Subscribe
-	public void cleanUp(){
+	public void cleanUp(CleanUpEvent event){
 		GL30.glDeleteFramebuffers(id);
 	}
 }

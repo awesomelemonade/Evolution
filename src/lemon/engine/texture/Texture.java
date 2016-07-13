@@ -4,6 +4,7 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 
+import lemon.engine.control.CleanUpEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -43,7 +44,7 @@ public class Texture implements Listener {
 		return id;
 	}
 	@Subscribe
-	public void cleanUp(){
+	public void cleanUp(CleanUpEvent event){
 		GL11.glDeleteTextures(id);
 	}
 }

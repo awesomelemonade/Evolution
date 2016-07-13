@@ -3,6 +3,7 @@ package lemon.engine.render;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
+import lemon.engine.control.CleanUpEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -42,7 +43,7 @@ public class ShaderProgram implements Listener {
 		return new UniformVariable(GL20.glGetUniformLocation(id, name), name);
 	}
 	@Subscribe
-	public void cleanUp(){
+	public void cleanUp(CleanUpEvent event){
 		GL20.glDeleteProgram(id);
 	}
 	public int getId(){
