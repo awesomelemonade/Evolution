@@ -34,8 +34,8 @@ public class HeightMap implements Renderable {
 				float avgHeight = (map[i][j]+map[i+1][j]+map[i+1][j+1])/3;
 				float avgHeight2 = (map[i][j]+map[i][j+1]+map[i+1][j+1])/3;
 				plotVertex(dataBuffer, i, j, 0, 0, avgHeight);
-				plotVertex(dataBuffer, i, j, 1, 0, avgHeight);
 				plotVertex(dataBuffer, i, j, 1, 1, avgHeight);
+				plotVertex(dataBuffer, i, j, 1, 0, avgHeight);
 				plotVertex(dataBuffer, i, j, 0, 0, avgHeight2);
 				plotVertex(dataBuffer, i, j, 0, 1, avgHeight2);
 				plotVertex(dataBuffer, i, j, 1, 1, avgHeight2);
