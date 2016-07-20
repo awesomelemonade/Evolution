@@ -1,16 +1,11 @@
 package lemon.engine.evolution;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
@@ -26,7 +21,6 @@ import lemon.engine.control.UpdateEvent;
 import lemon.engine.entity.HeightMap;
 import lemon.engine.entity.LineGraph;
 import lemon.engine.entity.Quad;
-import lemon.engine.entity.Segment;
 import lemon.engine.entity.Skybox;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -42,14 +36,12 @@ import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector;
-import lemon.engine.render.Renderable;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.render.UniformVariable;
 import lemon.engine.terrain.TerrainGenerator;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
-import lemon.engine.texture.TextureData;
 import lemon.engine.time.BenchmarkEvent;
 import lemon.engine.time.Benchmarker;
 import lemon.engine.toolbox.Toolbox;
@@ -100,17 +92,11 @@ public enum Game implements Listener {
 	
 	private Benchmarker benchmarker;
 	
-	private Texture texture;
-	
 	private TerrainLoader terrainLoader;
-	
-	private List<Vector> entities;
-	
-	private List<Renderable> segments;
 	
 	public TerrainLoader getTerrainLoader(){
 		if(terrainLoader==null){
-			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (500f/TILE_SIZE), 2), Math.max((int) (500f/TILE_SIZE), 2));
+			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (100f/TILE_SIZE), 2), Math.max((int) (100f/TILE_SIZE), 2));
 		}
 		return terrainLoader;
 	}
@@ -128,7 +114,6 @@ public enum Game implements Listener {
 		Skybox.INSTANCE.init();
 		Quad.INSTANCE.init();
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
-		segments = new ArrayList<Renderable>();
 		
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -213,15 +198,6 @@ public enum Game implements Listener {
 		uniform_depthSampler.loadInt(TextureBank.DEPTH.getId());
 		GL20.glUseProgram(0);
 		
-		texture = new Texture();
-		try {
-			BufferedImage image = ImageIO.read(new File("res/FTL.jpg"));
-			texture.load(new TextureData(image));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		
 		frameBuffer = new FrameBuffer();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
@@ -255,13 +231,6 @@ public enum Game implements Listener {
 		controls.bindKey(GLFW.GLFW_KEY_SPACE, GLFW.GLFW_KEY_SPACE);
 		controls.bindKey(GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_LEFT_SHIFT);
 		controls.bindKey(GLFW.GLFW_KEY_T, GLFW.GLFW_KEY_T);
-		
-		entities = new ArrayList<Vector>();
-		for(int x=-4;x<=4;x+=1){
-			for(int z=-4;z<=4;z+=1){
-				entities.add(new Vector(x, 0, z));
-			}
-		}
 	}
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -297,22 +266,6 @@ public enum Game implements Listener {
 			if(controls.getState(GLFW.GLFW_KEY_LEFT_SHIFT)){
 				player.getVelocity().setY(player.getVelocity().getY()-((float)(playerSpeed)));
 			}
-			if(controls.getState(GLFW.GLFW_KEY_T)){
-				/*int x = (int)(Math.random()*terrain.getWidth());
-				int y = (int)(Math.random()*terrain.getHeight());*/
-				float x = toArrayCoord(player.getCamera().getPosition().getX(), terrain.getWidth());
-				float z = toArrayCoord(player.getCamera().getPosition().getZ(), terrain.getHeight());
-				int intX = (int)x;
-				int intZ = (int)z;
-				if(intX>0&&intZ>0&&intX<terrain.getWidth()&&intZ<terrain.getHeight()){
-					Vector vector = new Vector(player.getCamera().getPosition());
-					vector.setY(getHeight(x, z));
-					entities.add(vector);
-					//terrain.set(x, y, terrain.get(x, y)+((float)Math.random()));
-					//terrain.update();
-				}
-				segments.add(new Segment(new Vector(0, 0, 0), player.getCamera().getPosition()));
-			}
 		}
 		player.getVelocity().setX(player.getVelocity().getX()*friction);
 		player.getVelocity().setY(player.getVelocity().getY()*friction);
@@ -321,48 +274,6 @@ public enum Game implements Listener {
 		updateViewMatrix(colorProgram, uniform_colorViewMatrix);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
 		updateCubeMapMatrix(cubemapProgram, uniform_cubemapViewMatrix);
-		for(Vector vector: entities){
-			vector.setX(vector.getX()+((float)Math.random()-0.5f));
-			vector.setZ(vector.getZ()+((float)Math.random()-0.5f));
-			if(vector.getX()<-49.5){
-				vector.setX(-49.5f);
-			}
-			if(vector.getX()>49.5){
-				vector.setX(49.5f);
-			}
-			if(vector.getZ()<-49.5){
-				vector.setZ(-49.5f);
-			}
-			if(vector.getZ()>49.5){
-				vector.setZ(49.5f);
-			}
-			vector.setY(getHeight(toArrayCoord(vector.getX(), terrain.getWidth()), toArrayCoord(vector.getZ(), terrain.getHeight())));
-		}
-		if(Math.random()<0.022){
-			List<Vector> born = new ArrayList<Vector>();
-			for(Vector vector: entities){
-				if(Math.random()<0.2){
-					born.add(new Vector(vector));
-				}
-			}
-			for(Vector vector: born){
-				entities.add(vector);
-			}
-		}
-		List<Vector> dead = new ArrayList<Vector>();
-		for(Vector vector: entities){
-			if(Math.random()*20<vector.getY()){
-				dead.add(vector);
-			}
-		}
-		for(Vector vector: entities){
-			if(Math.random()>(1f/((float)(near(vector, entities, 2f)))+0.64f)){
-				dead.add(vector);
-			}
-		}
-		for(Vector vector: dead){
-			entities.remove(vector);
-		}
 	}
 	public float near(Vector vector, List<Vector> entities, float distance){
 		float count = 0;
@@ -471,43 +382,11 @@ public enum Game implements Listener {
 		renderSkybox();
 		GL11.glDepthMask(true);
 		renderHeightMap();
-		for(Vector vector: entities){
-			renderQuad(vector);
-		}
-		for(Renderable renderable: segments){
-			renderSegment(renderable);
-		}
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL20.glUseProgram(postProcessingProgram.getId());
 		Quad.INSTANCE.render();
 		GL20.glUseProgram(0);
 		renderFPS();
-		num+=1f;
-	}
-	float num = 0;
-	public void renderQuad(Vector vector){
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL13.glActiveTexture(TextureBank.REUSE.getBind());
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
-		GL20.glUseProgram(textureProgram.getId());
-		uniform_textureModelMatrix.loadMatrix(MathUtil.getTranslation(vector).multiply(MathUtil.getRotationY(num)).multiply(MathUtil.getScalar(new Vector(1f, 1f, 1f))));
-		Quad.INSTANCE.render();
-		GL20.glUseProgram(0);
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
-	}
-	public void renderSegment(Renderable renderable){
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL20.glUseProgram(colorProgram.getId());
-		renderable.render();
-		GL20.glUseProgram(0);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
 	}
 	public void renderHeightMap(){
 		GL11.glEnable(GL11.GL_BLEND);
