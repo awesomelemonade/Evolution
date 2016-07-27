@@ -1,6 +1,8 @@
 package lemon.engine.math;
 
 public class Vector {
+	public static final Vector ZERO = Vector.unmodifiableVector(new Vector());
+	private static final String unmodifiableMessage = "Cannot Modify Vector";
 	private float x;
 	private float y;
 	private float z;
@@ -55,5 +57,21 @@ public class Vector {
 			}
 		}
 		return false;
+	}
+	public static Vector unmodifiableVector(Vector vector){
+		return new Vector(vector){
+			@Override
+			public void setX(float x){
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+			@Override
+			public void setY(float y){
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+			@Override
+			public void setZ(float z){
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+		};
 	}
 }
