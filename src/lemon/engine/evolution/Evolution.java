@@ -18,6 +18,7 @@ import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.input.KeyEvent;
+import lemon.engine.thread.ThreadManager;
 
 public class Evolution {
 	private static final Logger logger = Logger.getLogger("");
@@ -56,6 +57,7 @@ public class Evolution {
 		}catch(Exception ex){
 			ex.printStackTrace();
 		}finally{
+			ThreadManager.INSTANCE.interrupt();
 			window.dump();
 		}
 	}
