@@ -27,9 +27,8 @@ import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.CollisionHandler;
 import lemon.engine.game.Player;
 import lemon.engine.game.PlayerControls;
+import lemon.engine.game.StandardControls;
 import lemon.engine.input.CursorPositionEvent;
-import lemon.engine.input.KeyEvent;
-import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.loader.SkyboxLoader;
 import lemon.engine.math.MathUtil;
@@ -224,7 +223,7 @@ public enum Game implements Listener {
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		
-		controls = new PlayerControls<Integer, Integer>();
+		controls = new StandardControls();
 		controls.bindKey(GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_MOUSE_BUTTON_LEFT);
 		controls.bindKey(GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_A);
 		controls.bindKey(GLFW.GLFW_KEY_D, GLFW.GLFW_KEY_D);
@@ -281,24 +280,6 @@ public enum Game implements Listener {
 		updateViewMatrix(colorProgram, uniform_colorViewMatrix);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
 		updateCubeMapMatrix(cubemapProgram, uniform_cubemapViewMatrix);
-	}
-	@Subscribe
-	public void onKey(KeyEvent event){
-		if(event.getAction()==GLFW.GLFW_PRESS){
-			controls.setKeyState(event.getKey(), true);
-		}
-		if(event.getAction()==GLFW.GLFW_RELEASE){
-			controls.setKeyState(event.getKey(), false);
-		}
-	}
-	@Subscribe
-	public void onMouse(MouseButtonEvent event){
-		if(event.getAction()==GLFW.GLFW_PRESS){
-			controls.setKeyState(event.getButton(), true);
-		}
-		if(event.getAction()==GLFW.GLFW_RELEASE){
-			controls.setKeyState(event.getButton(), false);
-		}
 	}
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event){
