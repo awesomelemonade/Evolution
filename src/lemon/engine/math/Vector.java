@@ -1,6 +1,7 @@
 package lemon.engine.math;
 
 public class Vector {
+	public static final Vector[] EMPTY_ARRAY = new Vector[]{};
 	public static final Vector ZERO = Vector.unmodifiableVector(new Vector());
 	private static final String unmodifiableMessage = "Cannot Modify Vector";
 	private float x;
@@ -16,6 +17,11 @@ public class Vector {
 	}
 	public Vector(Vector vector){
 		this(vector.getX(), vector.getY(), vector.getZ());
+	}
+	public void set(Vector vector){
+		this.x = vector.getX();
+		this.y = vector.getY();
+		this.z = vector.getZ();
 	}
 	public void setX(float x){
 		this.x = x;

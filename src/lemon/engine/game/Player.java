@@ -5,7 +5,7 @@ import lemon.engine.math.Camera;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector;
 
-public class Player {
+public class Player implements Collidable {
 	private static final float DELTA_MODIFIER = 0.000001f;
 	private Camera camera;
 	private Vector velocity;
@@ -21,7 +21,20 @@ public class Player {
 	public Camera getCamera(){
 		return camera;
 	}
+	@Override
+	public Vector getPosition(){
+		return camera.getPosition();
+	}
+	@Override
 	public Vector getVelocity(){
 		return velocity;
+	}
+	@Override
+	public Vector collide(Collidable collidable) {
+		return collidable.getVelocity();
+	}
+	@Override
+	public Vector[] getCollisionPoints() {
+		return new Vector[]{camera.getPosition()};
 	}
 }

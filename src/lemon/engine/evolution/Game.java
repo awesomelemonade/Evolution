@@ -3,7 +3,6 @@ package lemon.engine.evolution;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +24,7 @@ import lemon.engine.entity.Skybox;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
+import lemon.engine.game.CollisionHandler;
 import lemon.engine.game.Player;
 import lemon.engine.game.PlayerControls;
 import lemon.engine.input.CursorPositionEvent;
@@ -93,6 +93,8 @@ public enum Game implements Listener {
 	private Benchmarker benchmarker;
 	
 	private TerrainLoader terrainLoader;
+	
+	private CollisionHandler collisionHandler;
 	
 	public TerrainLoader getTerrainLoader(){
 		if(terrainLoader==null){
@@ -231,6 +233,8 @@ public enum Game implements Listener {
 		controls.bindKey(GLFW.GLFW_KEY_SPACE, GLFW.GLFW_KEY_SPACE);
 		controls.bindKey(GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_LEFT_SHIFT);
 		controls.bindKey(GLFW.GLFW_KEY_T, GLFW.GLFW_KEY_T);
+		
+		collisionHandler = new CollisionHandler();
 	}
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -270,40 +274,13 @@ public enum Game implements Listener {
 		player.getVelocity().setX(player.getVelocity().getX()*friction);
 		player.getVelocity().setY(player.getVelocity().getY()*friction);
 		player.getVelocity().setZ(player.getVelocity().getZ()*friction);
+		
+		collisionHandler.update(event);
+		
 		player.update(event);
 		updateViewMatrix(colorProgram, uniform_colorViewMatrix);
 		updateViewMatrix(textureProgram, uniform_textureViewMatrix);
 		updateCubeMapMatrix(cubemapProgram, uniform_cubemapViewMatrix);
-	}
-	public float near(Vector vector, List<Vector> entities, float distance){
-		float count = 0;
-		for(Vector v: entities){
-			count+=Math.max(distance-vector.getDistance(v), 0);
-		}
-		return count;
-	}
-	public float toArrayCoord(float coord, float width){
-		return coord/TILE_SIZE+width/2f-TILE_SIZE/2f;
-	}
-	public float getHeight(float x, float z){
-		int intX = (int)x;
-		int intZ = (int)z;
-		float fracX = x-intX;
-		float fracZ = z-intZ;
-		if(intX>=0&&intZ>=0&&intX+1<terrain.getWidth()&&intZ+1<terrain.getHeight()){
-			return lerp(lerp(terrain.get(intX, intZ), terrain.get(intX+1, intZ), fracX), lerp(terrain.get(intX, intZ+1), terrain.get(intX+1, intZ+1), fracX), fracZ);
-		}else if(intX>=0&&intZ>=0&&intX<terrain.getWidth()&&intZ+1<terrain.getHeight()){
-			return lerp(terrain.get(intX, intZ), terrain.get(intX, intZ+1), fracZ);
-		}else if(intX>=0&&intZ>=0&&intX+1<terrain.getWidth()&&intZ<terrain.getHeight()){
-			return lerp(terrain.get(intX, intZ), terrain.get(intX+1, intZ), fracX);
-		}else if(intX>=0&&intZ>=0&&intX<terrain.getWidth()&&intZ<terrain.getHeight()){
-			return terrain.get(intX, intZ);
-		}else{
-			return 0;
-		}
-	}
-	public float lerp(float a, float b, float x){
-		return a*(1-x)+b*x;
 	}
 	@Subscribe
 	public void onKey(KeyEvent event){
