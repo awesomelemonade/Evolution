@@ -14,12 +14,16 @@ import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
+import lemon.engine.splash.Box2D;
+import lemon.engine.splash.LoadingBar;
+import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Toolbox;
 
 public enum Loading implements Listener {
 	INSTANCE;
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 	private ShaderProgram shaderProgram;
+	private LoadingBar loadingBar;
 	private Loader loader;
 	private long window;
 	private boolean started;
@@ -32,6 +36,10 @@ public enum Loading implements Listener {
 				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader"))
 		);
 		this.loader = Game.INSTANCE.getTerrainLoader();
+		this.loadingBar = new LoadingBar(this.loader.getPercentage(),
+				new Box2D(-1f, -1.1f, 2f, 0.3f),
+				new Color(1f, 0f, 0f), new Color(1f, 0f, 0f),
+				new Color(0f, 0f, 0f), new Color(0f, 0f, 0f));
 		loader.load();
 		this.window = event.getWindow();
 		started = false;
@@ -53,7 +61,7 @@ public enum Loading implements Listener {
 			return;
 		}
 		GL20.glUseProgram(shaderProgram.getId());
-		
+		loadingBar.render();
 		GL20.glUseProgram(0);
 	}
 	public void start(long window){
