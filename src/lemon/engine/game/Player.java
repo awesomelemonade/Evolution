@@ -30,7 +30,7 @@ public class Player implements Collidable {
 		return velocity;
 	}
 	@Override
-	public Vector collide(Collidable collidable) {
+	public Vector collide(Collidable collidable, UpdateEvent event) {
 		return collidable.getVelocity();
 	}
 	@Override

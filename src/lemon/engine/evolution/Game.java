@@ -3,6 +3,8 @@ package lemon.engine.evolution;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,6 +27,7 @@ import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.CollisionHandler;
+import lemon.engine.game.Platform;
 import lemon.engine.game.Player;
 import lemon.engine.game.PlayerControls;
 import lemon.engine.game.StandardControls;
@@ -95,6 +98,8 @@ public enum Game implements Listener {
 	
 	private CollisionHandler collisionHandler;
 	
+	private List<Platform> platforms;
+	
 	public TerrainLoader getTerrainLoader(){
 		if(terrainLoader==null){
 			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (100f/TILE_SIZE), 2), Math.max((int) (100f/TILE_SIZE), 2));
@@ -113,7 +118,8 @@ public enum Game implements Listener {
 		GL11.glViewport(0, 0, window_width, window_height);
 		
 		Skybox.INSTANCE.init();
-		Quad.INSTANCE.init();
+		Quad.TEXTURED.init();
+		Quad.COLORED.init();
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 		
 		benchmarker = new Benchmarker();
@@ -234,6 +240,12 @@ public enum Game implements Listener {
 		controls.bindKey(GLFW.GLFW_KEY_T, GLFW.GLFW_KEY_T);
 		
 		collisionHandler = new CollisionHandler();
+		collisionHandler.addCollidable(player);
+		platforms = new ArrayList<Platform>();
+		platforms.add(new Platform(new Vector(10f, 0f, 10f)));
+		for(Platform platform: platforms){
+			collisionHandler.addCollidable(platform);
+		}
 	}
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -340,9 +352,10 @@ public enum Game implements Listener {
 		renderSkybox();
 		GL11.glDepthMask(true);
 		renderHeightMap();
+		renderPlatforms();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL20.glUseProgram(postProcessingProgram.getId());
-		Quad.INSTANCE.render();
+		Quad.TEXTURED.render();
 		GL20.glUseProgram(0);
 		renderFPS();
 	}
@@ -351,8 +364,22 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(colorProgram.getId());
+		uniform_colorModelMatrix.loadMatrix(Matrix.getIdentity(4));
 		terrain.render();
 		GL20.glUseProgram(0);
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glDisable(GL11.GL_BLEND);
+	}
+	public void renderPlatforms(){
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		for(Platform platform: platforms){
+			GL20.glUseProgram(colorProgram.getId());
+			uniform_colorModelMatrix.loadMatrix(MathUtil.getTranslation(platform.getPosition()).multiply(MathUtil.getRotationX(90f)));
+			Quad.COLORED.render();
+			GL20.glUseProgram(0);
+		}
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}

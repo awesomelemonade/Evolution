@@ -16,8 +16,8 @@ public class CollisionHandler {
 	public void update(UpdateEvent event){
 		for(int i=0;i<collidables.size();++i){
 			for(int j=i+1;j<collidables.size();++j){
-				collidables.get(i).getVelocity().set(collidables.get(j).collide(collidables.get(i)));
-				collidables.get(j).getVelocity().set(collidables.get(i).collide(collidables.get(j)));
+				collidables.get(i).getVelocity().set(collidables.get(j).collide(collidables.get(i), event));
+				collidables.get(j).getVelocity().set(collidables.get(i).collide(collidables.get(j), event));
 			}
 		}
 	}
