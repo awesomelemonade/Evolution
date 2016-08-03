@@ -21,12 +21,14 @@ public enum EventManager {
 	private Map<Class<? extends Event>, List<ListenerMethod>> methods;
 	private Map<Class<? extends Event>, List<ListenerMethod>> preloaded;
 	private Queue<Listener> registrationQueue;
+	private Queue<Listener> unregistrationQueue;
 	private boolean inEvent;
 	
 	private EventManager(){
 		methods = new HashMap<Class<? extends Event>, List<ListenerMethod>>();
 		preloaded = new HashMap<Class<? extends Event>, List<ListenerMethod>>();
 		registrationQueue = new ArrayDeque<Listener>();
+		unregistrationQueue = new ArrayDeque<Listener>();
 		inEvent = false;
 	}
 	public void registerListener(Listener listener){
@@ -34,6 +36,13 @@ public enum EventManager {
 			registrationQueue.add(listener);
 		}else{
 			internalRegisterListener(listener);
+		}
+	}
+	public void unregisterListener(Listener listener){
+		if(inEvent){
+			unregistrationQueue.add(listener);
+		}else{
+			internalUnregisterListener(listener);
 		}
 	}
 	public void preload(Class<? extends Event> clazz){
@@ -69,6 +78,12 @@ public enum EventManager {
 					internalRegisterListener(listener);
 				}
 			}
+			if(!unregistrationQueue.isEmpty()){
+				Listener listener;
+				while((listener=unregistrationQueue.poll())!=null){
+					internalUnregisterListener(listener);
+				}
+			}
 		}
 	}
 	@SuppressWarnings("unchecked") //It's actually checked!
@@ -98,6 +113,28 @@ public enum EventManager {
 		}
 		if(!registered){
 			logger.log(Level.WARNING, String.format("Registered listener with no valid methods: %s", listener.getClass().getName()));
+		}
+	}
+	private void internalUnregisterListener(Listener listener){
+		List<ListenerMethod> unregister = new ArrayList<ListenerMethod>();
+		for(List<ListenerMethod> methods: this.methods.values()){
+			for(ListenerMethod method: methods){
+				if(method.getListener().equals(listener)){
+					unregister.add(method);
+				}
+			}
+		}
+		for(ListenerMethod method: unregister){
+			for(List<ListenerMethod> methods: this.methods.values()){
+				if(methods.contains(method)){
+					methods.remove(method);
+				}
+			}
+			for(List<ListenerMethod> methods: this.preloaded.values()){
+				if(methods.contains(method)){
+					methods.remove(method);
+				}
+			}
 		}
 	}
 	private class ListenerMethod{

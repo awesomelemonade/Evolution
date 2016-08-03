@@ -26,7 +26,6 @@ public enum Loading implements Listener {
 	private LoadingBar loadingBar;
 	private Loader loader;
 	private long window;
-	private boolean started;
 	@Subscribe
 	public void load(WindowInitEvent event){
 		shaderProgram = new ShaderProgram(
@@ -42,13 +41,9 @@ public enum Loading implements Listener {
 				new Color(0f, 0f, 0f), new Color(0f, 0f, 0f));
 		loader.load();
 		this.window = event.getWindow();
-		started = false;
 	}
 	@Subscribe
 	public void update(UpdateEvent event){
-		if(started){
-			return;
-		}
 		if(loader.getPercentage().getPart()!=loader.getPercentage().getWhole()){
 			logger.log(Level.INFO, loader.getPercentage().getPercentage()+"%");
 		}else{
@@ -57,9 +52,6 @@ public enum Loading implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event){
-		if(started){
-			return;
-		}
 		GL20.glUseProgram(shaderProgram.getId());
 		loadingBar.render();
 		GL20.glUseProgram(0);
@@ -67,6 +59,6 @@ public enum Loading implements Listener {
 	public void start(long window){
 		Game.INSTANCE.init(window);
 		EventManager.INSTANCE.registerListener(Game.INSTANCE);
-		started = true;
+		EventManager.INSTANCE.unregisterListener(this);
 	}
 }
