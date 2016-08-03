@@ -2,6 +2,7 @@ package lemon.engine.time;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import lemon.engine.entity.LineGraph;
 
@@ -21,6 +22,9 @@ public class Benchmarker {
 	}
 	public LineGraph getLineGraph(String name){
 		return graphs.get(name);
+	}
+	public Set<String> getNames(){
+		return graphs.keySet();
 	}
 	public int getSize(){
 		return graphs.size();

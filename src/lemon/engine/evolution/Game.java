@@ -395,15 +395,13 @@ public enum Game implements Listener {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL20.glUseProgram(lineProgram.getId());
-		uniform_lineColor.loadVector(new Vector(1f, 0f, 0f));
-		uniform_lineSpacing.loadFloat(2f/(benchmarker.getLineGraph("updateData").getSize()-1));
-		benchmarker.getLineGraph("updateData").render();
-		uniform_lineColor.loadVector(new Vector(1f, 1f, 0f));
-		uniform_lineSpacing.loadFloat(2f/(benchmarker.getLineGraph("renderData").getSize()-1));
-		benchmarker.getLineGraph("renderData").render();
-		uniform_lineColor.loadVector(new Vector(1f, 0f, 1f));
-		uniform_lineSpacing.loadFloat(2f/(benchmarker.getLineGraph("fpsData").getSize()-1));
-		benchmarker.getLineGraph("fpsData").render();
+		byte color = 1; //Not Black
+		for(String benchmarker: this.benchmarker.getNames()){
+			uniform_lineColor.loadVector(new Vector((((color&0x01)!=0)?1f:0f), (((color&0x02)!=0)?1f:0f), (((color&0x04)!=0)?1f:0f)));
+			uniform_lineSpacing.loadFloat(2f/(this.benchmarker.getLineGraph(benchmarker).getSize()-1));
+			this.benchmarker.getLineGraph(benchmarker).render();
+			color++;
+		}
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
