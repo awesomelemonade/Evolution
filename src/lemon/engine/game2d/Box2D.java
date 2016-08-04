@@ -1,4 +1,4 @@
-package lemon.engine.splash;
+package lemon.engine.game2d;
 
 public class Box2D {
 	private float x;

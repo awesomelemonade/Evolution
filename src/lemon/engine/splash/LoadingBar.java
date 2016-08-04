@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
+import lemon.engine.game2d.Box2D;
 import lemon.engine.math.Percentage;
 import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;

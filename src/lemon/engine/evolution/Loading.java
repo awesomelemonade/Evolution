@@ -12,9 +12,11 @@ import lemon.engine.control.WindowInitEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
+import lemon.engine.game2d.Box2D;
+import lemon.engine.math.Matrix;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
-import lemon.engine.splash.Box2D;
+import lemon.engine.render.UniformVariable;
 import lemon.engine.splash.LoadingBar;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Toolbox;
@@ -23,6 +25,7 @@ public enum Loading implements Listener {
 	INSTANCE;
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 	private ShaderProgram shaderProgram;
+	private UniformVariable uniform_transformationMatrix;
 	private LoadingBar loadingBar;
 	private Loader loader;
 	private long window;
@@ -34,6 +37,10 @@ public enum Loading implements Listener {
 				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
 				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader"))
 		);
+		uniform_transformationMatrix = shaderProgram.getUniformVariable("transformationMatrix");
+		GL20.glUseProgram(shaderProgram.getId());
+		uniform_transformationMatrix.loadMatrix(Matrix.getIdentity(4));
+		GL20.glUseProgram(0);
 		this.loader = Game.INSTANCE.getTerrainLoader();
 		this.loadingBar = new LoadingBar(this.loader.getPercentage(),
 				new Box2D(-1f, -1.1f, 2f, 0.3f),
