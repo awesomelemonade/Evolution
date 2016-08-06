@@ -10,10 +10,10 @@ public class Player2D implements Renderable {
 	private Vector position;
 	private Vector velocity;
 	private Quad2D quad;
-	public Player2D(){
+	public Player2D(Vector position, Vector velocity){
 		quad = new Quad2D(new Box2D(0f, 0, 20f, 50f), new Color(1f, 0f, 0f));
-		position = new Vector();
-		velocity = new Vector();
+		this.position = position;
+		this.velocity = velocity;
 	}
 	public void update(UpdateEvent event){
 		position.setX(position.getX()+velocity.getX()*event.getDelta()*DELTA_MODIFIER);

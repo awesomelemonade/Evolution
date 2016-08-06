@@ -1,6 +1,8 @@
 package lemon.engine.game2d;
 
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
@@ -16,9 +18,11 @@ import lemon.engine.game.PlayerControls;
 import lemon.engine.game.StandardControls;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Vector;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.render.UniformVariable;
+import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Toolbox;
 
 public enum Game2D implements Listener {
@@ -33,6 +37,7 @@ public enum Game2D implements Listener {
 	private static final float PLAYER_DELTA_MODIFIER = 0.00000001f;
 	private Player2D player;
 	private PlayerControls<Integer, Integer> controls;
+	private List<Brush2D> brushes;
 	
 	@Subscribe
 	public void load(WindowInitEvent event){
@@ -55,12 +60,17 @@ public enum Game2D implements Listener {
 		uniform_transformationMatrix.loadMatrix(Matrix.getIdentity(4));
 		GL20.glUseProgram(0);
 		
-		player = new Player2D();
+		player = new Player2D(new Vector(0f, 100f, 0f), new Vector());
 		controls = new StandardControls();
 		controls.bindKey(GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_A);
 		controls.bindKey(GLFW.GLFW_KEY_D, GLFW.GLFW_KEY_D);
 		controls.bindKey(GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_W);
 		controls.bindKey(GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_S);
+		
+		brushes = new ArrayList<Brush2D>();
+		brushes.add(new Brush2D(new Color(0f, 1f, 0f),
+				new Vector(0f, 0f), new Vector(window_width, 0f),
+				new Vector(0f, 100f), new Vector(window_width, 100f)));
 	}
 	@Subscribe
 	public void update(UpdateEvent event){
@@ -85,6 +95,10 @@ public enum Game2D implements Listener {
 	@Subscribe
 	public void render(RenderEvent event){
 		GL20.glUseProgram(shaderProgram.getId());
+		uniform_transformationMatrix.loadMatrix(Matrix.getIdentity(4));
+		for(Brush2D brush: brushes){
+			brush.render();
+		}
 		uniform_transformationMatrix.loadMatrix(MathUtil.getTranslation(player.getPosition()));
 		player.render();
 		GL20.glUseProgram(0);

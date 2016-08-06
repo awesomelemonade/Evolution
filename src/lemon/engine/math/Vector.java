@@ -8,7 +8,10 @@ public class Vector {
 	private float y;
 	private float z;
 	public Vector(){
-		this(0f, 0f, 0f);
+		this(0f, 0f);
+	}
+	public Vector(float x, float y){
+		this(x, y, 0f);
 	}
 	public Vector(float x, float y, float z){
 		this.x = x;
