@@ -41,6 +41,17 @@ public class MathUtil {
 		matrix.set(3, 3, 0);
 		return matrix;
 	}
+	public static Matrix getOrtho(float width, float height, float near, float far){
+		Matrix matrix = new Matrix(4);
+		matrix.set(0, 0, 2f/width);
+		matrix.set(1, 1, 2f/height);
+		matrix.set(2, 2, 1f/(far-near));
+		matrix.set(0, 3, -1f);
+		matrix.set(1, 3, -1f);
+		matrix.set(2, 3, (-near)/(far-near));
+		matrix.set(3, 3, 1);
+		return matrix;
+	}
 	public static Matrix getTranslation(Vector vector){
 		Matrix matrix = Matrix.getIdentity(4);
 		matrix.set(0, 3, vector.getX());

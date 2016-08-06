@@ -47,4 +47,8 @@ public class Color {
 	public float getAlpha(){
 		return alpha;
 	}
+	@Override
+	public String toString(){
+		return String.format("Color[%f, %f, %f, %f]", red, green, blue, alpha);
+	}
 }

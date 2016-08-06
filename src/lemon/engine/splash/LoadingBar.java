@@ -69,7 +69,6 @@ public class LoadingBar implements Renderable {
 		buffer.put(y);
 	}
 	private void addColorBuffer(FloatBuffer buffer, Color color){
-		
 		buffer.put(color.getRed());
 		buffer.put(color.getGreen());
 		buffer.put(color.getBlue());

@@ -17,6 +17,7 @@ import lemon.engine.control.GLFWWindowSettings;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
+import lemon.engine.game2d.Game2D;
 import lemon.engine.input.KeyEvent;
 import lemon.engine.thread.ThreadManager;
 
@@ -43,7 +44,7 @@ public class Evolution {
 		};
 		final GLFWWindow window = new GLFWWindow(settings);
 		try{
-			EventManager.INSTANCE.registerListener(Loading.INSTANCE);
+			EventManager.INSTANCE.registerListener(Game2D.INSTANCE);
 			EventManager.INSTANCE.registerListener(new Listener(){
 				@Subscribe
 				public void onKeyPress(KeyEvent event){
