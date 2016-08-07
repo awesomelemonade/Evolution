@@ -14,6 +14,7 @@ import lemon.engine.control.WindowInitEvent;
 
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
+import lemon.engine.game.Player;
 import lemon.engine.game.PlayerControls;
 import lemon.engine.game.StandardControls;
 import lemon.engine.math.MathUtil;
@@ -90,7 +91,46 @@ public enum Game2D implements Listener {
 		}
 		player.getVelocity().setX((float) (player.getVelocity().getX()*Math.pow(PLAYER_FRICTION, event.getDelta()*PLAYER_DELTA_MODIFIER)));
 		player.getVelocity().setY((float) (player.getVelocity().getY()*Math.pow(PLAYER_FRICTION, event.getDelta()*PLAYER_DELTA_MODIFIER)));
-		player.update(event);
+		Vector finalPosition = player.update(event);
+		Vector collisionVelocity = finalPosition.subtract(player.getPosition());
+		while(collisionispresent){
+			//find first point of collision
+			//set player to that first point of collision
+			//calculate where the new collision velocity is; set collision velocity to that
+			//calculate new actual velocity
+		}
+		player.setPosition(finalPosition);
+	}
+	public void recursion(Player player){
+		//calculate first point of collision
+		
+	}
+	//Returns percentage of the line that's intersected, lower the closer; -1=no collision
+	public float collide(Vector a, Vector b, Vector c, Vector d){
+		float xDiff = b.getX()-a.getX();
+		float xDiff2 = d.getX()-c.getX();
+		if(xDiff==0&&xDiff2==0){
+			
+		}
+		if(xDiff==0){
+			
+		}
+		if(xDiff2==0){
+			
+		}
+		float slope = (b.getY()-a.getY())/xDiff;
+		float slope2 = (d.getY()-c.getY())/xDiff2;
+		float yIntercept = a.getY()-(slope*a.getX());
+		float yIntercept2 = c.getY()-(slope2*c.getX());
+		if(slope==slope2){
+			if(yIntercept==yIntercept2){ //Collinear
+				
+			}else{ //Parallel
+				return -1;
+			}
+		}else{
+			
+		}
 	}
 	@Subscribe
 	public void render(RenderEvent event){

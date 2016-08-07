@@ -15,14 +15,18 @@ public class Player2D implements Renderable {
 		this.position = position;
 		this.velocity = velocity;
 	}
-	public void update(UpdateEvent event){
+	public Vector update(UpdateEvent event){
+		Vector position = new Vector(this.position);
 		position.setX(position.getX()+velocity.getX()*event.getDelta()*DELTA_MODIFIER);
 		position.setY(position.getY()+velocity.getY()*event.getDelta()*DELTA_MODIFIER);
-		position.setZ(position.getZ()+velocity.getZ()*event.getDelta()*DELTA_MODIFIER);
+		return position;
 	}
 	@Override
 	public void render(){
 		quad.render();
+	}
+	public void setPosition(Vector position){
+		this.position = position;
 	}
 	public Vector getPosition(){
 		return position;
