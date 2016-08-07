@@ -47,6 +47,18 @@ public class Vector {
 	public float getDistance(Vector vector){
 		return (float)Math.sqrt(Math.pow(vector.getX()-x, 2)+Math.pow(vector.getY()-y, 2)+Math.pow(vector.getZ()-z, 2));
 	}
+	public Vector add(Vector vector){
+		return new Vector(x+vector.getX(), y+vector.getY(), z+vector.getZ());
+	}
+	public Vector subtract(Vector vector){
+		return new Vector(x-vector.getX(), y-vector.getY(), z-vector.getZ());
+	}
+	public Vector multiply(Vector vector){
+		return new Vector(x*vector.getX(), y*vector.getY(), z*vector.getZ());
+	}
+	public Vector divide(Vector vector){
+		return new Vector(x/vector.getX(), y/vector.getY(), z/vector.getZ());
+	}
 	@Override
 	public String toString(){
 		return "["+x+", "+y+", "+z+"]";
