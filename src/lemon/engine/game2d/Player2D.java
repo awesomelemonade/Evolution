@@ -28,6 +28,9 @@ public class Player2D implements Renderable {
 	public void setPosition(Vector position){
 		this.position = position;
 	}
+	public void setVelocity(Vector velocity){
+		this.velocity = velocity;
+	}
 	public Vector getPosition(){
 		return position;
 	}

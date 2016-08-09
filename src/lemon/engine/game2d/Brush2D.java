@@ -34,7 +34,7 @@ public class Brush2D implements Renderable {
 	@Override
 	public void render() {
 		GL30.glBindVertexArray(vertexArray.getId());
-		GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, points.length);
+		GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, points.length-1);
 		GL30.glBindVertexArray(0);
 	}
 	private FloatBuffer getFloatBuffer(){
@@ -52,5 +52,8 @@ public class Brush2D implements Renderable {
 		buffer.put(color.getGreen());
 		buffer.put(color.getBlue());
 		buffer.put(color.getAlpha());
+	}
+	public Vector[] getPoints(){
+		return points;
 	}
 }
