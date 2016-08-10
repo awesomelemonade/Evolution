@@ -8,8 +8,7 @@ import org.lwjgl.opengl.GL20;
 
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
-import lemon.engine.control.WindowInitEvent;
-
+import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.math.MathUtil;
@@ -27,11 +26,11 @@ public enum Game2D implements Listener {
 	private UniformVariable uniform_transformationMatrix;
 	private Quad2D player;
 	private Matrix projectionMatrix;
-	@Subscribe
-	public void load(WindowInitEvent event){
+	
+	public void start(long window){
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
-		GLFW.glfwGetWindowSize(event.getWindow(), width, height);
+		GLFW.glfwGetWindowSize(window, width, height);
 		int window_width = width.get();
 		int window_height = height.get();
 		projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1f, 1f);
@@ -48,6 +47,7 @@ public enum Game2D implements Listener {
 		uniform_transformationMatrix.loadMatrix(Matrix.getIdentity(4));
 		GL20.glUseProgram(0);
 		player = new Quad2D(new Box2D(0f, 0, 20f, 50f), new Color(1f, 0f, 0f));
+		EventManager.INSTANCE.registerListener(this);
 	}
 	@Subscribe
 	public void update(UpdateEvent event){

@@ -23,6 +23,7 @@ import lemon.engine.entity.HeightMap;
 import lemon.engine.entity.LineGraph;
 import lemon.engine.entity.Quad;
 import lemon.engine.entity.Skybox;
+import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
@@ -246,6 +247,8 @@ public enum Game implements Listener {
 		for(Platform platform: platforms){
 			collisionHandler.addCollidable(platform);
 		}
+		
+		EventManager.INSTANCE.registerListener(this);
 	}
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;

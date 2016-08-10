@@ -57,4 +57,7 @@ public class Quad2D implements Renderable {
 		buffer.put(color.getBlue());
 		buffer.put(color.getAlpha());
 	}
+	public Box2D getBox2D(){
+		return box;
+	}
 }

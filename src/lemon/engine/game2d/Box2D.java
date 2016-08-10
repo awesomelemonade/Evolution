@@ -11,6 +11,9 @@ public class Box2D {
 		this.width = width;
 		this.height = height;
 	}
+	public boolean intersect(float x, float y){
+		return x>this.x&&x<this.x+this.width&&y>this.y&&y<this.y+this.height;
+	}
 	public void setX(float x){
 		this.x = x;
 	}
