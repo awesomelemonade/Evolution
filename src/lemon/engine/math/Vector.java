@@ -3,6 +3,14 @@ package lemon.engine.math;
 public class Vector {
 	public static final Vector[] EMPTY_ARRAY = new Vector[]{};
 	public static final Vector ZERO = Vector.unmodifiableVector(new Vector());
+	public static final Vector TOP_LEFT = Vector.unmodifiableVector(new Vector(-1f, 1f).normalize2D());
+	public static final Vector TOP = Vector.unmodifiableVector(new Vector(0f, 1f).normalize2D());
+	public static final Vector TOP_RIGHT = Vector.unmodifiableVector(new Vector(1f, 1f).normalize2D());
+	public static final Vector LEFT = Vector.unmodifiableVector(new Vector(-1f, 0f).normalize2D());
+	public static final Vector RIGHT = Vector.unmodifiableVector(new Vector(1f, 0f).normalize2D());
+	public static final Vector BOTTOM_LEFT = Vector.unmodifiableVector(new Vector(-1f, -1f).normalize2D());
+	public static final Vector BOTTOM = Vector.unmodifiableVector(new Vector(0f, -1f).normalize2D());
+	public static final Vector BOTTOM_RIGHT = Vector.unmodifiableVector(new Vector(1f, -1f).normalize2D());
 	private static final String unmodifiableMessage = "Cannot Modify Vector";
 	private float x;
 	private float y;
@@ -40,6 +48,14 @@ public class Vector {
 	}
 	public float getZ(){
 		return z;
+	}
+	public Vector normalize(){
+		float magnitude = (float)Math.sqrt(Math.pow(x, 2)+Math.pow(y, 2)+Math.pow(z, 2));
+		return new Vector(x/magnitude, y/magnitude, z/magnitude);
+	}
+	public Vector normalize2D(){
+		float magnitude = (float)Math.sqrt(Math.pow(x, 2)+Math.pow(y, 2));
+		return new Vector(x/magnitude, y/magnitude);
 	}
 	public Vector getInvert(){
 		return new Vector(-x, -y, -z);
