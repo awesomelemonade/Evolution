@@ -75,6 +75,17 @@ public class Vector {
 	public Vector divide(Vector vector){
 		return new Vector(x/vector.getX(), y/vector.getY(), z/vector.getZ());
 	}
+	public Vector average(Vector vector){
+		return new Vector((x+vector.getX())/2f, (y+vector.getY())/2f, (z+vector.getZ())/2f);
+	}
+	public float dotProduct(Vector vector){
+		return x*vector.getX()+y*vector.getY()+z*vector.getZ();
+	}
+	public Vector crossProduct(Vector vector){
+		return new Vector(y*vector.getZ()-vector.getY()*z,
+				z*vector.getX()-vector.getZ()*x,
+				x*vector.getY()-vector.getX()*y);
+	}
 	@Override
 	public String toString(){
 		return "["+x+", "+y+", "+z+"]";
