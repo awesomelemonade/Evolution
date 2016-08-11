@@ -15,10 +15,12 @@ import lemon.engine.toolbox.Color;
 
 public class Brush2D implements Renderable {
 	private Vector[] points;
+	private Vector[] normals;
 	private Color color;
 	private VertexArray vertexArray;
-	public Brush2D(Color color, Vector... points){
+	public Brush2D(Color color, Vector[] points, Vector[] normals){
 		this.points = points;
+		this.normals = normals;
 		this.color = color;
 		vertexArray = new VertexArray();
 		GL30.glBindVertexArray(vertexArray.getId());
@@ -55,5 +57,8 @@ public class Brush2D implements Renderable {
 	}
 	public Vector[] getPoints(){
 		return points;
+	}
+	public Vector[] getNormals(){
+		return normals;
 	}
 }

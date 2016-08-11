@@ -8,6 +8,8 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL20;
 
+import com.sun.org.apache.bcel.internal.util.BCELifier;
+
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.control.WindowInitEvent;
@@ -68,9 +70,24 @@ public enum Game2D implements Listener {
 		controls.bindKey(GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_S);
 		
 		brushes = new ArrayList<Brush2D>();
+		/*brushes.add(new Brush2D(new Color(0f, 1f, 0f),
+				new Vector[]{
+						new Vector(0f, 0f), new Vector(window_width, 0f),
+						new Vector(0f, 100f), new Vector(window_width, 100f)
+				},
+				new Vector[]{
+						Vector.BOTTOM_LEFT, Vector.BOTTOM_RIGHT, Vector.TOP_LEFT, Vector.TOP_RIGHT
+				})
+		);*/
 		brushes.add(new Brush2D(new Color(0f, 1f, 0f),
-				new Vector(0f, 0f), new Vector(window_width, 0f),
-				new Vector(0f, 100f), new Vector(window_width, 100f)));
+				new Vector[]{
+						new Vector(300f, 300f), new Vector(400f, 300f),
+						new Vector(300f, 400f), new Vector(400f, 400f)
+				},
+				new Vector[]{
+						Vector.BOTTOM_LEFT, Vector.BOTTOM_RIGHT, Vector.TOP_LEFT, Vector.TOP_RIGHT
+				})
+		);
 	}
 	@Subscribe
 	public void update(UpdateEvent event){
@@ -109,11 +126,11 @@ public enum Game2D implements Listener {
 		Vector velocity = finalPosition.subtract(player.getPosition());
 		for(Brush2D brush: brushes){
 			for(int i=0;i+2<brush.getPoints().length;++i){
-				float n = collide(player.getPosition(), finalPosition, brush.getPoints()[i], brush.getPoints()[i+1]);
+				float n = collide(player.getPosition(), finalPosition, brush.getPoints()[i], brush.getPoints()[i+1], brush.getNormals()[i].average(brush.getNormals()[i+1]).normalize2D());
 				System.out.println(brush.getPoints()[i]+" - "+brush.getPoints()[i+1]+": "+player.getPosition()+" - "+finalPosition+" - "+n);
-				float n2 = collide(player.getPosition(), finalPosition, brush.getPoints()[i+1], brush.getPoints()[i+2]);
+				float n2 = collide(player.getPosition(), finalPosition, brush.getPoints()[i+1], brush.getPoints()[i+2], brush.getNormals()[i+1].average(brush.getNormals()[i+2]).normalize2D());
 				System.out.println(brush.getPoints()[i+1]+" - "+brush.getPoints()[i+2]+": "+player.getPosition()+" - "+finalPosition+" - "+n2);
-				float n3 = collide(player.getPosition(), finalPosition, brush.getPoints()[i+2], brush.getPoints()[i]);
+				float n3 = collide(player.getPosition(), finalPosition, brush.getPoints()[i+2], brush.getPoints()[i], brush.getNormals()[i+2].average(brush.getNormals()[i]).normalize2D());
 				System.out.println(brush.getPoints()[i+2]+" - "+brush.getPoints()[i]+": "+player.getPosition()+" - "+finalPosition+" - "+n3);
 				float bestN = 1f;
 				if(n!=-1){
@@ -140,11 +157,28 @@ public enum Game2D implements Listener {
 		return finalPosition;
 	}
 	//Returns percentage of the line that's intersected, lower the closer; -1=no collision
-	public float collide(Vector a, Vector b, Vector c, Vector d){
+	public float collide(Vector a, Vector b, Vector c, Vector d, Vector normal){
+		System.out.println(a+" - "+b+": "+c+" - "+d+" -> "+normal);
+		if(normal.equals(Vector.ZERO)){
+			return 1f;
+		}
+		double angle = Math.acos(b.subtract(a).normalize2D().dotProduct(normal));
+		System.out.println("Angle Before: "+angle+" - "+(angle*180/Math.PI));
+		if(angle>Math.PI){
+			angle = (2*Math.PI)-angle;
+		}
+		System.out.println("Angle After: "+angle+" - "+(angle*180/Math.PI));
+		if(angle<Math.PI/2){
+			System.out.println("Normal Don't Agree: "+b.subtract(a)+" - "+normal);
+			return 1f;
+		}
 		float xDiff = b.getX()-a.getX();
 		float xDiff2 = d.getX()-c.getX();
 		System.out.println(xDiff+" - "+xDiff2);
-		if(xDiff==0&&xDiff2==0){ //Vertical Collinear
+		if(xDiff==0&&xDiff2==0){ //Vertical Collinear/Parallel
+			if(a.getX()!=c.getX()){ //Parallel
+				return -1f;
+			}
 			boolean factor = false;
 			if(a.getY()>b.getY()){
 				Vector n = a;
@@ -187,20 +221,18 @@ public enum Game2D implements Listener {
 			}
 		}
 		if(xDiff2==0){
+			//you have to use x instead of y because of horizontal lines.
 			boolean factor = false;
-			float slope = (b.getY()-a.getY())/xDiff;
-			float yIntercept = a.getY()-(slope*a.getX());
-			float y = slope*c.getX()+yIntercept;
-			if(c.getY()>d.getY()){
-				Vector n = c;
-				c = d; d = n;
+			if(a.getX()>b.getX()){
+				Vector n = a;
+				a = b; b = n;
 				factor = !factor;
 			}
-			if(y<=d.getY()&&y>=c.getY()){
+			if(c.getX()<=b.getX()&&c.getX()>=a.getX()){
 				if(factor){
-					return 1f-(y-c.getY())/(d.getY()-c.getY());
+					return 1f-(c.getX()-a.getX())/(b.getX()-a.getX());
 				}else{
-					return (y-c.getY())/(d.getY()-c.getY());
+					return (c.getX()-a.getX())/(b.getX()-a.getX());
 				}
 			}else{
 				return -1;
