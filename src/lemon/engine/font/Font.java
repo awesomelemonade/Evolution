@@ -70,6 +70,9 @@ public class Font {
 	public static int getValue(String line){
 		return Integer.parseInt(line.substring(line.indexOf('=')+1, line.length()));
 	}
+	public Texture getTexture(){
+		return texture;
+	}
 	public int getLineHeight(){
 		return lineHeight;
 	}
