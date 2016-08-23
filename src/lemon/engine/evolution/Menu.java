@@ -101,7 +101,7 @@ public enum Menu implements Listener {
 		EventManager.INSTANCE.unregisterListener(this);
 	}
 	public void startText(){
-		
+		FontTest.INSTANCE.start(window);
 		EventManager.INSTANCE.unregisterListener(this);
 	}
 }
