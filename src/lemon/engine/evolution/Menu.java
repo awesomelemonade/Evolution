@@ -43,8 +43,8 @@ public enum Menu implements Listener {
 		uniform_projectionMatrix = shaderProgram.getUniformVariable("projectionMatrix");
 		uniform_transformationMatrix = shaderProgram.getUniformVariable("transformationMatrix");
 		GL20.glUseProgram(shaderProgram.getId());
-		uniform_projectionMatrix.loadMatrix(Matrix.getIdentity(4));
-		uniform_transformationMatrix.loadMatrix(Matrix.getIdentity(4));
+		uniform_projectionMatrix.loadMatrix(Matrix.IDENTITY_4);
+		uniform_transformationMatrix.loadMatrix(Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
 		EventManager.INSTANCE.registerListener(this);
 		buttons = new ArrayList<Quad2D>();

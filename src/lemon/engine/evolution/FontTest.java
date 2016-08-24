@@ -55,7 +55,7 @@ public enum FontTest implements Listener {
 		uniform_textColor = textProgram.getUniformVariable("color");
 		uniform_textSampler = textProgram.getUniformVariable("sampler");
 		GL20.glUseProgram(textProgram.getId());
-		uniform_textModelMatrix.loadMatrix(Matrix.getIdentity(4));
+		uniform_textModelMatrix.loadMatrix(Matrix.IDENTITY_4);
 		uniform_textViewMatrix.loadMatrix(MathUtil.getTranslation(new Vector(0f, 0f, -500f)));
 		uniform_textProjectionMatrix.loadMatrix(projectionMatrix);
 		uniform_textColor.loadVector(new Vector(1f, 1f, 1f));
