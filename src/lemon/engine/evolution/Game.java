@@ -1,13 +1,19 @@
 package lemon.engine.evolution;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.imageio.ImageIO;
+
+import org.jcodec.api.awt.SequenceEncoder;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -17,6 +23,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
+import lemon.engine.control.CleanUpEvent;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.entity.HeightMap;
@@ -101,6 +108,9 @@ public enum Game implements Listener {
 	
 	private List<Platform> platforms;
 	
+	private int window_width;
+	private int window_height;
+	
 	public TerrainLoader getTerrainLoader(){
 		if(terrainLoader==null){
 			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (100f/TILE_SIZE), 2), Math.max((int) (100f/TILE_SIZE), 2));
@@ -113,8 +123,8 @@ public enum Game implements Listener {
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(window, width, height);
-		int window_width = width.get();
-		int window_height = height.get();
+		window_width = width.get();
+		window_height = height.get();
 		
 		GL11.glViewport(0, 0, window_width, window_height);
 		
@@ -247,7 +257,11 @@ public enum Game implements Listener {
 		for(Platform platform: platforms){
 			collisionHandler.addCollidable(platform);
 		}
-		
+		try {
+			encoder = new SequenceEncoder(new File("out/vid.mp4"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		EventManager.INSTANCE.registerListener(this);
 	}
 	private static float friction = 0.98f;
@@ -347,6 +361,7 @@ public enum Game implements Listener {
 		variable.loadMatrix(player.getCamera().getProjectionMatrix());
 		GL20.glUseProgram(0);
 	}
+	SequenceEncoder encoder;
 	@Subscribe
 	public void render(RenderEvent event){
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
@@ -356,11 +371,55 @@ public enum Game implements Listener {
 		GL11.glDepthMask(true);
 		renderHeightMap();
 		renderPlatforms();
+		
+		try {
+			BufferedImage image = toBufferedImage(window_width, window_height);
+			encoder.encodeImage(image);
+			ImageIO.write(image, "png", getNextScreenFile());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL20.glUseProgram(postProcessingProgram.getId());
 		Quad.TEXTURED.render();
 		GL20.glUseProgram(0);
 		renderFPS();
+	}
+	@Subscribe
+	public void close(CleanUpEvent event){
+		try {
+			encoder.finish();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	private File getNextScreenFile() {
+		String fileName = "out/test";
+		File imageToSave = new File(fileName + ".png");
+		int duplicate = 0;
+		while(imageToSave.exists()) {
+			imageToSave = new File(fileName + "_" + ++duplicate + ".png");
+		}
+		return imageToSave;
+	}
+	public BufferedImage toBufferedImage(int width, int height){
+		FloatBuffer buffer = BufferUtils.createFloatBuffer(3*width*height);
+		GL11.glReadPixels(0, 0, width, height, GL11.GL_RGB, GL11.GL_FLOAT, buffer);
+		buffer.rewind();
+		int[] rgbArray = new int[width*height];
+		for(int y=0;y<height;++y){
+			for(int x=0;x<width;++x){
+				int r = (int)(buffer.get()*255) << 16;
+				int g = (int)(buffer.get()*255) << 8;
+				int b = (int)(buffer.get()*255);
+				int i = ((height-1)-y)*width+x;
+				rgbArray[i] = r+g+b;
+			}
+		}
+		BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		image.setRGB(0, 0, width, height, rgbArray, 0, width);
+		return image;
 	}
 	public void renderHeightMap(){
 		GL11.glEnable(GL11.GL_BLEND);
