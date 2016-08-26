@@ -1,4 +1,4 @@
-package lemon.engine.evolution;
+package lemon.engine.animation;
 
 import java.io.File;
 import java.nio.IntBuffer;
@@ -10,12 +10,13 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
 import lemon.engine.control.RenderEvent;
+import lemon.engine.control.UpdateEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.font.Font;
 import lemon.engine.font.Text;
-import lemon.engine.math.MathUtil;
+import lemon.engine.math.Camera;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector;
@@ -27,6 +28,7 @@ import lemon.engine.toolbox.Toolbox;
 
 public enum FontTest implements Listener {
 	INSTANCE;
+	private Camera camera;
 	private ShaderProgram textProgram;
 	private UniformVariable uniform_textModelMatrix;
 	private UniformVariable uniform_textViewMatrix;
@@ -42,7 +44,8 @@ public enum FontTest implements Listener {
 		int window_width = width.get();
 		int window_height = height.get();
 		GL11.glViewport(0, 0, window_width, window_height);
-		Matrix projectionMatrix = MathUtil.getPerspective(new Projection(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f));
+		camera = new Camera(new Vector(0, 0, 500f), new Vector(), new Projection(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f));
+		Matrix projectionMatrix = camera.getProjectionMatrix();
 		textProgram = new ShaderProgram(
 				new int[]{0, 1},
 				new String[]{"position", "textureCoords"},
@@ -56,14 +59,27 @@ public enum FontTest implements Listener {
 		uniform_textSampler = textProgram.getUniformVariable("sampler");
 		GL20.glUseProgram(textProgram.getId());
 		uniform_textModelMatrix.loadMatrix(Matrix.IDENTITY_4);
-		uniform_textViewMatrix.loadMatrix(MathUtil.getTranslation(new Vector(0f, 0f, -500f)));
+		uniform_textViewMatrix.loadMatrix(Matrix.IDENTITY_4);
 		uniform_textProjectionMatrix.loadMatrix(projectionMatrix);
 		uniform_textColor.loadVector(new Vector(1f, 1f, 1f));
 		uniform_textSampler.loadInt(TextureBank.REUSE.getId());
 		GL20.glUseProgram(0);
 		font = new Font(new File("res/fonts/FreeSans.fnt"));
 		text = new Text(font, "Testing 123");
+		
+		updateViewMatrix();
+		
 		EventManager.INSTANCE.registerListener(this);
+	}
+	public void updateViewMatrix(){
+		GL20.glUseProgram(textProgram.getId());
+		uniform_textViewMatrix.loadMatrix(camera.getInvertedRotationMatrix().multiply(camera.getInvertedTranslationMatrix()));
+		GL20.glUseProgram(0);
+	}
+	@Subscribe
+	public void update(UpdateEvent event){
+		camera.getPosition().setX(camera.getPosition().getX()+event.getDelta()*0.0000001f);
+		updateViewMatrix();
 	}
 	@Subscribe
 	public void render(RenderEvent event){
