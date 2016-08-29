@@ -7,16 +7,19 @@ import javax.swing.JFrame;
 
 public class Launcher {
 	private static LauncherGui launcher;
-	private static String javaHome = System.getProperty("java.home");
-	private static String javaBin = javaHome+File.separator+"bin"+File.separator+"java";
-	private static String natives = "-Djava.library.path=/home/awesomelemonade/Data/lwjgl/native";
-	private static String classpaths = "/home/awesomelemonade/Data/lwjgl/jar/lwjgl.jar:bin";
-	private static String main = "lemon.engine.evolution.Evolution";
+	private static Settings settings;
 	public static void main(String[] args){
+		settings = new Settings();
+		settings.setDefaultValue("javaHome", System.getProperty("java.home"));
+		settings.setDefaultValue("javaBin", settings.getValue("javaHome")+File.separator+"bin"+File.separator+"java");
+		settings.setDefaultValue("natives", "-Djava.library.path=/home/awesomelemonade/Data/lwjgl/native");
+		settings.setDefaultValue("classpaths", "/home/awesomelemonade/Data/lwjgl/jar/lwjgl.jar:bin");
+		settings.setDefaultValue("main", "lemon.engine.evolution.Evolution");
 		launcher = new LauncherGui("Launcher", JFrame.EXIT_ON_CLOSE, new ProcessLauncher(){
 			@Override
 			public void launchProcess() {
-				ProcessBuilder builder = new ProcessBuilder(javaBin, natives, "-cp", classpaths, main).inheritIO();
+				ProcessBuilder builder = new ProcessBuilder(settings.getValue("javaBin"), settings.getValue("natives"),
+						"-cp", settings.getValue("classpaths"), settings.getValue("main")).inheritIO();
 				try {
 					launcher.startProcess(builder);
 				} catch (IOException e) {
