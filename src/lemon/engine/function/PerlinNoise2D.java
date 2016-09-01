@@ -1,16 +1,16 @@
 package lemon.engine.function;
 
-public class PerlinNoise2D implements Function2D<Float, Float> {
+public class PerlinNoise2D implements Function2D<Float, Float, Float> {
 	private HashFunction hasher;
 	private PairingFunction pairer;
 	private AbsoluteValue abs;
-	private Function2D<Float, Float> persistence;
+	private Function2D<Float, Float, Float> persistence;
 	private int iterations;
 
 	public PerlinNoise2D(HashFunction hasher, PairingFunction pairer, float persistence, int iterations){
-		this(hasher, pairer, new ConstantFunction2D<Float, Float>(persistence), iterations);
+		this(hasher, pairer, new ConstantFunction2D<Float, Float, Float>(persistence), iterations);
 	}
-	public PerlinNoise2D(HashFunction hasher, PairingFunction pairer, Function2D<Float, Float> persistence, int iterations){
+	public PerlinNoise2D(HashFunction hasher, PairingFunction pairer, Function2D<Float, Float, Float> persistence, int iterations){
 		this.hasher = hasher;
 		this.pairer = pairer;
 		abs = new AbsoluteValue();
