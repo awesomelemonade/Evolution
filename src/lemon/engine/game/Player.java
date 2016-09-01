@@ -21,6 +21,11 @@ public class Player implements Collidable {
 	public Camera getCamera(){
 		return camera;
 	}
+	public Vector getVectorDirection(){
+		return new Vector((float)(-(Math.sin(Math.toRadians(camera.getRotation().getY()))*Math.cos(Math.toRadians(camera.getRotation().getX())))),
+				(float)(Math.sin(Math.toRadians(camera.getRotation().getX()))),
+						(float)(-(Math.cos(Math.toRadians(camera.getRotation().getX()))*Math.cos(Math.toRadians(camera.getRotation().getY())))));
+	}
 	@Override
 	public Vector getPosition(){
 		return camera.getPosition();

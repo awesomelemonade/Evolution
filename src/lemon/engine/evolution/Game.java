@@ -27,17 +27,21 @@ import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
+import lemon.engine.function.MollerTrumbore;
 import lemon.engine.game.CollisionHandler;
 import lemon.engine.game.Platform;
 import lemon.engine.game.Player;
 import lemon.engine.game.PlayerControls;
 import lemon.engine.game.StandardControls;
 import lemon.engine.input.CursorPositionEvent;
+import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.loader.SkyboxLoader;
+import lemon.engine.math.Line;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
+import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
@@ -244,10 +248,11 @@ public enum Game implements Listener {
 		collisionHandler.addCollidable(player);
 		platforms = new ArrayList<Platform>();
 		platforms.add(new Platform(new Vector(10f, 0f, 10f)));
+		platforms.add(new Platform(new Vector(0f, 0f, 0f)));
 		for(Platform platform: platforms){
 			collisionHandler.addCollidable(platform);
 		}
-		
+		rayTriangleIntersection = new MollerTrumbore();
 		EventManager.INSTANCE.registerListener(this);
 	}
 	private static float friction = 0.98f;
@@ -319,7 +324,7 @@ public enum Game implements Listener {
 		mouseX = event.getX();
 		mouseY = event.getY();
 		if(controls.getState(GLFW.GLFW_MOUSE_BUTTON_1)){
-			player.getCamera().getRotation().setY((float) (player.getCamera().getRotation().getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY));
+			player.getCamera().getRotation().setY((float) (((player.getCamera().getRotation().getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY)%360)+360)%360);
 			player.getCamera().getRotation().setX((float) (player.getCamera().getRotation().getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
 			if(player.getCamera().getRotation().getX()<-90){
 				player.getCamera().getRotation().setX(-90);
@@ -411,5 +416,16 @@ public enum Game implements Listener {
 	@Subscribe
 	public void onBenchmark(BenchmarkEvent event){
 		benchmarker.benchmark(event.getBenchmark());
+	}
+	private MollerTrumbore rayTriangleIntersection;
+	@Subscribe
+	public void onClick(MouseButtonEvent event){
+		if(event.getAction()==GLFW.GLFW_RELEASE){
+			if(event.getButton()==GLFW.GLFW_MOUSE_BUTTON_1){
+				System.out.println(rayTriangleIntersection.resolve(new Triangle(new Vector(-1f, 0f, -1f), new Vector(-1f, 0f, 1f), new Vector(1f, 0f, 0f)),
+						new Line(player.getCamera().getPosition(), player.getVectorDirection())));
+				
+			}
+		}
 	}
 }
