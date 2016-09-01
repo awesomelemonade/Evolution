@@ -252,7 +252,7 @@ public enum Game implements Listener {
 		for(Platform platform: platforms){
 			collisionHandler.addCollidable(platform);
 		}
-		rayTriangleIntersection = new MollerTrumbore();
+		rayTriangleIntersection = new MollerTrumbore(true);
 		EventManager.INSTANCE.registerListener(this);
 	}
 	private static float friction = 0.98f;

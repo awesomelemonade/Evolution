@@ -6,11 +6,16 @@ import lemon.engine.math.Vector;
 
 public class MollerTrumbore implements Function2D<Triangle, Line, Float> {
 	private final float EPSILON;
+	private final boolean culling;
 	public MollerTrumbore(){
-		this(0.000001f);
+		this(0.000001f, false);
 	}
-	public MollerTrumbore(float EPSILON){
+	public MollerTrumbore(boolean culling){
+		this(0.000001f, culling);
+	}
+	public MollerTrumbore(float EPSILON, boolean culling){
 		this.EPSILON = EPSILON;
+		this.culling = culling;
 	}
 	@Override
 	public Float resolve(Triangle triangle, Line ray) {
@@ -26,8 +31,14 @@ public class MollerTrumbore implements Function2D<Triangle, Line, Float> {
 		
 		determinant = edge.dotProduct(p);
 		
-		if(determinant > -EPSILON && determinant < EPSILON){
-			return null;
+		if(culling){
+			if(determinant < EPSILON){
+				return null;
+			}
+		}else{
+			if(determinant > -EPSILON && determinant < EPSILON){
+				return null;
+			}
 		}
 		inverseDeterminant = 1f/determinant;
 		
