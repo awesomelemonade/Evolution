@@ -12,28 +12,23 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
+import javax.swing.text.DefaultCaret;
 
 public class LauncherGui {
 	private JFrame frame;
 	private List<Process> processes;
+	private List<LoggerGui> loggers;
+	private JTabbedPane tabbedPane;
 	public LauncherGui(String title, int closeOperation, ProcessLauncher processLauncher){
 		processes = new ArrayList<Process>();
+		loggers = new ArrayList<LoggerGui>();
 		frame = new JFrame(title);
 		frame.setDefaultCloseOperation(closeOperation);
 		frame.setSize(800, 600);
 		frame.setLayout(new BorderLayout());
 		frame.setResizable(true);
 		frame.setVisible(true);
-		JTabbedPane tabbedPane = new JTabbedPane();
-		JPanel panel = new JPanel(new BorderLayout());
-		JTextArea textArea = new JTextArea();
-		textArea.setEditable(false);
-		textArea.setLineWrap(true);
-		textArea.setWrapStyleWord(true);
-		JScrollPane scrollPane = new JScrollPane(textArea);
-		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-		panel.add(scrollPane, BorderLayout.CENTER);
+		tabbedPane = new JTabbedPane();
 		JButton playButton = new JButton("Play");
 		playButton.addActionListener(new ActionListener(){
 			@Override
@@ -41,12 +36,22 @@ public class LauncherGui {
 				processLauncher.launchProcess();
 			}
 		});
-		panel.add(playButton, BorderLayout.SOUTH);
-		tabbedPane.addTab("Main", panel);
+		frame.add(playButton, BorderLayout.SOUTH);
 		frame.add(tabbedPane, BorderLayout.CENTER);
 	}
 	public void startProcess(ProcessBuilder builder) throws IOException {
-		processes.add(builder.start());
+		Process process = builder.start();
+		LoggerGui logger = new LoggerGui(process.getErrorStream());
+		logger.setCaretPolicy(DefaultCaret.ALWAYS_UPDATE);
+		new Thread(logger).start();
+		JPanel panel = new JPanel(new BorderLayout());
+		JScrollPane scrollPane = new JScrollPane(logger.getJTextArea());
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		panel.add(scrollPane, BorderLayout.CENTER);
+		tabbedPane.addTab("Process "+(processes.size()+1), panel);
+		tabbedPane.setSelectedComponent(panel);
+		processes.add(process);
+		loggers.add(logger);
 	}
 	public JFrame getFrame(){
 		return frame;

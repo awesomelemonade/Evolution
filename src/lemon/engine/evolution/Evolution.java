@@ -27,6 +27,7 @@ public class Evolution {
 		logger.setLevel(Level.ALL);
 		ConsoleHandler consoleHandler = new ConsoleHandler();
 		consoleHandler.setFormatter(new SimpleFormatter());
+		consoleHandler.setLevel(Level.ALL);
 		logger.addHandler(consoleHandler);
 		GLFWWindowSettings settings = new GLFWWindowSettings(){
 			@Override

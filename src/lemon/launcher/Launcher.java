@@ -19,7 +19,7 @@ public class Launcher {
 			@Override
 			public void launchProcess() {
 				ProcessBuilder builder = new ProcessBuilder(settings.getValue("javaBin"), settings.getValue("natives"),
-						"-cp", settings.getValue("classpaths"), settings.getValue("main")).inheritIO();
+						"-cp", settings.getValue("classpaths"), settings.getValue("main"));
 				try {
 					launcher.startProcess(builder);
 				} catch (IOException e) {
