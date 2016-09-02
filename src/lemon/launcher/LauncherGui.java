@@ -10,7 +10,9 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 
 public class LauncherGui {
 	private JFrame frame;
@@ -25,6 +27,13 @@ public class LauncherGui {
 		frame.setVisible(true);
 		JTabbedPane tabbedPane = new JTabbedPane();
 		JPanel panel = new JPanel(new BorderLayout());
+		JTextArea textArea = new JTextArea();
+		textArea.setEditable(false);
+		textArea.setLineWrap(true);
+		textArea.setWrapStyleWord(true);
+		JScrollPane scrollPane = new JScrollPane(textArea);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		panel.add(scrollPane, BorderLayout.CENTER);
 		JButton playButton = new JButton("Play");
 		playButton.addActionListener(new ActionListener(){
 			@Override
