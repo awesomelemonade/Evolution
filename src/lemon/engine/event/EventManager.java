@@ -6,9 +6,11 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,6 +24,7 @@ public enum EventManager {
 	private Map<Class<? extends Event>, List<ListenerMethod>> preloaded;
 	private Queue<Listener> registrationQueue;
 	private Queue<Listener> unregistrationQueue;
+	private Set<Listener> listeners;
 	private boolean inEvent;
 	
 	private EventManager(){
@@ -29,6 +32,7 @@ public enum EventManager {
 		preloaded = new HashMap<Class<? extends Event>, List<ListenerMethod>>();
 		registrationQueue = new ArrayDeque<Listener>();
 		unregistrationQueue = new ArrayDeque<Listener>();
+		listeners = new HashSet<Listener>();
 		inEvent = false;
 	}
 	public void registerListener(Listener listener){
@@ -88,6 +92,9 @@ public enum EventManager {
 	}
 	@SuppressWarnings("unchecked") //It's actually checked!
 	private void internalRegisterListener(Listener listener){
+		if(listeners.contains(listener)){
+			throw new IllegalArgumentException(String.format("Cannot Register %s:%s twice", listener.getClass().toString(), listener.toString()));
+		}
 		boolean registered = false;
 		for(Method method: listener.getClass().getMethods()){
 			if(!Modifier.isStatic(method.getModifiers())){
@@ -111,11 +118,16 @@ public enum EventManager {
 				}
 			}
 		}
-		if(!registered){
+		if(registered){
+			listeners.add(listener);
+		}else{
 			logger.log(Level.WARNING, String.format("Registered listener with no valid methods: %s", listener.getClass().getName()));
 		}
 	}
 	private void internalUnregisterListener(Listener listener){
+		if(!listeners.contains(listener)){
+			return;
+		}
 		List<ListenerMethod> unregister = new ArrayList<ListenerMethod>();
 		for(List<ListenerMethod> methods: this.methods.values()){
 			for(ListenerMethod method: methods){
@@ -136,6 +148,7 @@ public enum EventManager {
 				}
 			}
 		}
+		listeners.remove(listener);
 	}
 	private class ListenerMethod{
 		private final Listener listener;
