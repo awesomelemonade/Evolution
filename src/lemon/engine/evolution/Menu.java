@@ -2,13 +2,14 @@ package lemon.engine.evolution;
 
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL20;
 
 import lemon.engine.control.RenderEvent;
-import lemon.engine.control.UpdateEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -29,8 +30,7 @@ public enum Menu implements Listener {
 	private ShaderProgram shaderProgram;
 	private UniformVariable uniform_projectionMatrix;
 	private UniformVariable uniform_transformationMatrix;
-	private Quad2D button;
-	private Quad2D button2;
+	private List<Quad2D> buttons;
 	
 	public void start(long window){
 		this.window = window;
@@ -43,16 +43,14 @@ public enum Menu implements Listener {
 		uniform_projectionMatrix = shaderProgram.getUniformVariable("projectionMatrix");
 		uniform_transformationMatrix = shaderProgram.getUniformVariable("transformationMatrix");
 		GL20.glUseProgram(shaderProgram.getId());
-		uniform_projectionMatrix.loadMatrix(Matrix.getIdentity(4));
-		uniform_transformationMatrix.loadMatrix(Matrix.getIdentity(4));
+		uniform_projectionMatrix.loadMatrix(Matrix.IDENTITY_4);
+		uniform_transformationMatrix.loadMatrix(Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
 		EventManager.INSTANCE.registerListener(this);
-		button = new Quad2D(new Box2D(-0.3f, -0.5f, 0.6f, 0.1f), new Color(100f, 100f, 100f));
-		button2 = new Quad2D(new Box2D(-0.3f, -0.7f, 0.6f, 0.1f), new Color(100f, 100f, 100f));
-	}
-	@Subscribe
-	public void update(UpdateEvent event){
-		//startLoading(window);
+		buttons = new ArrayList<Quad2D>();
+		for(int i=0;i<3;++i){
+			buttons.add(new Quad2D(new Box2D(-0.3f, -0.3f-i*0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
+		}
 	}
 	@Subscribe
 	public void onMouseClick(MouseButtonEvent event){
@@ -69,19 +67,29 @@ public enum Menu implements Listener {
 			int window_height = height.get();
 			mouseX = (2f*mouseX/window_width)-1f;
 			mouseY = -1f*((2f*mouseY/window_height)-1f);
-			if(button.getBox2D().intersect(mouseX, mouseY)){
-				startLoading();
-			}
-			if(button2.getBox2D().intersect(mouseX, mouseY)){
-				start2D();
+			for(int i=0;i<buttons.size();++i){
+				if(buttons.get(i).getBox2D().intersect(mouseX, mouseY)){
+					switch(i){
+						case 0:
+							startLoading();
+							break;
+						case 1:
+							start2D();
+							break;
+						case 2:
+							startText();
+							break;
+					}
+				}
 			}
 		}
 	}
 	@Subscribe
 	public void render(RenderEvent event){
 		GL20.glUseProgram(shaderProgram.getId());
-		button.render();
-		button2.render();
+		for(Quad2D button: buttons){
+			button.render();
+		}
 		GL20.glUseProgram(0);
 	}
 	public void startLoading(){
@@ -90,6 +98,10 @@ public enum Menu implements Listener {
 	}
 	public void start2D(){
 		Game2D.INSTANCE.start(window);
+		EventManager.INSTANCE.unregisterListener(this);
+	}
+	public void startText(){
+		FontTest.INSTANCE.start(window);
 		EventManager.INSTANCE.unregisterListener(this);
 	}
 }

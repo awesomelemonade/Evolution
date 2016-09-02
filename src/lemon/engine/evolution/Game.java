@@ -145,7 +145,7 @@ public enum Game implements Listener {
 		uniform_colorViewMatrix = colorProgram.getUniformVariable("viewMatrix");
 		uniform_colorProjectionMatrix = colorProgram.getUniformVariable("projectionMatrix");
 		GL20.glUseProgram(colorProgram.getId());
-		uniform_colorModelMatrix.loadMatrix(Matrix.getIdentity(4));
+		uniform_colorModelMatrix.loadMatrix(Matrix.IDENTITY_4);
 		uniform_colorProjectionMatrix.loadMatrix(projectionMatrix);
 		GL20.glUseProgram(0);
 		updateViewMatrix(colorProgram, uniform_colorViewMatrix);
@@ -372,7 +372,7 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(colorProgram.getId());
-		uniform_colorModelMatrix.loadMatrix(Matrix.getIdentity(4));
+		uniform_colorModelMatrix.loadMatrix(Matrix.IDENTITY_4);
 		terrain.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);

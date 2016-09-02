@@ -6,13 +6,25 @@ import java.util.Arrays;
 import org.lwjgl.BufferUtils;
 
 public class Matrix {
+	public static final Matrix IDENTITY_4 = Matrix.unmodifiableMatrix(Matrix.getIdentity(4));
+	private static final String unmodifiableMessage = "Cannot Modify Matrix";
 	private float[][] data;
-	
 	public Matrix(int size){
 		this(size, size);
 	}
 	public Matrix(int m, int n){
 		this.data = new float[m][n];
+	}
+	public Matrix(float[][] data){
+		this.data = new float[data.length][data[0].length];
+		for(int i=0;i<data.length;++i){
+			for(int j=0;j<data[0].length;++j){
+				this.data[i][j] = data[i][j];
+			}
+		}
+	}
+	public Matrix(Matrix matrix){
+		this(matrix.data);
 	}
 	public void set(int m, int n, float data){
 		this.data[m][n] = data;
@@ -55,6 +67,14 @@ public class Matrix {
 	@Override
 	public String toString(){
 		return Arrays.deepToString(data);
+	}
+	public static Matrix unmodifiableMatrix(Matrix matrix){
+		return new Matrix(matrix){
+			@Override
+			public void set(int x, int y, float data){
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+		};
 	}
 	public static Matrix getIdentity(int size){
 		Matrix matrix = new Matrix(size);
