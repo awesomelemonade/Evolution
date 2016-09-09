@@ -3,6 +3,8 @@ package lemon.launcher;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +29,6 @@ public class LauncherGui {
 		frame.setSize(800, 600);
 		frame.setLayout(new BorderLayout());
 		frame.setResizable(true);
-		frame.setVisible(true);
 		tabbedPane = new JTabbedPane();
 		JButton playButton = new JButton("Play");
 		playButton.addActionListener(new ActionListener(){
@@ -38,6 +39,25 @@ public class LauncherGui {
 		});
 		frame.add(playButton, BorderLayout.SOUTH);
 		frame.add(tabbedPane, BorderLayout.CENTER);
+		frame.addWindowListener(new WindowAdapter(){
+			@Override
+			public void windowClosing(WindowEvent event){
+				for(Process process: processes){
+					process.destroyForcibly();
+					new Thread(new Runnable(){
+						@Override
+						public void run() {
+							try {
+								System.out.println("Process Exit Value: "+process.waitFor());
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							}
+						}
+					}).start();
+				}
+			}
+		});
+		frame.setVisible(true);
 	}
 	public void startProcess(ProcessBuilder builder) throws IOException {
 		Process process = builder.start();
