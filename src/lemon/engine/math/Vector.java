@@ -63,6 +63,9 @@ public class Vector {
 	public Vector getInvert(){
 		return new Vector(-x, -y, -z);
 	}
+	public float absoluteValue(){
+		return getDistance(Vector.ZERO);
+	}
 	public float getDistance(Vector vector){
 		return (float)Math.sqrt(Math.pow(vector.getX()-x, 2)+Math.pow(vector.getY()-y, 2)+Math.pow(vector.getZ()-z, 2));
 	}
@@ -75,8 +78,14 @@ public class Vector {
 	public Vector multiply(Vector vector){
 		return new Vector(x*vector.getX(), y*vector.getY(), z*vector.getZ());
 	}
+	public Vector multiply(float scale){
+		return new Vector(x*scale, y*scale, z*scale);
+	}
 	public Vector divide(Vector vector){
 		return new Vector(x/vector.getX(), y/vector.getY(), z/vector.getZ());
+	}
+	public Vector divide(float scale){
+		return multiply(1f/scale);
 	}
 	public Vector average(Vector vector){
 		return new Vector((x+vector.getX())/2f, (y+vector.getY())/2f, (z+vector.getZ())/2f);
