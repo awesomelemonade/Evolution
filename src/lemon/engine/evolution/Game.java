@@ -28,6 +28,7 @@ import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.function.MollerTrumbore;
+import lemon.engine.function.RaySphereIntersection;
 import lemon.engine.game.CollisionHandler;
 import lemon.engine.game.Platform;
 import lemon.engine.game.Player;
@@ -41,6 +42,7 @@ import lemon.engine.math.Line;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
+import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector;
 import lemon.engine.render.ShaderProgram;
@@ -181,6 +183,7 @@ public enum Game implements Listener {
 			collisionHandler.addCollidable(platform);
 		}
 		rayTriangleIntersection = new MollerTrumbore(true);
+		raySphereIntersection = new RaySphereIntersection();
 		EventManager.INSTANCE.registerListener(this);
 	}
 	private static float friction = 0.98f;
@@ -348,13 +351,15 @@ public enum Game implements Listener {
 		benchmarker.benchmark(event.getBenchmark());
 	}
 	private MollerTrumbore rayTriangleIntersection;
+	private RaySphereIntersection raySphereIntersection;
 	@Subscribe
 	public void onClick(MouseButtonEvent event){
 		if(event.getAction()==GLFW.GLFW_RELEASE){
 			if(event.getButton()==GLFW.GLFW_MOUSE_BUTTON_1){
+				Line line = new Line(player.getCamera().getPosition(), player.getVectorDirection());
 				System.out.println(rayTriangleIntersection.resolve(new Triangle(new Vector(-1f, 0f, -1f), new Vector(-1f, 0f, 1f), new Vector(1f, 0f, 0f)),
-						new Line(player.getCamera().getPosition(), player.getVectorDirection())));
-				
+						line));
+				System.out.println(raySphereIntersection.resolve(line, new Sphere(Vector.ZERO, 1f)));
 			}
 		}
 	}
