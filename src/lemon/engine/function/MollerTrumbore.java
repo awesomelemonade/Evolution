@@ -24,10 +24,10 @@ public class MollerTrumbore implements Function2D<Triangle, Line, Float> {
 		float determinant;
 		float inverseDeterminant, u, v, t;
 		
-		edge = triangle.get(1).subtract(triangle.get(0));
-		edge2 = triangle.get(2).subtract(triangle.get(0));
+		edge = triangle.getVertex2().subtract(triangle.getVertex1());
+		edge2 = triangle.getVertex3().subtract(triangle.getVertex1());
 		
-		p = ray.get(1).crossProduct(edge2);
+		p = ray.getDirection().crossProduct(edge2);
 		
 		determinant = edge.dotProduct(p);
 		
@@ -42,7 +42,7 @@ public class MollerTrumbore implements Function2D<Triangle, Line, Float> {
 		}
 		inverseDeterminant = 1f/determinant;
 		
-		distance = ray.get(0).subtract(triangle.get(0));
+		distance = ray.getOrigin().subtract(triangle.getVertex1());
 		
 		u = distance.dotProduct(p) * inverseDeterminant;
 		
@@ -52,7 +52,7 @@ public class MollerTrumbore implements Function2D<Triangle, Line, Float> {
 		
 		q = distance.crossProduct(edge);
 		
-		v = ray.get(1).dotProduct(q)*inverseDeterminant;
+		v = ray.getDirection().dotProduct(q)*inverseDeterminant;
 		
 		if(v<0f||u+v>1f){
 			return null;
