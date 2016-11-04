@@ -1,10 +1,12 @@
 package lemon.engine.function;
 
+import java.util.function.BiFunction;
+
 import lemon.engine.math.Line;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector;
 
-public class MollerTrumbore implements Function2D<Triangle, Line, Float> {
+public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
 	private final float EPSILON;
 	private final boolean culling;
 	public MollerTrumbore(){
@@ -18,7 +20,7 @@ public class MollerTrumbore implements Function2D<Triangle, Line, Float> {
 		this.culling = culling;
 	}
 	@Override
-	public Float resolve(Triangle triangle, Line ray) {
+	public Float apply(Triangle triangle, Line ray) {
 		Vector edge, edge2;
 		Vector p, q, distance;
 		float determinant;

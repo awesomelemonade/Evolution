@@ -1,12 +1,14 @@
 package lemon.engine.function;
 
+import java.util.function.BiFunction;
+
 import lemon.engine.math.Line;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Vector;
 
-public class RaySphereIntersection implements Function2D<Line, Sphere, Float>{
+public class RaySphereIntersection implements BiFunction<Line, Sphere, Float>{
 	@Override
-	public Float resolve(Line ray, Sphere sphere) {
+	public Float apply(Line ray, Sphere sphere) {
 		float t0, t1;
 		Vector l = sphere.getCenter().subtract(ray.getOrigin());
 		float tca = l.dotProduct(ray.getDirection());

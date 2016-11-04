@@ -1,17 +1,20 @@
 package lemon.engine.function;
 
-public class PerlinNoise implements Function<Float, Float> {
-	private HashFunction hasher;
+import java.util.function.IntUnaryOperator;
+import java.util.function.UnaryOperator;
+
+public class PerlinNoise implements UnaryOperator<Float> {
+	private IntUnaryOperator hasher;
 	private float persistence;
 	private int iterations;
 	
-	public PerlinNoise(HashFunction hasher, float persistence, int iterations){
+	public PerlinNoise(IntUnaryOperator hasher, float persistence, int iterations){
 		this.hasher = hasher;
 		this.persistence = persistence;
 		this.iterations = iterations;
 	}
 	@Override
-	public Float resolve(Float x){
+	public Float apply(Float x){
 		float output = 0;
 		for(int i=0;i<iterations;++i){
 			float frequency = (float)Math.pow(2, i);
@@ -36,6 +39,6 @@ public class PerlinNoise implements Function<Float, Float> {
 		return hash(x)/2f+hash(x-1)/4f+hash(x+1)/4f;
 	}
 	public float hash(int x){
-		return ((float)hasher.resolve(x))/((float)(Integer.MAX_VALUE));
+		return ((float)hasher.applyAsInt(x))/((float)(Integer.MAX_VALUE));
 	}
 }

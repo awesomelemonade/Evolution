@@ -2,8 +2,9 @@ package lemon.engine.function;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.IntUnaryOperator;
 
-public class MurmurHash implements HashFunction {
+public class MurmurHash implements IntUnaryOperator {
 	private int seed;
 	private static final int c1 = 0xcc9e2d51;
 	private static final int c2 = 0x1b873593;
@@ -21,8 +22,8 @@ public class MurmurHash implements HashFunction {
 		this.seed = seed;
 	}
 	@Override
-	public Integer resolve(Integer value) {
-		int k1 = mixK1(value);
+	public int applyAsInt(int operand) {
+		int k1 = mixK1(operand);
 		int h1 = mixH1(seed, k1);
 		return fmix(h1, 32);
 	}
@@ -47,11 +48,9 @@ public class MurmurHash implements HashFunction {
 		h1 ^= h1 >>> 16;
 		return h1;
 	}
-	@Override
 	public void setSeed(int seed) {
 		this.seed = seed;
 	}
-	@Override
 	public int getSeed() {
 		return seed;
 	}

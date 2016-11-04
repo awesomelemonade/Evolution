@@ -1,28 +1,31 @@
 package lemon.engine.function;
 
-public class PerlinNoise2D implements Function2D<Float, Float, Float> {
-	private HashFunction hasher;
-	private PairingFunction pairer;
-	private AbsoluteValue abs;
-	private Function2D<Float, Float, Float> persistence;
-	private int iterations;
+import java.util.function.BinaryOperator;
+import java.util.function.IntBinaryOperator;
+import java.util.function.IntUnaryOperator;
 
-	public PerlinNoise2D(HashFunction hasher, PairingFunction pairer, float persistence, int iterations){
-		this(hasher, pairer, new ConstantFunction2D<Float, Float, Float>(persistence), iterations);
+public class PerlinNoise2D implements BinaryOperator<Float> {
+	private IntUnaryOperator hasher;
+	private IntBinaryOperator pairer;
+	private IntUnaryOperator abs = AbsoluteIntValue.HASHED;
+	private BinaryOperator<Float> persistence;
+	private int iterations;
+	
+	public PerlinNoise2D(IntUnaryOperator hasher, IntBinaryOperator pairer, float persistence, int iterations){
+		this(hasher, pairer, (x, y) -> persistence, iterations);
 	}
-	public PerlinNoise2D(HashFunction hasher, PairingFunction pairer, Function2D<Float, Float, Float> persistence, int iterations){
+	public PerlinNoise2D(IntUnaryOperator hasher, IntBinaryOperator pairer, BinaryOperator<Float> persistence, int iterations){
 		this.hasher = hasher;
 		this.pairer = pairer;
-		abs = new AbsoluteValue();
 		this.persistence = persistence;
 		this.iterations = iterations;
 	}
 	@Override
-	public Float resolve(Float x, Float y){
+	public Float apply(Float x, Float y){
 		float output = 0;
 		for(int i=0;i<iterations;++i){
 			float frequency = (float)Math.pow(2, i);
-			float amplitude = (float)Math.pow(persistence.resolve(x, y), i);
+			float amplitude = (float)Math.pow(persistence.apply(x, y), i);
 			output+=interpolatedNoise(x*frequency, y*frequency)*amplitude;
 		}
 		return output;
@@ -54,9 +57,9 @@ public class PerlinNoise2D implements Function2D<Float, Float, Float> {
 				hash2D(x, y)/4;
 	}
 	public float hash2D(int x, int y){
-		return hash(pairer.resolve(abs.resolve(x), abs.resolve(y)));
+		return hash(pairer.applyAsInt(abs.applyAsInt(x), abs.applyAsInt(y)));
 	}
 	public float hash(int x){
-		return ((float)hasher.resolve(x))/((float)(Integer.MAX_VALUE));
+		return ((float)hasher.applyAsInt(x))/((float)(Integer.MAX_VALUE));
 	}
 }

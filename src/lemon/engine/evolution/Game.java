@@ -357,9 +357,9 @@ public enum Game implements Listener {
 		if(event.getAction()==GLFW.GLFW_RELEASE){
 			if(event.getButton()==GLFW.GLFW_MOUSE_BUTTON_1){
 				Line line = new Line(player.getCamera().getPosition(), player.getVectorDirection());
-				System.out.println(rayTriangleIntersection.resolve(new Triangle(new Vector(-1f, 0f, -1f), new Vector(-1f, 0f, 1f), new Vector(1f, 0f, 0f)),
+				System.out.println(rayTriangleIntersection.apply(new Triangle(new Vector(-1f, 0f, -1f), new Vector(-1f, 0f, 1f), new Vector(1f, 0f, 0f)),
 						line));
-				System.out.println(raySphereIntersection.resolve(line, new Sphere(Vector.ZERO, 1f)));
+				System.out.println(raySphereIntersection.apply(line, new Sphere(Vector.ZERO, 1f)));
 			}
 		}
 	}

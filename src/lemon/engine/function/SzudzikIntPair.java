@@ -1,8 +1,11 @@
 package lemon.engine.function;
 
-public class SzudzikPair implements PairingFunction {
+import java.util.function.IntBinaryOperator;
+
+public enum SzudzikIntPair implements IntBinaryOperator {
+	INSTANCE;
 	@Override
-	public Integer resolve(Integer x, Integer y) {
+	public int applyAsInt(int x, int y) {
 		if(x<0||y<0){
 			throw new IllegalArgumentException("Out of Range: "+x+" "+y);
 		}
