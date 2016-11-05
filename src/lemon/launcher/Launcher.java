@@ -15,22 +15,15 @@ public class Launcher {
 		settings.setDefaultValue("natives", "-Djava.library.path=/home/awesomelemonade/Data/lwjgl/native");
 		settings.setDefaultValue("classpaths", "/home/awesomelemonade/Data/lwjgl/jar/lwjgl.jar:bin");
 		settings.setDefaultValue("main", "lemon.engine.evolution.Evolution");
-		launcher = new LauncherGui("Launcher", JFrame.EXIT_ON_CLOSE, new ProcessLauncher(){
-			@Override
-			public void launchProcess() {
-				ProcessBuilder builder = new ProcessBuilder(settings.getValue("javaBin"), settings.getValue("natives"),
-						"-cp", settings.getValue("classpaths"), settings.getValue("main"));
-				try {
-					launcher.startProcess(builder);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		});
-		//process.waitFor();
-		//process.exitValue();
-		//process.isAlive();
-		//process.destroy();
-		//process.destroyForcibly();
+		launcher = new LauncherGui("Launcher", JFrame.EXIT_ON_CLOSE, ()->launchProcess());
+	}
+	public static void launchProcess(){
+		ProcessBuilder builder = new ProcessBuilder(settings.getValue("javaBin"), settings.getValue("natives"),
+				"-cp", settings.getValue("classpaths"), settings.getValue("main"));
+		try {
+			launcher.startProcess(builder);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }
