@@ -13,6 +13,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -34,7 +35,7 @@ public class LauncherGui {
 		frame.setResizable(true);
 		tabbedPane = new JTabbedPane();
 		JButton playButton = new JButton("Play");
-		playButton.addActionListener(x->processLauncher.launchProcess());
+		playButton.addActionListener(x->processLauncher.launchProcess(JOptionPane.showInputDialog("Args")));
 		frame.add(playButton, BorderLayout.SOUTH);
 		frame.add(tabbedPane, BorderLayout.CENTER);
 		frame.addWindowListener(new WindowAdapter(){

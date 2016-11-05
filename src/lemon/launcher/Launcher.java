@@ -2,6 +2,8 @@ package lemon.launcher;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 
@@ -15,11 +17,21 @@ public class Launcher {
 		settings.setDefaultValue("natives", "-Djava.library.path=/home/awesomelemonade/Data/lwjgl/native");
 		settings.setDefaultValue("classpaths", "/home/awesomelemonade/Data/lwjgl/jar/lwjgl.jar:bin");
 		settings.setDefaultValue("main", "lemon.engine.evolution.Evolution");
-		launcher = new LauncherGui("Launcher", JFrame.EXIT_ON_CLOSE, ()->launchProcess());
+		launcher = new LauncherGui("Launcher", JFrame.EXIT_ON_CLOSE, x->launchProcess(x));
 	}
-	public static void launchProcess(){
-		ProcessBuilder builder = new ProcessBuilder(settings.getValue("javaBin"), settings.getValue("natives"),
-				"-cp", settings.getValue("classpaths"), settings.getValue("main"));
+	public static void launchProcess(String... args){
+		List<String> builderArgs = new ArrayList<String>();
+		builderArgs.add(settings.getValue("javaBin"));
+		builderArgs.add(settings.getValue("natives"));
+		builderArgs.add("-cp");
+		builderArgs.add(settings.getValue("classpaths"));
+		builderArgs.add(settings.getValue("main"));
+		if(args!=null){
+			for(String arg: args){
+				builderArgs.add(arg);
+			}
+		}
+		ProcessBuilder builder = new ProcessBuilder(builderArgs);
 		try {
 			launcher.startProcess(builder);
 		} catch (IOException e) {

@@ -2,5 +2,5 @@ package lemon.launcher;
 
 @FunctionalInterface
 public interface ProcessLauncher {
-	public void launchProcess();
+	public void launchProcess(String... args);
 }
