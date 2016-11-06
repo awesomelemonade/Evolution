@@ -10,7 +10,6 @@ import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
 
-import lemon.engine.game2d.Box2D;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureData;
 
@@ -21,9 +20,11 @@ public class Font {
 	private int scaleHeight;
 	private Texture texture;
 	private Map<Integer, CharData> data;
+	private Map<Integer, Map<Integer, Integer>> kernings;
 	public Font(File file){
 		texture = new Texture();
 		data = new HashMap<Integer, CharData>();
+		kernings = new HashMap<Integer, Map<Integer, Integer>>();
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(file));
 			reader.readLine(); //String info = reader.readLine();
@@ -37,20 +38,29 @@ public class Font {
 			for(int i=0;i<charCount;++i){
 				processCharData(reader.readLine());
 			}
+			String kernings = reader.readLine();
+			int kerningsCount = Integer.parseInt(kernings.substring("kernings count=".length()));
+			for(int i=0;i<kerningsCount;++i){
+				processKerning(reader.readLine());
+			}
 			reader.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	public Box2D getCharBox(char c){
-		CharData data = getCharData(c);
-		return new Box2D(
-				((float)data.getX())/((float)scaleWidth), ((float)data.getY())/((float)scaleHeight),
-				((float)data.getWidth())/((float)scaleHeight), ((float)data.getHeight())/((float)scaleHeight)
-		);
-	}
 	public CharData getCharData(char c){
 		return data.get((int)c);
+	}
+	public int getKerning(char a, char b){
+		int intA = (int)a;
+		int intB = (int)b;
+		if(!kernings.containsKey(intA)){
+			return 0;
+		}
+		if(!kernings.get(intA).containsKey(intB)){
+			return 0;
+		}
+		return kernings.get(intA).get(intB);
 	}
 	public void processCommon(String line){
 		StringTokenizer tokenizer = new StringTokenizer(line);
@@ -66,6 +76,15 @@ public class Font {
 				getValue(data[2]), getValue(data[3]), getValue(data[4]), getValue(data[5]),
 				getValue(data[6]), getValue(data[7]), getValue(data[8])
 		));
+	}
+	public void processKerning(String line){
+		String[] data = line.split("\\s+");
+		int a = getValue(data[1]);
+		int b = getValue(data[2]);
+		if(!kernings.containsKey(a)){
+			kernings.put(a, new HashMap<Integer, Integer>());
+		}
+		kernings.get(a).put(b, getValue(data[3]));
 	}
 	public static int getValue(String line){
 		return Integer.parseInt(line.substring(line.indexOf('=')+1, line.length()));

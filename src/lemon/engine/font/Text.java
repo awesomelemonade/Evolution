@@ -9,7 +9,6 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 import lemon.engine.font.Font.CharData;
-import lemon.engine.game2d.Box2D;
 import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 
@@ -34,23 +33,34 @@ public class Text implements Renderable {
 		GL20.glEnableVertexAttribArray(1);
 		GL30.glBindVertexArray(0);
 	}
-	public FloatBuffer getFloatBuffer(){
+	private FloatBuffer getFloatBuffer(){
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(text.length()*4*6);
-		float cursor = 0f;
-		for(int i=0;i<text.length();++i){
-			char c = text.charAt(i);
-			Box2D box = font.getCharBox(c);
-			CharData data = font.getCharData(c);
-			put(buffer, cursor+data.getXOffset(), -data.getYOffset()-data.getHeight(), box.getX(), box.getY()+box.getHeight());
-			put(buffer, cursor+data.getXOffset(), -data.getYOffset(), box.getX(), box.getY());
-			put(buffer, cursor+data.getXOffset()+data.getWidth(), -data.getYOffset()-data.getHeight(), box.getX()+box.getWidth(), box.getY()+box.getHeight());
-			put(buffer, cursor+data.getXOffset(), -data.getYOffset(), box.getX(), box.getY());
-			put(buffer, cursor+data.getXOffset()+data.getWidth(), -data.getYOffset()-data.getHeight(), box.getX()+box.getWidth(), box.getY()+box.getHeight());
-			put(buffer, cursor+data.getXOffset()+data.getWidth(), -data.getYOffset(), box.getX()+box.getWidth(), box.getY());
-			cursor+=data.getXAdvance();
+		char prevChar = text.charAt(0);
+		int cursor = putChar(buffer, font.getCharData(prevChar), 0, 0);
+		char currentChar;
+		for(int i=1;i<text.length();++i){
+			currentChar = text.charAt(i);
+			cursor+=putChar(buffer, font.getCharData(currentChar), font.getKerning(prevChar, currentChar), cursor);
+			prevChar = currentChar;
 		}
 		buffer.flip();
 		return buffer;
+	}
+	private int putChar(FloatBuffer buffer, CharData data, int kerning, int cursor){
+		kerning = 0;
+		float scaleWidth = font.getScaleWidth();
+		float scaleHeight = font.getScaleHeight();
+		float x = data.getX()/scaleWidth;
+		float y = data.getY()/scaleHeight;
+		float width = data.getWidth()/scaleWidth;
+		float height = data.getHeight()/scaleHeight;
+		put(buffer, cursor+data.getXOffset()+kerning, -data.getYOffset()-data.getHeight(), x, y+height);
+		put(buffer, cursor+data.getXOffset()+kerning, -data.getYOffset(), x, y);
+		put(buffer, cursor+data.getXOffset()+data.getWidth()+kerning, -data.getYOffset()-data.getHeight(), x+width, y+height);
+		put(buffer, cursor+data.getXOffset()+kerning, -data.getYOffset(), x, y);
+		put(buffer, cursor+data.getXOffset()+data.getWidth()+kerning, -data.getYOffset()-data.getHeight(), x+width, y+height);
+		put(buffer, cursor+data.getXOffset()+data.getWidth()+kerning, -data.getYOffset(), x+width, y);
+		return data.getXAdvance()+kerning;
 	}
 	private void put(FloatBuffer buffer, float... floats){
 		buffer.put(floats);
