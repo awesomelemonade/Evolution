@@ -1,7 +1,7 @@
-package lemon.engine.evolution;
+package lemon.engine.render;
 
 public enum MatrixType {
-	MODEL_MATRIX("modelMatrix"), VIEW_MATRIX("viewMatrix"), PROJECTION_MATRIX("projectionMatrix");
+	MODEL_MATRIX("modelMatrix"), VIEW_MATRIX("viewMatrix"), PROJECTION_MATRIX("projectionMatrix"), TRANSFORMATION_MATRIX("transformationMatrix");
 	private String uniformVariableName;
 	private MatrixType(String uniformVariableName){
 		this.uniformVariableName = uniformVariableName;

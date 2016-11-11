@@ -6,38 +6,28 @@ import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.toolbox.Toolbox;
 
-public enum CommonPrograms {
+public enum CommonPrograms2D {
 	COLOR(
 			new int[]{0, 1},
 			new String[]{"position", "color"},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/colorVertexShader")),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/colorFragmentShader"))	
-	), TEXTURE(
-			new int[]{0, 1},
-			new String[]{"position", "textureCoords"},
-			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/textureVertexShader")),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/textureFragmentShader"))
-	), CUBEMAP(
-			new int[]{0},
-			new String[]{"position"},
-			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/cubemapVertexShader")),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/cubemapFragmentShader"))
-	), POST_PROCESSING(
-			new int[]{0, 1},
-			new String[]{"position", "textureCoords"},
-			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/postVertexShader")),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/postFragmentShader"))
 	), LINE(
 			new int[]{0, 1},
 			new String[]{"id", "value"},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/lineVertexShader")),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/lineFragmentShader"))
+	), TEXT(
+			new int[]{0, 1},
+			new String[]{"position", "textureCoords"},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/textVertexShader")),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textFragmentShader"))
 	);
 	private ShaderProgram shaderProgram;
 	private int[] indices;
 	private String[] names;
 	private Shader[] shaders;
-	private CommonPrograms(int[] indices, String[] names, Shader... shaders){
+	private CommonPrograms2D(int[] indices, String[] names, Shader... shaders){
 		this.indices = indices;
 		this.names = names;
 		this.shaders = shaders;
@@ -49,7 +39,7 @@ public enum CommonPrograms {
 		return shaderProgram;
 	}
 	public static void initAll(){
-		for(CommonPrograms program: CommonPrograms.values()){
+		for(CommonPrograms2D program: CommonPrograms2D.values()){
 			program.init();
 		}
 	}

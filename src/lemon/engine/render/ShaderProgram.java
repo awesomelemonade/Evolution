@@ -67,6 +67,9 @@ public class ShaderProgram implements Listener {
 	public void loadMatrix(String name, Matrix matrix){
 		this.getUniformVariable(name).loadMatrix(matrix);
 	}
+	public void loadMatrix(MatrixType type, Matrix matrix){
+		this.loadMatrix(type.getUniformVariableName(), matrix);
+	}
 	@Subscribe
 	public void cleanUp(CleanUpEvent event){
 		GL20.glDeleteProgram(id);

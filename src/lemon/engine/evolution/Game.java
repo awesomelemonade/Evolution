@@ -45,6 +45,7 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector;
+import lemon.engine.render.MatrixType;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.terrain.TerrainGenerator;
 import lemon.engine.texture.Texture;
@@ -109,35 +110,51 @@ public enum Game implements Listener {
 		player = new Player(new Projection(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f));
 		Matrix projectionMatrix = player.getCamera().getProjectionMatrix();
 		
-		CommonPrograms.initAll();
+		CommonPrograms3D.initAll();
 		
-		GL20.glUseProgram(CommonPrograms.COLOR.getShaderProgram().getId());
-		CommonPrograms.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX.getUniformVariableName(), Matrix.IDENTITY_4);
-		CommonPrograms.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX.getUniformVariableName(), projectionMatrix);
+		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 		GL20.glUseProgram(0);
-		updateViewMatrix(CommonPrograms.COLOR.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		
-		GL20.glUseProgram(CommonPrograms.TEXTURE.getShaderProgram().getId());
-		CommonPrograms.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX.getUniformVariableName(), Matrix.IDENTITY_4);
-		CommonPrograms.TEXTURE.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX.getUniformVariableName(), projectionMatrix);
+		GL20.glUseProgram(CommonPrograms3D.TEXTURE.getShaderProgram().getId());
+		CommonPrograms3D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms3D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+		CommonPrograms3D.TEXTURE.getShaderProgram().loadInt("textureSampler", TextureBank.REUSE.getId());
 		GL20.glUseProgram(0);
-		updateViewMatrix(CommonPrograms.TEXTURE.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
 		
-		GL20.glUseProgram(CommonPrograms.CUBEMAP.getShaderProgram().getId());
-		CommonPrograms.CUBEMAP.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX.getUniformVariableName(), projectionMatrix);
-		CommonPrograms.CUBEMAP.getShaderProgram().loadInt("cubemapSampler", TextureBank.SKYBOX.getId());
+		GL20.glUseProgram(CommonPrograms3D.CUBEMAP.getShaderProgram().getId());
+		CommonPrograms3D.CUBEMAP.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+		CommonPrograms3D.CUBEMAP.getShaderProgram().loadInt("cubemapSampler", TextureBank.SKYBOX.getId());
 		GL20.glUseProgram(0);
-		updateViewMatrix(CommonPrograms.CUBEMAP.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 		
-		GL20.glUseProgram(CommonPrograms.LINE.getShaderProgram().getId());
-		CommonPrograms.LINE.getShaderProgram().loadInt("index", 0);
-		CommonPrograms.LINE.getShaderProgram().loadInt("total", 0);
-		CommonPrograms.LINE.getShaderProgram().loadFloat("alpha", 1f);
+		GL20.glUseProgram(CommonPrograms3D.POST_PROCESSING.getShaderProgram().getId());
+		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("colorSampler", TextureBank.COLOR.getId());
+		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("depthSampler", TextureBank.DEPTH.getId());
 		GL20.glUseProgram(0);
 		
-		GL20.glUseProgram(CommonPrograms.POST_PROCESSING.getShaderProgram().getId());
-		CommonPrograms.POST_PROCESSING.getShaderProgram().loadInt("colorSampler", TextureBank.COLOR.getId());
-		CommonPrograms.POST_PROCESSING.getShaderProgram().loadInt("depthSampler", TextureBank.DEPTH.getId());
+		CommonPrograms2D.initAll();
+		
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		GL20.glUseProgram(0);
+		
+		GL20.glUseProgram(CommonPrograms2D.LINE.getShaderProgram().getId());
+		CommonPrograms2D.LINE.getShaderProgram().loadInt("index", 0);
+		CommonPrograms2D.LINE.getShaderProgram().loadInt("total", 0);
+		CommonPrograms2D.LINE.getShaderProgram().loadFloat("alpha", 1f);
+		GL20.glUseProgram(0);
+		
+		GL20.glUseProgram(CommonPrograms2D.TEXT.getShaderProgram().getId());
+		CommonPrograms2D.TEXT.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.TEXT.getShaderProgram().loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.TEXT.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.TEXT.getShaderProgram().loadVector("color", Vector.ZERO);
+		CommonPrograms2D.TEXT.getShaderProgram().loadInt("textureSampler", TextureBank.REUSE.getId());
 		GL20.glUseProgram(0);
 		
 		frameBuffer = new FrameBuffer();
@@ -228,9 +245,9 @@ public enum Game implements Listener {
 		collisionHandler.update(event);
 		
 		player.update(event);
-		updateViewMatrix(CommonPrograms.COLOR.getShaderProgram());
-		updateViewMatrix(CommonPrograms.TEXTURE.getShaderProgram());
-		updateCubeMapMatrix(CommonPrograms.CUBEMAP.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
+		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 	}
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event){
@@ -239,9 +256,9 @@ public enum Game implements Listener {
 			playerSpeed = 0;
 		}
 		player.getCamera().getProjection().setFov(player.getCamera().getProjection().getFov()+((float)(event.getYOffset()/100f)));
-		updateProjectionMatrix(CommonPrograms.COLOR.getShaderProgram());
-		updateProjectionMatrix(CommonPrograms.TEXTURE.getShaderProgram());
-		updateProjectionMatrix(CommonPrograms.CUBEMAP.getShaderProgram());
+		updateProjectionMatrix(CommonPrograms3D.COLOR.getShaderProgram());
+		updateProjectionMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
+		updateProjectionMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 	}
 	private double lastMouseX;
 	private double lastMouseY;
@@ -264,24 +281,24 @@ public enum Game implements Listener {
 				player.getCamera().getRotation().setX(90);
 			}
 		}
-		updateViewMatrix(CommonPrograms.COLOR.getShaderProgram());
-		updateViewMatrix(CommonPrograms.TEXTURE.getShaderProgram());
-		updateCubeMapMatrix(CommonPrograms.CUBEMAP.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
+		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 	}
 	public void updateViewMatrix(ShaderProgram program){
 		GL20.glUseProgram(program.getId());
-		program.loadMatrix(MatrixType.VIEW_MATRIX.getUniformVariableName(),
+		program.loadMatrix(MatrixType.VIEW_MATRIX,
 				player.getCamera().getInvertedRotationMatrix().multiply(player.getCamera().getInvertedTranslationMatrix()));
 		GL20.glUseProgram(0);
 	}
 	public void updateCubeMapMatrix(ShaderProgram program){
 		GL20.glUseProgram(program.getId());
-		program.loadMatrix(MatrixType.VIEW_MATRIX.getUniformVariableName(), player.getCamera().getInvertedRotationMatrix());
+		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix());
 		GL20.glUseProgram(0);
 	}
 	public void updateProjectionMatrix(ShaderProgram program){
 		GL20.glUseProgram(program.getId());
-		program.loadMatrix(MatrixType.PROJECTION_MATRIX.getUniformVariableName(), player.getCamera().getProjectionMatrix());
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, player.getCamera().getProjectionMatrix());
 		GL20.glUseProgram(0);
 	}
 	@Subscribe
@@ -294,7 +311,7 @@ public enum Game implements Listener {
 		renderHeightMap();
 		renderPlatforms();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-		GL20.glUseProgram(CommonPrograms.POST_PROCESSING.getShaderProgram().getId());
+		GL20.glUseProgram(CommonPrograms3D.POST_PROCESSING.getShaderProgram().getId());
 		Quad.TEXTURED.render();
 		GL20.glUseProgram(0);
 		renderFPS();
@@ -303,8 +320,8 @@ public enum Game implements Listener {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL20.glUseProgram(CommonPrograms.COLOR.getShaderProgram().getId());
-		CommonPrograms.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX.getUniformVariableName(), Matrix.IDENTITY_4);
+		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX.getUniformVariableName(), Matrix.IDENTITY_4);
 		terrain.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -315,8 +332,8 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		for(Platform platform: platforms){
-			GL20.glUseProgram(CommonPrograms.COLOR.getShaderProgram().getId());
-			CommonPrograms.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX.getUniformVariableName(),
+			GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
+			CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX.getUniformVariableName(),
 					MathUtil.getTranslation(platform.getPosition()).multiply(MathUtil.getRotationX(90f)));
 			Quad.COLORED.render();
 			GL20.glUseProgram(0);
@@ -327,7 +344,7 @@ public enum Game implements Listener {
 	public void renderSkybox(){
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL20.glUseProgram(CommonPrograms.CUBEMAP.getShaderProgram().getId());
+		GL20.glUseProgram(CommonPrograms3D.CUBEMAP.getShaderProgram().getId());
 		Skybox.INSTANCE.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_BLEND);
@@ -335,11 +352,11 @@ public enum Game implements Listener {
 	public void renderFPS(){
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL20.glUseProgram(CommonPrograms.LINE.getShaderProgram().getId());
+		GL20.glUseProgram(CommonPrograms2D.LINE.getShaderProgram().getId());
 		byte color = 1; //Not Black
 		for(String benchmarker: this.benchmarker.getNames()){
-			CommonPrograms.LINE.getShaderProgram().loadVector("color", new Vector((((color&0x01)!=0)?1f:0f), (((color&0x02)!=0)?1f:0f), (((color&0x04)!=0)?1f:0f)));
-			CommonPrograms.LINE.getShaderProgram().loadFloat("spacing", 2f/(this.benchmarker.getLineGraph(benchmarker).getSize()-1));
+			CommonPrograms2D.LINE.getShaderProgram().loadVector("color", new Vector((((color&0x01)!=0)?1f:0f), (((color&0x02)!=0)?1f:0f), (((color&0x04)!=0)?1f:0f)));
+			CommonPrograms2D.LINE.getShaderProgram().loadFloat("spacing", 2f/(this.benchmarker.getLineGraph(benchmarker).getSize()-1));
 			this.benchmarker.getLineGraph(benchmarker).render();
 			color++;
 		}
