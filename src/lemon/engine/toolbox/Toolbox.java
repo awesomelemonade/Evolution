@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.List;
 
 import org.lwjgl.BufferUtils;
 
@@ -57,8 +58,24 @@ public class Toolbox {
 		buffer.flip();
 		return buffer;
 	}
+	public static FloatBuffer toFloatBuffer(List<Float> floats){
+		FloatBuffer buffer = BufferUtils.createFloatBuffer(floats.size());
+		for(float f: floats){
+			buffer.put(f);
+		}
+		buffer.flip();
+		return buffer;
+	}
 	public static IntBuffer toIntBuffer(int... ints){
 		IntBuffer buffer = BufferUtils.createIntBuffer(ints.length);
+		for(int i: ints){
+			buffer.put(i);
+		}
+		buffer.flip();
+		return buffer;
+	}
+	public static IntBuffer toIntBuffer(List<Integer> ints){
+		IntBuffer buffer = BufferUtils.createIntBuffer(ints.size());
 		for(int i: ints){
 			buffer.put(i);
 		}

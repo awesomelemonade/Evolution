@@ -23,6 +23,8 @@ import lemon.engine.entity.HeightMap;
 import lemon.engine.entity.LineGraph;
 import lemon.engine.entity.Quad;
 import lemon.engine.entity.Skybox;
+import lemon.engine.entity.SphereModelBuilder;
+import lemon.engine.entity.TriangularIndexedModel;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -80,6 +82,8 @@ public enum Game implements Listener {
 	
 	private List<Platform> platforms;
 	
+	private TriangularIndexedModel sphere;
+	
 	public TerrainLoader getTerrainLoader(){
 		if(terrainLoader==null){
 			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (100f/TILE_SIZE), 2), Math.max((int) (100f/TILE_SIZE), 2));
@@ -101,6 +105,8 @@ public enum Game implements Listener {
 		Quad.TEXTURED.init();
 		Quad.COLORED.init();
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
+		
+		sphere = new SphereModelBuilder(1f, 3).buildAndInit();
 		
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -323,6 +329,7 @@ public enum Game implements Listener {
 		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX.getUniformVariableName(), Matrix.IDENTITY_4);
 		terrain.render();
+		sphere.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
