@@ -6,7 +6,7 @@ import lemon.engine.math.Line;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Vector;
 
-public class RaySphereIntersection implements BiFunction<Line, Sphere, Float>{
+public class RaySphereIntersection implements BiFunction<Line, Sphere, Float> {
 	@Override
 	public Float apply(Line ray, Sphere sphere) {
 		float t0, t1;
