@@ -17,6 +17,8 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
+import lemon.engine.animation.KeyState;
+import lemon.engine.animation.LinearTargetedInterpolator;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.entity.HeightMap;
@@ -207,13 +209,17 @@ public enum Game implements Listener {
 		}
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
+		interp = new LinearTargetedInterpolator(x, new KeyState(new Vector(100f, 100f, 100f), 10000000000L));
+		
 		EventManager.INSTANCE.registerListener(this);
 	}
+	LinearTargetedInterpolator interp;
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed-maxSpeed*friction;
 	@Subscribe
 	public void update(UpdateEvent event){
+		interp.update(event.getDelta());
 		if(controls.hasStates()){
 			float angle = (player.getCamera().getRotation().getY()+90)*(((float)Math.PI)/180f);
 			float sin = (float)Math.sin(angle);
@@ -322,13 +328,15 @@ public enum Game implements Listener {
 		GL20.glUseProgram(0);
 		renderFPS();
 	}
+	Vector x = new Vector(Vector.ZERO);
 	public void renderHeightMap(){
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
-		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX.getUniformVariableName(), Matrix.IDENTITY_4);
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		terrain.render();
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(x));
 		sphere.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
