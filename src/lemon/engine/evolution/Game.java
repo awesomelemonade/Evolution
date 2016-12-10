@@ -17,8 +17,8 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
-import lemon.engine.animation.KeyState;
-import lemon.engine.animation.LinearTargetedInterpolator;
+import lemon.engine.animation.ExponentialTargetedInterpolator;
+import lemon.engine.animation.Interpolator;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.entity.HeightMap;
@@ -209,11 +209,12 @@ public enum Game implements Listener {
 		}
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
-		interp = new LinearTargetedInterpolator(x, new KeyState(new Vector(100f, 100f, 100f), 10000000000L));
+		//interp = new LinearTargetedInterpolator(x, new Vector(100f, 100f, 100f), 10000000000L);
+		interp = new ExponentialTargetedInterpolator(x, new Vector(0f, 0f, -100f), 1f);
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
-	LinearTargetedInterpolator interp;
+	Interpolator interp;
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed-maxSpeed*friction;

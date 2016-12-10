@@ -4,25 +4,25 @@ import lemon.engine.math.Vector;
 
 public class LinearTargetedInterpolator implements TargetedInterpolator {
 	private Vector vector;
-	private KeyState target;
+	private Vector target;
+	private long time;
 	public LinearTargetedInterpolator(Vector vector){
-		this(vector, null);
+		this(vector, null, 0);
 	}
-	public LinearTargetedInterpolator(Vector vector, KeyState target){
+	public LinearTargetedInterpolator(Vector vector, Vector target, long time){
 		this.vector = vector;
 		this.target = target;
+		this.time = time;
 	}
 	@Override
 	public void update(long time) {
-		if(target!=null){
-			if(target.getTime()>0){
-				float factor = ((float)time)/((float)this.getTarget().getTime());
-				if(factor>1){
-					factor = 1;
-				}
-				vector.set(vector.add(target.getVector().subtract(vector).multiply(factor)));
-				target.setTime((long)(target.getTime()-(((float)this.getTarget().getTime())*factor)));
+		if(this.time>0){
+			float factor = ((float)time)/((float)this.time);
+			if(factor>1){
+				factor = 1;
 			}
+			vector.set(vector.add(target.subtract(vector).multiply(factor)));
+			this.time-=((long)((((float)this.time)*factor)));
 		}
 	}
 	@Override
@@ -34,11 +34,17 @@ public class LinearTargetedInterpolator implements TargetedInterpolator {
 		return vector;
 	}
 	@Override
-	public void setTarget(KeyState target) {
+	public void setTarget(Vector target) {
 		this.target = target;
 	}
 	@Override
-	public KeyState getTarget() {
+	public Vector getTarget() {
 		return target;
+	}
+	public void setTime(long time){
+		this.time = time;
+	}
+	public long getTime(){
+		return time;
 	}
 }
