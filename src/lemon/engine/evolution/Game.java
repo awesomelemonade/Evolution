@@ -34,7 +34,6 @@ import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.function.CubicBezierCurve;
 import lemon.engine.function.MollerTrumbore;
 import lemon.engine.function.RaySphereIntersection;
-import lemon.engine.game.CollisionHandler;
 import lemon.engine.game.Platform;
 import lemon.engine.game.Player;
 import lemon.engine.game.PlayerControls;
@@ -80,8 +79,6 @@ public enum Game implements Listener {
 	private Benchmarker benchmarker;
 	
 	private TerrainLoader terrainLoader;
-	
-	private CollisionHandler collisionHandler;
 	
 	private List<Platform> platforms;
 	
@@ -213,14 +210,10 @@ public enum Game implements Listener {
 		controls.bindKey(GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_LEFT_SHIFT);
 		controls.bindKey(GLFW.GLFW_KEY_T, GLFW.GLFW_KEY_T);
 		
-		collisionHandler = new CollisionHandler();
-		collisionHandler.addCollidable(player);
 		platforms = new ArrayList<Platform>();
 		platforms.add(new Platform(new Vector(10f, 0f, 10f)));
 		platforms.add(new Platform(new Vector(0f, 0f, 0f)));
-		for(Platform platform: platforms){
-			collisionHandler.addCollidable(platform);
-		}
+		
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
 		//interp = new LinearTargetedInterpolator(x, new Vector(100f, 100f, 100f), 10000000000L);
