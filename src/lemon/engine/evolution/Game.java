@@ -17,7 +17,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
-import lemon.engine.animation.ExponentialTargetedInterpolator;
+import lemon.engine.animation.FunctionInterpolator;
 import lemon.engine.animation.Interpolator;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
@@ -31,6 +31,7 @@ import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
+import lemon.engine.function.CubicBezierCurve;
 import lemon.engine.function.MollerTrumbore;
 import lemon.engine.function.RaySphereIntersection;
 import lemon.engine.game.CollisionHandler;
@@ -85,6 +86,7 @@ public enum Game implements Listener {
 	private List<Platform> platforms;
 	
 	private TriangularIndexedModel sphere;
+	private TriangularIndexedModel model;
 	
 	public TerrainLoader getTerrainLoader(){
 		if(terrainLoader==null){
@@ -108,7 +110,19 @@ public enum Game implements Listener {
 		Quad.COLORED.init();
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 		
-		sphere = new SphereModelBuilder(1f, 3).buildAndInit();
+		sphere = new SphereModelBuilder(0.1f, 3).buildAndInit();
+		Vector[] vectors = new Vector[50];
+		int[] indices = new int[(vectors.length-1)*3];
+		for(int i=0;i<vectors.length;++i){
+			vectors[i] = curve.apply(((float)i)/((float)(vectors.length-1))*10-5);
+		}
+		for(int i=0;i<indices.length;i+=3){
+			indices[i] = 0;
+			indices[i+1] = (i/3)+1;
+			indices[i+2] = (i/3)+2;
+		}
+		model = new TriangularIndexedModel.Builder().addVertices(Vector.ZERO)
+				.addVertices(vectors).addIndices(indices).buildAndInit();
 		
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -210,10 +224,13 @@ public enum Game implements Listener {
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
 		//interp = new LinearTargetedInterpolator(x, new Vector(100f, 100f, 100f), 10000000000L);
-		interp = new ExponentialTargetedInterpolator(x, new Vector(0f, 0f, -100f), 1f);
+		//interp = new ExponentialTargetedInterpolator(x, new Vector(0f, 0f, -100f), 1f);
+		interp = new FunctionInterpolator(x, 10000000000L, curve);
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
+	CubicBezierCurve curve = new CubicBezierCurve(Vector.ZERO, 
+			new Vector(0.17f, 0.67f, 0f), new Vector(0.83f, 0.67f, 0f), new Vector(0f, 0f, -1f));
 	Interpolator interp;
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -337,7 +354,16 @@ public enum Game implements Listener {
 		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		terrain.render();
+		model.render();
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(x));
+		sphere.render();
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(curve.getA()));
+		sphere.render();
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(curve.getB()));
+		sphere.render();
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(curve.getC()));
+		sphere.render();
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(curve.getD()));
 		sphere.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -351,7 +377,7 @@ public enum Game implements Listener {
 			GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
 			CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX.getUniformVariableName(),
 					MathUtil.getTranslation(platform.getPosition()).multiply(MathUtil.getRotationX(90f)));
-			Quad.COLORED.render();
+			//Quad.COLORED.render();
 			GL20.glUseProgram(0);
 		}
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -392,7 +418,7 @@ public enum Game implements Listener {
 				Line line = new Line(player.getCamera().getPosition(), player.getVectorDirection());
 				System.out.println(rayTriangleIntersection.apply(new Triangle(new Vector(-1f, 0f, -1f), new Vector(-1f, 0f, 1f), new Vector(1f, 0f, 0f)),
 						line));
-				System.out.println(raySphereIntersection.apply(line, new Sphere(Vector.ZERO, 1f)));
+				System.out.println(raySphereIntersection.apply(line, new Sphere(x, 1f)));
 			}
 		}
 	}
