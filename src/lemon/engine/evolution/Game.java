@@ -48,7 +48,7 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
-import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.terrain.TerrainGenerator;
@@ -108,17 +108,17 @@ public enum Game implements Listener {
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 		
 		sphere = new SphereModelBuilder(0.1f, 3).buildAndInit();
-		Vector[] vectors = new Vector[50];
+		Vector3D[] vectors = new Vector3D[50];
 		int[] indices = new int[(vectors.length-1)*3];
 		for(int i=0;i<vectors.length;++i){
-			vectors[i] = curve.apply(((float)i)/((float)(vectors.length-1))*10-5);
+			vectors[i] = new Vector3D(curve.apply(((float)i)/((float)(vectors.length-1))*10-5));
 		}
 		for(int i=0;i<indices.length;i+=3){
 			indices[i] = 0;
 			indices[i+1] = (i/3)+1;
 			indices[i+2] = (i/3)+2;
 		}
-		model = new TriangularIndexedModel.Builder().addVertices(Vector.ZERO)
+		model = new TriangularIndexedModel.Builder().addVertices(Vector3D.ZERO)
 				.addVertices(vectors).addIndices(indices).buildAndInit();
 		
 		benchmarker = new Benchmarker();
@@ -172,7 +172,7 @@ public enum Game implements Listener {
 		CommonPrograms2D.TEXT.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		CommonPrograms2D.TEXT.getShaderProgram().loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		CommonPrograms2D.TEXT.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		CommonPrograms2D.TEXT.getShaderProgram().loadVector("color", Vector.ZERO);
+		CommonPrograms2D.TEXT.getShaderProgram().loadVector("color", Vector3D.ZERO);
 		CommonPrograms2D.TEXT.getShaderProgram().loadInt("textureSampler", TextureBank.REUSE.getId());
 		GL20.glUseProgram(0);
 		
@@ -211,8 +211,8 @@ public enum Game implements Listener {
 		controls.bindKey(GLFW.GLFW_KEY_T, GLFW.GLFW_KEY_T);
 		
 		platforms = new ArrayList<Platform>();
-		platforms.add(new Platform(new Vector(10f, 0f, 10f)));
-		platforms.add(new Platform(new Vector(0f, 0f, 0f)));
+		platforms.add(new Platform(new Vector3D(10f, 0f, 10f)));
+		platforms.add(new Platform(new Vector3D(0f, 0f, 0f)));
 		
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
@@ -222,8 +222,8 @@ public enum Game implements Listener {
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
-	CubicBezierCurve curve = new CubicBezierCurve(Vector.ZERO, 
-			new Vector(0.17f, 0.67f, 0f), new Vector(0.83f, 0.67f, 0f), new Vector(0f, 0f, -1f));
+	CubicBezierCurve curve = new CubicBezierCurve(Vector3D.ZERO, 
+			new Vector3D(0.17f, 0.67f, 0f), new Vector3D(0.83f, 0.67f, 0f), new Vector3D(0f, 0f, -1f));
 	Interpolator interp;
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -264,8 +264,6 @@ public enum Game implements Listener {
 		player.getVelocity().setX(player.getVelocity().getX()*friction);
 		player.getVelocity().setY(player.getVelocity().getY()*friction);
 		player.getVelocity().setZ(player.getVelocity().getZ()*friction);
-		
-		collisionHandler.update(event);
 		
 		player.update(event);
 		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
@@ -339,7 +337,7 @@ public enum Game implements Listener {
 		GL20.glUseProgram(0);
 		renderFPS();
 	}
-	Vector x = new Vector(Vector.ZERO);
+	Vector3D x = new Vector3D(Vector3D.ZERO);
 	public void renderHeightMap(){
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -350,13 +348,13 @@ public enum Game implements Listener {
 		model.render();
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(x));
 		sphere.render();
-		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(curve.getA()));
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(curve.getA())));
 		sphere.render();
-		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(curve.getB()));
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(curve.getB())));
 		sphere.render();
-		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(curve.getC()));
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(curve.getC())));
 		sphere.render();
-		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(curve.getD()));
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(curve.getD())));
 		sphere.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -390,7 +388,7 @@ public enum Game implements Listener {
 		GL20.glUseProgram(CommonPrograms2D.LINE.getShaderProgram().getId());
 		byte color = 1; //Not Black
 		for(String benchmarker: this.benchmarker.getNames()){
-			CommonPrograms2D.LINE.getShaderProgram().loadVector("color", new Vector((((color&0x01)!=0)?1f:0f), (((color&0x02)!=0)?1f:0f), (((color&0x04)!=0)?1f:0f)));
+			CommonPrograms2D.LINE.getShaderProgram().loadVector("color", new Vector3D((((color&0x01)!=0)?1f:0f), (((color&0x02)!=0)?1f:0f), (((color&0x04)!=0)?1f:0f)));
 			CommonPrograms2D.LINE.getShaderProgram().loadFloat("spacing", 2f/(this.benchmarker.getLineGraph(benchmarker).getSize()-1));
 			this.benchmarker.getLineGraph(benchmarker).render();
 			color++;
@@ -409,7 +407,7 @@ public enum Game implements Listener {
 		if(event.getAction()==GLFW.GLFW_RELEASE){
 			if(event.getButton()==GLFW.GLFW_MOUSE_BUTTON_1){
 				Line line = new Line(player.getCamera().getPosition(), player.getVectorDirection());
-				System.out.println(rayTriangleIntersection.apply(new Triangle(new Vector(-1f, 0f, -1f), new Vector(-1f, 0f, 1f), new Vector(1f, 0f, 0f)),
+				System.out.println(rayTriangleIntersection.apply(new Triangle(new Vector3D(-1f, 0f, -1f), new Vector3D(-1f, 0f, 1f), new Vector3D(1f, 0f, 0f)),
 						line));
 				System.out.println(raySphereIntersection.apply(line, new Sphere(x, 1f)));
 			}

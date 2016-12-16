@@ -52,7 +52,7 @@ public class MathUtil {
 		matrix.set(3, 3, 1);
 		return matrix;
 	}
-	public static Matrix getTranslation(Vector vector){
+	public static Matrix getTranslation(Vector3D vector){
 		Matrix matrix = Matrix.getIdentity(4);
 		matrix.set(0, 3, vector.getX());
 		matrix.set(1, 3, vector.getY());
@@ -95,7 +95,7 @@ public class MathUtil {
 		matrix.set(3, 3, 1);
 		return matrix;
 	}
-	public static Matrix getScalar(Vector vector){
+	public static Matrix getScalar(Vector3D vector){
 		Matrix matrix = new Matrix(4);
 		matrix.set(0, 0, vector.getX());
 		matrix.set(1, 1, vector.getY());

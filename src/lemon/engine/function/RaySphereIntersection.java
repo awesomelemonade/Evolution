@@ -4,13 +4,13 @@ import java.util.function.BiFunction;
 
 import lemon.engine.math.Line;
 import lemon.engine.math.Sphere;
-import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 
 public class RaySphereIntersection implements BiFunction<Line, Sphere, Float> {
 	@Override
 	public Float apply(Line ray, Sphere sphere) {
 		float t0, t1;
-		Vector l = sphere.getCenter().subtract(ray.getOrigin());
+		Vector3D l = sphere.getCenter().subtract(ray.getOrigin());
 		float tca = l.dotProduct(ray.getDirection());
 		if(tca<0){
 			return null;
@@ -34,6 +34,6 @@ public class RaySphereIntersection implements BiFunction<Line, Sphere, Float> {
 				return null;
 			}
 		}
-		return ray.getDirection().multiply(t0).absoluteValue();
+		return ray.getDirection().multiply(t0).getAbsoluteValue();
 	}
 }

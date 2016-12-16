@@ -12,7 +12,7 @@ public class FunctionInterpolator implements Interpolator {
 	private long totalTime;
 	public FunctionInterpolator(Vector vector, long totalTime, Function<Float, Vector> function){
 		this.vector = vector;
-		this.progress = Vector.ZERO;
+		this.progress = new Vector(vector.getDimensions());
 		this.time = 0;
 		this.totalTime = totalTime;
 		this.function = function;

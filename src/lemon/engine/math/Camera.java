@@ -2,35 +2,33 @@ package lemon.engine.math;
 
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
-import lemon.engine.math.Vector;
 
 public class Camera {
-	private Vector position;
-	private Vector rotation;
+	private Vector3D position;
+	private Vector3D rotation;
 	private Projection projection;
 	public Camera(Projection projection){
-		this(new Vector(), new Vector(), projection);
+		this(new Vector3D(), new Vector3D(), projection);
 	}
-	public Camera(Vector position, Vector rotation, Projection projection){
+	public Camera(Vector3D position, Vector3D rotation, Projection projection){
 		this.position = position;
 		this.rotation = rotation;
 		this.projection = projection;
 	}
-	public Vector getPosition(){
+	public Vector3D getPosition(){
 		return position;
 	}
-	public Vector getRotation(){
+	public Vector3D getRotation(){
 		return rotation;
 	}
 	public Projection getProjection(){
 		return projection;
 	}
 	public Matrix getInvertedTranslationMatrix(){
-		Vector translation = this.position.getInvert();
-		return MathUtil.getTranslation(translation);
+		return MathUtil.getTranslation(this.position.getInvert());
 	}
 	public Matrix getInvertedRotationMatrix(){
-		Vector rotation = this.rotation.getInvert();
+		Vector3D rotation = this.rotation.getInvert();
 		return MathUtil.getRotationX(rotation.getX()).multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
 	}
 	public Matrix getProjectionMatrix(){

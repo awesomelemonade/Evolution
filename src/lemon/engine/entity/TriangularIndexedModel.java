@@ -12,28 +12,28 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 import lemon.engine.control.Initializable;
-import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 import lemon.engine.toolbox.Toolbox;
 
 public class TriangularIndexedModel implements IndexedModel, Initializable, Renderable {
 	private VertexArray vertexArray;
-	private List<Vector> vertices;
+	private List<Vector3D> vertices;
 	private List<Integer> indices;
-	private TriangularIndexedModel(List<Vector> vertices, List<Integer> indices){
+	private TriangularIndexedModel(List<Vector3D> vertices, List<Integer> indices){
 		this.vertices = vertices;
 		this.indices = indices;
 	}
 	public static class Builder{
-		private List<Vector> vertices;
+		private List<Vector3D> vertices;
 		private List<Integer> indices;
 		public Builder(){
-			vertices = new ArrayList<Vector>();
+			vertices = new ArrayList<Vector3D>();
 			indices = new ArrayList<Integer>();
 		}
-		public Builder addVertices(Vector... vertices){
-			for(Vector vertex: vertices){
+		public Builder addVertices(Vector3D... vertices){
+			for(Vector3D vertex: vertices){
 				this.vertices.add(vertex);
 			}
 			return this;
@@ -44,7 +44,7 @@ public class TriangularIndexedModel implements IndexedModel, Initializable, Rend
 			}
 			return this;
 		}
-		public List<Vector> getVertices(){
+		public List<Vector3D> getVertices(){
 			return vertices;
 		}
 		public List<Integer> getIndices(){
@@ -75,7 +75,7 @@ public class TriangularIndexedModel implements IndexedModel, Initializable, Rend
 	}
 	private FloatBuffer getFloatBuffer(){
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(vertices.size()*3*4);
-		for(Vector vertex: vertices){
+		for(Vector3D vertex: vertices){
 			buffer.put(vertex.getX());
 			buffer.put(vertex.getY());
 			buffer.put(vertex.getZ());
@@ -88,7 +88,7 @@ public class TriangularIndexedModel implements IndexedModel, Initializable, Rend
 		return buffer;
 	}
 	@Override
-	public List<Vector> getVertices() {
+	public List<Vector3D> getVertices() {
 		return Collections.unmodifiableList(vertices);
 	}
 	@Override

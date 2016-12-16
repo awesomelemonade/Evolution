@@ -1,7 +1,7 @@
 package lemon.engine.render;
 
 import lemon.engine.math.Matrix;
-import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 
 import org.lwjgl.opengl.GL20;
 
@@ -18,7 +18,7 @@ public class UniformVariable {
 	public void loadFloat(float value){
 		GL20.glUniform1f(id, value);
 	}
-	public void loadVector(Vector vector){
+	public void loadVector(Vector3D vector){
 		GL20.glUniform3f(id, vector.getX(), vector.getY(), vector.getZ());
 	}
 	public void loadBoolean(boolean value){

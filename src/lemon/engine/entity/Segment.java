@@ -8,14 +8,14 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 
 public class Segment implements Renderable {
 	private VertexArray vertexArray;
 	private static final int VERTICES = 2;
-	public Segment(Vector point, Vector point2){
+	public Segment(Vector3D point, Vector3D point2){
 		vertexArray = new VertexArray();
 		GL30.glBindVertexArray(vertexArray.getId());
 		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vertexArray.generateVbo().getId());
@@ -31,7 +31,7 @@ public class Segment implements Renderable {
 		GL20.glEnableVertexAttribArray(1);
 		GL30.glBindVertexArray(0);
 	}
-	private void plotVertex(FloatBuffer dataBuffer, Vector vector){
+	private void plotVertex(FloatBuffer dataBuffer, Vector3D vector){
 		dataBuffer.put(vector.getX());
 		dataBuffer.put(vector.getY());
 		dataBuffer.put(vector.getZ());

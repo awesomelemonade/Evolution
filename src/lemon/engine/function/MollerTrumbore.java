@@ -4,7 +4,7 @@ import java.util.function.BiFunction;
 
 import lemon.engine.math.Line;
 import lemon.engine.math.Triangle;
-import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 
 public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
 	private final float EPSILON;
@@ -21,8 +21,8 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
 	}
 	@Override
 	public Float apply(Triangle triangle, Line ray) {
-		Vector edge, edge2;
-		Vector p, q, distance;
+		Vector3D edge, edge2;
+		Vector3D p, q, distance;
 		float determinant;
 		float inverseDeterminant, u, v, t;
 		

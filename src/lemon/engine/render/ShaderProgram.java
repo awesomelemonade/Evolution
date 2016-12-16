@@ -11,7 +11,7 @@ import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.math.Matrix;
-import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 
 public class ShaderProgram implements Listener {
 	private int id;
@@ -58,7 +58,7 @@ public class ShaderProgram implements Listener {
 	public void loadFloat(String name, float value){
 		this.getUniformVariable(name).loadFloat(value);
 	}
-	public void loadVector(String name, Vector vector){
+	public void loadVector(String name, Vector3D vector){
 		this.getUniformVariable(name).loadVector(vector);
 	}
 	public void loadBoolean(String name, boolean value){

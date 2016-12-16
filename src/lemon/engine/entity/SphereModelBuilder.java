@@ -3,16 +3,16 @@ package lemon.engine.entity;
 import java.util.HashMap;
 import java.util.Map;
 
-import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 
 public class SphereModelBuilder extends TriangularIndexedModel.Builder {
-	private static final Vector[] OCTAHEDRON_VERTICES = new Vector[]{
-			new Vector(0, -1, 0),
-			new Vector(0, 1, 0),
-			new Vector(-1, 0, -1),
-			new Vector(-1, 0, 1),
-			new Vector(1, 0, -1),
-			new Vector(1, 0, 1)
+	private static final Vector3D[] OCTAHEDRON_VERTICES = new Vector3D[]{
+			new Vector3D(0, -1, 0),
+			new Vector3D(0, 1, 0),
+			new Vector3D(-1, 0, -1),
+			new Vector3D(-1, 0, 1),
+			new Vector3D(1, 0, -1),
+			new Vector3D(1, 0, 1)
 	};
 	private static final int[] OCTAHEDRON_INDICES = new int[]{
 			0, 2, 3,
@@ -36,11 +36,11 @@ public class SphereModelBuilder extends TriangularIndexedModel.Builder {
 			return indices;
 		}
 		int[] newIndices = new int[indices.length*4];
-		Map<Vector, Map<Vector, Integer>> newVertices = new HashMap<Vector, Map<Vector, Integer>>();
+		Map<Vector3D, Map<Vector3D, Integer>> newVertices = new HashMap<Vector3D, Map<Vector3D, Integer>>();
 		for(int i=0;i<indices.length;i+=3){
-			Vector a = this.getVertices().get(indices[i]);
-			Vector b = this.getVertices().get(indices[i+1]);
-			Vector c = this.getVertices().get(indices[i+2]);
+			Vector3D a = this.getVertices().get(indices[i]);
+			Vector3D b = this.getVertices().get(indices[i+1]);
+			Vector3D c = this.getVertices().get(indices[i+2]);
 			
 			int index1 = addToMap(newVertices, a, b, a.average(b));
 			int index2 = addToMap(newVertices, b, c, b.average(c));
@@ -64,7 +64,7 @@ public class SphereModelBuilder extends TriangularIndexedModel.Builder {
 		}
 		return splitTriangles(newIndices, count-1);
 	}
-	private int addToMap(Map<Vector, Map<Vector, Integer>> vertices, Vector a, Vector b, Vector vertex){
+	private int addToMap(Map<Vector3D, Map<Vector3D, Integer>> vertices, Vector3D a, Vector3D b, Vector3D vertex){
 		if(vertices.containsKey(a)){
 			if(vertices.get(a).containsKey(b)){
 				return vertices.get(a).get(b);
@@ -76,15 +76,15 @@ public class SphereModelBuilder extends TriangularIndexedModel.Builder {
 			}
 		}
 		if(!vertices.containsKey(a)){
-			vertices.put(a, new HashMap<Vector, Integer>());
+			vertices.put(a, new HashMap<Vector3D, Integer>());
 		}
 		vertices.get(a).put(b, this.getVertices().size());
 		this.addVertices(vertex);
 		return this.getVertices().size()-1;
 	}
 	public void normalize(float radius){
-		for(Vector vertex: this.getVertices()){
-			vertex.set(vertex.multiply(radius).divide(vertex.absoluteValue()));
+		for(Vector3D vertex: this.getVertices()){
+			vertex.set(vertex.multiply(radius).divide(vertex.getAbsoluteValue()));
 		}
 	}
 }
