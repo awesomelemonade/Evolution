@@ -197,6 +197,12 @@ public enum Game implements Listener {
 		skyboxTexture = new Texture();
 		GL13.glActiveTexture(TextureBank.SKYBOX.getBind());
 		skyboxTexture.load(new SkyboxLoader(new File("res/darkskies/"), new File("res/darkskies/darkskies.cfg")).load());
+		//skyboxTexture.load(new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/bluecloud.cfg")).load());
+		//skyboxTexture.load(new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/browncloud.cfg")).load());
+		//skyboxTexture.load(new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/graycloud.cfg")).load());
+		//skyboxTexture.load(new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/yellowcloud.cfg")).load());
+		//skyboxTexture.load(new SkyboxLoader(new File("res/thinmatrix-cloud/"), new File("res/thinmatrix-cloud/day.cfg")).load());
+		//skyboxTexture.load(new SkyboxLoader(new File("res/thinmatrix-cloud/"), new File("res/thinmatrix-cloud/night.cfg")).load());
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		
@@ -264,6 +270,15 @@ public enum Game implements Listener {
 		player.getVelocity().setX(player.getVelocity().getX()*friction);
 		player.getVelocity().setY(player.getVelocity().getY()*friction);
 		player.getVelocity().setZ(player.getVelocity().getZ()*friction);
+
+		player.getCamera().getRotation().setY(player.getCamera().getRotation().getY()+rotationalVelocity.getY());
+		player.getCamera().getRotation().setX(player.getCamera().getRotation().getX()+rotationalVelocity.getX());
+		if(player.getCamera().getRotation().getX()<-90){
+			player.getCamera().getRotation().setX(-90);
+		}
+		if(player.getCamera().getRotation().getX()>90){
+			player.getCamera().getRotation().setX(90);
+		}
 		
 		player.update(event);
 		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
@@ -285,7 +300,8 @@ public enum Game implements Listener {
 	private double lastMouseY;
 	private double mouseX;
 	private double mouseY;
-	private static final float MOUSE_SENSITIVITY = 0.1f;
+	private static final float MOUSE_SENSITIVITY = 0.01f;
+	private Vector3D rotationalVelocity = new Vector3D();
 	@Subscribe
 	public void onMousePosition(CursorPositionEvent event){
 		lastMouseX = mouseX;
@@ -293,14 +309,10 @@ public enum Game implements Listener {
 		mouseX = event.getX();
 		mouseY = event.getY();
 		if(controls.getState(GLFW.GLFW_MOUSE_BUTTON_1)){
-			player.getCamera().getRotation().setY((float) (((player.getCamera().getRotation().getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY)%360)+360)%360);
-			player.getCamera().getRotation().setX((float) (player.getCamera().getRotation().getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
-			if(player.getCamera().getRotation().getX()<-90){
-				player.getCamera().getRotation().setX(-90);
-			}
-			if(player.getCamera().getRotation().getX()>90){
-				player.getCamera().getRotation().setX(90);
-			}
+			rotationalVelocity.setY((float) (rotationalVelocity.getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY));
+			rotationalVelocity.setX((float) (rotationalVelocity.getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
+			//player.getCamera().getRotation().setY((float) (((player.getCamera().getRotation().getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY)%360)+360)%360);
+			//player.getCamera().getRotation().setX((float) (player.getCamera().getRotation().getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
 		}
 		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
@@ -312,9 +324,11 @@ public enum Game implements Listener {
 				player.getCamera().getInvertedRotationMatrix().multiply(player.getCamera().getInvertedTranslationMatrix()));
 		GL20.glUseProgram(0);
 	}
+	float angle = 0;
 	public void updateCubeMapMatrix(ShaderProgram program){
+		//angle+=0.02;
 		GL20.glUseProgram(program.getId());
-		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix());
+		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix().multiply(MathUtil.getRotationY(angle)));
 		GL20.glUseProgram(0);
 	}
 	public void updateProjectionMatrix(ShaderProgram program){
