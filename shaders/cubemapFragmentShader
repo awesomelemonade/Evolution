@@ -4,7 +4,9 @@ in vec3 textureCoords;
 out vec4 outColor;
 
 uniform samplerCube cubemapSampler;
+uniform samplerCube cubemapSampler2;
+uniform float blendFactor;
 
 void main(void){
-	outColor = texture(cubemapSampler, textureCoords);
+	outColor = texture(cubemapSampler, textureCoords)*(1f-blendFactor)+texture(cubemapSampler2, textureCoords)*blendFactor;
 }

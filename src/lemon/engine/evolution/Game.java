@@ -74,7 +74,7 @@ public enum Game implements Listener {
 	private Texture colorTexture;
 	private Texture depthTexture;
 	
-	private Texture skyboxTexture;
+	private Texture[] skyboxTextures;
 	
 	private Benchmarker benchmarker;
 	
@@ -94,6 +94,9 @@ public enum Game implements Listener {
 	
 	public void init(long window){
 		logger.log(Level.FINE, "Initializing");
+		
+		GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+		
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(window, width, height);
@@ -147,6 +150,8 @@ public enum Game implements Listener {
 		GL20.glUseProgram(CommonPrograms3D.CUBEMAP.getShaderProgram().getId());
 		CommonPrograms3D.CUBEMAP.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 		CommonPrograms3D.CUBEMAP.getShaderProgram().loadInt("cubemapSampler", TextureBank.SKYBOX.getId());
+		CommonPrograms3D.CUBEMAP.getShaderProgram().loadInt("cubemapSampler2", TextureBank.SKYBOX_2.getId());
+		CommonPrograms3D.CUBEMAP.getShaderProgram().loadFloat("blendFactor", 0.5f);;
 		GL20.glUseProgram(0);
 		updateViewMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 		
@@ -194,16 +199,24 @@ public enum Game implements Listener {
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-		skyboxTexture = new Texture();
+		SkyboxLoader[] skyboxLoaders = new SkyboxLoader[]{
+				new SkyboxLoader(new File("res/darkskies/"), new File("res/darkskies/darkskies.cfg")),
+				new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/bluecloud.cfg")),
+				new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/browncloud.cfg")),
+				new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/graycloud.cfg")),
+				new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/yellowcloud.cfg")),
+				new SkyboxLoader(new File("res/thinmatrix-cloud/"), new File("res/thinmatrix-cloud/day.cfg")),
+				new SkyboxLoader(new File("res/thinmatrix-cloud/"), new File("res/thinmatrix-cloud/night.cfg"))
+		};
+		skyboxTextures = new Texture[skyboxLoaders.length];
+		for(int i=0;i<skyboxTextures.length;++i){
+			skyboxTextures[i] = new Texture();
+			skyboxTextures[i].load(skyboxLoaders[i].load());
+		}
 		GL13.glActiveTexture(TextureBank.SKYBOX.getBind());
-		skyboxTexture.load(new SkyboxLoader(new File("res/darkskies/"), new File("res/darkskies/darkskies.cfg")).load());
-		//skyboxTexture.load(new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/bluecloud.cfg")).load());
-		//skyboxTexture.load(new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/browncloud.cfg")).load());
-		//skyboxTexture.load(new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/graycloud.cfg")).load());
-		//skyboxTexture.load(new SkyboxLoader(new File("res/cloudy/"), new File("res/cloudy/yellowcloud.cfg")).load());
-		//skyboxTexture.load(new SkyboxLoader(new File("res/thinmatrix-cloud/"), new File("res/thinmatrix-cloud/day.cfg")).load());
-		//skyboxTexture.load(new SkyboxLoader(new File("res/thinmatrix-cloud/"), new File("res/thinmatrix-cloud/night.cfg")).load());
-		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
+		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTextures[0].getId());
+		GL13.glActiveTexture(TextureBank.SKYBOX_2.getBind());
+		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTextures[1].getId());
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		
 		controls = new StandardControls();
@@ -225,6 +238,7 @@ public enum Game implements Listener {
 		//interp = new LinearTargetedInterpolator(x, new Vector(100f, 100f, 100f), 10000000000L);
 		//interp = new ExponentialTargetedInterpolator(x, new Vector(0f, 0f, -100f), 1f);
 		interp = new FunctionInterpolator(x, 10000000000L, curve);
+		
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
@@ -326,7 +340,7 @@ public enum Game implements Listener {
 	}
 	float angle = 0;
 	public void updateCubeMapMatrix(ShaderProgram program){
-		//angle+=0.02;
+		angle+=0.02;
 		GL20.glUseProgram(program.getId());
 		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix().multiply(MathUtil.getRotationY(angle)));
 		GL20.glUseProgram(0);
