@@ -1,14 +1,33 @@
 package lemon.engine.math;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.BinaryOperator;
 
 public class Vector {
+	public static final Vector EMPTY_VECTOR = Vector.unmodifiableVector(new Vector());
 	protected static final String unmodifiableMessage = "Cannot Modify Vector";
 	private float[] data;
 	
 	public Vector(int length){
 		this.data = new float[length];
+	}
+	public Vector(List<Float> floats){
+		this.data = new float[floats.size()];
+		for(int i=0;i<floats.size();++i){
+			this.data[i] = floats.get(i);
+		}
+	}
+	public Vector(Vector vector, float... floats){
+		float[] data = new float[vector.getDimensions()+floats.length];
+		for(int i=0;i<vector.getDimensions();++i){
+			data[i] = vector.get(i);
+		}
+		for(int i=0;i<floats.length;++i){
+			data[i+vector.getDimensions()] = floats[i];
+		}
+		this.data = data;
 	}
 	public Vector(Vector vector){
 		float[] data = new float[vector.getDimensions()];
@@ -104,7 +123,7 @@ public class Vector {
 	public Vector operate(float scale, BinaryOperator<Float> operator){
 		float[] data = new float[this.data.length];
 		for(int i=0;i<data.length;++i){
-			data[i] = operator.apply(data[i], scale);
+			data[i] = operator.apply(this.data[i], scale);
 		}
 		return new Vector(data);
 	}
@@ -166,5 +185,21 @@ public class Vector {
 				throw new IllegalStateException(unmodifiableMessage);
 			}
 		};
+	}
+	public static Vector trimValues(Vector vector, float start, float end){
+		List<Float> floats = new ArrayList<Float>();
+		for(int i=0;i<vector.getDimensions();++i){
+			if(vector.get(i)>=start&&vector.get(i)<=end){
+				floats.add(vector.get(i));
+			}
+		}
+		return new Vector(floats);
+	}
+	public static Vector trim(Vector vector, int start, int end){
+		float[] data = new float[end-start];
+		for(int i=start;i<end;++i){
+			data[i-start] = vector.get(i);
+		}
+		return new Vector(data);
 	}
 }

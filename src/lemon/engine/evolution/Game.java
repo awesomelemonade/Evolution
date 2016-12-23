@@ -48,6 +48,7 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
+import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.ShaderProgram;
@@ -114,7 +115,7 @@ public enum Game implements Listener {
 		Vector3D[] vectors = new Vector3D[50];
 		int[] indices = new int[(vectors.length-1)*3];
 		for(int i=0;i<vectors.length;++i){
-			vectors[i] = new Vector3D(curve.apply(((float)i)/((float)(vectors.length-1))*10-5));
+			vectors[i] = new Vector3D(curve.apply(((float)i)/((float)(vectors.length-1))));
 		}
 		for(int i=0;i<indices.length;i+=3){
 			indices[i] = 0;
@@ -238,12 +239,12 @@ public enum Game implements Listener {
 		//interp = new LinearTargetedInterpolator(x, new Vector(100f, 100f, 100f), 10000000000L);
 		//interp = new ExponentialTargetedInterpolator(x, new Vector(0f, 0f, -100f), 1f);
 		interp = new FunctionInterpolator(x, 10000000000L, curve);
-		
+		System.out.println(curve.solve(0, 0.5f));
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
-	CubicBezierCurve curve = new CubicBezierCurve(Vector3D.ZERO, 
-			new Vector3D(0.17f, 0.67f, 0f), new Vector3D(0.83f, 0.67f, 0f), new Vector3D(0f, 0f, -1f));
+	CubicBezierCurve curve = new CubicBezierCurve(new Vector(0f, 0f, 0f), 
+			new Vector(0.17f, 0.67f, 0f), new Vector(0.83f, 0.67f, 0f), new Vector(1f, 1f, 0f));
 	Interpolator interp;
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
