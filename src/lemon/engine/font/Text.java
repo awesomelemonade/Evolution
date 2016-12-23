@@ -16,10 +16,8 @@ public class Text implements Renderable {
 	private VertexArray vertexArray;
 	private Font font;
 	private String text;
+	private float width;
 	public Text(Font font, String text){
-		if(text.isEmpty()){
-			throw new IllegalStateException("Text is empty!");
-		}
 		this.font = font;
 		this.text = text;
 		vertexArray = new VertexArray();
@@ -35,19 +33,29 @@ public class Text implements Renderable {
 	}
 	private FloatBuffer getFloatBuffer(){
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(text.length()*4*6);
+		if(text.isEmpty()){
+			buffer.flip();
+			return buffer;
+		}
 		char prevChar = text.charAt(0);
 		int cursor = putChar(buffer, font.getCharData(prevChar), 0, 0);
 		char currentChar;
-		for(int i=1;i<text.length();++i){
+		for(int i=1;i<text.length()-1;++i){
 			currentChar = text.charAt(i);
 			cursor+=putChar(buffer, font.getCharData(currentChar), font.getKerning(prevChar, currentChar), cursor);
 			prevChar = currentChar;
+		}
+		if(text.length()==1){
+			width = font.getCharData(text.charAt(0)).getWidth();
+		}else{
+			currentChar = text.charAt(text.length()-1);
+			width = cursor+font.getCharData(currentChar).getWidth();
+			putChar(buffer, font.getCharData(currentChar), font.getKerning(prevChar, currentChar), cursor);
 		}
 		buffer.flip();
 		return buffer;
 	}
 	private int putChar(FloatBuffer buffer, CharData data, int kerning, int cursor){
-		kerning = 0;
 		float scaleWidth = font.getScaleWidth();
 		float scaleHeight = font.getScaleHeight();
 		float x = data.getX()/scaleWidth;
@@ -72,5 +80,14 @@ public class Text implements Renderable {
 		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, text.length()*6);
 		GL30.glBindVertexArray(0);
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+	}
+	public Font getFont(){
+		return font;
+	}
+	public String getText(){
+		return text;
+	}
+	public float getWidth(){
+		return width;
 	}
 }

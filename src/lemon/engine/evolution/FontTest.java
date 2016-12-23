@@ -36,6 +36,8 @@ public enum FontTest implements Listener {
 	private Font font;
 	private Text text;
 	public void start(long window){
+		font = new Font(new File("res/fonts/FreeSans.fnt"));
+		text = new Text(font, "");
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(window, width, height);
@@ -61,8 +63,6 @@ public enum FontTest implements Listener {
 		uniform_textColor.loadVector(new Vector3D(1f, 1f, 1f));
 		uniform_textSampler.loadInt(TextureBank.REUSE.getId());
 		GL20.glUseProgram(0);
-		font = new Font(new File("res/fonts/FreeSans.fnt"));
-		text = new Text(font, "Testing 123");
 		EventManager.INSTANCE.registerListener(this);
 	}
 	@Subscribe
@@ -72,9 +72,14 @@ public enum FontTest implements Listener {
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		GL20.glUseProgram(textProgram.getId());
+		uniform_textModelMatrix.loadMatrix(MathUtil.getTranslation(new Vector3D(-text.getWidth()/2, 0f, 0f)));
 		text.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
+		if(Math.random()<0.05){
+			String abc = "abcdefghijklmnopqrstuvwxyz";
+			text = new Text(font, text.getText()+abc.charAt((int)(Math.random()*abc.length())));
+		}
 	}
 }
