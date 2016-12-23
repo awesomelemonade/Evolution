@@ -104,7 +104,7 @@ public class Vector {
 	public Vector operate(float scale, BinaryOperator<Float> operator){
 		float[] data = new float[this.data.length];
 		for(int i=0;i<data.length;++i){
-			data[i] = operator.apply(data[i], scale);
+			data[i] = operator.apply(this.data[i], scale);
 		}
 		return new Vector(data);
 	}
