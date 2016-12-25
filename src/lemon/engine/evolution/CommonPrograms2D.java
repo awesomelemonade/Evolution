@@ -10,8 +10,8 @@ public enum CommonPrograms2D {
 	COLOR(
 			new int[]{0, 1},
 			new String[]{"position", "color"},
-			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/colorVertexShader")),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/colorFragmentShader"))	
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader"))	
 	), LINE(
 			new int[]{0, 1},
 			new String[]{"id", "value"},
