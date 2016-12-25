@@ -18,34 +18,25 @@ import lemon.engine.game2d.Game2D;
 import lemon.engine.game2d.Quad2D;
 import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.math.Matrix;
-import lemon.engine.render.Shader;
-import lemon.engine.render.ShaderProgram;
-import lemon.engine.render.UniformVariable;
+import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
-import lemon.engine.toolbox.Toolbox;
 
 public enum Menu implements Listener {
 	INSTANCE;
 	private long window;
-	private ShaderProgram shaderProgram;
-	private UniformVariable uniform_projectionMatrix;
-	private UniformVariable uniform_transformationMatrix;
 	private List<Quad2D> buttons;
 	
 	public void start(long window){
 		this.window = window;
-		shaderProgram = new ShaderProgram(
-				new int[]{0, 1},
-				new String[]{"position", "color"},
-				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
-				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader"))
-		);
-		uniform_projectionMatrix = shaderProgram.getUniformVariable("projectionMatrix");
-		uniform_transformationMatrix = shaderProgram.getUniformVariable("transformationMatrix");
-		GL20.glUseProgram(shaderProgram.getId());
-		uniform_projectionMatrix.loadMatrix(Matrix.IDENTITY_4);
-		uniform_transformationMatrix.loadMatrix(Matrix.IDENTITY_4);
+		
+		CommonPrograms2D.initAll();
+		CommonPrograms3D.initAll();
+		
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
+		
 		EventManager.INSTANCE.registerListener(this);
 		buttons = new ArrayList<Quad2D>();
 		for(int i=0;i<3;++i){
@@ -86,7 +77,7 @@ public enum Menu implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event){
-		GL20.glUseProgram(shaderProgram.getId());
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		for(Quad2D button: buttons){
 			button.render();
 		}

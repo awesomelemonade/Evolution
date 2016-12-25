@@ -133,8 +133,6 @@ public enum Game implements Listener {
 		player = new Player(new Projection(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f));
 		Matrix projectionMatrix = player.getCamera().getProjectionMatrix();
 		
-		CommonPrograms3D.initAll();
-		
 		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
@@ -160,8 +158,6 @@ public enum Game implements Listener {
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("colorSampler", TextureBank.COLOR.getId());
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("depthSampler", TextureBank.DEPTH.getId());
 		GL20.glUseProgram(0);
-		
-		CommonPrograms2D.initAll();
 		
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
@@ -295,6 +291,9 @@ public enum Game implements Listener {
 			player.getCamera().getRotation().setX(90);
 		}
 		
+		angle+=0.02;
+		angle%=360;
+		
 		player.update(event);
 		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
@@ -341,7 +340,6 @@ public enum Game implements Listener {
 	}
 	float angle = 0;
 	public void updateCubeMapMatrix(ShaderProgram program){
-		angle+=0.02;
 		GL20.glUseProgram(program.getId());
 		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix().multiply(MathUtil.getRotationY(angle)));
 		GL20.glUseProgram(0);
@@ -407,6 +405,7 @@ public enum Game implements Listener {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL20.glUseProgram(CommonPrograms3D.CUBEMAP.getShaderProgram().getId());
+		CommonPrograms3D.CUBEMAP.getShaderProgram().loadFloat("blendFactor", angle/360);
 		Skybox.INSTANCE.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_BLEND);
