@@ -11,20 +11,15 @@ import lemon.engine.control.UpdateEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
+import lemon.engine.evolution.CommonPrograms2D;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
-import lemon.engine.render.Shader;
-import lemon.engine.render.ShaderProgram;
-import lemon.engine.render.UniformVariable;
+import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
-import lemon.engine.toolbox.Toolbox;
 
 public enum Game2D implements Listener {
 	INSTANCE;
-	private ShaderProgram shaderProgram;
-	private UniformVariable	uniform_projectionMatrix;
-	private UniformVariable uniform_transformationMatrix;
-	private Quad2D player;
+	private Quad2D quad;
 	private Matrix projectionMatrix;
 	
 	public void start(long window){
@@ -34,19 +29,11 @@ public enum Game2D implements Listener {
 		int window_width = width.get();
 		int window_height = height.get();
 		projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1f, 1f);
-		shaderProgram = new ShaderProgram(
-				new int[]{0, 1},
-				new String[]{"position", "color"},
-				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
-				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader"))
-		);
-		uniform_projectionMatrix = shaderProgram.getUniformVariable("projectionMatrix");
-		uniform_transformationMatrix = shaderProgram.getUniformVariable("transformationMatrix");
-		GL20.glUseProgram(shaderProgram.getId());
-		uniform_projectionMatrix.loadMatrix(projectionMatrix);
-		uniform_transformationMatrix.loadMatrix(Matrix.IDENTITY_4);
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
-		player = new Quad2D(new Box2D(0f, 0, 20f, 50f), new Color(1f, 0f, 0f));
+		quad = new Quad2D(new Box2D(0f, 0, 100f, 100f), new Color(1f, 0f, 0f));
 		EventManager.INSTANCE.registerListener(this);
 	}
 	@Subscribe
@@ -55,8 +42,8 @@ public enum Game2D implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event){
-		GL20.glUseProgram(shaderProgram.getId());
-		player.render();
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
+		quad.render();
 		GL20.glUseProgram(0);
 	}
 }
