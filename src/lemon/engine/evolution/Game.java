@@ -107,8 +107,6 @@ public enum Game implements Listener {
 		GL11.glViewport(0, 0, window_width, window_height);
 		
 		Skybox.INSTANCE.init();
-		Quad.TEXTURED.init();
-		Quad.COLORED.init();
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 		
 		sphere = new SphereModelBuilder(0.1f, 3).buildAndInit();

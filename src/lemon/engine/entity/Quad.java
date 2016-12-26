@@ -68,5 +68,66 @@ public enum Quad implements Renderable, Initializable {
 			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
 			GL30.glBindVertexArray(0);
 		}
+	},
+	TEXTURED_2D{
+		private final FloatBuffer VERTICES = Toolbox.toFloatBuffer(
+				-1f, 1f, 0f, 1f,
+				-1f, -1f, 0f, 0f,
+				1f, 1f, 1f, 1f,
+				1f, -1f, 1f, 0f
+		);
+		private VertexArray vertexArray;
+		@Override
+		public void init() {
+			vertexArray = new VertexArray();
+			GL30.glBindVertexArray(vertexArray.getId());
+			GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vertexArray.generateVbo().getId());
+			GL15.glBufferData(GL15.GL_ARRAY_BUFFER, VERTICES, GL15.GL_STATIC_DRAW);
+			GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 4*4, 0);
+			GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 4*4, 2*4);
+			GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+			GL20.glEnableVertexAttribArray(0);
+			GL20.glEnableVertexAttribArray(1);
+			GL30.glBindVertexArray(0);
+		}
+		@Override
+		public void render() {
+			GL30.glBindVertexArray(vertexArray.getId());
+			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
+			GL30.glBindVertexArray(0);
+		}
+	},
+	COLORED_2D{
+		private final FloatBuffer VERTICES = Toolbox.toFloatBuffer(
+				-1f, 1f, 1f, 1f, 1f, 1f,
+				-1f, -1f, 1f, 1f, 1f, 1f,
+				1f, 1f, 1f, 1f, 1f, 1f,
+				1f, -1f, 1f, 1f, 1f, 1f
+		);
+		private VertexArray vertexArray;
+		@Override
+		public void init() {
+			vertexArray = new VertexArray();
+			GL30.glBindVertexArray(vertexArray.getId());
+			GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vertexArray.generateVbo().getId());
+			GL15.glBufferData(GL15.GL_ARRAY_BUFFER, VERTICES, GL15.GL_STATIC_DRAW);
+			GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 6*4, 0);
+			GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 6*4, 2*4);
+			GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+			GL20.glEnableVertexAttribArray(0);
+			GL20.glEnableVertexAttribArray(1);
+			GL30.glBindVertexArray(0);
+		}
+		@Override
+		public void render() {
+			GL30.glBindVertexArray(vertexArray.getId());
+			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
+			GL30.glBindVertexArray(0);
+		}
 	};
+	public static void initAll(){
+		for(Quad quad: Quad.values()){
+			quad.init();
+		}
+	}
 }

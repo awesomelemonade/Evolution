@@ -10,27 +10,30 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL20;
 
 import lemon.engine.control.RenderEvent;
+import lemon.engine.entity.Quad;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.game2d.Box2D;
 import lemon.engine.game2d.Game2D;
-import lemon.engine.game2d.Quad2D;
 import lemon.engine.input.MouseButtonEvent;
+import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
-import lemon.engine.toolbox.Color;
 
 public enum Menu implements Listener {
 	INSTANCE;
 	private long window;
-	private List<Quad2D> buttons;
+	private List<Box2D> buttons;
 	
 	public void start(long window){
 		this.window = window;
 		
 		CommonPrograms2D.initAll();
 		CommonPrograms3D.initAll();
+		
+		Quad.initAll();
 		
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
@@ -39,9 +42,9 @@ public enum Menu implements Listener {
 		GL20.glUseProgram(0);
 		
 		EventManager.INSTANCE.registerListener(this);
-		buttons = new ArrayList<Quad2D>();
+		buttons = new ArrayList<Box2D>();
 		for(int i=0;i<3;++i){
-			buttons.add(new Quad2D(new Box2D(-0.3f, -0.3f-i*0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
+			buttons.add(new Box2D(-0.3f, -0.3f-0.2f*i, 0.6f, 0.1f));
 		}
 	}
 	@Subscribe
@@ -60,7 +63,7 @@ public enum Menu implements Listener {
 			mouseX = (2f*mouseX/window_width)-1f;
 			mouseY = -1f*((2f*mouseY/window_height)-1f);
 			for(int i=0;i<buttons.size();++i){
-				if(buttons.get(i).getBox2D().intersect(mouseX, mouseY)){
+				if(buttons.get(i).intersect(mouseX, mouseY)){
 					switch(i){
 						case 0:
 							startLoading();
@@ -79,8 +82,11 @@ public enum Menu implements Listener {
 	@Subscribe
 	public void render(RenderEvent event){
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
-		for(Quad2D button: buttons){
-			button.render();
+		for(Box2D button: buttons){
+			CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX,
+					MathUtil.getTranslation(new Vector3D(button.getX()+(button.getWidth()/2f), button.getY()+(button.getHeight()/2f), 0f))
+					.multiply(MathUtil.getScalar(new Vector3D(button.getWidth()/2f, button.getHeight()/2f, 1f))));
+			Quad.COLORED_2D.render();
 		}
 		GL20.glUseProgram(0);
 	}

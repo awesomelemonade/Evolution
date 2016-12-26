@@ -8,6 +8,7 @@ import org.lwjgl.opengl.GL20;
 
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
+import lemon.engine.entity.Quad;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -20,11 +21,10 @@ import lemon.engine.math.Vector;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
-import lemon.engine.toolbox.Color;
 
 public enum Game2D implements Listener {
 	INSTANCE;
-	private Quad2D quad;
+	private Box2D quad;
 	private Matrix projectionMatrix;
 	
 	private CubicBezierCurve curve = new CubicBezierCurve(new Vector2D(0f, 0f), 
@@ -49,17 +49,13 @@ public enum Game2D implements Listener {
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
-		quad = new Quad2D(new Box2D(0f, 0, 100f, 100f), new Color(1f, 0f, 0f));
+		quad = new Box2D(0f, 0, 100f, 100f);
 		EventManager.INSTANCE.registerListener(this);
 	}
 	long time = -500000000;
 	@Subscribe
 	public void update(UpdateEvent event){
 		time+=event.getDelta();
-	}
-	@Subscribe
-	public void render(RenderEvent event){
-		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		float timeProgress = (float)(time/1000000000.0);
 		if(timeProgress<0f){
 			timeProgress = 0f;
@@ -68,9 +64,15 @@ public enum Game2D implements Listener {
 			timeProgress = 1f;
 		}
 		Vector solved = curve.apply(timeProgress);
+		quad.setX(solved.get(1)*500f);
+	}
+	@Subscribe
+	public void render(RenderEvent event){
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX,
-				MathUtil.getTranslation(new Vector3D(solved.get(1)*500f, 0f, 0f)));
-		quad.render();
+				MathUtil.getTranslation(new Vector3D(quad.getX()+500f, quad.getY()+500f, 0f))
+				.multiply(MathUtil.getScalar(new Vector3D(50f, 50f, 1f))));
+		Quad.COLORED_2D.render();
 		GL20.glUseProgram(0);
 	}
 	@Subscribe
