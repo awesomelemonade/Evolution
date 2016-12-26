@@ -41,11 +41,13 @@ public enum Game2D implements Listener {
 		projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1f, 1f);
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
-		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
 		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
-		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
 		quad = new Quad2D(new Box2D(0f, 0, 100f, 100f), new Color(1f, 0f, 0f));
 		EventManager.INSTANCE.registerListener(this);
@@ -66,7 +68,7 @@ public enum Game2D implements Listener {
 			timeProgress = 1f;
 		}
 		Vector solved = curve.apply(timeProgress);
-		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX,
 				MathUtil.getTranslation(new Vector3D(solved.get(1)*500f, 0f, 0f)));
 		quad.render();
 		GL20.glUseProgram(0);

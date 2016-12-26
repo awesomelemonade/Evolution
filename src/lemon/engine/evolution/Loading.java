@@ -13,34 +13,21 @@ import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.game2d.Box2D;
 import lemon.engine.math.Matrix;
-import lemon.engine.render.Shader;
-import lemon.engine.render.ShaderProgram;
-import lemon.engine.render.UniformVariable;
+import lemon.engine.render.MatrixType;
 import lemon.engine.splash.LoadingBar;
 import lemon.engine.toolbox.Color;
-import lemon.engine.toolbox.Toolbox;
 
 public enum Loading implements Listener {
 	INSTANCE;
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
-	private ShaderProgram shaderProgram;
-	private UniformVariable uniform_projectionMatrix;
-	private UniformVariable uniform_transformationMatrix;
 	private LoadingBar loadingBar;
 	private Loader loader;
 	private long window;
 	public void start(long window){
-		shaderProgram = new ShaderProgram(
-				new int[]{0, 1},
-				new String[]{"position", "color"},
-				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
-				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader"))
-		);
-		uniform_projectionMatrix = shaderProgram.getUniformVariable("projectionMatrix");
-		uniform_transformationMatrix = shaderProgram.getUniformVariable("transformationMatrix");
-		GL20.glUseProgram(shaderProgram.getId());
-		uniform_projectionMatrix.loadMatrix(Matrix.IDENTITY_4);
-		uniform_transformationMatrix.loadMatrix(Matrix.IDENTITY_4);
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
 		this.loader = Game.INSTANCE.getTerrainLoader();
 		this.loadingBar = new LoadingBar(this.loader.getPercentage(),
@@ -61,7 +48,7 @@ public enum Loading implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event){
-		GL20.glUseProgram(shaderProgram.getId());
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		loadingBar.render();
 		GL20.glUseProgram(0);
 	}
