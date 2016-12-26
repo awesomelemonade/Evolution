@@ -38,4 +38,8 @@ public class Box2D {
 	public float getHeight(){
 		return height;
 	}
+	@Override
+	public String toString(){
+		return String.format("Box2D[%f, %f, %f, %f]", x, y, width, height);
+	}
 }
