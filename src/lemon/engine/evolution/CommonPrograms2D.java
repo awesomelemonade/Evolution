@@ -12,6 +12,11 @@ public enum CommonPrograms2D {
 			new String[]{"position", "color"},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader"))	
+	), TEXTURE(
+			new int[]{0, 1},
+			new String[]{"position", "textureCoords"},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/textureVertexShader")),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textureFragmentShader"))
 	), LINE(
 			new int[]{0, 1},
 			new String[]{"id", "value"},

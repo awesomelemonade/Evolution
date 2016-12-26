@@ -43,6 +43,10 @@ public enum Game2D implements Listener {
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
+		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		GL20.glUseProgram(0);
 		quad = new Quad2D(new Box2D(0f, 0, 100f, 100f), new Color(1f, 0f, 0f));
 		EventManager.INSTANCE.registerListener(this);
 	}
