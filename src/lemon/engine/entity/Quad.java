@@ -71,10 +71,10 @@ public enum Quad implements Renderable, Initializable {
 	},
 	TEXTURED_2D{
 		private final FloatBuffer VERTICES = Toolbox.toFloatBuffer(
-				-1f, 1f, 0f, 1f,
-				-1f, -1f, 0f, 0f,
-				1f, 1f, 1f, 1f,
-				1f, -1f, 1f, 0f
+				-1f, 1f, 0f, 0f,
+				-1f, -1f, 0f, 1f,
+				1f, 1f, 1f, 0f,
+				1f, -1f, 1f, 1f
 		);
 		private VertexArray vertexArray;
 		@Override
