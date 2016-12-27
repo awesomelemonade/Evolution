@@ -22,13 +22,12 @@ import lemon.engine.entity.Quad;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
+import lemon.engine.evolution.BezierCurves;
 import lemon.engine.evolution.CommonPrograms2D;
-import lemon.engine.function.CubicBezierCurve;
 import lemon.engine.input.KeyEvent;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector;
-import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
@@ -42,11 +41,6 @@ public enum Game2D implements Listener {
 	private Map<String, Texture> textures;
 	
 	private Box2D windowBox;
-	
-	private CubicBezierCurve curve = new CubicBezierCurve(new Vector2D(0f, 0f), 
-	//		new Vector2D(0.17f, 0.67f), new Vector2D(0.83f, 0.67f), new Vector2D(1f, 1f));
-	//		new Vector2D(0.25f, 0.1f), new Vector2D(0.25f, 1f), new Vector2D(1f, 1f));
-			new Vector2D(0.87f, -0.41f), new Vector2D(0.19f, 1.44f), new Vector2D(1f, 1f));
 	
 	public void start(long window){
 		IntBuffer width = BufferUtils.createIntBuffer(1);
@@ -90,7 +84,7 @@ public enum Game2D implements Listener {
 	public void update(UpdateEvent event){
 		time+=event.getDelta();
 		float timeProgress = getTimeProgress(time, getTime(0), getTime(1000));
-		Vector solved = curve.apply(timeProgress);
+		Vector solved = BezierCurves.BOUNCE.apply(timeProgress);
 		human.setY(-human.getHeight()+solved.get(1)*1000f);
 	}
 	public long getTime(long milliseconds){
