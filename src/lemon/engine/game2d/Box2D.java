@@ -1,5 +1,9 @@
 package lemon.engine.game2d;
 
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Matrix;
+import lemon.engine.math.Vector3D;
+
 public class Box2D {
 	private float x;
 	private float y;
@@ -37,6 +41,10 @@ public class Box2D {
 	}
 	public float getHeight(){
 		return height;
+	}
+	public Matrix getTransformationMatrix(){
+		return MathUtil.getTranslation(new Vector3D(x+(width/2f), y+(height/2f), 0f))
+				.multiply(MathUtil.getScalar(new Vector3D(width/2f, height/2f, 1f)));
 	}
 	@Override
 	public String toString(){
