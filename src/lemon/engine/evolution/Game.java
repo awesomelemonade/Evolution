@@ -233,7 +233,7 @@ public enum Game implements Listener {
 		raySphereIntersection = new RaySphereIntersection();
 		//interp = new LinearTargetedInterpolator(x, new Vector(100f, 100f, 100f), 10000000000L);
 		//interp = new ExponentialTargetedInterpolator(x, new Vector(0f, 0f, -100f), 1f);
-		interp = new FunctionInterpolator(x, 10000000000L, curve);
+		interp = new FunctionInterpolator(x, 0L, 10000000000L, curve);
 		System.out.println(curve.solve(0, 0.5f));
 		
 		EventManager.INSTANCE.registerListener(this);
@@ -244,9 +244,11 @@ public enum Game implements Listener {
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed-maxSpeed*friction;
+	private long time = 0;
 	@Subscribe
 	public void update(UpdateEvent event){
-		interp.update(event.getDelta());
+		time+=event.getDelta();
+		interp.update(time);
 		if(controls.hasStates()){
 			float angle = (player.getCamera().getRotation().getY()+90)*(((float)Math.PI)/180f);
 			float sin = (float)Math.sin(angle);
