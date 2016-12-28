@@ -12,6 +12,8 @@ import org.lwjgl.opengl.GL32;
 import lemon.engine.entity.Quad;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game2d.Box2D;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
@@ -64,7 +66,7 @@ public class SplitScreen {
 	public void render(Box2D box){
 		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
-		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, box.getTransformationMatrix());
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, box.getTransformationMatrix().multiply(MathUtil.getScalar(new Vector3D(1, -1, 1))));
 		Quad.TEXTURED_2D.render();
 		GL20.glUseProgram(0);
 	}

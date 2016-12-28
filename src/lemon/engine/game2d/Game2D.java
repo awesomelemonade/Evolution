@@ -5,9 +5,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -31,7 +29,6 @@ import lemon.engine.evolution.SplitScreen;
 import lemon.engine.input.KeyEvent;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
-import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
@@ -45,6 +42,7 @@ public enum Game2D implements Listener {
 	
 	private Box2D windowBox;
 	
+	private SplitScreen main;
 	private SplitScreen lightbulb;
 	
 	public void start(long window){
@@ -56,6 +54,7 @@ public enum Game2D implements Listener {
 		windowBox = new Box2D(0, 0, window_width, window_height);
 		projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1f, 1f);
 		
+		main = new SplitScreen((int)windowBox.getWidth(), (int)windowBox.getHeight());
 		lightbulb = new SplitScreen(135, 190);
 		
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
@@ -88,69 +87,55 @@ public enum Game2D implements Listener {
 		EventManager.INSTANCE.registerListener(this);
 	}
 	long time = -500000000;
-	float y = 0;
 	@Subscribe
 	public void update(UpdateEvent event){
 		time+=event.getDelta();
 		human.setY(-human.getHeight()+
 				BezierCurves.BOUNCE.apply(getTimeProgress(time, getTime(0), getTime(1000))).get(1)*1000f);
-		if(time>0){
-			float number = (BezierCurves.EASE_IN.apply(getProgress(time, getTime(0), getTime(1000))).get(1)*3+2.7f+((float)(Math.random()*2f)));
-			float width = (windowBox.getWidth()*0.4f);
-			for(int i=0;i<number;++i){
-				population.add(new Vector3D(width/(((int)number))*((float)(i+Math.random()-0.5)), y, 0f));
-			}
-		}
-		/*for(int i=0;i<number;++i){
-			population.add(new Vector3D((float)(Math.random()*(windowBox.getWidth()*0.4f)+(0.5f*windowBox.getWidth())),
-					y, (float)(Math.random()*200f-100f)));
-		}*/
-		y = BezierCurves.EASE_IN.apply(getTimeProgress(time, getTime(0), getTime(1000))).get(1)*windowBox.getHeight();
-		//y = ((float)time)/((float)1000000)-400;
+		
 	}
-	List<Vector3D> population = new ArrayList<Vector3D>();
 	@Subscribe
 	public void render(RenderEvent event){
 		
 		
-		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		
+		
+		
+		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, main.getFrameBuffer().getId());
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, human.getTransformationMatrix());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("human").getId());
 		Quad.TEXTURED_2D.render();
 		
-		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, lightbulb.getFrameBuffer().getId());
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(0f, 0f, 135f, 190f).getTransformationMatrix());
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("lightbulb").getId());
-		Quad.TEXTURED_2D.render();
-		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-		
-		
-
 		//CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(560f, 640f, 135f, 190f).getTransformationMatrix());
 		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("lightbulb").getId());
 		//Quad.TEXTURED_2D.render();
 		
-		
-		
-		
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		for(Vector3D vector: population){
-			CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(vector.getX(), vector.getY(), 80, 202).getTransformationMatrix());
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("population").getId());
-			Quad.TEXTURED_2D.render();
-		}
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		
 		GL20.glUseProgram(0);
 		
-		
-		//if(time>getTime(2750)){
+		if(time>getTime(2750)){
 			lightbulb.render(new Box2D(560f, 640f, lightbulb.getWidth(), lightbulb.getHeight()));
-		//}
+		}
+		
+		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+		
+		
+		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, lightbulb.getFrameBuffer().getId());
+		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(0f, 0f, 135f, 190f).getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("lightbulb").getId());
+		Quad.TEXTURED_2D.render();
+		GL20.glUseProgram(0);
+		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+		
+		
+		
+		main.render(windowBox);
 		
 		GL11.glDisable(GL11.GL_BLEND);
 	}
@@ -183,7 +168,6 @@ public enum Game2D implements Listener {
 		if(event.getAction()==GLFW.GLFW_RELEASE){
 			if(event.getKey()==GLFW.GLFW_KEY_R){
 				time = -500000000;
-				population.clear();
 			}
 		}
 	}
