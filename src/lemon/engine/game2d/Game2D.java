@@ -109,6 +109,8 @@ public enum Game2D implements Listener {
 				new Vector(0, demographics.getHeight(), 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		interpolators.add(new FunctionInterpolator(demographics, getTime(2000), getTime(3000), 
 				new Vector(demographics.getWidth()*0.1f, 0, -demographics.getWidth()*0.2f, -demographics.getHeight()*0.2f), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(demographics, getTime(5000), getTime(6000), 
+				new Vector(0, -(demographics.getHeight()*0.9f), 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		
 		electricityIconNames = new String[]{"electricityicon-cord", "electricityicon-lightbulb", "electricityicon-tower", "electricityicon-windmill", "electricityicon-batteries"};
 		electricityIcons = new Box2D[electricityIconNames.length];
@@ -117,6 +119,8 @@ public enum Game2D implements Listener {
 			electricityIcons[i] = new Box2D(windowBox.getWidth()/electricityIcons.length*(i+0.5f)-75, windowBox.getHeight(), 150, 150);
 			interpolators.add(new FunctionInterpolator(electricityIcons[i], getTime(2000), getTime(3000),
 					new Vector(0, yValues[i], 0, 0),f->BezierCurves.EASE_IN.apply(f).get(1)));
+			interpolators.add(new FunctionInterpolator(electricityIcons[i], getTime(5000), getTime(6000),
+					new Vector(0, -(windowBox.getHeight()+yValues[i])-150, 0, 0),f->BezierCurves.EASE_OUT.apply(f).get(1)));
 		}
 		
 		EventManager.INSTANCE.registerListener(this);
