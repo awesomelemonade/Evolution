@@ -63,11 +63,28 @@ public class SplitScreen {
 	public int getHeight(){
 		return height;
 	}
-	public void render(Box2D box){
+	public void render(Box2D stencil, Box2D box){
+		GL11.glEnable(GL11.GL_STENCIL_TEST);
+		GL11.glClear(GL11.GL_STENCIL_BUFFER_BIT);
+		GL11.glStencilFunc(GL11.GL_ALWAYS, 1, 0xFF);
+		GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
+		GL11.glStencilMask(0xFF);
+		GL11.glColorMask(false, false, false, false);
+		
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, stencil.getTransformationMatrix());
+		Quad.COLORED_2D.render();
+		GL20.glUseProgram(0);
+		
+		GL11.glStencilMask(0x00);
+		GL11.glStencilFunc(GL11.GL_EQUAL, 1, 0xFF);
+		GL11.glColorMask(true, true, true, true);
 		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
-		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, box.getTransformationMatrix().multiply(MathUtil.getScalar(new Vector3D(1, -1, 1))));
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX,
+				box.getTransformationMatrix().multiply(MathUtil.getScalar(new Vector3D(1, -1, 1))));
 		Quad.TEXTURED_2D.render();
 		GL20.glUseProgram(0);
+		GL11.glDisable(GL11.GL_STENCIL_TEST);
 	}
 }
