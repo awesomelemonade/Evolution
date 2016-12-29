@@ -51,7 +51,6 @@ public enum Game2D implements Listener {
 	private SplitScreen lightbulb;
 	
 	private Box2D demographics;
-	private Box2D electricityBackground;
 	
 	private List<Interpolator> interpolators;
 	
@@ -98,18 +97,15 @@ public enum Game2D implements Listener {
 		
 		demographics = new Box2D(0, 0, 2954, 1491);
 		demographics.scaleWidth(windowBox);
-		demographics.scale(0.8f);
+		demographics.scale(1f);
 		demographics.setY(-demographics.getHeight());
 		
-		electricityBackground = new Box2D(windowBox);
-		electricityBackground.setY(-electricityBackground.getHeight());
-		
 		interpolators = new ArrayList<Interpolator>();
-		
-		interpolators.add(new FunctionInterpolator(demographics, 0, getTime(1000),
-				f->new Vector(0, demographics.getHeight(), 0, 0).multiply(BezierCurves.EASE_IN.apply(f).get(1))));
-		interpolators.add(new FunctionInterpolator(electricityBackground, getTime(1000), getTime(2000),
-				f->new Vector(0, electricityBackground.getHeight(), 0, 0).multiply(BezierCurves.EASE_IN.apply(f).get(1))));
+
+		interpolators.add(new FunctionInterpolator(demographics, getTime(0), getTime(1000), 
+				new Vector(0, demographics.getHeight(), 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(demographics, getTime(2000), getTime(3000), 
+				new Vector(demographics.getWidth()*0.1f, 0, -demographics.getWidth()*0.2f, -demographics.getHeight()*0.2f), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
@@ -143,10 +139,6 @@ public enum Game2D implements Listener {
 		//CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(560f, 640f, 135f, 190f).getTransformationMatrix());
 		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("lightbulb").getId());
 		//Quad.TEXTURED_2D.render();
-		
-		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, electricityBackground.getTransformationMatrix());
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("electricitybackground").getId());
-		Quad.TEXTURED_2D.render();
 		
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, demographics.getTransformationMatrix());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("demographics").getId());

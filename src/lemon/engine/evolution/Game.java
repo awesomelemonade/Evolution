@@ -17,7 +17,6 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
-import lemon.engine.animation.FunctionInterpolator;
 import lemon.engine.animation.Interpolator;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
@@ -233,7 +232,7 @@ public enum Game implements Listener {
 		raySphereIntersection = new RaySphereIntersection();
 		//interp = new LinearTargetedInterpolator(x, new Vector(100f, 100f, 100f), 10000000000L);
 		//interp = new ExponentialTargetedInterpolator(x, new Vector(0f, 0f, -100f), 1f);
-		interp = new FunctionInterpolator(x, 0L, 10000000000L, curve);
+		//interp = new FunctionInterpolator(x, 0L, 10000000000L, curve);
 		System.out.println(curve.solve(0, 0.5f));
 		
 		EventManager.INSTANCE.registerListener(this);
