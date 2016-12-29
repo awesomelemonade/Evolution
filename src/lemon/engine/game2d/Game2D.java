@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -17,6 +19,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
+import lemon.engine.animation.FunctionInterpolator;
+import lemon.engine.animation.Interpolator;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.entity.Quad;
@@ -29,6 +33,7 @@ import lemon.engine.evolution.SplitScreen;
 import lemon.engine.input.KeyEvent;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Vector;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
@@ -44,6 +49,11 @@ public enum Game2D implements Listener {
 	
 	private SplitScreen main;
 	private SplitScreen lightbulb;
+	
+	private Box2D demographics;
+	private Box2D electricityBackground;
+	
+	private List<Interpolator> interpolators;
 	
 	public void start(long window){
 		IntBuffer width = BufferUtils.createIntBuffer(1);
@@ -76,6 +86,7 @@ public enum Game2D implements Listener {
 			while((line=reader.readLine())!=null){
 				StringTokenizer tokenizer = new StringTokenizer(line);
 				String name = tokenizer.nextToken();
+				System.out.println("Loading: "+name);
 				Texture texture = new Texture();
 				texture.load(new TextureData(ImageIO.read(new File("res/"+tokenizer.nextToken()))));
 				textures.put(name, texture);
@@ -84,15 +95,33 @@ public enum Game2D implements Listener {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		demographics = new Box2D(0, 0, 2954, 1491);
+		demographics.scaleWidth(windowBox);
+		demographics.scale(0.8f);
+		demographics.setY(-demographics.getHeight());
+		
+		electricityBackground = new Box2D(windowBox);
+		electricityBackground.setY(-electricityBackground.getHeight());
+		
+		interpolators = new ArrayList<Interpolator>();
+		
+		interpolators.add(new FunctionInterpolator(demographics, 0, getTime(1000),
+				f->new Vector(0, demographics.getHeight(), 0, 0).multiply(BezierCurves.EASE_IN.apply(f).get(1))));
+		interpolators.add(new FunctionInterpolator(electricityBackground, getTime(1000), getTime(2000),
+				f->new Vector(0, electricityBackground.getHeight(), 0, 0).multiply(BezierCurves.EASE_IN.apply(f).get(1))));
+		
 		EventManager.INSTANCE.registerListener(this);
 	}
 	long time = -500000000;
 	@Subscribe
 	public void update(UpdateEvent event){
 		time+=event.getDelta();
+		for(Interpolator interpolator: interpolators){
+			interpolator.update(time);
+		}
 		human.setY(-human.getHeight()+
 				BezierCurves.BOUNCE.apply(getTimeProgress(time, getTime(0), getTime(1000))).get(1)*1000f);
-		
 	}
 	@Subscribe
 	public void render(RenderEvent event){
@@ -107,19 +136,27 @@ public enum Game2D implements Listener {
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		
-		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, human.getTransformationMatrix());
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("human").getId());
-		Quad.TEXTURED_2D.render();
+		//CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, human.getTransformationMatrix());
+		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("human").getId());
+		//Quad.TEXTURED_2D.render();
 		
 		//CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(560f, 640f, 135f, 190f).getTransformationMatrix());
 		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("lightbulb").getId());
 		//Quad.TEXTURED_2D.render();
 		
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, electricityBackground.getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("electricitybackground").getId());
+		Quad.TEXTURED_2D.render();
+		
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, demographics.getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("demographics").getId());
+		Quad.TEXTURED_2D.render();
+		
 		GL20.glUseProgram(0);
 		
-		if(time>getTime(2750)){
+		/*if(time>getTime(2750)){
 			lightbulb.render(new Box2D(560f, 640f, lightbulb.getWidth(), lightbulb.getHeight()));
-		}
+		}*/
 		
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		
