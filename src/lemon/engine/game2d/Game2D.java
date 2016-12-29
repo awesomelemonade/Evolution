@@ -51,6 +51,8 @@ public enum Game2D implements Listener {
 	private SplitScreen lightbulb;
 	
 	private Box2D demographics;
+	private Box2D[] electricityIcons;
+	private String[] electricityIconNames;
 	
 	private List<Interpolator> interpolators;
 	
@@ -95,17 +97,27 @@ public enum Game2D implements Listener {
 			e.printStackTrace();
 		}
 		
+		interpolators = new ArrayList<Interpolator>();
+		
 		demographics = new Box2D(0, 0, 2954, 1491);
 		demographics.scaleWidth(windowBox);
 		demographics.scale(1f);
 		demographics.setY(-demographics.getHeight());
 		
-		interpolators = new ArrayList<Interpolator>();
-
+		
 		interpolators.add(new FunctionInterpolator(demographics, getTime(0), getTime(1000), 
 				new Vector(0, demographics.getHeight(), 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		interpolators.add(new FunctionInterpolator(demographics, getTime(2000), getTime(3000), 
 				new Vector(demographics.getWidth()*0.1f, 0, -demographics.getWidth()*0.2f, -demographics.getHeight()*0.2f), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		
+		electricityIconNames = new String[]{"electricityicon-cord", "electricityicon-lightbulb", "electricityicon-tower", "electricityicon-windmill", "electricityicon-batteries"};
+		electricityIcons = new Box2D[electricityIconNames.length];
+		float[] yValues = new float[]{-450, -300, -250, -300, -450};
+		for(int i=0;i<electricityIcons.length;++i){
+			electricityIcons[i] = new Box2D(windowBox.getWidth()/electricityIcons.length*(i+0.5f)-75, windowBox.getHeight(), 150, 150);
+			interpolators.add(new FunctionInterpolator(electricityIcons[i], getTime(2000), getTime(3000),
+					new Vector(0, yValues[i], 0, 0),f->BezierCurves.EASE_IN.apply(f).get(1)));
+		}
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
@@ -143,6 +155,12 @@ public enum Game2D implements Listener {
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, demographics.getTransformationMatrix());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("demographics").getId());
 		Quad.TEXTURED_2D.render();
+		
+		for(int i=0;i<electricityIcons.length;++i){
+			CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, electricityIcons[i].getTransformationMatrix());
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(electricityIconNames[i]).getId());
+			Quad.TEXTURED_2D.render();
+		}
 		
 		GL20.glUseProgram(0);
 		
