@@ -48,11 +48,15 @@ public enum Game2D implements Listener {
 	private Box2D windowBox;
 	
 	private SplitScreen main;
-	private SplitScreen lightbulb;
+	private SplitScreen lightbulbScreen;
+	private Box2D lightbulbScreenBox;
 	
 	private Box2D demographics;
 	private Box2D[] electricityIcons;
 	private String[] electricityIconNames;
+	private Box2D text_virtually;
+	private Box2D text_impossible;
+	
 	
 	private List<Interpolator> interpolators;
 	
@@ -65,8 +69,13 @@ public enum Game2D implements Listener {
 		windowBox = new Box2D(0, 0, window_width, window_height);
 		projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1f, 1f);
 		
+		//projectionMatrix = MathUtil.getOrtho(window_width*2f, window_height*2f, -1f, 1f);
+		//projectionMatrix = projectionMatrix.multiply(MathUtil.getTranslation(new Vector3D(window_width/2, window_height/2, 0)));
+		
 		main = new SplitScreen((int)windowBox.getWidth(), (int)windowBox.getHeight());
-		lightbulb = new SplitScreen(135, 190);
+		lightbulbScreen = new SplitScreen(135, 190);
+		lightbulbScreenBox = new Box2D(windowBox.getWidth()/2f, 0, lightbulbScreen.getWidth(), lightbulbScreen.getHeight());
+		lightbulbScreenBox.scaleWidth(windowBox.getWidth()/2f);
 		
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
@@ -100,7 +109,7 @@ public enum Game2D implements Listener {
 		interpolators = new ArrayList<Interpolator>();
 		
 		demographics = new Box2D(0, 0, 2954, 1491);
-		demographics.scaleWidth(windowBox);
+		demographics.scaleWidth(windowBox.getWidth());
 		demographics.scale(1f);
 		demographics.setY(-demographics.getHeight());
 		
@@ -109,7 +118,7 @@ public enum Game2D implements Listener {
 				new Vector(0, demographics.getHeight(), 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		interpolators.add(new FunctionInterpolator(demographics, getTime(2000), getTime(3000), 
 				new Vector(demographics.getWidth()*0.1f, 0, -demographics.getWidth()*0.2f, -demographics.getHeight()*0.2f), f->BezierCurves.EASE_IN.apply(f).get(1)));
-		interpolators.add(new FunctionInterpolator(demographics, getTime(5000), getTime(6000), 
+		interpolators.add(new FunctionInterpolator(demographics, getTime(4500), getTime(5500), 
 				new Vector(0, -(demographics.getHeight()*0.9f), 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		
 		electricityIconNames = new String[]{"electricityicon-cord", "electricityicon-lightbulb", "electricityicon-tower", "electricityicon-windmill", "electricityicon-batteries"};
@@ -119,9 +128,24 @@ public enum Game2D implements Listener {
 			electricityIcons[i] = new Box2D(windowBox.getWidth()/electricityIcons.length*(i+0.5f)-75, windowBox.getHeight(), 150, 150);
 			interpolators.add(new FunctionInterpolator(electricityIcons[i], getTime(2000), getTime(3000),
 					new Vector(0, yValues[i], 0, 0),f->BezierCurves.EASE_IN.apply(f).get(1)));
-			interpolators.add(new FunctionInterpolator(electricityIcons[i], getTime(5000), getTime(6000),
+			interpolators.add(new FunctionInterpolator(electricityIcons[i], getTime(4500), getTime(5500),
 					new Vector(0, -(windowBox.getHeight()+yValues[i])-150, 0, 0),f->BezierCurves.EASE_OUT.apply(f).get(1)));
 		}
+		
+		text_virtually = new Box2D(100, windowBox.getHeight(), 565, 125);
+		text_virtually.scale(1.6f);
+		text_impossible = new Box2D(700, windowBox.getHeight(), 647, 125);
+		text_impossible.scale(1.6f);
+
+		interpolators.add(new FunctionInterpolator(text_virtually, getTime(5500), getTime(5900),
+				new Vector(0, -500, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(text_impossible, getTime(5900), getTime(6300),
+				new Vector(0, -850, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		
+		interpolators.add(new FunctionInterpolator(text_virtually, getTime(7500), getTime(7900),
+				new Vector(0, -windowBox.getHeight()+500-text_virtually.getHeight(), 0, 0), f->BezierCurves.EASE_OUT.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(text_impossible, getTime(7500), getTime(7900),
+				new Vector(0, -windowBox.getHeight()+850-text_impossible.getHeight(), 0, 0), f->BezierCurves.EASE_OUT.apply(f).get(1)));
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
@@ -165,17 +189,23 @@ public enum Game2D implements Listener {
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(electricityIconNames[i]).getId());
 			Quad.TEXTURED_2D.render();
 		}
+
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, text_virtually.getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("text-virtually").getId());
+		Quad.TEXTURED_2D.render();
+		
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, text_impossible.getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("text-impossible").getId());
+		Quad.TEXTURED_2D.render();
 		
 		GL20.glUseProgram(0);
 		
-		/*if(time>getTime(2750)){
-			lightbulb.render(new Box2D(560f, 640f, lightbulb.getWidth(), lightbulb.getHeight()));
-		}*/
+		//lightbulbScreen.render(lightbulbScreenBox);
 		
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		
 		
-		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, lightbulb.getFrameBuffer().getId());
+		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, lightbulbScreen.getFrameBuffer().getId());
 		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(0f, 0f, 135f, 190f).getTransformationMatrix());
@@ -186,7 +216,7 @@ public enum Game2D implements Listener {
 		
 		
 		
-		main.render(windowBox);
+		main.render(windowBox, windowBox);
 		
 		GL11.glDisable(GL11.GL_BLEND);
 	}

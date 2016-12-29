@@ -48,9 +48,9 @@ public class Box2D extends Vector {
 		this.setHeight(this.getHeight()*factor);
 	}
 	//Scales it so it can fit inside this box's width
-	public void scaleWidth(Box2D box){
-		float ratio = box.getWidth()/this.getWidth();
-		this.setWidth(box.getWidth());
+	public void scaleWidth(float width){
+		float ratio = width/this.getWidth();
+		this.setWidth(width);
 		this.setHeight(this.getHeight()*ratio);
 	}
 	@Override
