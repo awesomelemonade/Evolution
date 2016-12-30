@@ -52,6 +52,9 @@ public enum Game2D implements Listener {
 	private Box2D lightbulbScreenStencilBox;
 	private Box2D lightbulbScreenBox;
 	private Box2D lightbulb;
+	private SplitScreen entertainmentScreen;
+	private Box2D entertainmentScreenStencilBox;
+	private Box2D entertainmentScreenBox;
 	
 	private Box2D demographics;
 	private Box2D[] electricityIcons;
@@ -150,12 +153,12 @@ public enum Game2D implements Listener {
 		lightbulbScreen = new SplitScreen((int)windowBox.getWidth(), (int)windowBox.getHeight());
 		lightbulbScreenStencilBox = new Box2D(0, 0, windowBox.getWidth(), windowBox.getHeight());
 		lightbulbScreenBox = new Box2D(-lightbulbScreen.getWidth(), 0, lightbulbScreen.getWidth(), lightbulbScreen.getHeight());
-		interpolators.add(new FunctionInterpolator(lightbulbScreenBox, getTime(7900), getTime(8900),
+		interpolators.add(new FunctionInterpolator(lightbulbScreenBox, getTime(8900), getTime(9900),
 				new Vector(lightbulbScreenBox.getWidth(), 0, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
-		interpolators.add(new FunctionInterpolator(lightbulbScreenStencilBox, getTime(9900), getTime(10900),
+		interpolators.add(new FunctionInterpolator(lightbulbScreenStencilBox, getTime(10400), getTime(11400),
 				new Vector(lightbulbScreenStencilBox.getWidth()/2, 0, -lightbulbScreenStencilBox.getWidth()/2, 0),
 				f->BezierCurves.EASE_IN.apply(f).get(1)));
-		interpolators.add(new FunctionInterpolator(lightbulbScreenBox, getTime(9900), getTime(10900),
+		interpolators.add(new FunctionInterpolator(lightbulbScreenBox, getTime(10400), getTime(11400),
 				new Vector(lightbulbScreenBox.getWidth()/4, 0, 0, 0),
 				f->BezierCurves.EASE_IN.apply(f).get(1)));
 		interpolators.add(new FunctionInterpolator(lightbulbScreenBox, getTime(11900), getTime(12900),
@@ -163,6 +166,17 @@ public enum Game2D implements Listener {
 		interpolators.add(new FunctionInterpolator(lightbulbScreenStencilBox, getTime(11900), getTime(12900),
 				new Vector(lightbulbScreenBox.getWidth(), 0, 0, 0),
 				f->BezierCurves.EASE_IN.apply(f).get(1)));
+		
+		entertainmentScreen = new SplitScreen((int)windowBox.getWidth()/2, (int)windowBox.getHeight());
+		entertainmentScreenStencilBox = new Box2D(0, 0, windowBox.getWidth()/2, windowBox.getHeight());
+		entertainmentScreenBox = new Box2D(-windowBox.getWidth()/2, 0, entertainmentScreen.getWidth(), entertainmentScreen.getHeight());
+		interpolators.add(new FunctionInterpolator(entertainmentScreenBox, getTime(10400), getTime(11400),
+				new Vector(windowBox.getWidth()/2, 0, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(entertainmentScreenBox, getTime(11900), getTime(12900),
+				new Vector(windowBox.getWidth(), 0, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(entertainmentScreenStencilBox, getTime(11900), getTime(12900),
+				new Vector(windowBox.getWidth(), 0, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
@@ -218,6 +232,7 @@ public enum Game2D implements Listener {
 		GL20.glUseProgram(0);
 		
 		lightbulbScreen.render(lightbulbScreenStencilBox, lightbulbScreenBox);
+		entertainmentScreen.render(entertainmentScreenStencilBox, entertainmentScreenBox);
 		
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		
@@ -226,14 +241,24 @@ public enum Game2D implements Listener {
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(0, 0, lightbulbScreen.getWidth(), lightbulbScreen.getHeight()).getTransformationMatrix());
-		CommonPrograms2D.COLOR.getShaderProgram().loadVector4f("colorMask", new Vector(0.7f, 0.7f, 0.7f, 1));
+		CommonPrograms2D.COLOR.getShaderProgram().loadVector4f("colorMask", new Vector(0.5f, 0.5f, 0.7f, 1f));
 		Quad.COLORED_2D.render();
-		CommonPrograms2D.COLOR.getShaderProgram().loadVector4f("colorMask", new Vector(1f, 1f, 1f, 1));
+		CommonPrograms2D.COLOR.getShaderProgram().loadVector4f("colorMask", new Vector(1f, 1f, 1f, 1f));
 		GL20.glUseProgram(0);
 		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, lightbulb.getTransformationMatrix());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("yellowlightbulb").getId());
 		Quad.TEXTURED_2D.render();
+		GL20.glUseProgram(0);
+		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+		
+		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, entertainmentScreen.getFrameBuffer().getId());
+		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(0, 0, entertainmentScreen.getWidth(), entertainmentScreen.getHeight()).getTransformationMatrix());
+		CommonPrograms2D.COLOR.getShaderProgram().loadVector4f("colorMask", new Vector(0.7f, 0.5f, 0.5f, 1f));
+		Quad.COLORED_2D.render();
+		CommonPrograms2D.COLOR.getShaderProgram().loadVector4f("colorMask", new Vector(1f, 1f, 1f, 1f));
 		GL20.glUseProgram(0);
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		
