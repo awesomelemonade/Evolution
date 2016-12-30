@@ -39,7 +39,7 @@ import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
 import lemon.engine.texture.TextureData;
 
-public enum Game2D implements Listener {
+public enum NHDScene1 implements Listener {
 	INSTANCE;
 	private Box2D human;
 	private Matrix projectionMatrix;
@@ -92,15 +92,16 @@ public enum Game2D implements Listener {
 		GL20.glUseProgram(0);
 		human = new Box2D(500f, 0, 1247f, 1067f);
 		textures = new HashMap<String, Texture>();
+		String resFolder = "res/"+this.getClass().getSimpleName()+"/";
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(new File("res/texture-config")));
+			BufferedReader reader = new BufferedReader(new FileReader(new File(resFolder+"texture-config")));
 			String line;
 			while((line=reader.readLine())!=null){
 				StringTokenizer tokenizer = new StringTokenizer(line);
 				String name = tokenizer.nextToken();
 				System.out.println("Loading: "+name);
 				Texture texture = new Texture();
-				texture.load(new TextureData(ImageIO.read(new File("res/"+tokenizer.nextToken()))));
+				texture.load(new TextureData(ImageIO.read(new File(resFolder+tokenizer.nextToken()))));
 				textures.put(name, texture);
 			}
 			reader.close();

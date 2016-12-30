@@ -15,7 +15,7 @@ import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.game2d.Box2D;
-import lemon.engine.game2d.Game2D;
+import lemon.engine.game2d.NHDScene1;
 import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
@@ -95,7 +95,7 @@ public enum Menu implements Listener {
 		EventManager.INSTANCE.unregisterListener(this);
 	}
 	public void start2D(){
-		Game2D.INSTANCE.start(window);
+		NHDScene1.INSTANCE.start(window);
 		EventManager.INSTANCE.unregisterListener(this);
 	}
 	public void startText(){
