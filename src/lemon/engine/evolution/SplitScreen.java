@@ -4,7 +4,6 @@ import java.nio.ByteBuffer;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
@@ -42,10 +41,10 @@ public class SplitScreen {
 		depthTexture = new Texture();
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, width, height, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer)null);
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL30.GL_DEPTH24_STENCIL8, width, height, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer)null);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
+		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_STENCIL_ATTACHMENT, depthTexture.getId(), 0);
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 	}
 	public FrameBuffer getFrameBuffer(){
@@ -65,10 +64,10 @@ public class SplitScreen {
 	}
 	public void render(Box2D stencil, Box2D box){
 		GL11.glEnable(GL11.GL_STENCIL_TEST);
+		GL11.glStencilMask(0xFF);
 		GL11.glClear(GL11.GL_STENCIL_BUFFER_BIT);
 		GL11.glStencilFunc(GL11.GL_ALWAYS, 1, 0xFF);
 		GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
-		GL11.glStencilMask(0xFF);
 		GL11.glColorMask(false, false, false, false);
 		
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
