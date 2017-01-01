@@ -4,10 +4,12 @@ in vec2 passTextureCoords;
 
 out vec4 outColor;
 
+uniform vec4 colorMask = vec4(1, 1, 1, 1);
 uniform sampler2D textureSampler;
 
 void main(void){
 	vec4 textureColor = texture(textureSampler, passTextureCoords);
+	textureColor = textureColor*colorMask;
 	if(textureColor.a==0){
 		discard;
 	}

@@ -53,6 +53,11 @@ public class Box2D extends Vector {
 		this.setWidth(width);
 		this.setHeight(this.getHeight()*ratio);
 	}
+	public void scaleHeight(float height){
+		float ratio = height/this.getHeight();
+		this.setWidth(this.getWidth()*ratio);
+		this.setHeight(height);
+	}
 	@Override
 	public String toString(){
 		return String.format("Box2D[%f, %f, %f, %f]", this.getX(), this.getY(), this.getWidth(), this.getHeight());
