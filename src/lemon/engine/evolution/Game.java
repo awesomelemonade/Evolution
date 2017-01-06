@@ -1,12 +1,15 @@
 package lemon.engine.evolution;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.imageio.ImageIO;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
@@ -26,6 +29,7 @@ import lemon.engine.entity.Quad;
 import lemon.engine.entity.Skybox;
 import lemon.engine.entity.SphereModelBuilder;
 import lemon.engine.entity.TriangularIndexedModel;
+import lemon.engine.entity.TriangularModel;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -38,8 +42,10 @@ import lemon.engine.game.Player;
 import lemon.engine.game.PlayerControls;
 import lemon.engine.game.StandardControls;
 import lemon.engine.input.CursorPositionEvent;
+import lemon.engine.input.KeyEvent;
 import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
+import lemon.engine.loader.ObjLoader;
 import lemon.engine.loader.SkyboxLoader;
 import lemon.engine.math.Line;
 import lemon.engine.math.MathUtil;
@@ -54,6 +60,7 @@ import lemon.engine.render.ShaderProgram;
 import lemon.engine.terrain.TerrainGenerator;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
+import lemon.engine.texture.TextureData;
 import lemon.engine.time.BenchmarkEvent;
 import lemon.engine.time.Benchmarker;
 
@@ -85,6 +92,9 @@ public enum Game implements Listener {
 	private TriangularIndexedModel sphere;
 	private TriangularIndexedModel model;
 	
+	private TriangularModel dragon;
+	private Texture dragonTexture;
+	
 	public TerrainLoader getTerrainLoader(){
 		if(terrainLoader==null){
 			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (100f/TILE_SIZE), 2), Math.max((int) (100f/TILE_SIZE), 2));
@@ -94,6 +104,16 @@ public enum Game implements Listener {
 	
 	public void init(long window){
 		logger.log(Level.FINE, "Initializing");
+		
+		dragon = new ObjLoader(new File("res/globe.obj")).load();
+		dragon.init();
+		
+		dragonTexture = new Texture();
+		try {
+			dragonTexture.load(new TextureData(ImageIO.read(new File("res/Eye.jpg"))));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 		GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		
@@ -155,6 +175,13 @@ public enum Game implements Listener {
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("colorSampler", TextureBank.COLOR.getId());
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("depthSampler", TextureBank.DEPTH.getId());
 		GL20.glUseProgram(0);
+		
+		GL20.glUseProgram(CommonPrograms3D.PROGRAM.getShaderProgram().getId());
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadInt("colorSampler", TextureBank.REUSE.getId());
+		GL20.glUseProgram(0);
+		updateViewMatrix(CommonPrograms3D.PROGRAM.getShaderProgram());
 		
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
@@ -247,7 +274,7 @@ public enum Game implements Listener {
 	@Subscribe
 	public void update(UpdateEvent event){
 		time+=event.getDelta();
-		interp.update(time);
+		//interp.update(time);
 		if(controls.hasStates()){
 			float angle = (player.getCamera().getRotation().getY()+90)*(((float)Math.PI)/180f);
 			float sin = (float)Math.sin(angle);
@@ -297,6 +324,7 @@ public enum Game implements Listener {
 		player.update(event);
 		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.PROGRAM.getShaderProgram());
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 	}
 	@Subscribe
@@ -309,6 +337,7 @@ public enum Game implements Listener {
 		updateProjectionMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		updateProjectionMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
 		updateProjectionMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
+		updateProjectionMatrix(CommonPrograms3D.PROGRAM.getShaderProgram());
 	}
 	private double lastMouseX;
 	private double lastMouseY;
@@ -330,6 +359,7 @@ public enum Game implements Listener {
 		}
 		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.PROGRAM.getShaderProgram());
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 	}
 	public void updateViewMatrix(ShaderProgram program){
@@ -356,13 +386,51 @@ public enum Game implements Listener {
 		GL11.glDepthMask(false);
 		renderSkybox();
 		GL11.glDepthMask(true);
+		renderDragon();
 		renderHeightMap();
-		renderPlatforms();
+		//renderPlatforms();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		GL20.glUseProgram(CommonPrograms3D.POST_PROCESSING.getShaderProgram().getId());
 		Quad.TEXTURED.render();
 		GL20.glUseProgram(0);
-		renderFPS();
+		//renderFPS();
+	}
+	private Vector3D vector = new Vector3D(-13.4f, -7.8f, 21.8f);
+	public void renderDragon(){
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL20.glUseProgram(CommonPrograms3D.PROGRAM.getShaderProgram().getId());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, dragonTexture.getId());
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(vector));
+		dragon.render();
+		GL20.glUseProgram(0);
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+	}
+	float r = 0.1f;
+	@Subscribe
+	public void onKey(KeyEvent event){
+		if(event.getAction()==GLFW.GLFW_RELEASE){
+			if(event.getKey()==GLFW.GLFW_KEY_G){
+				vector.setX(vector.getX()+r);
+			}
+			if(event.getKey()==GLFW.GLFW_KEY_H){
+				vector.setX(vector.getX()-r);
+			}
+			if(event.getKey()==GLFW.GLFW_KEY_J){
+				vector.setY(vector.getY()+r);
+			}
+			if(event.getKey()==GLFW.GLFW_KEY_K){
+				vector.setY(vector.getY()-r);
+			}
+			if(event.getKey()==GLFW.GLFW_KEY_L){
+				vector.setZ(vector.getZ()+r);
+			}
+			if(event.getKey()==GLFW.GLFW_KEY_SEMICOLON){
+				vector.setZ(vector.getZ()-r);
+			}
+			if(event.getKey()==GLFW.GLFW_KEY_SPACE){
+				System.out.println(vector);
+			}
+		}
 	}
 	Vector3D x = new Vector3D(Vector3D.ZERO);
 	public void renderHeightMap(){
@@ -370,8 +438,9 @@ public enum Game implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
-		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
-		terrain.render();
+		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getScalar(new Vector3D(600, 600, 600)));
+		sphere.render();
+		/*terrain.render();
 		model.render();
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(x));
 		sphere.render();
@@ -382,7 +451,7 @@ public enum Game implements Listener {
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(curve.getC())));
 		sphere.render();
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(curve.getD())));
-		sphere.render();
+		sphere.render();*/
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
