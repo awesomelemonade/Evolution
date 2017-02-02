@@ -27,6 +27,11 @@ public enum CommonPrograms3D {
 			new String[]{"position", "textureCoords"},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/postVertexShader")),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/postFragmentShader"))
+	), PROGRAM(
+			new int[]{0, 1, 2},
+			new String[]{"position", "textureCoords", "normal"},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/vertexShader")),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/fragmentShader"))
 	);
 	private ShaderProgram shaderProgram;
 	private int[] indices;

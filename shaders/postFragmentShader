@@ -16,4 +16,5 @@ void main(void){
 	}
 	vec4 color = texture(colorSampler, passTextureCoords);
 	outColor = mix(color, BLACK, depth);
+	outColor = color;
 }

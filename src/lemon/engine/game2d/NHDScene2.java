@@ -120,7 +120,7 @@ public enum NHDScene2 implements Listener {
 		interpolators.add(new FunctionInterpolator(franklinwikipediaMask, getTime(0), getTime(2000),
 				new Vector(0, 0, 0, 1),
 				f->BezierCurves.LINEAR.apply(f).get(1)));
-		interpolators.add(new FunctionInterpolator(franklinwikipediaMask, getTime(6000), getTime(8000),
+		interpolators.add(new FunctionInterpolator(franklinwikipediaMask, getTime(5000), getTime(7000),
 				new Vector(0, 0, 0, -1),
 				f->BezierCurves.LINEAR.apply(f).get(1)));
 		
@@ -136,7 +136,7 @@ public enum NHDScene2 implements Listener {
 		interpolators.add(new FunctionInterpolator(franklinkiteMask, getTime(200), getTime(2200),
 				new Vector(0, 0, 0, 1),
 				f->BezierCurves.LINEAR.apply(f).get(1)));
-		interpolators.add(new FunctionInterpolator(franklinkiteMask, getTime(12000), getTime(14000),
+		interpolators.add(new FunctionInterpolator(franklinkiteMask, getTime(10000), getTime(12000),
 				new Vector(0, 0, 0, -1),
 				f->BezierCurves.LINEAR.apply(f).get(1)));
 		
@@ -166,15 +166,15 @@ public enum NHDScene2 implements Listener {
 		edisonMasks[3] = new Vector(1, 1, 1, 0);
 		edisonMasks[4] = new Vector(1, 1, 1, 0);
 		
-		interpolators.add(new FunctionInterpolator(edisonMasks[0], getTime(12000), getTime(12001),
+		interpolators.add(new FunctionInterpolator(edisonMasks[0], getTime(10000), getTime(10001),
 				new Vector(0, 0, 0, 1), f->BezierCurves.LINEAR.apply(f).get(1)));
-		interpolators.add(new FunctionInterpolator(edisonMasks[0], getTime(19000), getTime(21000),
+		interpolators.add(new FunctionInterpolator(edisonMasks[0], getTime(16500), getTime(18500),
 				new Vector(0, 0, 0, -1), f->BezierCurves.LINEAR.apply(f).get(1)));
 		
 		for(int i=1;i<edisonNames.length;++i){
-			interpolators.add(new FunctionInterpolator(edisonMasks[i], getTime(14000+i*500), getTime(16000+i*500),
+			interpolators.add(new FunctionInterpolator(edisonMasks[i], getTime(12000+i*500), getTime(14000+i*500),
 					new Vector(0, 0, 0, 1), f->BezierCurves.LINEAR.apply(f).get(1)));
-			interpolators.add(new FunctionInterpolator(edisonMasks[i], getTime(19000), getTime(21000),
+			interpolators.add(new FunctionInterpolator(edisonMasks[i], getTime(16500), getTime(18500),
 					new Vector(0, 0, 0, -1), f->BezierCurves.LINEAR.apply(f).get(1)));
 		}
 		
@@ -185,7 +185,7 @@ public enum NHDScene2 implements Listener {
 		edisonStencils[3] = new Box2D(windowBox.getWidth()-x, windowBox.getHeight()/2, x, windowBox.getHeight()/2);
 		edisonStencils[4] = new Box2D(windowBox.getWidth()-x, 0, x, windowBox.getHeight()/2);
 		
-		interpolators.add(new FunctionInterpolator(edisonBoxes[0], getTime(12000), getTime(21000),
+		interpolators.add(new FunctionInterpolator(edisonBoxes[0], getTime(10000), getTime(19000),
 				new Vector(-100, -200, edisonBoxes[0].getWidth()*0.2f, edisonBoxes[0].getHeight()*0.2f), f->BezierCurves.LINEAR.apply(f).get(1)));
 		
 		
@@ -249,24 +249,6 @@ public enum NHDScene2 implements Listener {
 	}
 	public long getTime(long milliseconds){
 		return milliseconds*1000000;
-	}
-	public float getTimeProgress(long time, long startTime, long endTime){
-		if(time<=startTime){
-			return 0f;
-		}
-		if(time>=endTime){
-			return 1f;
-		}
-		return ((float)(time-startTime))/((float)(endTime-startTime));
-	}
-	public float getProgress(float current, float start, float finish){
-		if(current<=start){
-			return 0f;
-		}
-		if(current>=finish){
-			return 1f;
-		}
-		return ((float)(current-start))/((float)(finish-start));
 	}
 	public void doStencil(Box2D box){
 		GL11.glEnable(GL11.GL_STENCIL_TEST);

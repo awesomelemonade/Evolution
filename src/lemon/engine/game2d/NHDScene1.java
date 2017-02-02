@@ -24,16 +24,20 @@ import lemon.engine.animation.Interpolator;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.entity.Quad;
+import lemon.engine.entity.TriangularModel;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.evolution.BezierCurves;
 import lemon.engine.evolution.CommonPrograms2D;
+import lemon.engine.evolution.CommonPrograms3D;
 import lemon.engine.evolution.SplitScreen;
 import lemon.engine.input.KeyEvent;
+import lemon.engine.loader.ObjLoader;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
@@ -41,7 +45,6 @@ import lemon.engine.texture.TextureData;
 
 public enum NHDScene1 implements Listener {
 	INSTANCE;
-	private Box2D human;
 	private Matrix projectionMatrix;
 	private Map<String, Texture> textures;
 	
@@ -52,9 +55,14 @@ public enum NHDScene1 implements Listener {
 	private Box2D lightbulbScreenStencilBox;
 	private Box2D lightbulbScreenBox;
 	private Box2D lightbulb;
+	private Box2D glow;
+	private Vector glowMask;
 	private SplitScreen entertainmentScreen;
 	private Box2D entertainmentScreenStencilBox;
 	private Box2D entertainmentScreenBox;
+	private Box2D gameConsoleBox;
+	private Box2D tvBox;
+	private Box2D computerBox;
 	
 	private Box2D demographics;
 	private Box2D[] electricityIcons;
@@ -62,6 +70,14 @@ public enum NHDScene1 implements Listener {
 	private Box2D text_virtually;
 	private Box2D text_impossible;
 	
+	private Vector starBackgroundColor;
+	private TriangularModel globe;
+	private Vector3D globePosition;
+	private Vector3D globeScalar;
+	private Vector globeColor;
+	private String[] text_transformedTheWorldNames;
+	private Box2D[] text_transformedTheWorldBoxes;
+	private Vector[] text_transformedTheWorldMasks;
 	
 	private List<Interpolator> interpolators;
 	
@@ -72,7 +88,7 @@ public enum NHDScene1 implements Listener {
 		int window_width = width.get();
 		int window_height = height.get();
 		windowBox = new Box2D(0, 0, window_width, window_height);
-		projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1f, 1f);
+		projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1000f, 1000f);
 		
 		//projectionMatrix = MathUtil.getOrtho(window_width*2f, window_height*2f, -1f, 1f);
 		//projectionMatrix = projectionMatrix.multiply(MathUtil.getTranslation(new Vector3D(window_width/2, window_height/2, 0)));
@@ -90,7 +106,13 @@ public enum NHDScene1 implements Listener {
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadInt("textureSampler", TextureBank.REUSE.getId());
 		GL20.glUseProgram(0);
-		human = new Box2D(500f, 0, 1247f, 1067f);
+		GL20.glUseProgram(CommonPrograms3D.PROGRAM.getShaderProgram().getId());
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadInt("colorSampler", TextureBank.REUSE.getId());
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadVector4f("color", new Vector(0, 0, 0, 0));
+		GL20.glUseProgram(0);
 		textures = new HashMap<String, Texture>();
 		String resFolder = "res/"+this.getClass().getSimpleName()+"/";
 		try {
@@ -135,11 +157,11 @@ public enum NHDScene1 implements Listener {
 					new Vector(0, -(windowBox.getHeight()+yValues[i])-150, 0, 0),f->BezierCurves.EASE_OUT.apply(f).get(1)));
 		}
 		
-		text_virtually = new Box2D(100, windowBox.getHeight(), 565, 125);
+		text_virtually = new Box2D(120, windowBox.getHeight(), 565, 125);
 		text_virtually.scale(1.6f);
-		text_impossible = new Box2D(700, windowBox.getHeight(), 647, 125);
+		text_impossible = new Box2D(720, windowBox.getHeight(), 647, 125);
 		text_impossible.scale(1.6f);
-
+		
 		interpolators.add(new FunctionInterpolator(text_virtually, getTime(5500), getTime(5900),
 				new Vector(0, -500, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		interpolators.add(new FunctionInterpolator(text_impossible, getTime(5900), getTime(6300),
@@ -154,6 +176,9 @@ public enum NHDScene1 implements Listener {
 		lightbulbScreen = new SplitScreen((int)windowBox.getWidth(), (int)windowBox.getHeight());
 		lightbulbScreenStencilBox = new Box2D(0, 0, windowBox.getWidth(), windowBox.getHeight());
 		lightbulbScreenBox = new Box2D(-lightbulbScreen.getWidth(), 0, lightbulbScreen.getWidth(), lightbulbScreen.getHeight());
+		glow = new Box2D(0, 350, 500, 600);
+		glow.setX(lightbulb.getX()+lightbulb.getWidth()/2-glow.getWidth()/2);
+		glowMask = new Vector(1, 1, 1, 1);
 		interpolators.add(new FunctionInterpolator(lightbulbScreenBox, getTime(8900), getTime(9900),
 				new Vector(lightbulbScreenBox.getWidth(), 0, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		interpolators.add(new FunctionInterpolator(lightbulbScreenStencilBox, getTime(10400), getTime(11400),
@@ -178,39 +203,104 @@ public enum NHDScene1 implements Listener {
 		interpolators.add(new FunctionInterpolator(entertainmentScreenStencilBox, getTime(11900), getTime(12900),
 				new Vector(windowBox.getWidth(), 0, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		
+		gameConsoleBox = new Box2D(200, 250, 1275, 1430);
+		tvBox = new Box2D(150, 100, 900, 711);
+		computerBox = new Box2D(500, 100, 2400, 1908);
+		gameConsoleBox.scale(0.55f);
+		tvBox.scale(0.35f);
+		computerBox.scale(0.15f);
+		
+		starBackgroundColor = new Vector(0.4f, 0.4f, 0.4f, 0f);
+		interpolators.add(new FunctionInterpolator(starBackgroundColor, getTime(11900), getTime(11901),
+				new Vector(0, 0, 0, 1), f->BezierCurves.LINEAR.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(starBackgroundColor, getTime(14900), getTime(15900),
+				new Vector(0, 0, 0, -1), f->BezierCurves.LINEAR.apply(f).get(1)));
+		
+		
+		globe = new ObjLoader(new File("res/globe.obj")).load();
+		globe.init();
+		
+		globePosition = new Vector3D(windowBox.getWidth()/2, windowBox.getHeight()/2+100, 0);
+		globeScalar = new Vector3D(5, 5, 5);
+		globeColor = new Vector(0, 1, 0, 0);
+
+		interpolators.add(new FunctionInterpolator(globeColor, getTime(11900), getTime(12900),
+				new Vector(0, 0, 0, 1), f->BezierCurves.LINEAR.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(globeColor, getTime(14900), getTime(15900),
+				new Vector(0, 0, 0, -1), f->BezierCurves.LINEAR.apply(f).get(1)));
+		
+		text_transformedTheWorldNames = new String[]{"text-transformed", "text-the", "text-world"};
+		
+		text_transformedTheWorldBoxes = new Box2D[text_transformedTheWorldNames.length];
+		text_transformedTheWorldBoxes[0] = new Box2D(70, windowBox.getHeight(), 827, 125);
+		text_transformedTheWorldBoxes[1] = new Box2D(1090, windowBox.getHeight(), 215, 125);
+		text_transformedTheWorldBoxes[2] = new Box2D(1370, windowBox.getHeight(), 410, 125);
+		
+		for(Box2D box: text_transformedTheWorldBoxes){
+			box.scale(1.2f);
+		}
+		
+		text_transformedTheWorldMasks = new Vector[text_transformedTheWorldNames.length];
+		for(int i=0;i<text_transformedTheWorldMasks.length;++i){
+			text_transformedTheWorldMasks[i] = new Vector(1f, 1f, 1f, 1f);
+			interpolators.add(new FunctionInterpolator(text_transformedTheWorldMasks[i], getTime(14900), getTime(15900),
+					new Vector(0, 0, 0, -1), f->BezierCurves.LINEAR.apply(f).get(1)));
+		}
+		
+		interpolators.add(new FunctionInterpolator(text_transformedTheWorldBoxes[0], getTime(11900), getTime(12900),
+				new Vector(0, -1000, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(text_transformedTheWorldBoxes[1], getTime(12400), getTime(13400),
+				new Vector(0, -1000, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
+		interpolators.add(new FunctionInterpolator(text_transformedTheWorldBoxes[2], getTime(12600), getTime(13600),
+				new Vector(0, -1000, 0, 0), f->BezierCurves.EASE_IN.apply(f).get(1)));
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
-	long time = -500000000;
+	long time = 0;
 	@Subscribe
 	public void update(UpdateEvent event){
 		time+=event.getDelta();
 		for(Interpolator interpolator: interpolators){
 			interpolator.update(time);
 		}
-		human.setY(-human.getHeight()+
-				BezierCurves.BOUNCE.apply(getTimeProgress(time, getTime(0), getTime(1000))).get(1)*1000f);
+		if(Math.random()<0.2){
+			glowMask.set(3, (float)Math.random());
+		}
 	}
+	float angle = 0;
 	@Subscribe
 	public void render(RenderEvent event){
-		
+		angle+=2f;
 		
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		
 		
-		
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, main.getFrameBuffer().getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, windowBox.getTransformationMatrix());
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadVector4f("colorMask", starBackgroundColor);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("starsbackground").getId());
+		Quad.TEXTURED_2D.render();
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadVector4f("colorMask", new Vector(1f, 1f, 1f, 1f));
+		GL20.glUseProgram(0);
+		GL20.glUseProgram(CommonPrograms3D.PROGRAM.getShaderProgram().getId());
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadVector4f("color", globeColor);
+		CommonPrograms3D.PROGRAM.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX,
+				MathUtil.getTranslation(new Vector3D(globePosition)).multiply(MathUtil.getRotationY((float)angle).multiply(
+						MathUtil.getScalar(globeScalar).multiply(MathUtil.getTranslation(new Vector3D(-13.4f, -7.8f, 21.8f))))));
+		globe.render();
+		GL20.glUseProgram(0);
+		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		
-		//CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, human.getTransformationMatrix());
-		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("human").getId());
-		//Quad.TEXTURED_2D.render();
-		
-		//CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, new Box2D(560f, 640f, 135f, 190f).getTransformationMatrix());
-		//GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("lightbulb").getId());
-		//Quad.TEXTURED_2D.render();
+		for(int i=0;i<text_transformedTheWorldNames.length;++i){
+			CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, text_transformedTheWorldBoxes[i].getTransformationMatrix());
+			CommonPrograms2D.TEXTURE.getShaderProgram().loadVector4f("colorMask", text_transformedTheWorldMasks[i]);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(text_transformedTheWorldNames[i]).getId());
+			Quad.TEXTURED_2D.render();
+			CommonPrograms2D.TEXTURE.getShaderProgram().loadVector4f("colorMask", new Vector(1f, 1f, 1f, 1f));
+		}
 		
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, demographics.getTransformationMatrix());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("demographics").getId());
@@ -250,6 +340,11 @@ public enum NHDScene1 implements Listener {
 		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, lightbulb.getTransformationMatrix());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("yellowlightbulb").getId());
 		Quad.TEXTURED_2D.render();
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, glow.getTransformationMatrix());
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadVector4f("colorMask", glowMask);
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("glow").getId());
+		Quad.TEXTURED_2D.render();
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadVector4f("colorMask", new Vector(1f, 1f, 1f, 1f));
 		GL20.glUseProgram(0);
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		
@@ -260,6 +355,17 @@ public enum NHDScene1 implements Listener {
 		CommonPrograms2D.COLOR.getShaderProgram().loadVector4f("colorMask", new Vector(0.7f, 0.5f, 0.5f, 1f));
 		Quad.COLORED_2D.render();
 		CommonPrograms2D.COLOR.getShaderProgram().loadVector4f("colorMask", new Vector(1f, 1f, 1f, 1f));
+		GL20.glUseProgram(0);
+		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, gameConsoleBox.getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("gameconsole").getId());
+		Quad.TEXTURED_2D.render();
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, tvBox.getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("television").getId());
+		Quad.TEXTURED_2D.render();
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, computerBox.getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get("computer").getId());
+		Quad.TEXTURED_2D.render();
 		GL20.glUseProgram(0);
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		

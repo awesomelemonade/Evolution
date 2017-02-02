@@ -40,6 +40,9 @@ public class Texture implements Listener {
 		}
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, 0);
 	}
+	public void setData(TextureData data){
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGBA, data.getWidth(), data.getHeight(), 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data.getData());
+	}
 	public int getId(){
 		return id;
 	}

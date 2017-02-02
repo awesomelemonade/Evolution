@@ -62,13 +62,20 @@ public class Text implements Renderable {
 		float y = data.getY()/scaleHeight;
 		float width = data.getWidth()/scaleWidth;
 		float height = data.getHeight()/scaleHeight;
-		put(buffer, cursor+data.getXOffset()+kerning, -data.getYOffset()-data.getHeight(), x, y+height);
+		put(buffer, cursor+data.getXOffset()+kerning, font.getLineHeight()-data.getYOffset(), x, y);
+		put(buffer, cursor+data.getXOffset()+kerning+data.getWidth(), font.getLineHeight()-data.getYOffset(), x+width, y);
+		put(buffer, cursor+data.getXOffset()+kerning+data.getWidth(), font.getLineHeight()-(data.getYOffset()+data.getHeight()), x+width, y+height);
+		put(buffer, cursor+data.getXOffset()+kerning, font.getLineHeight()-data.getYOffset(), x, y);
+		put(buffer, cursor+data.getXOffset()+kerning, font.getLineHeight()-(data.getYOffset()+data.getHeight()), x, y+height);
+		put(buffer, cursor+data.getXOffset()+kerning+data.getWidth(), font.getLineHeight()-(data.getYOffset()+data.getHeight()), x+width, y+height);
+		
+		/*put(buffer, cursor+data.getXOffset()+kerning, -data.getYOffset()-data.getHeight(), x, y+height);
 		put(buffer, cursor+data.getXOffset()+kerning, -data.getYOffset(), x, y);
 		put(buffer, cursor+data.getXOffset()+data.getWidth()+kerning, -data.getYOffset()-data.getHeight(), x+width, y+height);
 		put(buffer, cursor+data.getXOffset()+kerning, -data.getYOffset(), x, y);
 		put(buffer, cursor+data.getXOffset()+data.getWidth()+kerning, -data.getYOffset()-data.getHeight(), x+width, y+height);
-		put(buffer, cursor+data.getXOffset()+data.getWidth()+kerning, -data.getYOffset(), x+width, y);
-		return data.getXAdvance()+kerning;
+		put(buffer, cursor+data.getXOffset()+data.getWidth()+kerning, -data.getYOffset(), x+width, y);*/
+		return data.getXAdvance();
 	}
 	private void put(FloatBuffer buffer, float... floats){
 		buffer.put(floats);

@@ -20,6 +20,7 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
+import lemon.engine.animation.FunctionInterpolator;
 import lemon.engine.animation.Interpolator;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
@@ -90,10 +91,9 @@ public enum Game implements Listener {
 	private List<Platform> platforms;
 	
 	private TriangularIndexedModel sphere;
-	private TriangularIndexedModel model;
 	
-	private TriangularModel dragon;
-	private Texture dragonTexture;
+	//private TriangularModel dragon;
+	//private Texture dragonTexture;
 	
 	public TerrainLoader getTerrainLoader(){
 		if(terrainLoader==null){
@@ -105,7 +105,7 @@ public enum Game implements Listener {
 	public void init(long window){
 		logger.log(Level.FINE, "Initializing");
 		
-		dragon = new ObjLoader(new File("res/globe.obj")).load();
+		/*dragon = new ObjLoader(new File("res/globe.obj")).load();
 		dragon.init();
 		
 		dragonTexture = new Texture();
@@ -113,7 +113,7 @@ public enum Game implements Listener {
 			dragonTexture.load(new TextureData(ImageIO.read(new File("res/Eye.jpg"))));
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 		
 		GLFW.glfwSetInputMode(window, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		
@@ -129,18 +129,6 @@ public enum Game implements Listener {
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 		
 		sphere = new SphereModelBuilder(0.1f, 3).buildAndInit();
-		Vector3D[] vectors = new Vector3D[50];
-		int[] indices = new int[(vectors.length-1)*3];
-		for(int i=0;i<vectors.length;++i){
-			vectors[i] = new Vector3D(curve.apply(((float)i)/((float)(vectors.length-1))));
-		}
-		for(int i=0;i<indices.length;i+=3){
-			indices[i] = 0;
-			indices[i+1] = (i/3)+1;
-			indices[i+2] = (i/3)+2;
-		}
-		model = new TriangularIndexedModel.Builder().addVertices(Vector3D.ZERO)
-				.addVertices(vectors).addIndices(indices).buildAndInit();
 		
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -236,9 +224,9 @@ public enum Game implements Listener {
 			skyboxTextures[i].load(skyboxLoaders[i].load());
 		}
 		GL13.glActiveTexture(TextureBank.SKYBOX.getBind());
-		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTextures[0].getId());
+		//GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTextures[0].getId());
 		GL13.glActiveTexture(TextureBank.SKYBOX_2.getBind());
-		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTextures[1].getId());
+		//GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTextures[1].getId());
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		
 		controls = new StandardControls();
@@ -260,21 +248,28 @@ public enum Game implements Listener {
 		//interp = new LinearTargetedInterpolator(x, new Vector(100f, 100f, 100f), 10000000000L);
 		//interp = new ExponentialTargetedInterpolator(x, new Vector(0f, 0f, -100f), 1f);
 		//interp = new FunctionInterpolator(x, 0L, 10000000000L, curve);
-		System.out.println(curve.solve(0, 0.5f));
+		
+		interpolators = new ArrayList<Interpolator>();
+
+		interpolators.add(new FunctionInterpolator(player.getPosition(), getTime(0), getTime(2000),
+				new Vector(0, 0, 100), f->BezierCurves.LINEAR.apply(f).get(1)));
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
-	CubicBezierCurve curve = new CubicBezierCurve(new Vector(0f, 0f, 0f), 
-			new Vector(0.17f, 0.67f, 0f), new Vector(0.83f, 0.67f, 0f), new Vector(1f, 1f, 0f));
-	Interpolator interp;
+	public long getTime(long milliseconds){
+		return milliseconds*1000000;
+	}
+	private List<Interpolator> interpolators;
 	private static float friction = 0.98f;
-	private static float maxSpeed = 0.03f;
+	private static float maxSpeed = 0.12f;
 	private static float playerSpeed = maxSpeed-maxSpeed*friction;
 	private long time = 0;
 	@Subscribe
 	public void update(UpdateEvent event){
 		time+=event.getDelta();
-		//interp.update(time);
+		for(Interpolator interpolator: interpolators){
+			interpolator.update(time);
+		}
 		if(controls.hasStates()){
 			float angle = (player.getCamera().getRotation().getY()+90)*(((float)Math.PI)/180f);
 			float sin = (float)Math.sin(angle);
@@ -386,7 +381,7 @@ public enum Game implements Listener {
 		GL11.glDepthMask(false);
 		renderSkybox();
 		GL11.glDepthMask(true);
-		renderDragon();
+		//renderDragon();
 		renderHeightMap();
 		//renderPlatforms();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
@@ -395,8 +390,7 @@ public enum Game implements Listener {
 		GL20.glUseProgram(0);
 		//renderFPS();
 	}
-	private Vector3D vector = new Vector3D(-13.4f, -7.8f, 21.8f);
-	public void renderDragon(){
+	/*public void renderDragon(){
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(CommonPrograms3D.PROGRAM.getShaderProgram().getId());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, dragonTexture.getId());
@@ -404,31 +398,12 @@ public enum Game implements Listener {
 		dragon.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
-	}
-	float r = 0.1f;
+	}*/
 	@Subscribe
 	public void onKey(KeyEvent event){
 		if(event.getAction()==GLFW.GLFW_RELEASE){
-			if(event.getKey()==GLFW.GLFW_KEY_G){
-				vector.setX(vector.getX()+r);
-			}
-			if(event.getKey()==GLFW.GLFW_KEY_H){
-				vector.setX(vector.getX()-r);
-			}
-			if(event.getKey()==GLFW.GLFW_KEY_J){
-				vector.setY(vector.getY()+r);
-			}
-			if(event.getKey()==GLFW.GLFW_KEY_K){
-				vector.setY(vector.getY()-r);
-			}
-			if(event.getKey()==GLFW.GLFW_KEY_L){
-				vector.setZ(vector.getZ()+r);
-			}
-			if(event.getKey()==GLFW.GLFW_KEY_SEMICOLON){
-				vector.setZ(vector.getZ()-r);
-			}
-			if(event.getKey()==GLFW.GLFW_KEY_SPACE){
-				System.out.println(vector);
+			if(event.getKey()==GLFW.GLFW_KEY_R){
+				time = 0;
 			}
 		}
 	}

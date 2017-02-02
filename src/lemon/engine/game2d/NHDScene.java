@@ -48,6 +48,9 @@ public enum NHDScene implements Listener {
 	
 	private SplitScreen main;
 	
+	private String[] names;
+	private Box2D[] boxes;
+	private Vector[] masks;
 	
 	private List<Interpolator> interpolators;
 	
@@ -96,10 +99,19 @@ public enum NHDScene implements Listener {
 		
 		interpolators = new ArrayList<Interpolator>();
 		
+		names = new String[]{};
+		boxes = new Box2D[]{};
+		masks = new Vector[names.length];
+		for(int i=0;i<masks.length;++i){
+			masks[i] = new Vector(1, 1, 1, 0);
+		}
+		
+		interpolators.add(new FunctionInterpolator(masks[0], getTime(0), getTime(2000),
+				new Vector(0, 0, 0, 1), f->BezierCurves.LINEAR.apply(f).get(1)));
 		
 		EventManager.INSTANCE.registerListener(this);
 	}
-	long time = -500000000;
+	long time = 0;
 	@Subscribe
 	public void update(UpdateEvent event){
 		time+=event.getDelta();
@@ -120,7 +132,9 @@ public enum NHDScene implements Listener {
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		GL20.glUseProgram(CommonPrograms2D.TEXTURE.getShaderProgram().getId());
 		
-		
+		for(int i=0;i<names.length;++i){
+			renderTexture(names[i], boxes[i], masks[i]);
+		}
 		
 		GL20.glUseProgram(0);
 		
@@ -131,26 +145,38 @@ public enum NHDScene implements Listener {
 		
 		GL11.glDisable(GL11.GL_BLEND);
 	}
+	public void renderTexture(String texture, Box2D box){
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, box.getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(texture).getId());
+		Quad.TEXTURED_2D.render();
+	}
+	public void renderTexture(String texture, Box2D box, Vector mask){
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadVector4f("colorMask", mask);
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, box.getTransformationMatrix());
+		GL11.glBindTexture(GL11.GL_TEXTURE_2D, textures.get(texture).getId());
+		Quad.TEXTURED_2D.render();
+		CommonPrograms2D.TEXTURE.getShaderProgram().loadVector4f("colorMask", new Vector(1f, 1f, 1f, 1f));
+	}
 	public long getTime(long milliseconds){
 		return milliseconds*1000000;
 	}
-	public float getTimeProgress(long time, long startTime, long endTime){
-		if(time<=startTime){
-			return 0f;
-		}
-		if(time>=endTime){
-			return 1f;
-		}
-		return ((float)(time-startTime))/((float)(endTime-startTime));
-	}
-	public float getProgress(float current, float start, float finish){
-		if(current<=start){
-			return 0f;
-		}
-		if(current>=finish){
-			return 1f;
-		}
-		return ((float)(current-start))/((float)(finish-start));
+	public void doStencil(Box2D box){
+		GL11.glEnable(GL11.GL_STENCIL_TEST);
+		GL11.glStencilMask(0xFF);
+		GL11.glClear(GL11.GL_STENCIL_BUFFER_BIT);
+		GL11.glStencilFunc(GL11.GL_ALWAYS, 1, 0xFF);
+		GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_REPLACE);
+		GL11.glColorMask(false, false, false, false);
+		
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
+		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, box.getTransformationMatrix());
+		Quad.COLORED_2D.render();
+		GL20.glUseProgram(0);
+		
+		GL11.glStencilMask(0x00);
+		GL11.glStencilFunc(GL11.GL_EQUAL, 1, 0xFF);
+		GL11.glColorMask(true, true, true, true);
+		GL11.glDisable(GL11.GL_STENCIL_TEST);
 	}
 	@Subscribe
 	public void onKey(KeyEvent event){
@@ -159,7 +185,7 @@ public enum NHDScene implements Listener {
 		}
 		if(event.getAction()==GLFW.GLFW_RELEASE){
 			if(event.getKey()==GLFW.GLFW_KEY_R){
-				time = -500000000;
+				time = 0;
 			}
 		}
 	}
