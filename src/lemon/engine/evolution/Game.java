@@ -17,8 +17,9 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
-import lemon.engine.animation.FunctionInterpolator;
+import lemon.engine.animation.AutomaticInterpolator;
 import lemon.engine.animation.Interpolator;
+import lemon.engine.animation.LinearInterpolator;
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
 import lemon.engine.entity.HeightMap;
@@ -48,6 +49,7 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
+import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.ShaderProgram;
@@ -216,21 +218,20 @@ public enum Game implements Listener {
 		
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
-		//interp = new LinearTargetedInterpolator(x, new Vector(100f, 100f, 100f), 10000000000L);
-		//interp = new ExponentialTargetedInterpolator(x, new Vector(0f, 0f, -100f), 1f);
-		interp = new FunctionInterpolator(x, 10000000000L, curve);
-		
+		interp = new AutomaticInterpolator(x, new LinearInterpolator(new Vector(5f, 5f, 5f)), f->BezierCurves.EASE_OUT.apply(Interpolator.clamp(f/3000000000f)).get(1));
 		EventManager.INSTANCE.registerListener(this);
 	}
 	CubicBezierCurve curve = new CubicBezierCurve(Vector3D.ZERO, 
 			new Vector3D(0.17f, 0.67f, 0f), new Vector3D(0.83f, 0.67f, 0f), new Vector3D(0f, 0f, -1f));
-	Interpolator interp;
+	AutomaticInterpolator interp;
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed-maxSpeed*friction;
+	private float globalTime = -1000000000;
 	@Subscribe
 	public void update(UpdateEvent event){
-		interp.update(event.getDelta());
+		globalTime+=event.getDelta();
+		interp.update(globalTime);
 		if(controls.hasStates()){
 			float angle = (player.getCamera().getRotation().getY()+90)*(((float)Math.PI)/180f);
 			float sin = (float)Math.sin(angle);
