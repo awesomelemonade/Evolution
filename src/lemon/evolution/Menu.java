@@ -1,4 +1,4 @@
-package lemon.engine.evolution;
+package lemon.evolution;
 
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
@@ -13,10 +13,9 @@ import lemon.engine.control.RenderEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
-import lemon.engine.game2d.Box2D;
-import lemon.engine.game2d.Game2D;
 import lemon.engine.game2d.Quad2D;
 import lemon.engine.input.MouseButtonEvent;
+import lemon.engine.math.Box2D;
 import lemon.engine.math.Matrix;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
@@ -74,7 +73,7 @@ public enum Menu implements Listener {
 							startLoading();
 							break;
 						case 1:
-							start2D();
+							//start2D();
 							break;
 						case 2:
 							startText();
@@ -94,10 +93,6 @@ public enum Menu implements Listener {
 	}
 	public void startLoading(){
 		Loading.INSTANCE.start(window);
-		EventManager.INSTANCE.unregisterListener(this);
-	}
-	public void start2D(){
-		Game2D.INSTANCE.start(window);
 		EventManager.INSTANCE.unregisterListener(this);
 	}
 	public void startText(){

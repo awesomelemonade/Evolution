@@ -1,4 +1,4 @@
-package lemon.engine.evolution;
+package lemon.evolution;
 
 import lemon.engine.function.CubicBezierCurve;
 import lemon.engine.math.Vector;

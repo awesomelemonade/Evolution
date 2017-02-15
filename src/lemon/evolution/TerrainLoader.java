@@ -1,4 +1,4 @@
-package lemon.engine.evolution;
+package lemon.evolution;
 
 import lemon.engine.control.Loader;
 import lemon.engine.math.Percentage;
