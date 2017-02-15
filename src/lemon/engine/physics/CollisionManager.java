@@ -21,13 +21,16 @@ public class CollisionManager {
 	public void update(){
 		Queue<CollisionEffect> queue = new ArrayDeque<CollisionEffect>();
 		for(DynamicCollidable dynamicCollidable: dynamicCollidables){
-			queue.add(new CollisionEffect(dynamicCollidable.getPosition(), dynamicCollidable.getVelocity(), dynamicCollidable.getVelocity()));
+			queue.add(new CollisionEffect(dynamicCollidable));
 		}
 		while(!queue.isEmpty()){
 			CollisionEffect effect = queue.poll();
 			float lowestDistance = Float.MAX_VALUE;
 			Collidable lowestCollidable = null;
 			for(Collidable collidable: collidables){
+				if(collidable.equals(effect.getCollidable())){ //You can't collide with yourself!
+					continue;
+				}
 				float distance = collidable.getIntersection(effect);
 				if(distance<lowestDistance){
 					lowestDistance = distance;
@@ -35,9 +38,9 @@ public class CollisionManager {
 				}
 			}
 			if(lowestCollidable!=null){
-				CollisionEffect newEffect = lowestCollidable.applyResponse();
-				if(newEffect.hasMotion()){
-					queue.add(newEffect);
+				lowestCollidable.applyResponse();
+				if(effect.hasMotion()){
+					queue.add(effect);
 				}
 			}
 		}

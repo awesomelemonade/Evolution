@@ -3,22 +3,14 @@ package lemon.engine.physics;
 import lemon.engine.math.Vector3D;
 
 public class CollisionEffect {
-	private Vector3D position;
-	private Vector3D velocity;
+	private DynamicCollidable collidable;
 	private Vector3D motion;
-	public CollisionEffect(Vector3D position, Vector3D velocity, Vector3D motion){
-		this.position = position;
-		this.velocity = velocity;
-		this.motion = motion;
+	public CollisionEffect(DynamicCollidable collidable){
+		this.collidable = collidable;
+		this.motion = new Vector3D(collidable.getVelocity());
 	}
-	public CollisionEffect(Vector3D position, Vector3D velocity){
-		this(position, velocity, null);
-	}
-	public Vector3D getPosition(){
-		return position;
-	}
-	public Vector3D getVelocity(){
-		return velocity;
+	public DynamicCollidable getCollidable(){
+		return collidable;
 	}
 	public Vector3D getMotion(){
 		return motion;
