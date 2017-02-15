@@ -3,19 +3,15 @@ package lemon.engine.math;
 import java.util.function.BinaryOperator;
 
 public class Box2D extends Vector {
-	private float x;
-	private float y;
-	private float width;
-	private float height;
 	public Box2D(float x, float y, float width, float height){
 		super(4);
-		super.set(0, x);
-		super.set(0, y);
-		super.set(0, width);
-		super.set(0, height);
+		this.setX(x);
+		this.setY(y);
+		this.setWidth(width);
+		this.setHeight(height);
 	}
 	public boolean intersect(float x, float y){
-		return x>this.x&&x<this.x+this.width&&y>this.y&&y<this.y+this.height;
+		return x>this.getX()&&x<this.getX()+this.getWidth()&&y>this.getY()&&y<this.getY()+this.getHeight();
 	}
 	public void setX(float x){
 		super.set(0, x);
