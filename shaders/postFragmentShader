@@ -10,10 +10,5 @@ uniform sampler2D colorSampler;
 uniform sampler2D depthSampler;
 
 void main(void){
-	float depth = pow(texture(depthSampler, passTextureCoords).x, 2048);
-	if(depth==1){
-		depth = 0;
-	}
-	vec4 color = texture(colorSampler, passTextureCoords);
-	outColor = mix(color, BLACK, depth);
+	outColor = texture(colorSampler, passTextureCoords);
 }
