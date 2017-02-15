@@ -1,4 +1,4 @@
-package lemon.evolution;
+package lemon.evolution.util;
 
 import org.lwjgl.opengl.GL20;
 
