@@ -233,7 +233,9 @@ public enum Game implements Listener {
 		GL20.glUseProgram(CommonPrograms3D.POST_PROCESSING.getShaderProgram().getId());
 		Quad.TEXTURED.render();
 		GL20.glUseProgram(0);
-		renderFPS();
+		if(GameControls.DEBUG_TOGGLE.isActivated()){
+			renderFPS();
+		}
 	}
 	public void renderHeightMap(){
 		GL11.glEnable(GL11.GL_BLEND);

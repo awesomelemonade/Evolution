@@ -13,6 +13,7 @@ public class GameControls {
 	public static final PlayerControl STRAFE_RIGHT = new PlayerControl();
 	public static final PlayerControl MOVE_UP = new PlayerControl();
 	public static final PlayerControl MOVE_DOWN = new PlayerControl();
+	public static final PlayerControl DEBUG_TOGGLE = new PlayerControl();
 	public static void setup(){
 		BasicControlActivator.setup();
 		BasicControlActivator.bindMouseHolds(GLFW.GLFW_MOUSE_BUTTON_1, CAMERA_ROTATE);
@@ -22,5 +23,6 @@ public class GameControls {
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_D, STRAFE_RIGHT);
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_SPACE, MOVE_UP);
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_LEFT_SHIFT, MOVE_DOWN);
+		BasicControlActivator.bindKeyboardToggle(GLFW.GLFW_KEY_F3, DEBUG_TOGGLE);
 	}
 }
