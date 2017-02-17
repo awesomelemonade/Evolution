@@ -26,8 +26,6 @@ import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.Player;
-import lemon.engine.game.PlayerControls;
-import lemon.engine.game.StandardControls;
 import lemon.engine.input.CursorPositionEvent;
 import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.loader.SkyboxLoader;
@@ -50,8 +48,6 @@ public enum Game implements Listener {
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 	
 	private Player player;
-	
-	private PlayerControls<Integer, Integer> controls;
 	
 	private HeightMap terrain;
 	
@@ -126,15 +122,8 @@ public enum Game implements Listener {
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		
-		controls = new StandardControls();
-		controls.bindKey(GLFW.GLFW_MOUSE_BUTTON_LEFT, GLFW.GLFW_MOUSE_BUTTON_LEFT);
-		controls.bindKey(GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_A);
-		controls.bindKey(GLFW.GLFW_KEY_D, GLFW.GLFW_KEY_D);
-		controls.bindKey(GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_W);
-		controls.bindKey(GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_S);
-		controls.bindKey(GLFW.GLFW_KEY_SPACE, GLFW.GLFW_KEY_SPACE);
-		controls.bindKey(GLFW.GLFW_KEY_LEFT_SHIFT, GLFW.GLFW_KEY_LEFT_SHIFT);
-		controls.bindKey(GLFW.GLFW_KEY_T, GLFW.GLFW_KEY_T);
+		GameControls.setup();
+		
 		EventManager.INSTANCE.registerListener(this);
 	}
 	private static float friction = 0.98f;
@@ -142,35 +131,33 @@ public enum Game implements Listener {
 	private static float playerSpeed = maxSpeed-maxSpeed*friction;
 	@Subscribe
 	public void update(UpdateEvent event){
-		if(controls.hasStates()){
-			float angle = (player.getCamera().getRotation().getY()+90)*(((float)Math.PI)/180f);
-			float sin = (float)Math.sin(angle);
-			float cos = (float)Math.cos(angle);
-			if(controls.getState(GLFW.GLFW_KEY_A)){
-				player.getVelocity().setX(player.getVelocity().getX()-((float)(playerSpeed))*sin);
-				player.getVelocity().setZ(player.getVelocity().getZ()-((float)(playerSpeed))*cos);
-			}
-			if(controls.getState(GLFW.GLFW_KEY_D)){
-				player.getVelocity().setX(player.getVelocity().getX()+((float)(playerSpeed))*sin);
-				player.getVelocity().setZ(player.getVelocity().getZ()+((float)(playerSpeed))*cos);
-			}
-			angle = player.getCamera().getRotation().getY()*(((float)Math.PI)/180f);
-			sin = (float)Math.sin(angle);
-			cos = (float)Math.cos(angle);
-			if(controls.getState(GLFW.GLFW_KEY_W)){
-				player.getVelocity().setX(player.getVelocity().getX()-((float)(playerSpeed))*sin);
-				player.getVelocity().setZ(player.getVelocity().getZ()-((float)(playerSpeed))*cos);
-			}
-			if(controls.getState(GLFW.GLFW_KEY_S)){
-				player.getVelocity().setX(player.getVelocity().getX()+((float)(playerSpeed))*sin);
-				player.getVelocity().setZ(player.getVelocity().getZ()+((float)(playerSpeed))*cos);
-			}
-			if(controls.getState(GLFW.GLFW_KEY_SPACE)){
-				player.getVelocity().setY(player.getVelocity().getY()+((float)(playerSpeed)));
-			}
-			if(controls.getState(GLFW.GLFW_KEY_LEFT_SHIFT)){
-				player.getVelocity().setY(player.getVelocity().getY()-((float)(playerSpeed)));
-			}
+		float angle = (player.getCamera().getRotation().getY()+90)*(((float)Math.PI)/180f);
+		float sin = (float)Math.sin(angle);
+		float cos = (float)Math.cos(angle);
+		if(GameControls.STRAFE_LEFT.isActivated()){
+			player.getVelocity().setX(player.getVelocity().getX()-((float)(playerSpeed))*sin);
+			player.getVelocity().setZ(player.getVelocity().getZ()-((float)(playerSpeed))*cos);
+		}
+		if(GameControls.STRAFE_RIGHT.isActivated()){
+			player.getVelocity().setX(player.getVelocity().getX()+((float)(playerSpeed))*sin);
+			player.getVelocity().setZ(player.getVelocity().getZ()+((float)(playerSpeed))*cos);
+		}
+		angle = player.getCamera().getRotation().getY()*(((float)Math.PI)/180f);
+		sin = (float)Math.sin(angle);
+		cos = (float)Math.cos(angle);
+		if(GameControls.MOVE_FORWARDS.isActivated()){
+			player.getVelocity().setX(player.getVelocity().getX()-((float)(playerSpeed))*sin);
+			player.getVelocity().setZ(player.getVelocity().getZ()-((float)(playerSpeed))*cos);
+		}
+		if(GameControls.MOVE_BACKWARDS.isActivated()){
+			player.getVelocity().setX(player.getVelocity().getX()+((float)(playerSpeed))*sin);
+			player.getVelocity().setZ(player.getVelocity().getZ()+((float)(playerSpeed))*cos);
+		}
+		if(GameControls.MOVE_UP.isActivated()){
+			player.getVelocity().setY(player.getVelocity().getY()+((float)(playerSpeed)));
+		}
+		if(GameControls.MOVE_DOWN.isActivated()){
+			player.getVelocity().setY(player.getVelocity().getY()-((float)(playerSpeed)));
 		}
 		player.getVelocity().setX(player.getVelocity().getX()*friction);
 		player.getVelocity().setY(player.getVelocity().getY()*friction);
@@ -203,7 +190,7 @@ public enum Game implements Listener {
 		lastMouseY = mouseY;
 		mouseX = event.getX();
 		mouseY = event.getY();
-		if(controls.getState(GLFW.GLFW_MOUSE_BUTTON_1)){
+		if(GameControls.CAMERA_ROTATE.isActivated()){
 			player.getCamera().getRotation().setY((float) (((player.getCamera().getRotation().getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY)%360)+360)%360);
 			player.getCamera().getRotation().setX((float) (player.getCamera().getRotation().getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
 			if(player.getCamera().getRotation().getX()<-90){
