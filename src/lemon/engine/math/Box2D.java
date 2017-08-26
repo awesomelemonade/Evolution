@@ -60,7 +60,6 @@ public class Box2D extends Vector {
 	public Box2D average(Box2D vector){
 		return operate(vector, BasicFloatOperator.AVERAGE);
 	}
-	@Override
 	public Box2D operate(float scale, BinaryOperator<Float> operator){
 		return new Box2D(operator.apply(this.getX(), scale), operator.apply(this.getY(), scale),
 				operator.apply(this.getWidth(), scale), operator.apply(this.getHeight(), scale));

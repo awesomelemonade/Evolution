@@ -1,8 +1,10 @@
 package lemon.engine.math;
 
 import java.util.function.BinaryOperator;
+import java.util.function.Function;
 
 public class Vector2D extends Vector {
+	public static final Function<float[], Vector2D> supplier = (data) -> new Vector2D(data);
 	public static final Vector2D[] EMPTY_ARRAY = new Vector2D[]{};
 	public static final Vector2D ZERO = Vector2D.unmodifiableVector(new Vector2D());
 	public static final Vector2D TOP_LEFT = Vector2D.unmodifiableVector(new Vector2D(-1f, 1f).normalize());
@@ -18,6 +20,13 @@ public class Vector2D extends Vector {
 	}
 	public Vector2D(float x, float y){
 		super(x, y);
+	}
+	public Vector2D(float[] data){
+		if(data.length!=2){
+			throw new IllegalArgumentException("Only 2 Dimensions Allowed");
+		}
+		this.setX(data[0]);
+		this.setY(data[1]);
 	}
 	public Vector2D(Vector vector){
 		super(2);
@@ -74,7 +83,6 @@ public class Vector2D extends Vector {
 	public Vector2D average(Vector2D vector){
 		return operate(vector, BasicFloatOperator.AVERAGE);
 	}
-	@Override
 	public Vector2D operate(float scale, BinaryOperator<Float> operator){
 		return new Vector2D(operator.apply(this.getX(), scale), operator.apply(this.getY(), scale));
 	}

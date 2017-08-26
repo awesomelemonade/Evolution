@@ -1,8 +1,10 @@
 package lemon.engine.math;
 
 import java.util.function.BinaryOperator;
+import java.util.function.Function;
 
 public class Vector3D extends Vector {
+	public static final Function<float[], Vector3D> supplier = (data) -> new Vector3D(data);
 	public static final Vector3D[] EMPTY_ARRAY = new Vector3D[]{};
 	public static final Vector3D ZERO = Vector3D.unmodifiableVector(new Vector3D());
 	public Vector3D(){
@@ -10,6 +12,14 @@ public class Vector3D extends Vector {
 	}
 	public Vector3D(float x, float y, float z){
 		super(x, y, z);
+	}
+	public Vector3D(float[] data){
+		if(data.length!=3){
+			throw new IllegalArgumentException("Only 3 Dimensions Allowed");
+		}
+		this.setX(data[0]);
+		this.setY(data[1]);
+		this.setZ(data[2]);
 	}
 	public Vector3D(Vector vector){
 		super(3);
@@ -73,7 +83,6 @@ public class Vector3D extends Vector {
 	public Vector3D average(Vector3D vector){
 		return operate(vector, BasicFloatOperator.AVERAGE);
 	}
-	@Override
 	public Vector3D operate(float scale, BinaryOperator<Float> operator){
 		return new Vector3D(operator.apply(this.getX(), scale), operator.apply(this.getY(), scale), operator.apply(this.getZ(), scale));
 	}

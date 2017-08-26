@@ -1,9 +1,6 @@
 package lemon.engine.math;
 
-import java.nio.FloatBuffer;
 import java.util.Arrays;
-
-import org.lwjgl.BufferUtils;
 
 public class Matrix {
 	public static final Matrix IDENTITY_4 = Matrix.unmodifiableMatrix(Matrix.getIdentity(4));
@@ -37,16 +34,6 @@ public class Matrix {
 	}
 	public int getColumns(){
 		return data[0].length;
-	}
-	public FloatBuffer toFloatBuffer(){
-		FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length*data[0].length);
-		for(int j=0;j<this.getColumns();++j){
-			for(int i=0;i<this.getRows();++i){
-				buffer.put(this.get(i, j));
-			}
-		}
-		buffer.flip();
-		return buffer;
 	}
 	public Matrix multiply(Matrix matrix){
 		if(getColumns()!=matrix.getRows()){
