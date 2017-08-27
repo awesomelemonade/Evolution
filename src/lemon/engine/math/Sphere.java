@@ -2,15 +2,15 @@ package lemon.engine.math;
 
 public class Sphere {
 	private Vector3D center;
-	private Vector3D axes;
-	public Sphere(Vector3D center, Vector3D axes){
+	private float radius;
+	public Sphere(Vector3D center, float radius){
 		this.center = center;
-		this.axes = axes;
+		this.radius = radius;
 	}
 	public Vector3D getCenter(){
 		return center;
 	}
-	public Vector3D getAxes(){
-		return axes;
+	public float getRadius(){
+		return radius;
 	}
 }
