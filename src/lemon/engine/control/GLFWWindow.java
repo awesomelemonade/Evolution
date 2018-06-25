@@ -33,15 +33,15 @@ public class GLFWWindow {
 		GLFW.glfwDefaultWindowHints();
 		GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
 		window = settings.createWindow();
-		if(window==MemoryUtil.NULL){
+		if(window == MemoryUtil.NULL){
 			throw new IllegalStateException("GLFW window not created");
 		}
 		glfwInput = new GLFWInput(window);
 		glfwInput.init();
 		GLFW.glfwMakeContextCurrent(window);
-		GLFW.glfwSwapInterval(0);
+		GLFW.glfwSwapInterval(0); // Disables v-sync
 		GLFW.glfwShowWindow(window);
-		GL.createCapabilities(); //GLContext.createFromCurrent();
+		GL.createCapabilities(); // GLContext.createFromCurrent();
 		EventManager.INSTANCE.callListeners(new LemonWindowInitEvent(window));
 	}
 	public void run(){
@@ -57,14 +57,14 @@ public class GLFWWindow {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			//Event Driven
 			long updateTime = System.nanoTime();
-			long delta = updateTime-deltaTime;
+			long delta = updateTime - deltaTime;
 			EventManager.INSTANCE.callListeners(new LemonUpdateEvent(delta));
 			deltaTime = updateTime;
-			updateTime = System.nanoTime()-updateTime;
+			updateTime = System.nanoTime() - updateTime;
 			long renderTime = System.nanoTime();
 			EventManager.INSTANCE.callListeners(new LemonRenderEvent());
-			renderTime = System.nanoTime()-renderTime;
-			EventManager.INSTANCE.callListeners(new LemonBenchmarkEvent(new Benchmark(this, (float)(updateTime), (float)(renderTime), ((float)delta)/1000000f)));
+			renderTime = System.nanoTime() - renderTime;
+			EventManager.INSTANCE.callListeners(new LemonBenchmarkEvent(new Benchmark(this, (float)(updateTime), (float)(renderTime), ((float)delta) / 1000000f)));
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());
