@@ -8,50 +8,49 @@ import java.util.Queue;
 public class CollisionManager {
 	private List<DynamicCollidable> dynamicCollidables;
 	private List<Collidable> collidables;
-	public CollisionManager(){
+
+	public CollisionManager() {
 		dynamicCollidables = new ArrayList<DynamicCollidable>();
 		collidables = new ArrayList<Collidable>();
 	}
-	public void addCollidable(Collidable collidable){
-		if(collidable instanceof DynamicCollidable){
-			dynamicCollidables.add((DynamicCollidable)collidable);
+	public void addCollidable(Collidable collidable) {
+		if (collidable instanceof DynamicCollidable) {
+			dynamicCollidables.add((DynamicCollidable) collidable);
 		}
 		collidables.add(collidable);
 	}
-	public void update(){
+	public void update() {
 		Queue<CollisionEffect> queue = new ArrayDeque<CollisionEffect>();
-		for(DynamicCollidable dynamicCollidable: dynamicCollidables){
+		for (DynamicCollidable dynamicCollidable : dynamicCollidables) {
 			queue.add(new CollisionEffect(dynamicCollidable));
 		}
-		while(!queue.isEmpty()){
+		while (!queue.isEmpty()) {
 			CollisionEffect effect = queue.poll();
 			float lowestDistance = Float.MAX_VALUE;
 			Collidable lowestCollidable = null;
-			for(Collidable collidable: collidables){
-				if(collidable.equals(effect.getCollidable())){ //You can't collide with yourself!
+			for (Collidable collidable : collidables) {
+				if (collidable.equals(effect.getCollidable())) { // You can't collide with yourself!
 					continue;
 				}
 				float distance = collidable.getIntersection(effect);
-				if(distance<lowestDistance){
+				if (distance < lowestDistance) {
 					lowestDistance = distance;
 					lowestCollidable = collidable;
 				}
 			}
-			if(lowestCollidable == null || lowestDistance == 0){ // No Collision Calculated; epsilon?
-				//move position with frame's velocity
+			if (lowestCollidable == null || lowestDistance == 0) { // No Collision Calculated; epsilon?
+				// move position with frame's velocity
 				effect.getCollidable().getPosition().selfAdd(effect.getCollidable().getVelocity());
-			}else{
-				//move effect's collidable to the collision point
-				//apply response - changing both the frame's velocity and the overall velocity
-				//queue both collidables (regardless of motion
+			} else {
+				// move effect's collidable to the collision point
+				// apply response - changing both the frame's velocity and the overall velocity
+				// queue both collidables (regardless of motion
 			}
-			
-			/*if(lowestCollidable!=null){
-				lowestCollidable.applyResponse();
-				if(effect.hasMotion()){
-					queue.add(effect);
-				}
-			}*/
+
+			/*
+			 * if(lowestCollidable!=null){ lowestCollidable.applyResponse();
+			 * if(effect.hasMotion()){ queue.add(effect); } }
+			 */
 		}
 	}
 }

@@ -15,26 +15,27 @@ import org.lwjgl.opengl.GL30;
 public class VertexArray implements Listener {
 	private int id;
 	private List<VertexBuffer> vbos;
-	public VertexArray(){
+
+	public VertexArray() {
 		id = GL30.glGenVertexArrays();
 		vbos = new ArrayList<VertexBuffer>();
 		EventManager.INSTANCE.registerListener(this);
 	}
-	public int getId(){
+	public int getId() {
 		return id;
 	}
-	public VertexBuffer generateVbo(){
+	public VertexBuffer generateVbo() {
 		VertexBuffer vbo = new VertexBuffer();
 		vbos.add(vbo);
 		return vbo;
 	}
-	public List<VertexBuffer> getVbos(){
+	public List<VertexBuffer> getVbos() {
 		return Collections.unmodifiableList(vbos);
 	}
 	@Subscribe
-	public void cleanUp(CleanUpEvent event){
+	public void cleanUp(CleanUpEvent event) {
 		GL30.glDeleteVertexArrays(id);
-		for(VertexBuffer vbo: vbos){
+		for (VertexBuffer vbo : vbos) {
 			GL15.glDeleteBuffers(vbo.getId());
 		}
 	}

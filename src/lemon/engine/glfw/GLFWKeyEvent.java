@@ -9,7 +9,8 @@ public class GLFWKeyEvent implements KeyEvent, GLFWEvent {
 	private int scancode;
 	private int action;
 	private boolean[] mods;
-	public GLFWKeyEvent(long window, int key, int scancode, int action, int mods){
+
+	public GLFWKeyEvent(long window, int key, int scancode, int action, int mods) {
 		this.window = window;
 		this.key = key;
 		this.scancode = scancode;

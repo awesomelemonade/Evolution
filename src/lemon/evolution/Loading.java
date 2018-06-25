@@ -29,13 +29,11 @@ public enum Loading implements Listener {
 	private LoadingBar loadingBar;
 	private Loader loader;
 	private long window;
-	public void start(long window){
-		shaderProgram = new ShaderProgram(
-				new int[]{0, 1},
-				new String[]{"position", "color"},
+
+	public void start(long window) {
+		shaderProgram = new ShaderProgram(new int[] { 0, 1 }, new String[] { "position", "color" },
 				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
-				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader"))
-		);
+				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader")));
 		uniform_projectionMatrix = shaderProgram.getUniformVariable("projectionMatrix");
 		uniform_transformationMatrix = shaderProgram.getUniformVariable("transformationMatrix");
 		GL20.glUseProgram(shaderProgram.getId());
@@ -43,29 +41,27 @@ public enum Loading implements Listener {
 		uniform_transformationMatrix.loadMatrix(Matrix.IDENTITY_4);
 		GL20.glUseProgram(0);
 		this.loader = Game.INSTANCE.getTerrainLoader();
-		this.loadingBar = new LoadingBar(this.loader.getPercentage(),
-				new Box2D(-1f, -1.1f, 2f, 0.3f),
-				new Color(1f, 0f, 0f), new Color(1f, 0f, 0f),
-				new Color(0f, 0f, 0f), new Color(0f, 0f, 0f));
+		this.loadingBar = new LoadingBar(this.loader.getPercentage(), new Box2D(-1f, -1.1f, 2f, 0.3f),
+				new Color(1f, 0f, 0f), new Color(1f, 0f, 0f), new Color(0f, 0f, 0f), new Color(0f, 0f, 0f));
 		loader.load();
 		this.window = window;
 		EventManager.INSTANCE.registerListener(this);
 	}
 	@Subscribe
-	public void update(UpdateEvent event){
-		if(loader.getPercentage().getPart()!=loader.getPercentage().getWhole()){
-			logger.log(Level.INFO, loader.getPercentage().getPercentage()+"%");
-		}else{
+	public void update(UpdateEvent event) {
+		if (loader.getPercentage().getPart() != loader.getPercentage().getWhole()) {
+			logger.log(Level.INFO, loader.getPercentage().getPercentage() + "%");
+		} else {
 			startGame(window);
 		}
 	}
 	@Subscribe
-	public void render(RenderEvent event){
+	public void render(RenderEvent event) {
 		GL20.glUseProgram(shaderProgram.getId());
 		loadingBar.render();
 		GL20.glUseProgram(0);
 	}
-	public void startGame(long window){
+	public void startGame(long window) {
 		Game.INSTANCE.init(window);
 		EventManager.INSTANCE.unregisterListener(this);
 	}

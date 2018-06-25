@@ -22,19 +22,22 @@ import lemon.engine.thread.ThreadManager;
 
 public class Evolution {
 	private static final Logger logger = Logger.getLogger("");
-	public static void main(String[] args){
+
+	public static void main(String[] args) {
 		LogManager.getLogManager().reset();
 		logger.setLevel(Level.ALL);
 		ConsoleHandler consoleHandler = new ConsoleHandler();
 		consoleHandler.setFormatter(new SimpleFormatter());
 		logger.addHandler(consoleHandler);
-		GLFWWindowSettings settings = new GLFWWindowSettings(){
+		GLFWWindowSettings settings = new GLFWWindowSettings() {
 			@Override
 			public long createWindow() {
 				GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GL11.GL_FALSE);
 				GLFWVidMode vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
-				return GLFW.glfwCreateWindow(vidmode.width(), vidmode.height(), "LWJGL version: " + Version.getVersion(), GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
-				//return GLFW.glfwCreateWindow(800, 600, "Title", MemoryUtil.NULL, MemoryUtil.NULL);
+				return GLFW.glfwCreateWindow(vidmode.width(), vidmode.height(),
+						"LWJGL version: " + Version.getVersion(), GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
+				// return GLFW.glfwCreateWindow(800, 600, "Title", MemoryUtil.NULL,
+				// MemoryUtil.NULL);
 			}
 			@Override
 			public int getTargetFrameRate() {
@@ -42,11 +45,11 @@ public class Evolution {
 			}
 		};
 		final GLFWWindow window = new GLFWWindow(settings);
-		try{
-			EventManager.INSTANCE.registerListener(new Listener(){
+		try {
+			EventManager.INSTANCE.registerListener(new Listener() {
 				@Subscribe
-				public void onKeyPress(KeyEvent event){
-					if(event.getKey()==GLFW.GLFW_KEY_ESCAPE){
+				public void onKeyPress(KeyEvent event) {
+					if (event.getKey() == GLFW.GLFW_KEY_ESCAPE) {
 						GLFW.glfwSetWindowShouldClose(window.getId(), true);
 					}
 				}
@@ -54,9 +57,9 @@ public class Evolution {
 			window.init();
 			Menu.INSTANCE.start(window.getId());
 			window.run();
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			ex.printStackTrace();
-		}finally{
+		} finally {
 			ThreadManager.INSTANCE.interrupt();
 			window.dump();
 		}

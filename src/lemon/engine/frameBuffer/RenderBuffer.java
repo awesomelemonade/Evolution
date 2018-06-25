@@ -9,15 +9,16 @@ import lemon.engine.event.Subscribe;
 
 public class RenderBuffer implements Listener {
 	private int id;
-	public RenderBuffer(){
+
+	public RenderBuffer() {
 		id = GL30.glGenRenderbuffers();
 		EventManager.INSTANCE.registerListener(this);
 	}
-	public int getId(){
+	public int getId() {
 		return id;
 	}
 	@Subscribe
-	public void cleanUp(CleanUpEvent event){
+	public void cleanUp(CleanUpEvent event) {
 		GL30.glDeleteRenderbuffers(id);
 	}
 }

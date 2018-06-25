@@ -4,7 +4,8 @@ import lemon.engine.input.WindowCloseEvent;
 
 public class GLFWWindowCloseEvent implements WindowCloseEvent, GLFWEvent {
 	private long window;
-	public GLFWWindowCloseEvent(long window){
+
+	public GLFWWindowCloseEvent(long window) {
 		this.window = window;
 	}
 	@Override

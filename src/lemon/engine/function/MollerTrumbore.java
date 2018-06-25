@@ -9,13 +9,14 @@ import lemon.engine.math.Vector3D;
 public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
 	private final float EPSILON;
 	private final boolean culling;
-	public MollerTrumbore(){
+
+	public MollerTrumbore() {
 		this(0.000001f, false);
 	}
-	public MollerTrumbore(boolean culling){
+	public MollerTrumbore(boolean culling) {
 		this(0.000001f, culling);
 	}
-	public MollerTrumbore(float EPSILON, boolean culling){
+	public MollerTrumbore(float EPSILON, boolean culling) {
 		this.EPSILON = EPSILON;
 		this.culling = culling;
 	}
@@ -25,44 +26,44 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
 		Vector3D p, q, distance;
 		float determinant;
 		float inverseDeterminant, u, v, t;
-		
+
 		edge = triangle.getVertex2().subtract(triangle.getVertex1());
 		edge2 = triangle.getVertex3().subtract(triangle.getVertex1());
-		
+
 		p = ray.getDirection().crossProduct(edge2);
-		
+
 		determinant = edge.dotProduct(p);
-		
-		if(culling){
-			if(determinant < EPSILON){
+
+		if (culling) {
+			if (determinant < EPSILON) {
 				return null;
 			}
-		}else{
-			if(determinant > -EPSILON && determinant < EPSILON){
+		} else {
+			if (determinant > -EPSILON && determinant < EPSILON) {
 				return null;
 			}
 		}
-		inverseDeterminant = 1f/determinant;
-		
+		inverseDeterminant = 1f / determinant;
+
 		distance = ray.getOrigin().subtract(triangle.getVertex1());
-		
+
 		u = distance.dotProduct(p) * inverseDeterminant;
-		
-		if(u<0f||u>1f){
+
+		if (u < 0f || u > 1f) {
 			return null;
 		}
-		
+
 		q = distance.crossProduct(edge);
-		
-		v = ray.getDirection().dotProduct(q)*inverseDeterminant;
-		
-		if(v<0f||u+v>1f){
+
+		v = ray.getDirection().dotProduct(q) * inverseDeterminant;
+
+		if (v < 0f || u + v > 1f) {
 			return null;
 		}
-		
-		t = edge2.dotProduct(q)*inverseDeterminant;
-		
-		if(t>EPSILON){
+
+		t = edge2.dotProduct(q) * inverseDeterminant;
+
+		if (t > EPSILON) {
 			return t;
 		}
 		return null;

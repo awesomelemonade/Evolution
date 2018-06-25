@@ -7,7 +7,8 @@ public class GLFWCharacterEvent implements CharacterEvent, GLFWEvent {
 	private long window;
 	private int codepoint;
 	private boolean[] mods;
-	public GLFWCharacterEvent(long window, int codepoint, int mods){
+
+	public GLFWCharacterEvent(long window, int codepoint, int mods) {
 		this.window = window;
 		this.codepoint = codepoint;
 		this.mods = MathUtil.convertMods(mods);

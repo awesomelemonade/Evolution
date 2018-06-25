@@ -46,157 +46,169 @@ import lemon.evolution.util.CommonPrograms3D;
 public enum Game implements Listener {
 	INSTANCE;
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
-	
+
 	private Player player;
-	
+
 	private HeightMap terrain;
-	
-	private static final float TILE_SIZE = 0.2f; //0.2f 1f
-	
+
+	private static final float TILE_SIZE = 0.2f; // 0.2f 1f
+
 	private FrameBuffer frameBuffer;
 	private Texture colorTexture;
 	private Texture depthTexture;
-	
+
 	private Texture skyboxTexture;
-	
+
 	private Benchmarker benchmarker;
-	
+
 	private TerrainLoader terrainLoader;
-	
-	public TerrainLoader getTerrainLoader(){
-		if(terrainLoader==null){
-			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (100f/TILE_SIZE), 2), Math.max((int) (100f/TILE_SIZE), 2));
+
+	public TerrainLoader getTerrainLoader() {
+		if (terrainLoader == null) {
+			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (100f / TILE_SIZE), 2),
+					Math.max((int) (100f / TILE_SIZE), 2));
 		}
 		return terrainLoader;
 	}
-	
-	public void init(long window){
+
+	public void init(long window) {
 		logger.log(Level.FINE, "Initializing");
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(window, width, height);
 		int window_width = width.get();
 		int window_height = height.get();
-		
+
 		GL11.glViewport(0, 0, window_width, window_height);
-		
+
 		Skybox.INSTANCE.init();
 		Quad.TEXTURED.init();
 		Quad.COLORED.init();
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
-		
+
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
 		benchmarker.put("renderData", new LineGraph(1000, 100000000));
 		benchmarker.put("fpsData", new LineGraph(1000, 100));
-		
-		player = new Player(new Projection(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f));
-		
+
+		player = new Player(new Projection(60f, ((float) window_width) / ((float) window_height), 0.01f, 1000f));
+
 		CommonProgramsSetup.setup(player.getCamera().getProjectionMatrix());
-		
+
 		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
 		updateViewMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
-		
+
 		frameBuffer = new FrameBuffer();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
 		colorTexture = new Texture();
 		GL13.glActiveTexture(TextureBank.COLOR.getBind());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, window_width, window_height, 0, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, (ByteBuffer)null);
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, window_width, window_height, 0, GL11.GL_RGB,
+				GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
 		depthTexture = new Texture();
 		GL13.glActiveTexture(TextureBank.DEPTH.getBind());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, window_width, window_height, 0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer)null);
+		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, window_width, window_height, 0,
+				GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
 		skyboxTexture = new Texture();
 		GL13.glActiveTexture(TextureBank.SKYBOX.getBind());
-		skyboxTexture.load(new SkyboxLoader(new File("res/darkskies/"), new File("res/darkskies/darkskies.cfg")).load());
+		skyboxTexture
+				.load(new SkyboxLoader(new File("res/darkskies/"), new File("res/darkskies/darkskies.cfg")).load());
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
-		
+
 		GameControls.setup();
-		
+
 		EventManager.INSTANCE.registerListener(this);
 	}
+
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
-	private static float playerSpeed = maxSpeed-maxSpeed*friction;
+	private static float playerSpeed = maxSpeed - maxSpeed * friction;
+
 	@Subscribe
-	public void update(UpdateEvent event){
-		float angle = (player.getCamera().getRotation().getY()+90)*(((float)Math.PI)/180f);
-		float sin = (float)Math.sin(angle);
-		float cos = (float)Math.cos(angle);
-		if(GameControls.STRAFE_LEFT.isActivated()){
-			player.getVelocity().setX(player.getVelocity().getX()-((float)(playerSpeed))*sin);
-			player.getVelocity().setZ(player.getVelocity().getZ()-((float)(playerSpeed))*cos);
+	public void update(UpdateEvent event) {
+		float angle = (player.getCamera().getRotation().getY() + 90) * (((float) Math.PI) / 180f);
+		float sin = (float) Math.sin(angle);
+		float cos = (float) Math.cos(angle);
+		if (GameControls.STRAFE_LEFT.isActivated()) {
+			player.getVelocity().setX(player.getVelocity().getX() - ((float) (playerSpeed)) * sin);
+			player.getVelocity().setZ(player.getVelocity().getZ() - ((float) (playerSpeed)) * cos);
 		}
-		if(GameControls.STRAFE_RIGHT.isActivated()){
-			player.getVelocity().setX(player.getVelocity().getX()+((float)(playerSpeed))*sin);
-			player.getVelocity().setZ(player.getVelocity().getZ()+((float)(playerSpeed))*cos);
+		if (GameControls.STRAFE_RIGHT.isActivated()) {
+			player.getVelocity().setX(player.getVelocity().getX() + ((float) (playerSpeed)) * sin);
+			player.getVelocity().setZ(player.getVelocity().getZ() + ((float) (playerSpeed)) * cos);
 		}
-		angle = player.getCamera().getRotation().getY()*(((float)Math.PI)/180f);
-		sin = (float)Math.sin(angle);
-		cos = (float)Math.cos(angle);
-		if(GameControls.MOVE_FORWARDS.isActivated()){
-			player.getVelocity().setX(player.getVelocity().getX()-((float)(playerSpeed))*sin);
-			player.getVelocity().setZ(player.getVelocity().getZ()-((float)(playerSpeed))*cos);
+		angle = player.getCamera().getRotation().getY() * (((float) Math.PI) / 180f);
+		sin = (float) Math.sin(angle);
+		cos = (float) Math.cos(angle);
+		if (GameControls.MOVE_FORWARDS.isActivated()) {
+			player.getVelocity().setX(player.getVelocity().getX() - ((float) (playerSpeed)) * sin);
+			player.getVelocity().setZ(player.getVelocity().getZ() - ((float) (playerSpeed)) * cos);
 		}
-		if(GameControls.MOVE_BACKWARDS.isActivated()){
-			player.getVelocity().setX(player.getVelocity().getX()+((float)(playerSpeed))*sin);
-			player.getVelocity().setZ(player.getVelocity().getZ()+((float)(playerSpeed))*cos);
+		if (GameControls.MOVE_BACKWARDS.isActivated()) {
+			player.getVelocity().setX(player.getVelocity().getX() + ((float) (playerSpeed)) * sin);
+			player.getVelocity().setZ(player.getVelocity().getZ() + ((float) (playerSpeed)) * cos);
 		}
-		if(GameControls.MOVE_UP.isActivated()){
-			player.getVelocity().setY(player.getVelocity().getY()+((float)(playerSpeed)));
+		if (GameControls.MOVE_UP.isActivated()) {
+			player.getVelocity().setY(player.getVelocity().getY() + ((float) (playerSpeed)));
 		}
-		if(GameControls.MOVE_DOWN.isActivated()){
-			player.getVelocity().setY(player.getVelocity().getY()-((float)(playerSpeed)));
+		if (GameControls.MOVE_DOWN.isActivated()) {
+			player.getVelocity().setY(player.getVelocity().getY() - ((float) (playerSpeed)));
 		}
-		player.getVelocity().setX(player.getVelocity().getX()*friction);
-		player.getVelocity().setY(player.getVelocity().getY()*friction);
-		player.getVelocity().setZ(player.getVelocity().getZ()*friction);
-		
+		player.getVelocity().setX(player.getVelocity().getX() * friction);
+		player.getVelocity().setY(player.getVelocity().getY() * friction);
+		player.getVelocity().setZ(player.getVelocity().getZ() * friction);
+
 		player.update(event);
 		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 	}
 	@Subscribe
-	public void onMouseScroll(MouseScrollEvent event){
-		playerSpeed+=(float)(event.getYOffset()/100f);
-		if(playerSpeed<0){
+	public void onMouseScroll(MouseScrollEvent event) {
+		playerSpeed += (float) (event.getYOffset() / 100f);
+		if (playerSpeed < 0) {
 			playerSpeed = 0;
 		}
-		player.getCamera().getProjection().setFov(player.getCamera().getProjection().getFov()+((float)(event.getYOffset()/100f)));
+		player.getCamera().getProjection()
+				.setFov(player.getCamera().getProjection().getFov() + ((float) (event.getYOffset() / 100f)));
 		updateProjectionMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		updateProjectionMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
 		updateProjectionMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 	}
+
 	private double lastMouseX;
 	private double lastMouseY;
 	private double mouseX;
 	private double mouseY;
 	private static final float MOUSE_SENSITIVITY = 0.1f;
+
 	@Subscribe
-	public void onMousePosition(CursorPositionEvent event){
+	public void onMousePosition(CursorPositionEvent event) {
 		lastMouseX = mouseX;
 		lastMouseY = mouseY;
 		mouseX = event.getX();
 		mouseY = event.getY();
-		if(GameControls.CAMERA_ROTATE.isActivated()){
-			player.getCamera().getRotation().setY((float) (((player.getCamera().getRotation().getY()-(mouseX-lastMouseX)*MOUSE_SENSITIVITY)%360)+360)%360);
-			player.getCamera().getRotation().setX((float) (player.getCamera().getRotation().getX()-(mouseY-lastMouseY)*MOUSE_SENSITIVITY));
-			if(player.getCamera().getRotation().getX()<-90){
+		if (GameControls.CAMERA_ROTATE.isActivated()) {
+			player.getCamera().getRotation().setY(
+					(float) (((player.getCamera().getRotation().getY() - (mouseX - lastMouseX) * MOUSE_SENSITIVITY)
+							% 360) + 360) % 360);
+			player.getCamera().getRotation().setX(
+					(float) (player.getCamera().getRotation().getX() - (mouseY - lastMouseY) * MOUSE_SENSITIVITY));
+			if (player.getCamera().getRotation().getX() < -90) {
 				player.getCamera().getRotation().setX(-90);
 			}
-			if(player.getCamera().getRotation().getX()>90){
+			if (player.getCamera().getRotation().getX() > 90) {
 				player.getCamera().getRotation().setX(90);
 			}
 		}
@@ -204,24 +216,24 @@ public enum Game implements Listener {
 		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
 	}
-	public void updateViewMatrix(ShaderProgram program){
+	public void updateViewMatrix(ShaderProgram program) {
 		GL20.glUseProgram(program.getId());
-		program.loadMatrix(MatrixType.VIEW_MATRIX,
-				player.getCamera().getInvertedRotationMatrix().multiply(player.getCamera().getInvertedTranslationMatrix()));
+		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix()
+				.multiply(player.getCamera().getInvertedTranslationMatrix()));
 		GL20.glUseProgram(0);
 	}
-	public void updateCubeMapMatrix(ShaderProgram program){
+	public void updateCubeMapMatrix(ShaderProgram program) {
 		GL20.glUseProgram(program.getId());
 		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix());
 		GL20.glUseProgram(0);
 	}
-	public void updateProjectionMatrix(ShaderProgram program){
+	public void updateProjectionMatrix(ShaderProgram program) {
 		GL20.glUseProgram(program.getId());
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, player.getCamera().getProjectionMatrix());
 		GL20.glUseProgram(0);
 	}
 	@Subscribe
-	public void render(RenderEvent event){
+	public void render(RenderEvent event) {
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
 		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 		GL11.glDepthMask(false);
@@ -233,11 +245,11 @@ public enum Game implements Listener {
 		GL20.glUseProgram(CommonPrograms3D.POST_PROCESSING.getShaderProgram().getId());
 		Quad.TEXTURED.render();
 		GL20.glUseProgram(0);
-		if(GameControls.DEBUG_TOGGLE.isActivated()){
+		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			renderFPS();
 		}
 	}
-	public void renderHeightMap(){
+	public void renderHeightMap() {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -248,14 +260,14 @@ public enum Game implements Listener {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
-	public void renderPlatforms(){
+	public void renderPlatforms() {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
-	public void renderSkybox(){
+	public void renderSkybox() {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL20.glUseProgram(CommonPrograms3D.CUBEMAP.getShaderProgram().getId());
@@ -263,14 +275,16 @@ public enum Game implements Listener {
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
-	public void renderFPS(){
+	public void renderFPS() {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL20.glUseProgram(CommonPrograms2D.LINE.getShaderProgram().getId());
-		byte color = 1; //Not Black
-		for(String benchmarker: this.benchmarker.getNames()){
-			CommonPrograms2D.LINE.getShaderProgram().loadVector("color", new Vector3D((((color&0x01)!=0)?1f:0f), (((color&0x02)!=0)?1f:0f), (((color&0x04)!=0)?1f:0f)));
-			CommonPrograms2D.LINE.getShaderProgram().loadFloat("spacing", 2f/(this.benchmarker.getLineGraph(benchmarker).getSize()-1));
+		byte color = 1; // Not Black
+		for (String benchmarker : this.benchmarker.getNames()) {
+			CommonPrograms2D.LINE.getShaderProgram().loadVector("color", new Vector3D((((color & 0x01) != 0) ? 1f : 0f),
+					(((color & 0x02) != 0) ? 1f : 0f), (((color & 0x04) != 0) ? 1f : 0f)));
+			CommonPrograms2D.LINE.getShaderProgram().loadFloat("spacing",
+					2f / (this.benchmarker.getLineGraph(benchmarker).getSize() - 1));
 			this.benchmarker.getLineGraph(benchmarker).render();
 			color++;
 		}
@@ -278,7 +292,7 @@ public enum Game implements Listener {
 		GL11.glDisable(GL11.GL_BLEND);
 	}
 	@Subscribe
-	public void onBenchmark(BenchmarkEvent event){
+	public void onBenchmark(BenchmarkEvent event) {
 		benchmarker.benchmark(event.getBenchmark());
 	}
 }

@@ -19,21 +19,21 @@ public class GLFWWindow {
 	private TimeSync timeSync;
 	private long window;
 	private GLFWWindowSettings settings;
-	
-	public GLFWWindow(GLFWWindowSettings settings){
+
+	public GLFWWindow(GLFWWindowSettings settings) {
 		timeSync = new TimeSync();
 		this.settings = settings;
 	}
-	
-	public void init(){
+
+	public void init() {
 		GLFW.glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
-		if(!GLFW.glfwInit()){
+		if (!GLFW.glfwInit()) {
 			throw new IllegalStateException("GLFW not initialized");
 		}
 		GLFW.glfwDefaultWindowHints();
 		GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GL11.GL_FALSE);
 		window = settings.createWindow();
-		if(window == MemoryUtil.NULL){
+		if (window == MemoryUtil.NULL) {
 			throw new IllegalStateException("GLFW window not created");
 		}
 		glfwInput = new GLFWInput(window);
@@ -44,18 +44,18 @@ public class GLFWWindow {
 		GL.createCapabilities(); // GLContext.createFromCurrent();
 		EventManager.INSTANCE.callListeners(new LemonWindowInitEvent(window));
 	}
-	public void run(){
+	public void run() {
 		EventManager.INSTANCE.preload(LemonUpdateEvent.class);
 		EventManager.INSTANCE.preload(LemonRenderEvent.class);
 		long deltaTime = System.nanoTime();
-		while(!GLFW.glfwWindowShouldClose(window)){
+		while (!GLFW.glfwWindowShouldClose(window)) {
 			int error = GL11.glGetError();
-			while(error!=GL11.GL_NO_ERROR){
+			while (error != GL11.GL_NO_ERROR) {
 				System.out.println(error);
 				error = GL11.glGetError();
 			}
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-			//Event Driven
+			// Event Driven
 			long updateTime = System.nanoTime();
 			long delta = updateTime - deltaTime;
 			EventManager.INSTANCE.callListeners(new LemonUpdateEvent(delta));
@@ -64,21 +64,23 @@ public class GLFWWindow {
 			long renderTime = System.nanoTime();
 			EventManager.INSTANCE.callListeners(new LemonRenderEvent());
 			renderTime = System.nanoTime() - renderTime;
-			EventManager.INSTANCE.callListeners(new LemonBenchmarkEvent(new Benchmark(this, (float)(updateTime), (float)(renderTime), ((float)delta) / 1000000f)));
+			EventManager.INSTANCE.callListeners(new LemonBenchmarkEvent(
+					new Benchmark(this, (float) (updateTime), (float) (renderTime), ((float) delta) / 1000000f)));
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());
-			//GLFW.glfwSetWindowTitle(window, settings.getTitle()+" - "+Integer.toString(timeSync.getFps()));
+			// GLFW.glfwSetWindowTitle(window, settings.getTitle()+" -
+			// "+Integer.toString(timeSync.getFps()));
 		}
 	}
-	public void dump(){
+	public void dump() {
 		EventManager.INSTANCE.callListeners(new LemonCleanUpEvent());
 		GLFW.glfwDestroyWindow(window);
 		Callbacks.glfwFreeCallbacks(window);
 		GLFW.glfwTerminate();
 		errorCallback.free();
 	}
-	public long getId(){
+	public long getId() {
 		return window;
 	}
 }

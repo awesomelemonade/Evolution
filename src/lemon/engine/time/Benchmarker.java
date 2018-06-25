@@ -8,25 +8,26 @@ import lemon.engine.entity.LineGraph;
 
 public class Benchmarker {
 	private Map<String, LineGraph> graphs;
-	public Benchmarker(){
+
+	public Benchmarker() {
 		graphs = new LinkedHashMap<String, LineGraph>();
 	}
-	public void benchmark(Benchmark benchmark){
+	public void benchmark(Benchmark benchmark) {
 		int n = 0;
-		for(LineGraph graph: graphs.values()){
+		for (LineGraph graph : graphs.values()) {
 			graph.add(benchmark.getData()[n++]);
 		}
 	}
-	public void put(String name, LineGraph graph){
+	public void put(String name, LineGraph graph) {
 		graphs.put(name, graph);
 	}
-	public LineGraph getLineGraph(String name){
+	public LineGraph getLineGraph(String name) {
 		return graphs.get(name);
 	}
-	public Set<String> getNames(){
+	public Set<String> getNames() {
 		return graphs.keySet();
 	}
-	public int getSize(){
+	public int getSize() {
 		return graphs.size();
 	}
 }

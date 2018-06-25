@@ -9,15 +9,16 @@ import lemon.engine.event.Subscribe;
 
 public class FrameBuffer implements Listener {
 	private int id;
-	public FrameBuffer(){
+
+	public FrameBuffer() {
 		id = GL30.glGenFramebuffers();
 		EventManager.INSTANCE.registerListener(this);
 	}
-	public int getId(){
+	public int getId() {
 		return id;
 	}
 	@Subscribe
-	public void cleanUp(CleanUpEvent event){
+	public void cleanUp(CleanUpEvent event) {
 		GL30.glDeleteFramebuffers(id);
 	}
 }

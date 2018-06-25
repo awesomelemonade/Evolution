@@ -34,97 +34,97 @@ public class GLFWInput {
 	private GLFWWindowPosCallback windowPosCallback;
 	private GLFWWindowRefreshCallback windowRefreshCallback;
 	private GLFWWindowSizeCallback windowSizeCallback;
-	
-	public GLFWInput(long window){
+
+	public GLFWInput(long window) {
 		this.window = window;
 	}
-	public void init(){
-		GLFW.glfwSetCharModsCallback(window, charModsCallback = new GLFWCharModsCallback(){
+	public void init() {
+		GLFW.glfwSetCharModsCallback(window, charModsCallback = new GLFWCharModsCallback() {
 			@Override
-			public void invoke(long window, int codepoint, int mods){
+			public void invoke(long window, int codepoint, int mods) {
 				EventManager.INSTANCE.callListeners(new GLFWCharacterEvent(window, codepoint, mods));
 			}
 		});
-		GLFW.glfwSetCursorEnterCallback(window, cursorEnterCallback = new GLFWCursorEnterCallback(){
+		GLFW.glfwSetCursorEnterCallback(window, cursorEnterCallback = new GLFWCursorEnterCallback() {
 			@Override
-			public void invoke(long window, boolean entered){
+			public void invoke(long window, boolean entered) {
 				EventManager.INSTANCE.callListeners(new GLFWCursorEnterEvent(window, entered));
 			}
 		});
-		GLFW.glfwSetCursorPosCallback(window, cursorPosCallback = new GLFWCursorPosCallback(){
+		GLFW.glfwSetCursorPosCallback(window, cursorPosCallback = new GLFWCursorPosCallback() {
 			@Override
-			public void invoke(long window, double xPos, double yPos){
+			public void invoke(long window, double xPos, double yPos) {
 				EventManager.INSTANCE.callListeners(new GLFWCursorPositionEvent(window, xPos, yPos));
 			}
 		});
-		GLFW.glfwSetDropCallback(window, dropCallback = new GLFWDropCallback(){
+		GLFW.glfwSetDropCallback(window, dropCallback = new GLFWDropCallback() {
 			@Override
-			public void invoke(long window, int count, long names){
+			public void invoke(long window, int count, long names) {
 				EventManager.INSTANCE.callListeners(new GLFWFileDropEvent(window, count, names));
 			}
 		});
-		GLFW.glfwSetFramebufferSizeCallback(window, framebufferSizeCallback = new GLFWFramebufferSizeCallback(){
+		GLFW.glfwSetFramebufferSizeCallback(window, framebufferSizeCallback = new GLFWFramebufferSizeCallback() {
 			@Override
-			public void invoke(long window, int width, int height){
+			public void invoke(long window, int width, int height) {
 				EventManager.INSTANCE.callListeners(new GLFWFrameBufferSizeEvent(window, width, height));
 			}
 		});
-		GLFW.glfwSetKeyCallback(window, keyCallback = new GLFWKeyCallback(){
+		GLFW.glfwSetKeyCallback(window, keyCallback = new GLFWKeyCallback() {
 			@Override
-			public void invoke(long window, int key, int scancode, int action, int mods){
+			public void invoke(long window, int key, int scancode, int action, int mods) {
 				EventManager.INSTANCE.callListeners(new GLFWKeyEvent(window, key, scancode, action, mods));
 			}
 		});
-		GLFW.glfwSetMouseButtonCallback(window, mouseButtonCallback = new GLFWMouseButtonCallback(){
+		GLFW.glfwSetMouseButtonCallback(window, mouseButtonCallback = new GLFWMouseButtonCallback() {
 			@Override
-			public void invoke(long window, int button, int action, int mods){
+			public void invoke(long window, int button, int action, int mods) {
 				EventManager.INSTANCE.callListeners(new GLFWMouseButtonEvent(window, button, action, mods));
 			}
 		});
-		GLFW.glfwSetScrollCallback(window, scrollCallback = new GLFWScrollCallback(){
+		GLFW.glfwSetScrollCallback(window, scrollCallback = new GLFWScrollCallback() {
 			@Override
-			public void invoke(long window, double xOffSet, double yOffSet){
+			public void invoke(long window, double xOffSet, double yOffSet) {
 				EventManager.INSTANCE.callListeners(new GLFWMouseScrollEvent(window, xOffSet, yOffSet));
 			}
 		});
-		GLFW.glfwSetWindowCloseCallback(window, windowCloseCallback = new GLFWWindowCloseCallback(){
+		GLFW.glfwSetWindowCloseCallback(window, windowCloseCallback = new GLFWWindowCloseCallback() {
 			@Override
-			public void invoke(long window){
+			public void invoke(long window) {
 				EventManager.INSTANCE.callListeners(new GLFWWindowCloseEvent(window));
 			}
 		});
-		GLFW.glfwSetWindowFocusCallback(window, windowFocusCallback = new GLFWWindowFocusCallback(){
+		GLFW.glfwSetWindowFocusCallback(window, windowFocusCallback = new GLFWWindowFocusCallback() {
 			@Override
-			public void invoke(long window, boolean focused){
+			public void invoke(long window, boolean focused) {
 				EventManager.INSTANCE.callListeners(new GLFWWindowFocusEvent(window, focused));
 			}
 		});
-		GLFW.glfwSetWindowIconifyCallback(window, windowIconifyCallback = new GLFWWindowIconifyCallback(){
+		GLFW.glfwSetWindowIconifyCallback(window, windowIconifyCallback = new GLFWWindowIconifyCallback() {
 			@Override
-			public void invoke(long window, boolean iconified){
+			public void invoke(long window, boolean iconified) {
 				EventManager.INSTANCE.callListeners(new GLFWWindowMinimizeEvent(window, iconified));
 			}
 		});
-		GLFW.glfwSetWindowPosCallback(window, windowPosCallback = new GLFWWindowPosCallback(){
+		GLFW.glfwSetWindowPosCallback(window, windowPosCallback = new GLFWWindowPosCallback() {
 			@Override
-			public void invoke(long window, int xPos, int yPos){
+			public void invoke(long window, int xPos, int yPos) {
 				EventManager.INSTANCE.callListeners(new GLFWWindowMoveEvent(window, xPos, yPos));
 			}
 		});
-		GLFW.glfwSetWindowRefreshCallback(window, windowRefreshCallback = new GLFWWindowRefreshCallback(){
+		GLFW.glfwSetWindowRefreshCallback(window, windowRefreshCallback = new GLFWWindowRefreshCallback() {
 			@Override
-			public void invoke(long window){
+			public void invoke(long window) {
 				EventManager.INSTANCE.callListeners(new GLFWWindowRefreshEvent(window));
 			}
 		});
-		GLFW.glfwSetWindowSizeCallback(window, windowSizeCallback = new GLFWWindowSizeCallback(){
+		GLFW.glfwSetWindowSizeCallback(window, windowSizeCallback = new GLFWWindowSizeCallback() {
 			@Override
-			public void invoke(long window, int width, int height){
+			public void invoke(long window, int width, int height) {
 				EventManager.INSTANCE.callListeners(new GLFWWindowSizeEvent(window, width, height));
 			}
 		});
 	}
-	public long getWindow(){
+	public long getWindow() {
 		return window;
 	}
 	public GLFWCharModsCallback getCharModsCallback() {

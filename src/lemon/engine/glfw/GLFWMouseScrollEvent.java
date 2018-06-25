@@ -6,7 +6,8 @@ public class GLFWMouseScrollEvent implements MouseScrollEvent, GLFWEvent {
 	private long window;
 	private double xOffset;
 	private double yOffset;
-	public GLFWMouseScrollEvent(long window, double xOffset, double yOffset){
+
+	public GLFWMouseScrollEvent(long window, double xOffset, double yOffset) {
 		this.window = window;
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;

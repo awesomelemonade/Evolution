@@ -8,7 +8,8 @@ public class GLFWMouseButtonEvent implements MouseButtonEvent, GLFWEvent {
 	private long window;
 	private int button;
 	private int action;
-	public GLFWMouseButtonEvent(long window, int button, int action, int mods){
+
+	public GLFWMouseButtonEvent(long window, int button, int action, int mods) {
 		this.window = window;
 		this.button = button;
 		this.action = action;

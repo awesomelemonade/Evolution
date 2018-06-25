@@ -9,13 +9,15 @@ public class AutomaticInterpolator {
 	private Interpolator interpolator;
 	private UnaryOperator<Float> operator;
 	private Vector prevUpdate;
-	public AutomaticInterpolator(Vector vector, Interpolator interpolator, UnaryOperator<Float> operator){
+
+	public AutomaticInterpolator(Vector vector, Interpolator interpolator, UnaryOperator<Float> operator) {
 		this.vector = vector;
 		this.interpolator = interpolator;
 		this.operator = operator;
 		this.prevUpdate = new Vector(vector.getDimensions());
 	}
-	public void update(float value){
+
+	public void update(float value) {
 		Vector interpolated = interpolator.interpolate(operator.apply(value));
 		vector.set(vector.subtract(prevUpdate).add(interpolated));
 		prevUpdate = interpolated;

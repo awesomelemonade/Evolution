@@ -5,7 +5,8 @@ import lemon.engine.input.WindowFocusEvent;
 public class GLFWWindowFocusEvent implements WindowFocusEvent, GLFWEvent {
 	private long window;
 	private boolean focused;
-	public GLFWWindowFocusEvent(long window, boolean focused){
+
+	public GLFWWindowFocusEvent(long window, boolean focused) {
 		this.window = window;
 		this.focused = focused;
 	}

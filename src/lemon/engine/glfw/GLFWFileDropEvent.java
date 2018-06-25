@@ -8,11 +8,12 @@ import lemon.engine.input.FileDropEvent;
 public class GLFWFileDropEvent implements FileDropEvent, GLFWEvent {
 	private long window;
 	private String[] files;
-	public GLFWFileDropEvent(long window, int count, long files){
+
+	public GLFWFileDropEvent(long window, int count, long files) {
 		this.window = window;
 		this.files = new String[count];
 		PointerBuffer nameBuffer = MemoryUtil.memPointerBuffer(files, count);
-		for(int i=0;i<count;++i){
+		for (int i = 0; i < count; ++i) {
 			this.files[i] = MemoryUtil.memUTF8(MemoryUtil.memByteBufferNT1(nameBuffer.get(i)));
 		}
 	}

@@ -6,7 +6,8 @@ public class GLFWWindowSizeEvent implements WindowSizeEvent, GLFWEvent {
 	private long window;
 	private int width;
 	private int height;
-	public GLFWWindowSizeEvent(long window, int width, int height){
+
+	public GLFWWindowSizeEvent(long window, int width, int height) {
 		this.window = window;
 		this.width = width;
 		this.height = height;

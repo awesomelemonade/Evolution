@@ -14,7 +14,8 @@ public class GameControls {
 	public static final PlayerControl MOVE_UP = new PlayerControl();
 	public static final PlayerControl MOVE_DOWN = new PlayerControl();
 	public static final PlayerControl DEBUG_TOGGLE = new PlayerControl();
-	public static void setup(){
+
+	public static void setup() {
 		BasicControlActivator.setup();
 		BasicControlActivator.bindMouseHolds(GLFW.GLFW_MOUSE_BUTTON_1, CAMERA_ROTATE);
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_W, MOVE_FORWARDS);

@@ -5,50 +5,51 @@ public class Color {
 	private float green;
 	private float blue;
 	private float alpha;
-	public Color(){
+
+	public Color() {
 		this(1f);
 	}
-	public Color(float value){
+	public Color(float value) {
 		this(value, value, value, 1f);
 	}
-	public Color(float red, float green, float blue){
+	public Color(float red, float green, float blue) {
 		this(red, green, blue, 1f);
 	}
-	public Color(float red, float green, float blue, float alpha){
+	public Color(float red, float green, float blue, float alpha) {
 		this.red = red;
 		this.green = green;
 		this.blue = blue;
 		this.alpha = alpha;
 	}
-	public Color(Color color){
+	public Color(Color color) {
 		this(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
 	}
-	public void setRed(float red){
+	public void setRed(float red) {
 		this.red = red;
 	}
-	public float getRed(){
+	public float getRed() {
 		return red;
 	}
-	public void setGreen(float green){
+	public void setGreen(float green) {
 		this.green = green;
 	}
-	public float getGreen(){
+	public float getGreen() {
 		return green;
 	}
-	public void setBlue(float blue){
+	public void setBlue(float blue) {
 		this.blue = blue;
 	}
-	public float getBlue(){
+	public float getBlue() {
 		return blue;
 	}
-	public void setAlpha(float alpha){
+	public void setAlpha(float alpha) {
 		this.alpha = alpha;
 	}
-	public float getAlpha(){
+	public float getAlpha() {
 		return alpha;
 	}
 	@Override
-	public String toString(){
+	public String toString() {
 		return String.format("Color[%f, %f, %f, %f]", red, green, blue, alpha);
 	}
 }

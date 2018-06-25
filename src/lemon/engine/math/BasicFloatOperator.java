@@ -3,30 +3,34 @@ package lemon.engine.math;
 import java.util.function.BinaryOperator;
 
 public enum BasicFloatOperator implements BinaryOperator<Float> {
-	ADDITION{
+	ADDITION {
 		@Override
 		public Float apply(Float x, Float y) {
-			return x+y;
+			return x + y;
 		}
-	}, SUBTRACTION{
+	},
+	SUBTRACTION {
 		@Override
 		public Float apply(Float x, Float y) {
-			return x-y;
+			return x - y;
 		}
-	}, MULTIPLICATION{
+	},
+	MULTIPLICATION {
 		@Override
 		public Float apply(Float x, Float y) {
-			return x*y;
+			return x * y;
 		}
-	}, DIVISION{
+	},
+	DIVISION {
 		@Override
 		public Float apply(Float x, Float y) {
-			return x/y;
+			return x / y;
 		}
-	}, AVERAGE{
+	},
+	AVERAGE {
 		@Override
 		public Float apply(Float x, Float y) {
-			return (x+y)/2;
+			return (x + y) / 2;
 		}
 	};
 	@Override

@@ -6,7 +6,8 @@ public class GLFWWindowMoveEvent implements WindowMoveEvent, GLFWEvent {
 	private long window;
 	private int x;
 	private int y;
-	public GLFWWindowMoveEvent(long window, int x, int y){
+
+	public GLFWWindowMoveEvent(long window, int x, int y) {
 		this.window = window;
 		this.x = x;
 		this.y = y;

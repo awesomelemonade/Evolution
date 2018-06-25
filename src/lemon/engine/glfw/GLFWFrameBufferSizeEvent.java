@@ -6,7 +6,8 @@ public class GLFWFrameBufferSizeEvent implements FrameBufferSizeEvent, GLFWEvent
 	private long window;
 	private int width;
 	private int height;
-	public GLFWFrameBufferSizeEvent(long window, int width, int height){
+
+	public GLFWFrameBufferSizeEvent(long window, int width, int height) {
 		this.window = window;
 		this.width = width;
 		this.height = height;

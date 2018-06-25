@@ -35,20 +35,19 @@ public enum FontTest implements Listener {
 	private UniformVariable uniform_textSampler;
 	private Font font;
 	private Text text;
-	public void start(long window){
+
+	public void start(long window) {
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(window, width, height);
 		int window_width = width.get();
 		int window_height = height.get();
 		GL11.glViewport(0, 0, window_width, window_height);
-		Matrix projectionMatrix = MathUtil.getPerspective(new Projection(60f, ((float)window_width)/((float)window_height), 0.01f, 1000f));
-		textProgram = new ShaderProgram(
-				new int[]{0, 1},
-				new String[]{"position", "textureCoords"},
+		Matrix projectionMatrix = MathUtil
+				.getPerspective(new Projection(60f, ((float) window_width) / ((float) window_height), 0.01f, 1000f));
+		textProgram = new ShaderProgram(new int[] { 0, 1 }, new String[] { "position", "textureCoords" },
 				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/textVertexShader")),
-				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textFragmentShader"))
-		);
+				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textFragmentShader")));
 		uniform_textModelMatrix = textProgram.getUniformVariable("modelMatrix");
 		uniform_textViewMatrix = textProgram.getUniformVariable("viewMatrix");
 		uniform_textProjectionMatrix = textProgram.getUniformVariable("projectionMatrix");
@@ -66,7 +65,7 @@ public enum FontTest implements Listener {
 		EventManager.INSTANCE.registerListener(this);
 	}
 	@Subscribe
-	public void render(RenderEvent event){
+	public void render(RenderEvent event) {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);

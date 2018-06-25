@@ -4,6 +4,7 @@ import lemon.engine.math.Vector3D;
 
 public class PlanarCollidable implements Collidable {
 	private CollisionEffect currentEffect;
+
 	@Override
 	public float getIntersection(CollisionEffect effect) {
 		this.currentEffect = effect;

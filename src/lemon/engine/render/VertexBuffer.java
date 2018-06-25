@@ -4,10 +4,11 @@ import org.lwjgl.opengl.GL15;
 
 public class VertexBuffer {
 	private int id;
-	public VertexBuffer(){
+
+	public VertexBuffer() {
 		id = GL15.glGenBuffers();
 	}
-	public int getId(){
+	public int getId() {
 		return id;
 	}
 }

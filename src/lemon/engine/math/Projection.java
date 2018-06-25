@@ -5,7 +5,8 @@ public class Projection {
 	private float aspectRatio;
 	private float nearPlane;
 	private float farPlane;
-	public Projection(float fov, float aspectRatio, float nearPlane, float farPlane){
+
+	public Projection(float fov, float aspectRatio, float nearPlane, float farPlane) {
 		this.fov = fov;
 		this.aspectRatio = aspectRatio;
 		this.nearPlane = nearPlane;

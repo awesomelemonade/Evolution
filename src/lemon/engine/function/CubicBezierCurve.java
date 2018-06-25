@@ -9,7 +9,8 @@ public class CubicBezierCurve implements Function<Float, Vector> {
 	private Vector b;
 	private Vector c;
 	private Vector d;
-	public CubicBezierCurve(Vector a, Vector b, Vector c, Vector d){
+
+	public CubicBezierCurve(Vector a, Vector b, Vector c, Vector d) {
 		this.a = a;
 		this.b = b;
 		this.c = c;
@@ -17,19 +18,19 @@ public class CubicBezierCurve implements Function<Float, Vector> {
 	}
 	@Override
 	public Vector apply(Float t) {
-		return a.multiply((float)Math.pow(1-t, 3)).add(b.multiply((float)(3*Math.pow(1-t, 2)*t))).
-				add(c.multiply((float)(3*(1-t)*Math.pow(t, 2))).add(d.multiply((float)Math.pow(t, 3))));
+		return a.multiply((float) Math.pow(1 - t, 3)).add(b.multiply((float) (3 * Math.pow(1 - t, 2) * t)))
+				.add(c.multiply((float) (3 * (1 - t) * Math.pow(t, 2))).add(d.multiply((float) Math.pow(t, 3))));
 	}
-	public Vector getA(){
+	public Vector getA() {
 		return a;
 	}
-	public Vector getB(){
+	public Vector getB() {
 		return b;
 	}
-	public Vector getC(){
+	public Vector getC() {
 		return c;
 	}
-	public Vector getD(){
+	public Vector getD() {
 		return d;
 	}
 }
