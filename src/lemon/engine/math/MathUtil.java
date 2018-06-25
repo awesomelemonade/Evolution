@@ -7,8 +7,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class MathUtil {
 
-	private MathUtil() {
-	}
+	private MathUtil() {}
 
 	public static boolean[] convertMods(int bitset) {
 		boolean[] mods = new boolean[4];
