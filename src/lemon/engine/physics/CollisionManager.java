@@ -37,12 +37,21 @@ public class CollisionManager {
 					lowestCollidable = collidable;
 				}
 			}
-			if(lowestCollidable!=null){
+			if(lowestCollidable == null || lowestDistance == 0){ // No Collision Calculated; epsilon?
+				//move position with frame's velocity
+				effect.getCollidable().getPosition().selfAdd(effect.getCollidable().getVelocity());
+			}else{
+				//move effect's collidable to the collision point
+				//apply response - changing both the frame's velocity and the overall velocity
+				//queue both collidables (regardless of motion
+			}
+			
+			/*if(lowestCollidable!=null){
 				lowestCollidable.applyResponse();
 				if(effect.hasMotion()){
 					queue.add(effect);
 				}
-			}
+			}*/
 		}
 	}
 }
