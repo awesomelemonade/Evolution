@@ -97,6 +97,27 @@ public class Vector {
 		}
 		return sum;
 	}
+	public void selfAdd(Vector vector) {
+		selfOperate(vector, BasicFloatOperator.ADDITION);
+	}
+	public void selfSubtract(Vector vector) {
+		selfOperate(vector, BasicFloatOperator.SUBTRACTION);
+	}
+	public void selfMultiply(Vector vector) {
+		selfOperate(vector, BasicFloatOperator.MULTIPLICATION);
+	}
+	public void selfMultiply(float scale) {
+		selfOperate(scale, BasicFloatOperator.MULTIPLICATION);
+	}
+	public void selfDivide(Vector vector) {
+		selfOperate(vector, BasicFloatOperator.DIVISION);
+	}
+	public void selfDivide(float scale) {
+		selfOperate(scale, BasicFloatOperator.DIVISION);
+	}
+	public void selfAverage(Vector vector) {
+		selfOperate(vector, BasicFloatOperator.AVERAGE);
+	}
 	public Vector add(Vector vector){
 		return add(vector, supplier);
 	}
@@ -153,6 +174,17 @@ public class Vector {
 			data[i] = operator.apply(this.data[i], vector.get(i));
 		}
 		return supplier.apply(data);
+	}
+	public void selfOperate(float scale, BinaryOperator<Float> operator) {
+		for(int i=0;i<data.length;++i) {
+			data[i] = operator.apply(data[i], scale);
+		}
+	}
+	public void selfOperate(Vector vector, BinaryOperator<Float> operator) {
+		checkDimensions(vector);
+		for(int i=0;i<data.length;++i) {
+			data[i] = operator.apply(data[i], vector.get(i));
+		}
 	}
 	public float dotProduct(Vector vector){
 		checkDimensions(vector);

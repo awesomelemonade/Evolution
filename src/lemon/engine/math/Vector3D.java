@@ -1,6 +1,5 @@
 package lemon.engine.math;
 
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 public class Vector3D extends Vector {
@@ -61,33 +60,27 @@ public class Vector3D extends Vector {
 		return new Vector3D(-this.getX(), -this.getY(), -this.getZ());
 	}
 	public Vector3D add(Vector3D vector){
-		return operate(vector, BasicFloatOperator.ADDITION);
+		return operate(vector, BasicFloatOperator.ADDITION, supplier);
 	}
 	public Vector3D subtract(Vector3D vector){
-		return operate(vector, BasicFloatOperator.SUBTRACTION);
+		return operate(vector, BasicFloatOperator.SUBTRACTION, supplier);
 	}
 	public Vector3D multiply(Vector3D vector){
-		return operate(vector, BasicFloatOperator.MULTIPLICATION);
+		return operate(vector, BasicFloatOperator.MULTIPLICATION, supplier);
 	}
 	@Override
 	public Vector3D multiply(float scale){
-		return operate(scale, BasicFloatOperator.MULTIPLICATION);
+		return operate(scale, BasicFloatOperator.MULTIPLICATION, supplier);
 	}
 	public Vector3D divide(Vector3D vector){
-		return operate(vector, BasicFloatOperator.DIVISION);
+		return operate(vector, BasicFloatOperator.DIVISION, supplier);
 	}
 	@Override
 	public Vector3D divide(float scale){
-		return operate(scale, BasicFloatOperator.DIVISION);
+		return operate(scale, BasicFloatOperator.DIVISION, supplier);
 	}
 	public Vector3D average(Vector3D vector){
-		return operate(vector, BasicFloatOperator.AVERAGE);
-	}
-	public Vector3D operate(float scale, BinaryOperator<Float> operator){
-		return new Vector3D(operator.apply(this.getX(), scale), operator.apply(this.getY(), scale), operator.apply(this.getZ(), scale));
-	}
-	public Vector3D operate(Vector3D vector, BinaryOperator<Float> operator){
-		return new Vector3D(operator.apply(this.getX(), vector.getX()), operator.apply(this.getY(), vector.getY()), operator.apply(this.getZ(), vector.getZ()));
+		return operate(vector, BasicFloatOperator.AVERAGE, supplier);
 	}
 	public Vector3D crossProduct(Vector3D vector){ //Implemented in only Vector3D
 		return new Vector3D(this.getY()*vector.getZ()-vector.getY()*this.getZ(),

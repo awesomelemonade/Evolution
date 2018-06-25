@@ -1,6 +1,5 @@
 package lemon.engine.math;
 
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 public class Vector2D extends Vector {
@@ -61,33 +60,27 @@ public class Vector2D extends Vector {
 		return new Vector2D(-this.getX(), -this.getY());
 	}
 	public Vector2D add(Vector2D vector){
-		return operate(vector, BasicFloatOperator.ADDITION);
+		return operate(vector, BasicFloatOperator.ADDITION, supplier);
 	}
 	public Vector2D subtract(Vector2D vector){
-		return operate(vector, BasicFloatOperator.SUBTRACTION);
+		return operate(vector, BasicFloatOperator.SUBTRACTION, supplier);
 	}
 	public Vector2D multiply(Vector2D vector){
-		return operate(vector, BasicFloatOperator.MULTIPLICATION);
+		return operate(vector, BasicFloatOperator.MULTIPLICATION, supplier);
 	}
 	@Override
 	public Vector2D multiply(float scale){
-		return operate(scale, BasicFloatOperator.MULTIPLICATION);
+		return operate(scale, BasicFloatOperator.MULTIPLICATION, supplier);
 	}
 	public Vector2D divide(Vector2D vector){
-		return operate(vector, BasicFloatOperator.DIVISION);
+		return operate(vector, BasicFloatOperator.DIVISION, supplier);
 	}
 	@Override
 	public Vector2D divide(float scale){
-		return operate(scale, BasicFloatOperator.DIVISION);
+		return operate(scale, BasicFloatOperator.DIVISION, supplier);
 	}
 	public Vector2D average(Vector2D vector){
-		return operate(vector, BasicFloatOperator.AVERAGE);
-	}
-	public Vector2D operate(float scale, BinaryOperator<Float> operator){
-		return new Vector2D(operator.apply(this.getX(), scale), operator.apply(this.getY(), scale));
-	}
-	public Vector2D operate(Vector2D vector, BinaryOperator<Float> operator){
-		return new Vector2D(operator.apply(this.getX(), vector.getX()), operator.apply(this.getY(), vector.getY()));
+		return operate(vector, BasicFloatOperator.AVERAGE, supplier);
 	}
 	public static Vector2D unmodifiableVector(Vector2D vector){
 		return new Vector2D(vector){
