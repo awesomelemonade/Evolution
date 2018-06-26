@@ -25,12 +25,20 @@ import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
+import lemon.engine.function.LineLineIntersection;
+import lemon.engine.function.MollerTrumbore;
+import lemon.engine.function.RaySphereIntersection;
 import lemon.engine.game.Player;
 import lemon.engine.input.CursorPositionEvent;
+import lemon.engine.input.KeyEvent;
+import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.loader.SkyboxLoader;
+import lemon.engine.math.Line;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
+import lemon.engine.math.Sphere;
+import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.ShaderProgram;
@@ -128,6 +136,9 @@ public enum Game implements Listener {
 
 		GameControls.setup();
 
+		rayTriangleIntersection = new MollerTrumbore(true);
+		raySphereIntersection = new RaySphereIntersection();
+		
 		EventManager.INSTANCE.registerListener(this);
 	}
 
@@ -165,6 +176,21 @@ public enum Game implements Listener {
 		if (GameControls.MOVE_DOWN.isActivated()) {
 			player.getVelocity().setY(player.getVelocity().getY() - ((float) (playerSpeed)));
 		}
+		EventManager.INSTANCE.registerListener(new Listener() {
+			@Subscribe
+			public void onKeyRelease(KeyEvent event) {
+				if(event.getAction() == GLFW.GLFW_RELEASE) {
+					if (event.getKey() == GLFW.GLFW_KEY_R) {
+						System.out.println("Set Origin: "+player.getPosition());
+						line.set(0, new Vector3D(player.getPosition()));
+					}
+					if (event.getKey() == GLFW.GLFW_KEY_T) {
+						line.set(1, new Vector3D(player.getPosition().subtract(line.getOrigin())));
+						System.out.println("Set Direction: "+line.getDirection());
+					}
+				}
+			}
+		});
 		player.getVelocity().setX(player.getVelocity().getX() * friction);
 		player.getVelocity().setY(player.getVelocity().getY() * friction);
 		player.getVelocity().setZ(player.getVelocity().getZ() * friction);
@@ -264,6 +290,9 @@ public enum Game implements Listener {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		
+		
+		
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
@@ -294,5 +323,20 @@ public enum Game implements Listener {
 	@Subscribe
 	public void onBenchmark(BenchmarkEvent event) {
 		benchmarker.benchmark(event.getBenchmark());
+	}
+	private MollerTrumbore rayTriangleIntersection;
+	private RaySphereIntersection raySphereIntersection;
+	private Line line = new Line();
+	@Subscribe
+	public void onClick(MouseButtonEvent event){
+		if(event.getAction()==GLFW.GLFW_RELEASE){
+			if(event.getButton()==GLFW.GLFW_MOUSE_BUTTON_1){
+				Line line = new Line(player.getCamera().getPosition(), player.getVectorDirection());
+				System.out.println(rayTriangleIntersection.apply(new Triangle(new Vector3D(-1f, 0f, -1f), new Vector3D(-1f, 0f, 1f), new Vector3D(1f, 0f, 0f)),
+						line));
+				System.out.println(raySphereIntersection.apply(line, new Sphere(Vector3D.ZERO, 1f)));
+				System.out.println(LineLineIntersection.INSTANCE.apply(line, this.line));
+			}
+		}
 	}
 }

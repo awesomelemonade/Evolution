@@ -1,5 +1,7 @@
 package lemon.engine.math;
 
+import java.util.Arrays;
+
 public class VectorArray {
 	private Vector3D[] array;
 
@@ -17,5 +19,9 @@ public class VectorArray {
 	}
 	public Vector3D get(int index) {
 		return array[index];
+	}
+	@Override
+	public String toString(){
+		return Arrays.toString(array);
 	}
 }

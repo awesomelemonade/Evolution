@@ -15,4 +15,8 @@ public class Line extends VectorArray {
 	public Vector3D getDirection() {
 		return this.get(1);
 	}
+	@Override
+	public String toString(){
+		return "Line - " + super.toString();
+	}
 }
