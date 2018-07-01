@@ -8,7 +8,10 @@ import org.lwjgl.glfw.GLFW;
 public class MathUtil {
 
 	private MathUtil() {}
-
+	
+	public static boolean inRange(float a, float min, float max) {
+		return a >= min && a <= max;
+	}
 	public static boolean[] convertMods(int bitset) {
 		boolean[] mods = new boolean[4];
 		if ((bitset & (1 << 0)) == 1)

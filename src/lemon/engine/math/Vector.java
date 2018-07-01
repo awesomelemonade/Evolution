@@ -224,7 +224,19 @@ public class Vector {
 				throw new IllegalStateException(unmodifiableMessage);
 			}
 			@Override
+			public void set(float[] data) {
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+			@Override
 			public void set(int index, float data) {
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+			@Override
+			public void selfOperate(float scale, BinaryOperator<Float> operator) {
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+			@Override
+			public void selfOperate(Vector vector, BinaryOperator<Float> operator) {
 				throw new IllegalStateException(unmodifiableMessage);
 			}
 		};

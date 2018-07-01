@@ -1,5 +1,6 @@
 package lemon.engine.math;
 
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 public class Vector2D extends Vector {
@@ -90,7 +91,19 @@ public class Vector2D extends Vector {
 				throw new IllegalStateException(unmodifiableMessage);
 			}
 			@Override
+			public void set(float[] data) {
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+			@Override
 			public void set(int index, float data) {
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+			@Override
+			public void selfOperate(float scale, BinaryOperator<Float> operator) {
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+			@Override
+			public void selfOperate(Vector vector, BinaryOperator<Float> operator) {
 				throw new IllegalStateException(unmodifiableMessage);
 			}
 		};
