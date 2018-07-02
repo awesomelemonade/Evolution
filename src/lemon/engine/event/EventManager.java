@@ -3,14 +3,13 @@ package lemon.engine.event;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,35 +21,21 @@ public enum EventManager {
 	private static final Logger logger = Logger.getLogger(EventManager.class.getName());
 	private Map<Class<? extends Event>, List<ListenerMethod>> methods;
 	private Map<Class<? extends Event>, List<ListenerMethod>> preloaded;
-	private Queue<Listener> registrationQueue;
-	private Queue<Listener> unregistrationQueue;
 	private Set<Listener> listeners;
-	private boolean inEvent;
 
 	private EventManager() {
 		methods = new HashMap<Class<? extends Event>, List<ListenerMethod>>();
 		preloaded = new HashMap<Class<? extends Event>, List<ListenerMethod>>();
-		registrationQueue = new ArrayDeque<Listener>();
-		unregistrationQueue = new ArrayDeque<Listener>();
 		listeners = new HashSet<Listener>();
-		inEvent = false;
 	}
 	public void registerListener(Listener listener) {
-		if (inEvent) {
-			registrationQueue.add(listener);
-		} else {
-			internalRegisterListener(listener);
-		}
+		internalRegisterListener(listener);
 	}
 	public void unregisterListener(Listener listener) {
-		if (inEvent) {
-			unregistrationQueue.add(listener);
-		} else {
-			internalUnregisterListener(listener);
-		}
+		internalUnregisterListener(listener);
 	}
 	public void preload(Class<? extends Event> clazz) {
-		preloaded.put(clazz, new ArrayList<ListenerMethod>());
+		preloaded.put(clazz, new CopyOnWriteArrayList<ListenerMethod>());
 		for (Class<? extends Event> c : methods.keySet()) {
 			if (c.isAssignableFrom(clazz)) {
 				for (ListenerMethod method : methods.get(c)) {
@@ -60,8 +45,6 @@ public enum EventManager {
 		}
 	}
 	public void callListeners(Event event) {
-		boolean nestedInEvent = inEvent;
-		inEvent = true;
 		if (!preloaded.containsKey(event.getClass())) {
 			preload(event.getClass());
 		}
@@ -72,21 +55,6 @@ public enum EventManager {
 				logger.log(Level.SEVERE, ex.getMessage(), ex);
 			} catch (InvocationTargetException ex) {
 				logger.log(Level.WARNING, ex.getCause().getMessage(), ex.getCause());
-			}
-		}
-		if (!nestedInEvent) {
-			inEvent = false;
-			if (!registrationQueue.isEmpty()) {
-				Listener listener;
-				while ((listener = registrationQueue.poll()) != null) {
-					internalRegisterListener(listener);
-				}
-			}
-			if (!unregistrationQueue.isEmpty()) {
-				Listener listener;
-				while ((listener = unregistrationQueue.poll()) != null) {
-					internalUnregisterListener(listener);
-				}
 			}
 		}
 	}
