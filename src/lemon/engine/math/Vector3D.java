@@ -15,6 +15,7 @@ public class Vector3D extends Vector {
 		super(x, y, z);
 	}
 	public Vector3D(float[] data) {
+		super(3);
 		if (data.length != 3) {
 			throw new IllegalArgumentException("Only 3 Dimensions Allowed");
 		}

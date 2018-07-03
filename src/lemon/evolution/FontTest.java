@@ -10,7 +10,6 @@ import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL20;
 
 import lemon.engine.control.RenderEvent;
-import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.font.Font;
@@ -63,7 +62,6 @@ public enum FontTest implements Listener {
 		GL20.glUseProgram(0);
 		font = new Font(new File("res/fonts/FreeSans.fnt"));
 		text = new Text(font, "Testing 123");
-		EventManager.INSTANCE.registerListener(this);
 	}
 	@Subscribe
 	public void render(RenderEvent event) {
