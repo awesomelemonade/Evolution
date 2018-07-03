@@ -10,18 +10,17 @@ import lemon.engine.math.MathUtil;
 
 public class CollisionManager {
 	private List<DynamicCollidable> dynamicCollidables;
-	private List<Collidable> staticCollidables;
+	private List<StaticCollidable> staticCollidables;
 
 	public CollisionManager() {
 		dynamicCollidables = new ArrayList<DynamicCollidable>();
-		staticCollidables = new ArrayList<Collidable>();
+		staticCollidables = new ArrayList<StaticCollidable>();
 	}
-	public void addCollidable(Collidable collidable) {
-		if (collidable instanceof DynamicCollidable) {
-			dynamicCollidables.add((DynamicCollidable) collidable);
-		} else {
-			staticCollidables.add(collidable);
-		}
+	public void addCollidable(DynamicCollidable collidable) {
+		dynamicCollidables.add(collidable);
+	}
+	public void addCollidable(StaticCollidable collidable) {
+		staticCollidables.add(collidable);
 	}
 	class PotentialCollision implements Comparable<PotentialCollision> {
 		private Collidable a;
@@ -111,11 +110,13 @@ public class CollisionManager {
 				((DynamicCollidable)collision.getA()).getPosition().selfAdd(
 						((DynamicCollidable)collision.getA()).getVelocity()
 						.multiply(collision.getProgression() - progressions.getOrDefault(collision.getA(), 0f)));
+				progressions.put((DynamicCollidable)collision.getA(), collision.getProgression());
 			}
 			if (collision.getB() instanceof DynamicCollidable) {
 				((DynamicCollidable)collision.getB()).getPosition().selfAdd(
 						((DynamicCollidable)collision.getB()).getVelocity()
 						.multiply(collision.getProgression() - progressions.getOrDefault(collision.getB(), 0f)));
+				progressions.put((DynamicCollidable)collision.getB(), collision.getProgression());
 			}
 			//Resolve Collision
 			resolveCollision(collision.getA(), collision.getB());
