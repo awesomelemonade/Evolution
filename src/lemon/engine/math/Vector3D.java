@@ -9,7 +9,7 @@ public class Vector3D extends Vector {
 	public static final Vector3D ZERO = Vector3D.unmodifiableVector(new Vector3D());
 
 	public Vector3D() {
-		this(0, 0, 0);
+		this(0f, 0f, 0f);
 	}
 	public Vector3D(float x, float y, float z) {
 		super(x, y, z);

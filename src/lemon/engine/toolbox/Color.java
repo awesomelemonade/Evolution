@@ -1,11 +1,19 @@
 package lemon.engine.toolbox;
 
-public class Color {
-	private float red;
-	private float green;
-	private float blue;
-	private float alpha;
+import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 
+public class Color extends Vector {
+	
+	public static final Color RED = new Color(1f, 0f, 0f);
+	public static final Color GREEN = new Color(0f, 1f, 0f);
+	public static final Color BLUE = new Color(0f, 0f, 1f);
+
+	private static final int RED_INDEX = 0;
+	private static final int GREEN_INDEX = 1;
+	private static final int BLUE_INDEX = 2;
+	private static final int ALPHA_INDEX = 3;
+	
 	public Color() {
 		this(1f);
 	}
@@ -16,40 +24,40 @@ public class Color {
 		this(red, green, blue, 1f);
 	}
 	public Color(float red, float green, float blue, float alpha) {
-		this.red = red;
-		this.green = green;
-		this.blue = blue;
-		this.alpha = alpha;
+		super(red, green, blue, alpha);
 	}
 	public Color(Color color) {
 		this(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
 	}
 	public void setRed(float red) {
-		this.red = red;
+		super.set(RED_INDEX, red);
 	}
 	public float getRed() {
-		return red;
+		return super.get(RED_INDEX);
 	}
 	public void setGreen(float green) {
-		this.green = green;
+		super.set(GREEN_INDEX, green);
 	}
 	public float getGreen() {
-		return green;
+		return super.get(GREEN_INDEX);
 	}
 	public void setBlue(float blue) {
-		this.blue = blue;
+		super.set(BLUE_INDEX, blue);
 	}
 	public float getBlue() {
-		return blue;
+		return super.get(BLUE_INDEX);
 	}
 	public void setAlpha(float alpha) {
-		this.alpha = alpha;
+		super.set(ALPHA_INDEX, alpha);
 	}
 	public float getAlpha() {
-		return alpha;
+		return super.get(ALPHA_INDEX);
+	}
+	public Vector3D toVector3D() {
+		return new Vector3D(this.getRed(), this.getGreen(), this.getBlue());
 	}
 	@Override
 	public String toString() {
-		return String.format("Color[%f, %f, %f, %f]", red, green, blue, alpha);
+		return String.format("Color[%f, %f, %f, %f]", this.getRed(), this.getGreen(), this.getBlue(), this.getAlpha());
 	}
 }
