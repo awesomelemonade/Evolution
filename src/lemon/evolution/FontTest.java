@@ -36,10 +36,11 @@ public enum FontTest implements Listener {
 	private Font font;
 	private Text text;
 
-	public void start(long window) {
+	@Override
+	public void onRegister() {
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
-		GLFW.glfwGetWindowSize(window, width, height);
+		GLFW.glfwGetWindowSize(GLFW.glfwGetCurrentContext(), width, height);
 		int window_width = width.get();
 		int window_height = height.get();
 		GL11.glViewport(0, 0, window_width, window_height);

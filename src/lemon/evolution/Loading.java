@@ -28,9 +28,9 @@ public enum Loading implements Listener {
 	private UniformVariable uniform_transformationMatrix;
 	private LoadingBar loadingBar;
 	private Loader loader;
-	private long window;
 
-	public void start(long window) {
+	@Override
+	public void onRegister() {
 		shaderProgram = new ShaderProgram(new int[] { 0, 1 }, new String[] { "position", "color" },
 				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
 				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader")));
@@ -44,15 +44,13 @@ public enum Loading implements Listener {
 		this.loadingBar = new LoadingBar(this.loader.getPercentage(), new Box2D(-1f, -1.1f, 2f, 0.3f),
 				new Color(1f, 0f, 0f), new Color(1f, 0f, 0f), new Color(0f, 0f, 0f), new Color(0f, 0f, 0f));
 		loader.load();
-		this.window = window;
-		EventManager.INSTANCE.registerListener(this);
 	}
 	@Subscribe
 	public void update(UpdateEvent event) {
 		if (loader.getPercentage().getPart() != loader.getPercentage().getWhole()) {
 			logger.log(Level.INFO, loader.getPercentage().getPercentage() + "%");
 		} else {
-			startGame(window);
+			startGame();
 		}
 	}
 	@Subscribe
@@ -61,8 +59,8 @@ public enum Loading implements Listener {
 		loadingBar.render();
 		GL20.glUseProgram(0);
 	}
-	public void startGame(long window) {
-		Game.INSTANCE.init(window);
+	public void startGame() {
+		EventManager.INSTANCE.registerListener(Game.INSTANCE);
 		EventManager.INSTANCE.unregisterListener(this);
 	}
 }

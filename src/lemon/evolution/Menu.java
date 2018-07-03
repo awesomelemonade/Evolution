@@ -14,51 +14,36 @@ import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.game2d.Quad2D;
-import lemon.engine.input.MouseButtonEvent;
+import lemon.engine.glfw.GLFWMouseButtonEvent;
 import lemon.engine.math.Box2D;
-import lemon.engine.math.Matrix;
-import lemon.engine.render.Shader;
-import lemon.engine.render.ShaderProgram;
-import lemon.engine.render.UniformVariable;
 import lemon.engine.toolbox.Color;
-import lemon.engine.toolbox.Toolbox;
+import lemon.evolution.setup.CommonProgramsSetup;
+import lemon.evolution.util.CommonPrograms2D;
+import lemon.game2d.Game2D;
 
 public enum Menu implements Listener {
 	INSTANCE;
-	private long window;
-	private ShaderProgram shaderProgram;
-	private UniformVariable uniform_projectionMatrix;
-	private UniformVariable uniform_transformationMatrix;
 	private List<Quad2D> buttons;
 
-	public void start(long window) {
-		this.window = window;
-		shaderProgram = new ShaderProgram(new int[] { 0, 1 }, new String[] { "position", "color" },
-				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
-				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader")));
-		uniform_projectionMatrix = shaderProgram.getUniformVariable("projectionMatrix");
-		uniform_transformationMatrix = shaderProgram.getUniformVariable("transformationMatrix");
-		GL20.glUseProgram(shaderProgram.getId());
-		uniform_projectionMatrix.loadMatrix(Matrix.IDENTITY_4);
-		uniform_transformationMatrix.loadMatrix(Matrix.IDENTITY_4);
-		GL20.glUseProgram(0);
-		EventManager.INSTANCE.registerListener(this);
+	@Override
+	public void onRegister() {
+		CommonProgramsSetup.setup2D();
 		buttons = new ArrayList<Quad2D>();
 		for (int i = 0; i < 3; ++i) {
 			buttons.add(new Quad2D(new Box2D(-0.3f, -0.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
 		}
 	}
 	@Subscribe
-	public void onMouseClick(MouseButtonEvent event) {
+	public void onMouseClick(GLFWMouseButtonEvent event) {
 		if (event.getAction() == GLFW.GLFW_RELEASE) {
 			DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
 			DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
-			GLFW.glfwGetCursorPos(window, xBuffer, yBuffer);
+			GLFW.glfwGetCursorPos(event.getWindow(), xBuffer, yBuffer);
 			float mouseX = (float) xBuffer.get();
 			float mouseY = (float) yBuffer.get();
 			IntBuffer width = BufferUtils.createIntBuffer(1);
 			IntBuffer height = BufferUtils.createIntBuffer(1);
-			GLFW.glfwGetWindowSize(window, width, height);
+			GLFW.glfwGetWindowSize(event.getWindow(), width, height);
 			int window_width = width.get();
 			int window_height = height.get();
 			mouseX = (2f * mouseX / window_width) - 1f;
@@ -67,13 +52,13 @@ public enum Menu implements Listener {
 				if (buttons.get(i).getBox2D().intersect(mouseX, mouseY)) {
 					switch (i) {
 						case 0:
-							startLoading();
+							start(Loading.INSTANCE);
 							break;
 						case 1:
-							// start2D();
+							start(Game2D.INSTANCE);
 							break;
 						case 2:
-							startText();
+							start(FontTest.INSTANCE);
 							break;
 					}
 				}
@@ -82,18 +67,14 @@ public enum Menu implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event) {
-		GL20.glUseProgram(shaderProgram.getId());
+		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		for (Quad2D button : buttons) {
 			button.render();
 		}
 		GL20.glUseProgram(0);
 	}
-	public void startLoading() {
-		Loading.INSTANCE.start(window);
-		EventManager.INSTANCE.unregisterListener(this);
-	}
-	public void startText() {
-		FontTest.INSTANCE.start(window);
+	public void start(Listener listener) {
+		EventManager.INSTANCE.registerListener(listener);
 		EventManager.INSTANCE.unregisterListener(this);
 	}
 }

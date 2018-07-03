@@ -22,7 +22,7 @@ import lemon.engine.thread.ThreadManager;
 
 public class Evolution {
 	private static final Logger logger = Logger.getLogger("");
-
+	
 	public static void main(String[] args) {
 		LogManager.getLogManager().reset();
 		logger.setLevel(Level.ALL);
@@ -55,7 +55,7 @@ public class Evolution {
 				}
 			});
 			window.init();
-			Menu.INSTANCE.start(window.getId());
+			EventManager.INSTANCE.registerListener(Menu.INSTANCE);
 			window.run();
 		} catch (Exception ex) {
 			ex.printStackTrace();

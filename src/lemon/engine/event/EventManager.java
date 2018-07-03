@@ -93,6 +93,7 @@ public enum EventManager {
 			logger.log(Level.WARNING,
 					String.format("Registered listener with no valid methods: %s", listener.getClass().getName()));
 		}
+		listener.onRegister();
 		EventManager.INSTANCE.callListeners(new LemonRegisterListenerEvent(listener));
 	}
 	private void internalUnregisterListener(Listener listener) {
@@ -120,6 +121,7 @@ public enum EventManager {
 			}
 		}
 		listeners.remove(listener);
+		listener.onUnregister();
 		EventManager.INSTANCE.callListeners(new LemonUnregisterListenerEvent(listener));
 	}
 

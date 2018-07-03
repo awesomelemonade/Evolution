@@ -27,7 +27,9 @@ public enum CommonPrograms2D {
 		this.shaders = shaders;
 	}
 	public void init() {
-		shaderProgram = new ShaderProgram(indices, names, shaders);
+		if (shaderProgram == null) {
+			shaderProgram = new ShaderProgram(indices, names, shaders);
+		}
 	}
 	public ShaderProgram getShaderProgram() {
 		return shaderProgram;

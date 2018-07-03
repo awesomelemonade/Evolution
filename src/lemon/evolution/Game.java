@@ -79,11 +79,12 @@ public enum Game implements Listener {
 		return terrainLoader;
 	}
 
-	public void init(long window) {
+	@Override
+	public void onRegister() {
 		logger.log(Level.FINE, "Initializing");
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
-		GLFW.glfwGetWindowSize(window, width, height);
+		GLFW.glfwGetWindowSize(GLFW.glfwGetCurrentContext(), width, height);
 		int window_width = width.get();
 		int window_height = height.get();
 
@@ -101,7 +102,8 @@ public enum Game implements Listener {
 
 		player = new Player(new Projection(60f, ((float) window_width) / ((float) window_height), 0.01f, 1000f));
 
-		CommonProgramsSetup.setup(player.getCamera().getProjectionMatrix());
+		CommonProgramsSetup.setup2D();
+		CommonProgramsSetup.setup3D(player.getCamera().getProjectionMatrix());
 
 		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
 		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
@@ -138,8 +140,6 @@ public enum Game implements Listener {
 
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
-		
-		EventManager.INSTANCE.registerListener(this);
 	}
 
 	private static float friction = 0.98f;

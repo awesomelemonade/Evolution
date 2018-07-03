@@ -10,7 +10,7 @@ import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 
 public class CommonProgramsSetup {
-	public static void setup(Matrix projectionMatrix) {
+	public static void setup3D(Matrix projectionMatrix) {
 		CommonPrograms3D.initAll();
 
 		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
@@ -36,7 +36,8 @@ public class CommonProgramsSetup {
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("colorSampler", TextureBank.COLOR.getId());
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("depthSampler", TextureBank.DEPTH.getId());
 		GL20.glUseProgram(0);
-
+	}
+	public static void setup2D() {
 		CommonPrograms2D.initAll();
 
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
