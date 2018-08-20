@@ -29,9 +29,9 @@ public class SphereModelBuilder extends TriangularIndexedModel.Builder {
 			Vector3D b = this.getVertices().get(indices[i + 1]);
 			Vector3D c = this.getVertices().get(indices[i + 2]);
 
-			int index1 = addToMap(newVertices, a, b, a.average(b));
-			int index2 = addToMap(newVertices, b, c, b.average(c));
-			int index3 = addToMap(newVertices, c, a, c.average(a));
+			int index1 = addToMap(newVertices, a, b);
+			int index2 = addToMap(newVertices, b, c);
+			int index3 = addToMap(newVertices, c, a);
 
 			newIndices[i * 4] = indices[i];
 			newIndices[i * 4 + 1] = index1;
@@ -51,7 +51,7 @@ public class SphereModelBuilder extends TriangularIndexedModel.Builder {
 		}
 		return splitTriangles(newIndices, count - 1);
 	}
-	private int addToMap(Map<Vector3D, Map<Vector3D, Integer>> vertices, Vector3D a, Vector3D b, Vector3D vertex) {
+	private int addToMap(Map<Vector3D, Map<Vector3D, Integer>> vertices, Vector3D a, Vector3D b) {
 		if (vertices.containsKey(a)) {
 			if (vertices.get(a).containsKey(b)) {
 				return vertices.get(a).get(b);
@@ -66,7 +66,7 @@ public class SphereModelBuilder extends TriangularIndexedModel.Builder {
 			vertices.put(a, new HashMap<Vector3D, Integer>());
 		}
 		vertices.get(a).put(b, this.getVertices().size());
-		this.addVertices(vertex);
+		this.addVertices(a.average(b));
 		return this.getVertices().size() - 1;
 	}
 	public void normalize(float radius) {
