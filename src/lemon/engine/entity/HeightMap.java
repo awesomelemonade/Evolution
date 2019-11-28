@@ -27,50 +27,51 @@ public class HeightMap implements Renderable {
 			}
 		}
 		vertexArray = new VertexArray();
-		GL30.glBindVertexArray(vertexArray.getId());
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, (dataBuffer = vertexArray.generateVbo()).getId());
-		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer((6 * (map.length - 1) * (map[0].length - 1)) * 7);
-		for (int i = 0; i < map.length - 1; ++i) {
-			for (int j = 0; j < map[0].length - 1; ++j) {
-				float avgHeight = (map[i][j] + map[i + 1][j] + map[i + 1][j + 1]) / 3;
-				float avgHeight2 = (map[i][j] + map[i][j + 1] + map[i + 1][j + 1]) / 3;
-				plotVertex(dataBuffer, i, j, 0, 0, avgHeight);
-				plotVertex(dataBuffer, i, j, 1, 1, avgHeight);
-				plotVertex(dataBuffer, i, j, 1, 0, avgHeight);
-				plotVertex(dataBuffer, i, j, 0, 0, avgHeight2);
-				plotVertex(dataBuffer, i, j, 0, 1, avgHeight2);
-				plotVertex(dataBuffer, i, j, 1, 1, avgHeight2);
-			}
-		}
-		dataBuffer.flip();
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, dataBuffer, GL15.GL_DYNAMIC_DRAW);
-		GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 7 * 4, 0);
-		GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 7 * 4, 3 * 4);
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-		GL20.glEnableVertexAttribArray(0);
-		GL20.glEnableVertexAttribArray(1);
-		GL30.glBindVertexArray(0);
+		vertexArray.bind(vao -> {
+			(dataBuffer = vao.generateVbo()).bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+				FloatBuffer dataBuffer = BufferUtils.createFloatBuffer((6 * (map.length - 1) * (map[0].length - 1)) * 7);
+				for (int i = 0; i < map.length - 1; ++i) {
+					for (int j = 0; j < map[0].length - 1; ++j) {
+						float avgHeight = (map[i][j] + map[i + 1][j] + map[i + 1][j + 1]) / 3;
+						float avgHeight2 = (map[i][j] + map[i][j + 1] + map[i + 1][j + 1]) / 3;
+						plotVertex(dataBuffer, i, j, 0, 0, avgHeight);
+						plotVertex(dataBuffer, i, j, 1, 1, avgHeight);
+						plotVertex(dataBuffer, i, j, 1, 0, avgHeight);
+						plotVertex(dataBuffer, i, j, 0, 0, avgHeight2);
+						plotVertex(dataBuffer, i, j, 0, 1, avgHeight2);
+						plotVertex(dataBuffer, i, j, 1, 1, avgHeight2);
+					}
+				}
+				dataBuffer.flip();
+				GL15.glBufferData(target, dataBuffer, GL15.GL_DYNAMIC_DRAW);
+				GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 7 * 4, 0);
+				GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 7 * 4, 3 * 4);
+			});
+			GL20.glEnableVertexAttribArray(0);
+			GL20.glEnableVertexAttribArray(1);
+		});
 	}
 	public void update() {
-		GL30.glBindVertexArray(vertexArray.getId());
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, dataBuffer.getId());
-		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer((6 * (map.length - 1) * (map[0].length - 1)) * 7);
-		for (int i = 0; i < map.length - 1; ++i) {
-			for (int j = 0; j < map[0].length - 1; ++j) {
-				float avgHeight = (map[i][j] + map[i + 1][j] + map[i + 1][j + 1]) / 3;
-				float avgHeight2 = (map[i][j] + map[i][j + 1] + map[i + 1][j + 1]) / 3;
-				plotVertex(dataBuffer, i, j, 0, 0, avgHeight);
-				plotVertex(dataBuffer, i, j, 1, 0, avgHeight);
-				plotVertex(dataBuffer, i, j, 1, 1, avgHeight);
-				plotVertex(dataBuffer, i, j, 0, 0, avgHeight2);
-				plotVertex(dataBuffer, i, j, 0, 1, avgHeight2);
-				plotVertex(dataBuffer, i, j, 1, 1, avgHeight2);
-			}
-		}
-		dataBuffer.flip();
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, dataBuffer, GL15.GL_DYNAMIC_DRAW);
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-		GL30.glBindVertexArray(0);
+		vertexArray.bind(vao -> {
+			dataBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+				FloatBuffer dataBuffer = BufferUtils.createFloatBuffer((6 * (map.length - 1) * (map[0].length - 1)) * 7);
+				for (int i = 0; i < map.length - 1; ++i) {
+					for (int j = 0; j < map[0].length - 1; ++j) {
+						float avgHeight = (map[i][j] + map[i + 1][j] + map[i + 1][j + 1]) / 3;
+						float avgHeight2 = (map[i][j] + map[i][j + 1] + map[i + 1][j + 1]) / 3;
+						plotVertex(dataBuffer, i, j, 0, 0, avgHeight);
+						plotVertex(dataBuffer, i, j, 1, 0, avgHeight);
+						plotVertex(dataBuffer, i, j, 1, 1, avgHeight);
+						plotVertex(dataBuffer, i, j, 0, 0, avgHeight2);
+
+						plotVertex(dataBuffer, i, j, 0, 1, avgHeight2);
+						plotVertex(dataBuffer, i, j, 1, 1, avgHeight2);
+					}
+				}
+				dataBuffer.flip();
+				GL15.glBufferData(target, dataBuffer, GL15.GL_DYNAMIC_DRAW);
+			});
+		});
 	}
 	public float get(int x, int y) {
 		return map[x][y];
@@ -100,8 +101,8 @@ public class HeightMap implements Renderable {
 	}
 	@Override
 	public void render() {
-		GL30.glBindVertexArray(vertexArray.getId());
-		GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6 * (map.length - 1) * (map[0].length - 1));
-		GL30.glBindVertexArray(0);
+		vertexArray.bind(vao -> {
+			GL11.glDrawArrays(GL11.GL_TRIANGLES, 0, 6 * (map.length - 1) * (map[0].length - 1));
+		});
 	}
 }

@@ -1,7 +1,8 @@
 package lemon.engine.entity;
 
 import java.nio.FloatBuffer;
-import java.util.LinkedList;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -14,7 +15,7 @@ import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
 
 public class LineGraph implements Renderable {
-	private LinkedList<Float> values;
+	private Deque<Float> values;
 	private int size;
 	private float max;
 	private VertexArray vertexArray;
@@ -23,7 +24,7 @@ public class LineGraph implements Renderable {
 	public LineGraph(int size, float max, float... values) {
 		this.size = size;
 		this.max = max;
-		this.values = new LinkedList<Float>();
+		this.values = new ArrayDeque<Float>();
 		for (float f : values) {
 			this.values.add(f);
 		}
