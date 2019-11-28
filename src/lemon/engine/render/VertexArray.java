@@ -8,6 +8,7 @@ import lemon.engine.event.Subscribe;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
@@ -38,5 +39,10 @@ public class VertexArray implements Listener {
 		for (VertexBuffer vbo : vbos) {
 			GL15.glDeleteBuffers(vbo.getId());
 		}
+	}
+	public void bind(Consumer<VertexArray> consumer) {
+		GL30.glBindVertexArray(id);
+		consumer.accept(this);
+		GL30.glBindVertexArray(0);
 	}
 }

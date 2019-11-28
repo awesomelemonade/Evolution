@@ -65,17 +65,18 @@ public class TriangularIndexedModel implements IndexedModel, Initializable, Rend
 
 	public void init() {
 		vertexArray = new VertexArray();
-		GL30.glBindVertexArray(vertexArray.getId());
-		GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vertexArray.generateVbo().getId());
-		GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, Toolbox.toIntBuffer(indices), GL15.GL_STATIC_DRAW);
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vertexArray.generateVbo().getId());
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, getFloatBuffer(), GL15.GL_STATIC_DRAW);
-		GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 7 * 4, 0);
-		GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 7 * 4, 3 * 4);
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-		GL20.glEnableVertexAttribArray(0);
-		GL20.glEnableVertexAttribArray(1);
-		GL30.glBindVertexArray(0);
+		vertexArray.bind(vao -> {
+			vao.generateVbo().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
+				GL15.glBufferData(target, Toolbox.toIntBuffer(indices), GL15.GL_STATIC_DRAW);
+			}, false);
+			vao.generateVbo().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+				GL15.glBufferData(target, getFloatBuffer(), GL15.GL_STATIC_DRAW);
+				GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 7 * 4, 0);
+				GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 7 * 4, 3 * 4);
+			});
+			GL20.glEnableVertexAttribArray(0);
+			GL20.glEnableVertexAttribArray(1);
+		});
 	}
 	private FloatBuffer getFloatBuffer() {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(vertices.size() * 3 * 4);
