@@ -1,6 +1,5 @@
 package lemon.evolution.setup;
 
-import lemon.evolution.util.ShaderProgramHolder;
 import org.lwjgl.opengl.GL20;
 
 import lemon.engine.math.Matrix;
@@ -14,53 +13,50 @@ public class CommonProgramsSetup {
 	public static void setup3D(Matrix projectionMatrix) {
 		CommonPrograms3D.initAll();
 
-		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
-		loadMatrix(CommonPrograms3D.COLOR, MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
-		loadMatrix(CommonPrograms3D.COLOR, MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-		loadMatrix(CommonPrograms3D.COLOR, MatrixType.PROJECTION_MATRIX, projectionMatrix);
-		GL20.glUseProgram(0);
+		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+		});
 
-		GL20.glUseProgram(CommonPrograms3D.TEXTURE.getShaderProgram().getId());
-		loadMatrix(CommonPrograms3D.TEXTURE, MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
-		loadMatrix(CommonPrograms3D.TEXTURE, MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-		loadMatrix(CommonPrograms3D.TEXTURE, MatrixType.PROJECTION_MATRIX, projectionMatrix);
-		CommonPrograms3D.TEXTURE.getShaderProgram().loadInt("textureSampler", TextureBank.REUSE.getId());
-		GL20.glUseProgram(0);
+		CommonPrograms3D.TEXTURE.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+			program.loadInt("textureSampler", TextureBank.REUSE.getId());
+		});
 
-		GL20.glUseProgram(CommonPrograms3D.CUBEMAP.getShaderProgram().getId());
-		loadMatrix(CommonPrograms3D.CUBEMAP, MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-		loadMatrix(CommonPrograms3D.CUBEMAP, MatrixType.PROJECTION_MATRIX, projectionMatrix);
-		CommonPrograms3D.CUBEMAP.getShaderProgram().loadInt("cubemapSampler", TextureBank.SKYBOX.getId());
-		GL20.glUseProgram(0);
+		CommonPrograms3D.CUBEMAP.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+			program.loadInt("cubemapSampler", TextureBank.SKYBOX.getId());
+		});
 
-		GL20.glUseProgram(CommonPrograms3D.POST_PROCESSING.getShaderProgram().getId());
-		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("colorSampler", TextureBank.COLOR.getId());
-		CommonPrograms3D.POST_PROCESSING.getShaderProgram().loadInt("depthSampler", TextureBank.DEPTH.getId());
-		GL20.glUseProgram(0);
+		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
+			program.loadInt("colorSampler", TextureBank.COLOR.getId());
+			program.loadInt("depthSampler", TextureBank.DEPTH.getId());
+		});
 	}
 	public static void setup2D() {
 		CommonPrograms2D.initAll();
 
-		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
-		loadMatrix(CommonPrograms2D.COLOR, MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
-		loadMatrix(CommonPrograms2D.COLOR, MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		GL20.glUseProgram(0);
+		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		});
 
-		GL20.glUseProgram(CommonPrograms2D.LINE.getShaderProgram().getId());
-		CommonPrograms2D.LINE.getShaderProgram().loadInt("index", 0);
-		CommonPrograms2D.LINE.getShaderProgram().loadInt("total", 0);
-		CommonPrograms2D.LINE.getShaderProgram().loadFloat("alpha", 1f);
-		GL20.glUseProgram(0);
+		CommonPrograms2D.LINE.getShaderProgram().use(program -> {
+			program.loadInt("index", 0);
+			program.loadInt("total", 0);
+			program.loadFloat("alpha", 1f);
+		});
 
-		GL20.glUseProgram(CommonPrograms2D.TEXT.getShaderProgram().getId());
-		loadMatrix(CommonPrograms2D.TEXT, MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
-		loadMatrix(CommonPrograms2D.TEXT, MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-		loadMatrix(CommonPrograms2D.TEXT, MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		CommonPrograms2D.TEXT.getShaderProgram().loadVector("color", Vector3D.ZERO);
-		CommonPrograms2D.TEXT.getShaderProgram().loadInt("textureSampler", TextureBank.REUSE.getId());
-		GL20.glUseProgram(0);
-	}
-	private static void loadMatrix(ShaderProgramHolder holder, MatrixType matrixType, Matrix matrix) {
-		holder.getShaderProgram().loadMatrix(matrixType, matrix);
+		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+			program.loadVector("color", Vector3D.ZERO);
+			program.loadInt("textureSampler", TextureBank.REUSE.getId());
+		});
 	}
 }

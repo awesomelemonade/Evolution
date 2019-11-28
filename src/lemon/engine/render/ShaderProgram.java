@@ -2,6 +2,7 @@ package lemon.engine.render;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
@@ -78,5 +79,11 @@ public class ShaderProgram implements Listener {
 	}
 	public int getId() {
 		return id;
+	}
+
+	public void use(Consumer<ShaderProgram> consumer) {
+		GL20.glUseProgram(this.getId());
+		consumer.accept(this);
+		GL20.glUseProgram(0);
 	}
 }
