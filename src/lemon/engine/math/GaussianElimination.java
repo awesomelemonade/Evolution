@@ -2,7 +2,7 @@ package lemon.engine.math;
 
 public class GaussianElimination {
 	// Solves A * x = b matrix equation
-	// Based off https://introcs.cs.princeton.edu/java/95linear/GaussianElimination.java.html
+	// Based on https://introcs.cs.princeton.edu/java/95linear/GaussianElimination.java.html
 	private static final float EPSILON = 1e-10f;
 	public static Vector solve(Matrix a, Vector b) {
 		// Copy Both
@@ -20,7 +20,7 @@ public class GaussianElimination {
 			}
 			// swap
 			if (p != max) {
-				a.swap(p, max);
+				//a.swap(p, max);
 				float temp = b.get(p);
 				b.set(p, b.get(max));
 				b.set(max, temp);

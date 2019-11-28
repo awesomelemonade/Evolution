@@ -6,7 +6,7 @@ import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.toolbox.Toolbox;
 
-public enum CommonPrograms3D {
+public enum CommonPrograms3D implements ShaderProgramHolder {
 	COLOR(new int[] { 0, 1 }, new String[] { "position", "color" },
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/colorVertexShader")),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/colorFragmentShader"))), TEXTURE(
@@ -37,6 +37,7 @@ public enum CommonPrograms3D {
 			shaderProgram = new ShaderProgram(indices, names, shaders);
 		}
 	}
+	@Override
 	public ShaderProgram getShaderProgram() {
 		return shaderProgram;
 	}

@@ -7,7 +7,15 @@ public class Shader {
 	private int id;
 	private int type;
 
+	/**
+	 * Creates a shader
+	 * @param type of shader; most commonly GL20.GL_VERTEX_SHADER or GL20.GL_FRAGMENT_SHADER
+	 * @param sequence to parse the shader
+	 */
 	public Shader(int type, CharSequence sequence) {
+		if (sequence == null) {
+			throw new IllegalArgumentException("sequence cannot be null");
+		}
 		this.type = type;
 		id = GL20.glCreateShader(type);
 		GL20.glShaderSource(id, sequence);

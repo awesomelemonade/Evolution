@@ -33,11 +33,10 @@ public class Evolution {
 			@Override
 			public long createWindow() {
 				GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GL11.GL_FALSE);
-				GLFWVidMode vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+				/*GLFWVidMode vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
 				return GLFW.glfwCreateWindow(vidmode.width(), vidmode.height(),
-						"LWJGL version: " + Version.getVersion(), GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
-				// return GLFW.glfwCreateWindow(800, 600, "Title", MemoryUtil.NULL,
-				// MemoryUtil.NULL);
+						"LWJGL version: " + Version.getVersion(), GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);*/
+				return GLFW.glfwCreateWindow(800, 600, "Title", MemoryUtil.NULL, MemoryUtil.NULL);
 			}
 			@Override
 			public int getTargetFrameRate() {

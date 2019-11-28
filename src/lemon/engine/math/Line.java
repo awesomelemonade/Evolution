@@ -5,9 +5,7 @@ public class Line extends VectorArray {
 		super(2);
 	}
 	public Line(Vector3D vector, Vector3D vector2) {
-		this();
-		this.set(0, vector);
-		this.set(1, vector2);
+		super(new Vector3D[]{vector, vector2});
 	}
 	public Vector3D getOrigin() {
 		return this.get(0);
@@ -17,6 +15,6 @@ public class Line extends VectorArray {
 	}
 	@Override
 	public String toString(){
-		return "Line - " + super.toString();
+		return String.format("Line%s", super.toString());
 	}
 }

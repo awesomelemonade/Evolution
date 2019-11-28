@@ -6,6 +6,7 @@ import java.nio.IntBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.evolution.util.ShaderProgramHolder;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -105,9 +106,9 @@ public enum Game implements Listener {
 		CommonProgramsSetup.setup2D();
 		CommonProgramsSetup.setup3D(player.getCamera().getProjectionMatrix());
 
-		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
-		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
-		updateViewMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.COLOR);
+		updateViewMatrix(CommonPrograms3D.TEXTURE);
+		updateViewMatrix(CommonPrograms3D.CUBEMAP);
 
 		frameBuffer = new FrameBuffer();
 		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
@@ -196,9 +197,9 @@ public enum Game implements Listener {
 		player.getVelocity().setZ(player.getVelocity().getZ() * friction);
 
 		player.update(event);
-		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
-		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
-		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.COLOR);
+		updateViewMatrix(CommonPrograms3D.TEXTURE);
+		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
 	}
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event) {
@@ -208,9 +209,9 @@ public enum Game implements Listener {
 		}
 		player.getCamera().getProjection()
 				.setFov(player.getCamera().getProjection().getFov() + ((float) (event.getYOffset() / 100f)));
-		updateProjectionMatrix(CommonPrograms3D.COLOR.getShaderProgram());
-		updateProjectionMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
-		updateProjectionMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
+		updateProjectionMatrix(CommonPrograms3D.COLOR);
+		updateProjectionMatrix(CommonPrograms3D.TEXTURE);
+		updateProjectionMatrix(CommonPrograms3D.CUBEMAP);
 	}
 
 	private double lastMouseX;
@@ -238,22 +239,25 @@ public enum Game implements Listener {
 				player.getCamera().getRotation().setX(90);
 			}
 		}
-		updateViewMatrix(CommonPrograms3D.COLOR.getShaderProgram());
-		updateViewMatrix(CommonPrograms3D.TEXTURE.getShaderProgram());
-		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP.getShaderProgram());
+		updateViewMatrix(CommonPrograms3D.COLOR);
+		updateViewMatrix(CommonPrograms3D.TEXTURE);
+		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
 	}
-	public void updateViewMatrix(ShaderProgram program) {
+	public void updateViewMatrix(ShaderProgramHolder holder) {
+		ShaderProgram program = holder.getShaderProgram();
 		GL20.glUseProgram(program.getId());
 		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix()
 				.multiply(player.getCamera().getInvertedTranslationMatrix()));
 		GL20.glUseProgram(0);
 	}
-	public void updateCubeMapMatrix(ShaderProgram program) {
+	public void updateCubeMapMatrix(ShaderProgramHolder holder) {
+		ShaderProgram program = holder.getShaderProgram();
 		GL20.glUseProgram(program.getId());
 		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix());
 		GL20.glUseProgram(0);
 	}
-	public void updateProjectionMatrix(ShaderProgram program) {
+	public void updateProjectionMatrix(ShaderProgramHolder holder) {
+		ShaderProgram program = holder.getShaderProgram();
 		GL20.glUseProgram(program.getId());
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, player.getCamera().getProjectionMatrix());
 		GL20.glUseProgram(0);
@@ -329,8 +333,8 @@ public enum Game implements Listener {
 	private Line line = new Line();
 	@Subscribe
 	public void onClick(MouseButtonEvent event){
-		if(event.getAction()==GLFW.GLFW_RELEASE){
-			if(event.getButton()==GLFW.GLFW_MOUSE_BUTTON_1){
+		if(event.getAction() == GLFW.GLFW_RELEASE){
+			if(event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1){
 				Line line = new Line(player.getCamera().getPosition(), player.getVectorDirection());
 				System.out.println(rayTriangleIntersection.apply(new Triangle(new Vector3D(-1f, 0f, -1f), new Vector3D(-1f, 0f, 1f), new Vector3D(1f, 0f, 0f)),
 						line));

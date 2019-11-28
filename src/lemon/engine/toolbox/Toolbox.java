@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.List;
+import java.util.Optional;
 
 import org.lwjgl.BufferUtils;
 
@@ -17,7 +18,7 @@ public class Toolbox {
 	private Toolbox() {
 	}
 
-	public static StringBuilder getFile(String path) {
+	public static Optional<StringBuilder> getFile(String path) {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
 			StringBuilder builder = new StringBuilder();
@@ -26,14 +27,13 @@ public class Toolbox {
 				builder.append(line).append("\n");
 			}
 			reader.close();
-			return builder;
+			return Optional.of(builder);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
-			return null;
 		} catch (IOException e) {
 			e.printStackTrace();
-			return null;
 		}
+		return Optional.empty();
 	}
 	public static ByteBuffer toByteBuffer(BufferedImage image) {
 		int[] pixels = new int[image.getWidth() * image.getHeight()];

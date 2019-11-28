@@ -11,6 +11,9 @@ public class VectorArray {
 			array[i] = new Vector3D();
 		}
 	}
+	public VectorArray(Vector3D[] array) {
+		this.array = array;
+	}
 	public void set(int index, Vector3D vector) {
 		if (vector == null) {
 			throw new NullPointerException("Vector cannot be null");

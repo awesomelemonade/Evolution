@@ -6,7 +6,7 @@ Notable Highlights
 ------------------
 * Reflection: Dynamic loading of classes via Java's reflection and annotations
 * Handmade event system using Java reflection
-* Signed Distance Field Font Rendering: Implemented a technique shown in this [paper] (https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf)
+* Signed Distance Field Font Rendering: Implemented a technique shown in this [paper](https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf)
 * OpenGL 3+ Rendering (Vertex Arrays, Vertex Buffers, Shaders, Shader Programs, GLSL, Uniform Variables, etc)
 * Object model loading (ObjLoader) using .obj files for 3D rendering
 * TimeSync using lwjgl's implementation of sync() to sync frame rates
@@ -23,4 +23,4 @@ Notable Highlights
 
 Other
 -----
-LWJGL Version: 3.0.0 build 79 (27 Apr 16)
+LWJGL Version: 3.2.3 release (Downloaded 27 Nov 19)
