@@ -46,8 +46,8 @@ public enum FontTest implements Listener {
 		Matrix projectionMatrix = MathUtil
 				.getPerspective(new Projection(60f, ((float) window_width) / ((float) window_height), 0.01f, 1000f));
 		textProgram = new ShaderProgram(new int[] { 0, 1 }, new String[] { "position", "textureCoords" },
-				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/textVertexShader")),
-				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textFragmentShader")));
+				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/textVertexShader").orElseThrow()),
+				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textFragmentShader").orElseThrow()));
 		uniform_textModelMatrix = textProgram.getUniformVariable("modelMatrix");
 		uniform_textViewMatrix = textProgram.getUniformVariable("viewMatrix");
 		uniform_textProjectionMatrix = textProgram.getUniformVariable("projectionMatrix");

@@ -32,8 +32,8 @@ public enum Loading implements Listener {
 	@Override
 	public void onRegister() {
 		shaderProgram = new ShaderProgram(new int[] { 0, 1 }, new String[] { "position", "color" },
-				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
-				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader")));
+				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader").orElseThrow()),
+				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader").orElseThrow()));
 		uniform_projectionMatrix = shaderProgram.getUniformVariable("projectionMatrix");
 		uniform_transformationMatrix = shaderProgram.getUniformVariable("transformationMatrix");
 		GL20.glUseProgram(shaderProgram.getId());

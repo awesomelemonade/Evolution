@@ -8,14 +8,14 @@ import lemon.engine.toolbox.Toolbox;
 
 public enum CommonPrograms2D implements ShaderProgramHolder {
 	COLOR(new int[] { 0, 1 }, new String[] { "position", "color" },
-			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader")),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader"))), LINE(
-					new int[] { 0, 1 }, new String[] { "id", "value" },
-					new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/lineVertexShader")),
-					new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/lineFragmentShader"))), TEXT(
-							new int[] { 0, 1 }, new String[] { "position", "textureCoords" },
-							new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/textVertexShader")),
-							new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textFragmentShader")));
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/colorVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/colorFragmentShader").orElseThrow())),
+	LINE(new int[] { 0, 1 }, new String[] { "id", "value" },
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/lineVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/lineFragmentShader").orElseThrow())),
+	TEXT(new int[] { 0, 1 }, new String[] { "position", "textureCoords" },
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/textVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textFragmentShader").orElseThrow()));
 	private ShaderProgram shaderProgram;
 	private int[] indices;
 	private String[] names;

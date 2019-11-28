@@ -12,6 +12,6 @@ uniform int total;
 uniform float alpha;
 
 void main(void){
-	gl_Position = vec4(id * spacing - 1f, value, 0, 1);
-	passColor = vec4(color.rgb, 1f);
+	gl_Position = vec4(id * spacing - 1, value, 0, 1);
+	passColor = vec4(color.rgb, 1);
 }
