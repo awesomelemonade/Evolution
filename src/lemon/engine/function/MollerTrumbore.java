@@ -1,12 +1,13 @@
 package lemon.engine.function;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import lemon.engine.math.Line;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 
-public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
+public class MollerTrumbore implements BiFunction<Triangle, Line, Optional<Float>> {
 	private final float EPSILON;
 	private final boolean culling;
 
@@ -21,7 +22,7 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
 		this.culling = culling;
 	}
 	@Override
-	public Float apply(Triangle triangle, Line ray) {
+	public Optional<Float> apply(Triangle triangle, Line ray) {
 		Vector3D edge, edge2;
 		Vector3D p, q, distance;
 		float determinant;
@@ -36,11 +37,11 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
 
 		if (culling) {
 			if (determinant < EPSILON) {
-				return null;
+				return Optional.empty();
 			}
 		} else {
 			if (determinant > -EPSILON && determinant < EPSILON) {
-				return null;
+				return Optional.empty();
 			}
 		}
 		inverseDeterminant = 1f / determinant;
@@ -50,7 +51,7 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
 		u = distance.dotProduct(p) * inverseDeterminant;
 
 		if (u < 0f || u > 1f) {
-			return null;
+			return Optional.empty();
 		}
 
 		q = distance.crossProduct(edge);
@@ -58,14 +59,14 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Float> {
 		v = ray.getDirection().dotProduct(q) * inverseDeterminant;
 
 		if (v < 0f || u + v > 1f) {
-			return null;
+			return Optional.empty();
 		}
 
 		t = edge2.dotProduct(q) * inverseDeterminant;
 
 		if (t > EPSILON) {
-			return t;
+			return Optional.of(t);
 		}
-		return null;
+		return Optional.empty();
 	}
 }
