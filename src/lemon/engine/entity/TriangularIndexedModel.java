@@ -102,8 +102,8 @@ public class TriangularIndexedModel implements IndexedModel, Initializable, Rend
 	}
 	@Override
 	public void render() {
-		GL30.glBindVertexArray(vertexArray.getId());
-		GL11.glDrawElements(GL11.GL_TRIANGLES, indices.size(), GL11.GL_UNSIGNED_INT, 0);
-		GL30.glBindVertexArray(0);
+		vertexArray.bind(vao -> {
+			GL11.glDrawElements(GL11.GL_TRIANGLES, indices.size(), GL11.GL_UNSIGNED_INT, 0);
+		});
 	}
 }

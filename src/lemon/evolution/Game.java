@@ -6,6 +6,8 @@ import java.nio.IntBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.evolution.puzzle.PuzzleBall;
+import lemon.evolution.puzzle.PuzzleGrid;
 import lemon.evolution.util.ShaderProgramHolder;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
@@ -141,7 +143,13 @@ public enum Game implements Listener {
 
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
+
+		puzzleBall = new PuzzleBall(Vector3D.ZERO, Vector3D.ZERO);
+		puzzleGrid = new PuzzleGrid();
 	}
+
+	private PuzzleBall puzzleBall;
+	private PuzzleGrid puzzleGrid;
 
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -192,9 +200,7 @@ public enum Game implements Listener {
 				}
 			}
 		});
-		player.getVelocity().setX(player.getVelocity().getX() * friction);
-		player.getVelocity().setY(player.getVelocity().getY() * friction);
-		player.getVelocity().setZ(player.getVelocity().getZ() * friction);
+		player.getVelocity().selfMultiply(friction);
 
 		player.update(event);
 		updateViewMatrix(CommonPrograms3D.COLOR);
@@ -264,17 +270,19 @@ public enum Game implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event) {
-		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
-		GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-		GL11.glDepthMask(false);
-		renderSkybox();
-		GL11.glDepthMask(true);
-		renderHeightMap();
-		renderPlatforms();
-		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-		GL20.glUseProgram(CommonPrograms3D.POST_PROCESSING.getShaderProgram().getId());
-		Quad.TEXTURED.render();
-		GL20.glUseProgram(0);
+		frameBuffer.bind(frameBuffer -> {
+			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+			GL11.glDepthMask(false);
+			renderSkybox();
+			GL11.glDepthMask(true);
+			renderHeightMap();
+			renderPlatforms();
+			puzzleBall.render();
+			puzzleGrid.render();
+		});
+		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
+			Quad.TEXTURED.render();
+		});
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			renderFPS();
 		}
