@@ -86,6 +86,12 @@ public class Vector {
 		}
 		return sum;
 	}
+	public float getLength() {
+		return this.getAbsoluteValue();
+	}
+	public float getLengthSquared() {
+		return this.getAbsoluteValueSquared();
+	}
 	public float getDistance(Vector vector) {
 		return (float) Math.sqrt(getDistanceSquared(vector));
 	}
@@ -139,6 +145,9 @@ public class Vector {
 	public Vector average(Vector vector) {
 		return average(vector, supplier);
 	}
+	public Vector scaleToLength(float length) {
+		return scaleToLength(length, supplier);
+	}
 	public <T extends Vector> T add(T vector, Function<float[], T> supplier) {
 		return operate(vector, BasicFloatOperator.ADDITION, supplier);
 	}
@@ -159,6 +168,9 @@ public class Vector {
 	}
 	public <T extends Vector> T average(T vector, Function<float[], T> supplier) {
 		return operate(vector, BasicFloatOperator.AVERAGE, supplier);
+	}
+	public <T extends Vector> T scaleToLength(float length, Function<float[], T> supplier) {
+		return multiply(length / this.getLength(), supplier);
 	}
 	public <T extends Vector> T operate(float scale, BinaryOperator<Float> operator, Function<float[], T> supplier) {
 		float[] data = new float[this.data.length];

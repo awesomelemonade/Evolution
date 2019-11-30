@@ -31,7 +31,7 @@ public class Vector2D extends Vector {
 	}
 	public Vector2D(Vector vector) {
 		super(2);
-		if (vector.getDimensions() != 3) {
+		if (vector.getDimensions() != 2) {
 			throw new IllegalArgumentException("Only 2 Dimensions Allowed");
 		}
 		this.setX(vector.get(0));
@@ -83,6 +83,10 @@ public class Vector2D extends Vector {
 	}
 	public Vector2D average(Vector2D vector) {
 		return operate(vector, BasicFloatOperator.AVERAGE, supplier);
+	}
+	@Override
+	public Vector2D scaleToLength(float length) {
+		return this.scaleToLength(length, supplier);
 	}
 	public static Vector2D unmodifiableVector(Vector2D vector) {
 		return new Vector2D(vector) {

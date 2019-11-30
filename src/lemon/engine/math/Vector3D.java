@@ -86,6 +86,10 @@ public class Vector3D extends Vector {
 	public Vector3D average(Vector3D vector) {
 		return operate(vector, BasicFloatOperator.AVERAGE, supplier);
 	}
+	@Override
+	public Vector3D scaleToLength(float length) {
+		return this.scaleToLength(length, supplier);
+	}
 	public Vector3D crossProduct(Vector3D vector) { // Implemented in only Vector3D
 		return new Vector3D(this.getY() * vector.getZ() - vector.getY() * this.getZ(),
 				this.getZ() * vector.getX() - vector.getZ() * this.getX(),
