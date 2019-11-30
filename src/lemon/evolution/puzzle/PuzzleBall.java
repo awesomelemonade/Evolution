@@ -32,4 +32,11 @@ public class PuzzleBall implements Renderable {
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDisable(GL11.GL_BLEND);
     }
+
+    public Vector3D getPosition() {
+        return position;
+    }
+    public Vector3D getVelocity() {
+        return velocity;
+    }
 }

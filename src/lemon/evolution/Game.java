@@ -6,6 +6,7 @@ import java.nio.IntBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.evolution.physicsbeta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
 import lemon.evolution.puzzle.PuzzleGrid;
 import lemon.evolution.util.ShaderProgramHolder;
@@ -144,8 +145,10 @@ public enum Game implements Listener {
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
 
-		puzzleBall = new PuzzleBall(Vector3D.ZERO, Vector3D.ZERO);
+		puzzleBall = new PuzzleBall(new Vector3D(Vector3D.ZERO), new Vector3D(Vector3D.ZERO));
 		puzzleGrid = new PuzzleGrid();
+
+		CollisionPacket.triangles.add(new Triangle(new Vector3D(0f, -10f, 1000f), new Vector3D(1000f, -30f, -1000f), new Vector3D(-1000f, -30f, -1000f)));
 	}
 
 	private PuzzleBall puzzleBall;
@@ -206,6 +209,8 @@ public enum Game implements Listener {
 		updateViewMatrix(CommonPrograms3D.COLOR);
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
+
+		CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity(), new Vector3D(0, -0.02f, 0));
 	}
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event) {

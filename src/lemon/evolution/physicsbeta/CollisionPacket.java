@@ -143,11 +143,12 @@ public class CollisionPacket {
 		float t = 1.0f;
 	}
 	// response steps
-	public void collideAndSlide(Vector3D position, Vector3D velocity, Vector3D gravity) {
+	public static void collideAndSlide(Vector3D position, Vector3D velocity, Vector3D gravity) {
 		// Do collision detection
 		CollisionPacket packet = new CollisionPacket();
 		packet.r3Position = position;
 		packet.r3Velocity = velocity;
+		packet.eRadius = new Vector3D(1f, 1f, 1f);
 
 		// calculate position and velocity in eSpace
 		Vector3D eSpacePosition = packet.r3Position.divide(packet.eRadius);
@@ -173,7 +174,7 @@ public class CollisionPacket {
 		// Move the entity (application specific function)
 		position.set(finalPosition);
 	}
-	public Vector3D collideWithWorld(Vector3D position, Vector3D velocity, CollisionPacket packet, int collisionRecursionDepth) {
+	public static Vector3D collideWithWorld(Vector3D position, Vector3D velocity, CollisionPacket packet, int collisionRecursionDepth) {
 		final float unitsPerMeter = 100.0f; // Set this to match application scale
 		float unitScale = unitsPerMeter / 100.0f;
 		float veryCloseDistance = 0.005f * unitScale;
