@@ -1,7 +1,11 @@
 package lemon.engine.entity;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
+import lemon.engine.math.Triangle;
+import lemon.engine.math.Vector3D;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -63,7 +67,6 @@ public class HeightMap implements Renderable {
 						plotVertex(dataBuffer, i, j, 1, 0, avgHeight);
 						plotVertex(dataBuffer, i, j, 1, 1, avgHeight);
 						plotVertex(dataBuffer, i, j, 0, 0, avgHeight2);
-
 						plotVertex(dataBuffer, i, j, 0, 1, avgHeight2);
 						plotVertex(dataBuffer, i, j, 1, 1, avgHeight2);
 					}
@@ -98,6 +101,29 @@ public class HeightMap implements Renderable {
 		// dataBuffer.put(avgHeight);
 		// dataBuffer.put(avgHeight);
 		dataBuffer.put(1f);
+	}
+	public List<Triangle> getTriangles() {
+		Vector3D[][] vectors = new Vector3D[map.length][map[0].length];
+		for (int i = 0; i < map.length; ++i) {
+			for (int j = 0; j < map[0].length; ++j) {
+				float x = i * tileSize - (map.length * tileSize / 2) + tileSize / 2;
+				float y = map[i][j];
+				float z = j * tileSize - (map[0].length * tileSize / 2) + tileSize / 2;
+				vectors[i][j] = new Vector3D(x, y, z);
+			}
+		}
+		List<Triangle> triangles = new ArrayList<Triangle>();
+		for (int i = 0; i < map.length - 1; ++i) {
+			for (int j = 0; j < map[0].length - 1; ++j) {
+				Vector3D a = vectors[i][j];
+				Vector3D b = vectors[i + 1][j];
+				Vector3D c = vectors[i][j + 1];
+				Vector3D d = vectors[i + 1][j + 1];
+				triangles.add(new Triangle(b, a, d));
+				triangles.add(new Triangle(a, c, d));
+			}
+		}
+		return triangles;
 	}
 	@Override
 	public void render() {

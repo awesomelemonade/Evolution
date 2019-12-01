@@ -63,7 +63,7 @@ public enum Game implements Listener {
 
 	private HeightMap terrain;
 
-	private static final float TILE_SIZE = 0.2f; // 0.2f 1f
+	private static final float TILE_SIZE = 0.5f; // 0.2f 1f
 
 	private FrameBuffer frameBuffer;
 	private Texture colorTexture;
@@ -77,8 +77,8 @@ public enum Game implements Listener {
 
 	public TerrainLoader getTerrainLoader() {
 		if (terrainLoader == null) {
-			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (100f / TILE_SIZE), 2),
-					Math.max((int) (100f / TILE_SIZE), 2));
+			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (50f / TILE_SIZE), 2),
+					Math.max((int) (50f / TILE_SIZE), 2));
 		}
 		return terrainLoader;
 	}
@@ -145,10 +145,13 @@ public enum Game implements Listener {
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
 
-		puzzleBall = new PuzzleBall(new Vector3D(Vector3D.ZERO), new Vector3D(Vector3D.ZERO));
+		puzzleBall = new PuzzleBall(new Vector3D(0, 20f, 0), new Vector3D(Vector3D.ZERO));
 		puzzleGrid = new PuzzleGrid();
 
+		CollisionPacket.triangles.addAll(terrain.getTriangles());
 		CollisionPacket.triangles.add(new Triangle(new Vector3D(0f, -10f, 1000f), new Vector3D(1000f, -30f, -1000f), new Vector3D(-1000f, -30f, -1000f)));
+
+		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 	}
 
 	private PuzzleBall puzzleBall;
@@ -210,6 +213,7 @@ public enum Game implements Listener {
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
 
+		puzzleBall.getVelocity().selfAdd(new Vector3D(0, -0.002f, 0));
 		CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity(), new Vector3D(0, -0.02f, 0));
 	}
 	@Subscribe
@@ -283,7 +287,7 @@ public enum Game implements Listener {
 			renderHeightMap();
 			renderPlatforms();
 			puzzleBall.render();
-			puzzleGrid.render();
+			//puzzleGrid.render();
 		});
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
 			Quad.TEXTURED.render();

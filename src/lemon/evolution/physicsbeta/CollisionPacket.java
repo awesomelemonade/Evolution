@@ -160,12 +160,12 @@ public class CollisionPacket {
 		// Add gravity pull
 		// to remove gravity uncomment from here
 		// Set the new r3 position (convert back from eSpace to r3)
-		packet.r3Position = finalPosition.multiply(packet.eRadius);
+		/*packet.r3Position = finalPosition.multiply(packet.eRadius);
 		packet.r3Velocity = gravity;
 
 		eSpaceVelocity = gravity.divide(packet.eRadius);
 
-		finalPosition = collideWithWorld(finalPosition, eSpaceVelocity, packet, 0);
+		finalPosition = collideWithWorld(finalPosition, eSpaceVelocity, packet, 0);*/
 		// ... to here
 
 		// Convert final result back to r3
