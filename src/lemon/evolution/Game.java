@@ -213,7 +213,7 @@ public enum Game implements Listener {
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
 
-		puzzleBall.getVelocity().selfAdd(new Vector3D(0, -0.002f, 0));
+		puzzleBall.getVelocity().selfAdd(new Vector3D(0, -0.02f, 0));
 		CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity(), new Vector3D(0, -0.02f, 0));
 	}
 	@Subscribe

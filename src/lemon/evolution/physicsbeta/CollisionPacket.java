@@ -1,9 +1,6 @@
 package lemon.evolution.physicsbeta;
 
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Plane;
-import lemon.engine.math.Triangle;
-import lemon.engine.math.Vector3D;
+import lemon.engine.math.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -155,7 +152,10 @@ public class CollisionPacket {
 		Vector3D eSpaceVelocity = packet.r3Velocity.divide(packet.eRadius);
 
 		// Iterate until we have our final position
-		Vector3D finalPosition = collideWithWorld(eSpacePosition, eSpaceVelocity, packet, 0);
+		VectorArray array = collideWithWorld(eSpacePosition, eSpaceVelocity, packet, 0, eSpaceVelocity);
+
+		Vector3D finalPosition = array.get(0);
+		Vector3D finalVelocity = array.get(1);
 
 		// Add gravity pull
 		// to remove gravity uncomment from here
@@ -170,23 +170,26 @@ public class CollisionPacket {
 
 		// Convert final result back to r3
 		finalPosition = finalPosition.multiply(packet.eRadius);
+		eSpaceVelocity = finalVelocity.multiply(packet.eRadius);
 
 		// Move the entity (application specific function)
 		position.set(finalPosition);
+		velocity.set(eSpaceVelocity);
 	}
-	public static Vector3D collideWithWorld(Vector3D position, Vector3D velocity, CollisionPacket packet, int collisionRecursionDepth) {
-		final float unitsPerMeter = 100.0f; // Set this to match application scale
+	public static VectorArray collideWithWorld(Vector3D position, Vector3D velocity, CollisionPacket packet, int collisionRecursionDepth, Vector3D remainingVelocity) {
+		final float unitsPerMeter = 1.0f; // Set this to match application scale
 		float unitScale = unitsPerMeter / 100.0f;
 		float veryCloseDistance = 0.005f * unitScale;
+		veryCloseDistance = 0.001f;
 
 		// do we need to worry?
 		if (collisionRecursionDepth > 5) {
-			return position;
+			return new VectorArray(position, velocity);
 		}
 
 		// Ok, we need to worry:
-		packet.velocity = velocity;
-		packet.normalizedVelocity = velocity.normalize();
+		packet.velocity = remainingVelocity;
+		packet.normalizedVelocity = remainingVelocity.normalize();
 		packet.basePoint = position;
 		packet.foundCollision = false;
 
@@ -196,16 +199,16 @@ public class CollisionPacket {
 
 		// if no collision we just move along the velocity
 		if (!packet.foundCollision) {
-			return position.add(velocity);
+			return new VectorArray(position.add(velocity), velocity);
 		}
 
 		// Collision occurred
 
-		Vector3D destinationPoint = position.add(velocity);
+		Vector3D destinationPoint = position.add(remainingVelocity);
 		Vector3D newBasePoint = position;
 
 		if (packet.nearestDistance >= veryCloseDistance) {
-			Vector3D v = velocity.scaleToLength(packet.nearestDistance - veryCloseDistance);
+			Vector3D v = remainingVelocity.scaleToLength(packet.nearestDistance - veryCloseDistance);
 			newBasePoint = packet.basePoint.add(v);
 
 			v.normalize();
@@ -214,23 +217,25 @@ public class CollisionPacket {
 
 		// Determine the sliding plane
 		Vector3D slidePlaneOrigin = packet.intersectionPoint;
-		Vector3D slidePlaneNormal = newBasePoint.subtract(packet.intersectionPoint);
-		slidePlaneNormal.normalize();
+		Vector3D slidePlaneNormal = newBasePoint.subtract(packet.intersectionPoint).normalize();
 		Plane slidingPlane = new Plane(slidePlaneOrigin, slidePlaneNormal);
 
 		Vector3D newDestinationPoint = destinationPoint.subtract(slidePlaneNormal
 				.multiply(slidingPlane.getSignedDistanceTo(destinationPoint)));
 
 		// Generate the slide vector, which will become our new velocity vector for the next iteration
-		Vector3D newVelocityVector = newDestinationPoint.subtract(packet.intersectionPoint);
+		Vector3D newRemainingVelocity = newDestinationPoint.subtract(packet.intersectionPoint);
 
-		// Don't recurse if the new velocity is very small
-		if (newVelocityVector.getLengthSquared() < veryCloseDistance * veryCloseDistance) {
-			return newBasePoint;
+		Vector3D temp = destinationPoint.subtract(newDestinationPoint).normalize();
+		Vector3D newVelocity = velocity.subtract(temp.multiply(velocity.dotProduct(temp)));
+
+		// Don't recurse if the remaining velocity is very small
+		if (newRemainingVelocity.getLengthSquared() < veryCloseDistance * veryCloseDistance) {
+			return new VectorArray(newBasePoint, newVelocity);
 		}
 
 		// Recurse
-		return collideWithWorld(newBasePoint, newVelocityVector, packet, collisionRecursionDepth + 1);
+		return collideWithWorld(newBasePoint, newVelocity, packet, collisionRecursionDepth + 1, newRemainingVelocity);
 	}
 	// Super temporary stuff below
 	public static final List<Triangle> triangles = new ArrayList<Triangle>();
