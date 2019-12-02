@@ -196,12 +196,16 @@ public enum Game implements Listener {
 			public void onKeyRelease(KeyEvent event) {
 				if(event.getAction() == GLFW.GLFW_RELEASE) {
 					if (event.getKey() == GLFW.GLFW_KEY_R) {
-						System.out.println("Set Origin: "+player.getPosition());
+						System.out.println("Set Origin: " + player.getPosition());
 						line.set(0, new Vector3D(player.getPosition()));
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_T) {
 						line.set(1, new Vector3D(player.getPosition().subtract(line.getOrigin())));
-						System.out.println("Set Direction: "+line.getDirection());
+						System.out.println("Set Direction: " + line.getDirection());
+					}
+					if (event.getKey() == GLFW.GLFW_KEY_G) {
+						puzzleBall.getPosition().set(player.getPosition());
+						puzzleBall.getVelocity().set(Vector3D.ZERO);
 					}
 				}
 			}
@@ -213,7 +217,7 @@ public enum Game implements Listener {
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
 
-		puzzleBall.getVelocity().selfAdd(new Vector3D(0, -0.02f, 0));
+		puzzleBall.getVelocity().selfAdd(new Vector3D(0, -0.002f, 0));
 		CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity(), new Vector3D(0, -0.02f, 0));
 	}
 	@Subscribe

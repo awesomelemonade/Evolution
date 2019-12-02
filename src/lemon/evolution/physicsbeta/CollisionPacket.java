@@ -199,7 +199,7 @@ public class CollisionPacket {
 
 		// if no collision we just move along the velocity
 		if (!packet.foundCollision) {
-			return new VectorArray(position.add(velocity), velocity);
+			return new VectorArray(position.add(remainingVelocity), velocity);
 		}
 
 		// Collision occurred
