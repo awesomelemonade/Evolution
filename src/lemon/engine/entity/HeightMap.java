@@ -102,7 +102,7 @@ public class HeightMap implements Renderable {
 		// dataBuffer.put(avgHeight);
 		dataBuffer.put(1f);
 	}
-	public List<Triangle> getTriangles() {
+	public Triangle[][][] getTriangles() {
 		Vector3D[][] vectors = new Vector3D[map.length][map[0].length];
 		for (int i = 0; i < map.length; ++i) {
 			for (int j = 0; j < map[0].length; ++j) {
@@ -112,15 +112,15 @@ public class HeightMap implements Renderable {
 				vectors[i][j] = new Vector3D(x, y, z);
 			}
 		}
-		List<Triangle> triangles = new ArrayList<Triangle>();
+		Triangle[][][] triangles = new Triangle[map.length - 1][map[0].length - 1][2];
 		for (int i = 0; i < map.length - 1; ++i) {
 			for (int j = 0; j < map[0].length - 1; ++j) {
 				Vector3D a = vectors[i][j];
 				Vector3D b = vectors[i + 1][j];
 				Vector3D c = vectors[i][j + 1];
 				Vector3D d = vectors[i + 1][j + 1];
-				triangles.add(new Triangle(b, a, d));
-				triangles.add(new Triangle(a, c, d));
+				triangles[i][j][0] = new Triangle(b, a, d);
+				triangles[i][j][1] = new Triangle(a, c, d);
 			}
 		}
 		return triangles;

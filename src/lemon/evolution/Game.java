@@ -77,8 +77,8 @@ public enum Game implements Listener {
 
 	public TerrainLoader getTerrainLoader() {
 		if (terrainLoader == null) {
-			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (50f / TILE_SIZE), 2),
-					Math.max((int) (50f / TILE_SIZE), 2));
+			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (500f / TILE_SIZE), 2),
+					Math.max((int) (500f / TILE_SIZE), 2));
 		}
 		return terrainLoader;
 	}
@@ -148,10 +148,32 @@ public enum Game implements Listener {
 		puzzleBall = new PuzzleBall(new Vector3D(0, 20f, 0), new Vector3D(Vector3D.ZERO));
 		puzzleGrid = new PuzzleGrid();
 
-		CollisionPacket.triangles.addAll(terrain.getTriangles());
+		Game.triangles = terrain.getTriangles();
 		CollisionPacket.triangles.add(new Triangle(new Vector3D(0f, -10f, 1000f), new Vector3D(1000f, -30f, -1000f), new Vector3D(-1000f, -30f, -1000f)));
+		CollisionPacket.consumers.add(packet -> {
+			Vector3D origin = packet.basePoint;
+			float radius = packet.velocity.getAbsoluteValue() + 2f;
 
+			int roundedX = Math.round(origin.getX() / TILE_SIZE);
+			int roundedZ = Math.round(origin.getZ() / TILE_SIZE);
+			int indexRadius = (int) Math.ceil(radius / TILE_SIZE);
+			for (int i = -indexRadius; i <= indexRadius; i++) {
+				for (int j = -indexRadius; j <= indexRadius; j++) {
+					if (i * i + j * j <= indexRadius * indexRadius) {
+						checkTriangle(packet, roundedX + i + triangles.length / 2, roundedZ + j + triangles[0].length / 2);
+					}
+				}
+			}
+		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
+	}
+	// temp
+	private static Triangle[][][] triangles;
+	private static void checkTriangle(CollisionPacket packet, int x, int y) {
+		if (x >= 0 && x < triangles.length && y >= 0 && y < triangles[0].length) {
+			CollisionPacket.checkTriangle(packet, triangles[x][y][0]);
+			CollisionPacket.checkTriangle(packet, triangles[x][y][1]);
+		}
 	}
 
 	private PuzzleBall puzzleBall;

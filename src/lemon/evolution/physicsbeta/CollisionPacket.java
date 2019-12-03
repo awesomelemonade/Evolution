@@ -4,14 +4,15 @@ import lemon.engine.math.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class CollisionPacket {
 	private Vector3D eRadius; // ellipsoid radius
 	private Vector3D r3Velocity;
 	private Vector3D r3Position;
-	private Vector3D velocity;
+	public Vector3D velocity; // temp public
 	private Vector3D normalizedVelocity;
-	private Vector3D basePoint;
+	public Vector3D basePoint; // temp public
 
 	private boolean foundCollision;
 	private float nearestDistance;
@@ -239,7 +240,12 @@ public class CollisionPacket {
 	}
 	// Super temporary stuff below
 	public static final List<Triangle> triangles = new ArrayList<Triangle>();
+	public static final List<Consumer<CollisionPacket>> consumers = new ArrayList<Consumer<CollisionPacket>>();
 	public static void checkCollision(CollisionPacket packet) {
+		// transform packet.basePoint and packet.velocity from eSpace to r3 space?
+		for (Consumer<CollisionPacket> consumer : consumers) {
+			consumer.accept(packet);
+		}
 		for (Triangle triangle : triangles) {
 			CollisionPacket.checkTriangle(packet, triangle);
 		}
