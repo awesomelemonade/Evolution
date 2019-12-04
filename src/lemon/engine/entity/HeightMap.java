@@ -95,9 +95,9 @@ public class HeightMap implements Renderable {
 		// dataBuffer.put(avgHeight/20f+0.2f);
 		// dataBuffer.put(avgHeight/5f+2f);
 		// dataBuffer.put(1-(avgHeight)-5f);
-		dataBuffer.put((avgHeight + 12f) / 20f);
-		dataBuffer.put((avgHeight + 12f) / 20f);
-		dataBuffer.put((avgHeight + 12f) / 20f);
+		dataBuffer.put((avgHeight / 10 + 12f) / 20f);
+		dataBuffer.put((avgHeight / 10 + 12f) / 20f);
+		dataBuffer.put((avgHeight / 10 + 12f) / 20f);
 		// dataBuffer.put(avgHeight);
 		// dataBuffer.put(avgHeight);
 		dataBuffer.put(1f);

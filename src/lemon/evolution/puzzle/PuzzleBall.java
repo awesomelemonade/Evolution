@@ -11,13 +11,15 @@ import org.lwjgl.opengl.GL11;
 public class PuzzleBall implements Renderable {
     private static final int RADIUS = 1;
     private static final int ITERATIONS = 5;
-    private Renderable sphere;
+    private static Renderable sphere;
     private Vector3D position;
     private Vector3D velocity;
     public PuzzleBall(Vector3D position, Vector3D velocity) {
         this.position = position;
         this.velocity = velocity;
-        sphere = new SphereModelBuilder(RADIUS, ITERATIONS).buildAndInit();
+        if (sphere == null) {
+            sphere = new SphereModelBuilder(RADIUS, ITERATIONS).buildAndInit();
+        }
     }
 
     @Override

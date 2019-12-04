@@ -3,6 +3,8 @@ package lemon.evolution;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -145,11 +147,17 @@ public enum Game implements Listener {
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
 
-		puzzleBall = new PuzzleBall(new Vector3D(0, 20f, 0), new Vector3D(Vector3D.ZERO));
+		//puzzleBall = new PuzzleBall(new Vector3D(0, 20f, 0), new Vector3D(Vector3D.ZERO));
+		puzzleBalls = new ArrayList<PuzzleBall>();
+		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 20f, 0), new Vector3D(Vector3D.ZERO)));
+		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 30f, 0), new Vector3D(Vector3D.ZERO)));
+		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 40f, 0), new Vector3D(Vector3D.ZERO)));
+		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 50f, 0), new Vector3D(Vector3D.ZERO)));
+		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 60f, 0), new Vector3D(Vector3D.ZERO)));
 		puzzleGrid = new PuzzleGrid();
 
 		Game.triangles = terrain.getTriangles();
-		CollisionPacket.triangles.add(new Triangle(new Vector3D(0f, -10f, 1000f), new Vector3D(1000f, -30f, -1000f), new Vector3D(-1000f, -30f, -1000f)));
+		//CollisionPacket.triangles.add(new Triangle(new Vector3D(0f, -10f, 1000f), new Vector3D(1000f, -30f, -1000f), new Vector3D(-1000f, -30f, -1000f)));
 		CollisionPacket.consumers.add(packet -> {
 			Vector3D origin = packet.basePoint;
 			float radius = packet.velocity.getAbsoluteValue() + 2f;
@@ -166,6 +174,29 @@ public enum Game implements Listener {
 			}
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
+
+
+		EventManager.INSTANCE.registerListener(new Listener() {
+			@Subscribe
+			public void onKeyRelease(KeyEvent event) {
+				if(event.getAction() == GLFW.GLFW_RELEASE) {
+					if (event.getKey() == GLFW.GLFW_KEY_R) {
+						System.out.println("Set Origin: " + player.getPosition());
+						line.set(0, new Vector3D(player.getPosition()));
+					}
+					if (event.getKey() == GLFW.GLFW_KEY_T) {
+						line.set(1, new Vector3D(player.getPosition().subtract(line.getOrigin())));
+						System.out.println("Set Direction: " + line.getDirection());
+					}
+					if (event.getKey() == GLFW.GLFW_KEY_G) {
+						puzzleBalls.add(new PuzzleBall(new Vector3D(player.getPosition()), new Vector3D(player.getVelocity())));
+					}
+					if (event.getKey() == GLFW.GLFW_KEY_C) {
+						puzzleBalls.clear();
+					}
+				}
+			}
+		});
 	}
 	// temp
 	private static Triangle[][][] triangles;
@@ -176,7 +207,7 @@ public enum Game implements Listener {
 		}
 	}
 
-	private PuzzleBall puzzleBall;
+	private List<PuzzleBall> puzzleBalls;
 	private PuzzleGrid puzzleGrid;
 
 	private static float friction = 0.98f;
@@ -213,25 +244,6 @@ public enum Game implements Listener {
 		if (GameControls.MOVE_DOWN.isActivated()) {
 			player.getVelocity().setY(player.getVelocity().getY() - ((float) (playerSpeed)));
 		}
-		EventManager.INSTANCE.registerListener(new Listener() {
-			@Subscribe
-			public void onKeyRelease(KeyEvent event) {
-				if(event.getAction() == GLFW.GLFW_RELEASE) {
-					if (event.getKey() == GLFW.GLFW_KEY_R) {
-						System.out.println("Set Origin: " + player.getPosition());
-						line.set(0, new Vector3D(player.getPosition()));
-					}
-					if (event.getKey() == GLFW.GLFW_KEY_T) {
-						line.set(1, new Vector3D(player.getPosition().subtract(line.getOrigin())));
-						System.out.println("Set Direction: " + line.getDirection());
-					}
-					if (event.getKey() == GLFW.GLFW_KEY_G) {
-						puzzleBall.getPosition().set(player.getPosition());
-						puzzleBall.getVelocity().set(Vector3D.ZERO);
-					}
-				}
-			}
-		});
 		player.getVelocity().selfMultiply(friction);
 
 		player.update(event);
@@ -239,8 +251,10 @@ public enum Game implements Listener {
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
 
-		puzzleBall.getVelocity().selfAdd(new Vector3D(0, -0.002f, 0));
-		CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity(), new Vector3D(0, -0.02f, 0));
+		for (PuzzleBall puzzleBall : puzzleBalls) {
+			puzzleBall.getVelocity().selfAdd(new Vector3D(0, -0.005f, 0));
+			CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity(), new Vector3D(0, -0.02f, 0));
+		}
 	}
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event) {
@@ -312,7 +326,9 @@ public enum Game implements Listener {
 			GL11.glDepthMask(true);
 			renderHeightMap();
 			renderPlatforms();
-			puzzleBall.render();
+			for (PuzzleBall puzzleBall : puzzleBalls) {
+				puzzleBall.render();
+			}
 			//puzzleGrid.render();
 		});
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
