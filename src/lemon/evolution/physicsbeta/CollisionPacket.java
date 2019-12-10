@@ -7,23 +7,16 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class CollisionPacket {
-	private Vector3D eRadius; // ellipsoid radius
-	private Vector3D r3Velocity;
-	private Vector3D r3Position;
 	public Vector3D velocity; // temp public
 	private Vector3D normalizedVelocity;
 	public Vector3D basePoint; // temp public
 
-	private boolean foundCollision;
-	private float nearestDistance;
+	private float t = Float.MAX_VALUE;
 	private Vector3D intersectionPoint;
 
 	public static void checkTriangle(CollisionPacket packet, Triangle triangle) {
 		Plane trianglePlane = new Plane(triangle);
 		if (trianglePlane.isFrontFacingTo(packet.normalizedVelocity)) {
-			float t0, t1;
-			boolean embeddedInPlane = false;
-
 			float signedDistanceToTrianglePlane = trianglePlane.getSignedDistanceTo(packet.basePoint);
 
 			// cache this as we're going to use it a few times below
@@ -38,71 +31,47 @@ public class CollisionPacket {
 				} else {
 					// Sphere is embedded in plane
 					// It intersects the whole range [0 .. 1]
-					embeddedInPlane = true;
-					t0 = 0.0f;
-					t1 = 1.0f;
+					// t0 = 0.0f;
 				}
 			} else {
 				// Calculate intersection interval
-				t0 = (-1.0f - signedDistanceToTrianglePlane) / normalDotVelocity;
-				t1 = ( 1.0f - signedDistanceToTrianglePlane) / normalDotVelocity;
+				float t0 = Math.min((-1.0f - signedDistanceToTrianglePlane) / normalDotVelocity,
+						( 1.0f - signedDistanceToTrianglePlane) / normalDotVelocity);
 
-				// Swap so t0 < t1
-				if (t0 > t1) {
-					float temp = t1;
-					t1 = t0;
-					t0 = temp;
-				}
-
-				// Check that at least one result is within range
-				if (t0 > 1.0 || t1 < 0) {
+				if (t0 > 1.0) {
 					// [t0, t1] is outside of [0, 1]
 					// No collisions possible
 					return;
 				}
-
-				// Clamp to [0, 1]
-				t0 = MathUtil.clamp(t0, 0f, 1f);
-				t1 = MathUtil.clamp(t1, 0f, 1f);
-			}
-
-			Info info = new Info();
-
-			if (!embeddedInPlane) {
+				if (t0 < 0) {
+					t0 = 0f;
+				}
 				Vector3D planeIntersectionPoint = packet.basePoint.subtract(trianglePlane.getNormal())
 						.add(packet.velocity.multiply(t0));
 				if (triangle.isInside(planeIntersectionPoint)) {
-					info.foundCollision = true;
-					info.t = t0;
-					info.collisionPoint = planeIntersectionPoint;
+					if (t0 < packet.t) {
+						packet.t = t0;
+						packet.intersectionPoint = planeIntersectionPoint;
+					}
+					return;
 				}
 			}
-			if (!info.foundCollision) {
-				Vector3D velocity = packet.velocity;
-				Vector3D base = packet.basePoint;
-				float velocitySquaredLength = velocity.getAbsoluteValueSquared();
+			Vector3D velocity = packet.velocity;
+			Vector3D base = packet.basePoint;
+			float velocitySquaredLength = velocity.getAbsoluteValueSquared();
 
-				checkVertex(velocitySquaredLength, velocity, base, triangle.getVertex1(), info);
-				checkVertex(velocitySquaredLength, velocity, base, triangle.getVertex2(), info);
-				checkVertex(velocitySquaredLength, velocity, base, triangle.getVertex3(), info);
+			// Check vertices
+			checkVertex(velocitySquaredLength, velocity, base, triangle.getVertex1(), packet);
+			checkVertex(velocitySquaredLength, velocity, base, triangle.getVertex2(), packet);
+			checkVertex(velocitySquaredLength, velocity, base, triangle.getVertex3(), packet);
 
-				// Check against edges
-				checkEdge(velocitySquaredLength, velocity, base, triangle.getVertex1(), triangle.getVertex2(), info);
-				checkEdge(velocitySquaredLength, velocity, base, triangle.getVertex2(), triangle.getVertex3(), info);
-				checkEdge(velocitySquaredLength, velocity, base, triangle.getVertex3(), triangle.getVertex1(), info);
-			}
-
-			if (info.foundCollision) {
-				float distToCollision = info.t * packet.velocity.getAbsoluteValue();
-				if ((!packet.foundCollision) || distToCollision < packet.nearestDistance) {
-					packet.nearestDistance = distToCollision;
-					packet.intersectionPoint = info.collisionPoint;
-					packet.foundCollision = true;
-				}
-			}
+			// Check against edges
+			checkEdge(velocitySquaredLength, velocity, base, triangle.getVertex1(), triangle.getVertex2(), packet);
+			checkEdge(velocitySquaredLength, velocity, base, triangle.getVertex2(), triangle.getVertex3(), packet);
+			checkEdge(velocitySquaredLength, velocity, base, triangle.getVertex3(), triangle.getVertex1(), packet);
 		}
 	}
-	private static void checkEdge(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertexA, Vector3D vertexB, Info info) {
+	private static void checkEdge(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertexA, Vector3D vertexB, CollisionPacket packet) {
 		Vector3D edge = vertexB.subtract(vertexA);
 		Vector3D baseToVertex = vertexA.subtract(base);
 		float edgeSquaredLength = edge.getAbsoluteValueSquared();
@@ -116,41 +85,60 @@ public class CollisionPacket {
 		float c = edgeSquaredLength * (1.0f - baseToVertex.getAbsoluteValueSquared()) +
 				edgeDotBaseToVertex * edgeDotBaseToVertex;
 
-		MathUtil.getLowestRoot(a, b, c, info.t).ifPresent(root -> {
-			float f = (edgeDotVelocity * root - edgeDotBaseToVertex) / edgeSquaredLength;
+		float t = getLowestRoot(a, b, c);
+		if (t < packet.t) {
+			float f = (edgeDotVelocity * t - edgeDotBaseToVertex) / edgeSquaredLength;
 			if (f >= 0.0f && f <= 1.0f) {
-				info.t = root;
-				info.foundCollision = true;
-				info.collisionPoint = vertexA.add(edge.multiply(f));
+				packet.t = t;
+				packet.intersectionPoint = vertexA.add(edge.multiply(f));
 			}
-		});
+		}
 	}
-	private static void checkVertex(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertex, Info info) {
+	private static void checkVertex(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertex, CollisionPacket packet) {
 		// p1
 		float b = 2.0f * velocity.dotProduct(base.subtract(vertex));
 		float c = vertex.subtract(base).getAbsoluteValueSquared() - 1.0f;
-		MathUtil.getLowestRoot(velocitySquaredLength, b, c, info.t).ifPresent(root -> {
-			info.t = root;
-			info.foundCollision = true;
-			info.collisionPoint = vertex;
-		});
+		float t = getLowestRoot(velocitySquaredLength, b, c);
+		if (t < packet.t) {
+			packet.t = t;
+			packet.intersectionPoint = vertex;
+		}
 	}
-	private static class Info {
-		Vector3D collisionPoint;
-		boolean foundCollision = false;
-		float t = 1.0f;
+	public static float getLowestRoot(float a, float b, float c) {
+		float determinant = b * b - 4.0f * a * c;
+
+		if (determinant < 0.0f) {
+			return Float.MAX_VALUE;
+		}
+
+		float sqrtD = (float) Math.sqrt(determinant);
+		float root1 = (-b - sqrtD) / (2 * a);
+		float root2 = (-b + sqrtD) / (2 * a);
+
+		// Swap so root1 <= root2
+		if (root1 > root2) {
+			float temp = root2;
+			root2 = root1;
+			root1 = temp;
+		}
+
+		if (root1 > 0) {
+			return root1;
+		}
+		if (root2 > 0) {
+			return root2;
+		}
+		return Float.MAX_VALUE;
 	}
 	// response steps
 	public static void collideAndSlide(Vector3D position, Vector3D velocity, Vector3D gravity) {
 		// Do collision detection
 		CollisionPacket packet = new CollisionPacket();
-		packet.r3Position = position;
-		packet.r3Velocity = velocity;
-		packet.eRadius = new Vector3D(1f, 1f, 1f);
+		Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
 
 		// calculate position and velocity in eSpace
-		Vector3D eSpacePosition = packet.r3Position.divide(packet.eRadius);
-		Vector3D eSpaceVelocity = packet.r3Velocity.divide(packet.eRadius);
+		Vector3D eSpacePosition = position.divide(eRadius);
+		Vector3D eSpaceVelocity = velocity.divide(eRadius);
 
 		// Iterate until we have our final position
 		VectorArray array = collideWithWorld(eSpacePosition, eSpaceVelocity, packet, 0, eSpaceVelocity);
@@ -158,20 +146,9 @@ public class CollisionPacket {
 		Vector3D finalPosition = array.get(0);
 		Vector3D finalVelocity = array.get(1);
 
-		// Add gravity pull
-		// to remove gravity uncomment from here
-		// Set the new r3 position (convert back from eSpace to r3)
-		/*packet.r3Position = finalPosition.multiply(packet.eRadius);
-		packet.r3Velocity = gravity;
-
-		eSpaceVelocity = gravity.divide(packet.eRadius);
-
-		finalPosition = collideWithWorld(finalPosition, eSpaceVelocity, packet, 0);*/
-		// ... to here
-
 		// Convert final result back to r3
-		finalPosition = finalPosition.multiply(packet.eRadius);
-		eSpaceVelocity = finalVelocity.multiply(packet.eRadius);
+		finalPosition = finalPosition.multiply(eRadius);
+		eSpaceVelocity = finalVelocity.multiply(eRadius);
 
 		// Move the entity (application specific function)
 		position.set(finalPosition);
@@ -192,14 +169,14 @@ public class CollisionPacket {
 		packet.velocity = remainingVelocity;
 		packet.normalizedVelocity = remainingVelocity.normalize();
 		packet.basePoint = position;
-		packet.foundCollision = false;
+		packet.t = Float.MAX_VALUE;
 
 		// Check for collision (calls the collision routines)
 		// Application specific
 		checkCollision(packet);
 
 		// if no collision we just move along the velocity
-		if (!packet.foundCollision) {
+		if (packet.t > 1) {
 			return new VectorArray(position.add(remainingVelocity), velocity);
 		}
 
@@ -207,9 +184,10 @@ public class CollisionPacket {
 
 		Vector3D destinationPoint = position.add(remainingVelocity);
 		Vector3D newBasePoint = position;
+		float nearestDistance = packet.velocity.getAbsoluteValue() * packet.t;
 
-		if (packet.nearestDistance >= veryCloseDistance) {
-			Vector3D v = remainingVelocity.scaleToLength(packet.nearestDistance - veryCloseDistance);
+		if (nearestDistance >= veryCloseDistance) {
+			Vector3D v = remainingVelocity.scaleToLength(nearestDistance - veryCloseDistance);
 			newBasePoint = packet.basePoint.add(v);
 
 			v.normalize();

@@ -124,31 +124,4 @@ public class MathUtil {
 	public static float clamp(float value, float lower, float upper) {
 		return Math.max(lower, Math.min(upper, value));
 	}
-
-	public static Optional<Float> getLowestRoot(float a, float b, float c, float maxRoot) {
-		float determinant = b * b - 4.0f * a * c;
-
-		if (determinant < 0.0f) {
-			return Optional.empty();
-		}
-
-		float sqrtD = (float) Math.sqrt(determinant);
-		float root1 = (-b - sqrtD) / (2 * a);
-		float root2 = (-b + sqrtD) / (2 * a);
-
-		// Swap so root1 <= root2
-		if (root1 > root2) {
-			float temp = root2;
-			root2 = root1;
-			root1 = temp;
-		}
-
-		if (root1 > 0 && root1 < maxRoot) {
-			return Optional.of(root1);
-		}
-		if (root2 > 0 && root2 < maxRoot) {
-			return Optional.of(root2);
-		}
-		return Optional.empty();
-	}
 }
