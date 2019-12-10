@@ -8,6 +8,13 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.engine.math.Line;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Matrix;
+import lemon.engine.math.Projection;
+import lemon.engine.math.Sphere;
+import lemon.engine.math.Triangle;
+import lemon.engine.math.Vector3D;
 import lemon.evolution.physicsbeta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
 import lemon.evolution.puzzle.PuzzleGrid;
@@ -40,12 +47,6 @@ import lemon.engine.input.KeyEvent;
 import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.loader.SkyboxLoader;
-import lemon.engine.math.Line;
-import lemon.engine.math.Matrix;
-import lemon.engine.math.Projection;
-import lemon.engine.math.Sphere;
-import lemon.engine.math.Triangle;
-import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.terrain.TerrainGenerator;
@@ -106,7 +107,8 @@ public enum Game implements Listener {
 		benchmarker.put("renderData", new LineGraph(1000, 100000000));
 		benchmarker.put("fpsData", new LineGraph(1000, 100));
 
-		player = new Player(new Projection(60f, ((float) window_width) / ((float) window_height), 0.01f, 1000f));
+		player = new Player(new Projection(MathUtil.toRadians(60f),
+				((float) window_width) / ((float) window_height), 0.01f, 1000f));
 
 		CommonProgramsSetup.setup2D();
 		CommonProgramsSetup.setup3D(player.getCamera().getProjectionMatrix());
@@ -216,7 +218,7 @@ public enum Game implements Listener {
 
 	@Subscribe
 	public void update(UpdateEvent event) {
-		float angle = (player.getCamera().getRotation().getY() + 90) * (((float) Math.PI) / 180f);
+		float angle = (player.getCamera().getRotation().getY() + MathUtil.PI / 2f);
 		float sin = (float) Math.sin(angle);
 		float cos = (float) Math.cos(angle);
 		if (GameControls.STRAFE_LEFT.isActivated()) {
@@ -227,7 +229,7 @@ public enum Game implements Listener {
 			player.getVelocity().setX(player.getVelocity().getX() + ((float) (playerSpeed)) * sin);
 			player.getVelocity().setZ(player.getVelocity().getZ() + ((float) (playerSpeed)) * cos);
 		}
-		angle = player.getCamera().getRotation().getY() * (((float) Math.PI) / 180f);
+		angle = player.getCamera().getRotation().getY();
 		sin = (float) Math.sin(angle);
 		cos = (float) Math.cos(angle);
 		if (GameControls.MOVE_FORWARDS.isActivated()) {
@@ -263,7 +265,7 @@ public enum Game implements Listener {
 			playerSpeed = 0;
 		}
 		player.getCamera().getProjection()
-				.setFov(player.getCamera().getProjection().getFov() + ((float) (event.getYOffset() / 100f)));
+				.setFov(player.getCamera().getProjection().getFov() + ((float) (event.getYOffset() / 10000f)));
 		updateProjectionMatrix(CommonPrograms3D.COLOR);
 		updateProjectionMatrix(CommonPrograms3D.TEXTURE);
 		updateProjectionMatrix(CommonPrograms3D.CUBEMAP);
@@ -273,7 +275,7 @@ public enum Game implements Listener {
 	private double lastMouseY;
 	private double mouseX;
 	private double mouseY;
-	private static final float MOUSE_SENSITIVITY = 0.1f;
+	private static final float MOUSE_SENSITIVITY = 0.001f;
 
 	@Subscribe
 	public void onMousePosition(CursorPositionEvent event) {
@@ -283,15 +285,15 @@ public enum Game implements Listener {
 		mouseY = event.getY();
 		if (GameControls.CAMERA_ROTATE.isActivated()) {
 			player.getCamera().getRotation().setY(
-					(float) (((player.getCamera().getRotation().getY() - (mouseX - lastMouseX) * MOUSE_SENSITIVITY)
-							% 360) + 360) % 360);
+					(float) ((((player.getCamera().getRotation().getY() - (mouseX - lastMouseX) * MOUSE_SENSITIVITY)
+							% (2f * MathUtil.PI)) + (2 * MathUtil.PI)) % (2 * MathUtil.PI)));
 			player.getCamera().getRotation().setX(
 					(float) (player.getCamera().getRotation().getX() - (mouseY - lastMouseY) * MOUSE_SENSITIVITY));
-			if (player.getCamera().getRotation().getX() < -90) {
-				player.getCamera().getRotation().setX(-90);
+			if (player.getCamera().getRotation().getX() < -MathUtil.PI / 2f) {
+				player.getCamera().getRotation().setX(-MathUtil.PI / 2f);
 			}
-			if (player.getCamera().getRotation().getX() > 90) {
-				player.getCamera().getRotation().setX(90);
+			if (player.getCamera().getRotation().getX() > MathUtil.PI / 2f) {
+				player.getCamera().getRotation().setX(MathUtil.PI / 2f);
 			}
 		}
 		updateViewMatrix(CommonPrograms3D.COLOR);

@@ -7,6 +7,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 
 public class MathUtil {
+	public static final float PI = (float) Math.PI;
 
 	private MathUtil() {}
 	
@@ -39,7 +40,7 @@ public class MathUtil {
 	}
 	public static Matrix getPerspective(Projection projection) {
 		Matrix matrix = new Matrix(4);
-		float yScale = (float) (1 / Math.tan(Math.toRadians(projection.getFov() / 2)));
+		float yScale = (float) (1f / Math.tan(projection.getFov() / 2f));
 		float xScale = yScale / projection.getAspectRatio();
 		matrix.set(0, 0, xScale);
 		matrix.set(1, 1, yScale);
@@ -71,8 +72,8 @@ public class MathUtil {
 	}
 	public static Matrix getRotationX(float angle) {
 		Matrix matrix = new Matrix(4);
-		float sin = (float) Math.sin(Math.toRadians(angle));
-		float cos = (float) Math.cos(Math.toRadians(angle));
+		float sin = (float) Math.sin(angle);
+		float cos = (float) Math.cos(angle);
 		matrix.set(0, 0, 1);
 		matrix.set(1, 1, cos);
 		matrix.set(2, 1, sin);
@@ -83,8 +84,8 @@ public class MathUtil {
 	}
 	public static Matrix getRotationY(float angle) {
 		Matrix matrix = new Matrix(4);
-		float sin = (float) Math.sin(Math.toRadians(angle));
-		float cos = (float) Math.cos(Math.toRadians(angle));
+		float sin = (float) Math.sin(angle);
+		float cos = (float) Math.cos(angle);
 		matrix.set(0, 0, cos);
 		matrix.set(1, 1, 1);
 		matrix.set(2, 0, -sin);
@@ -95,8 +96,8 @@ public class MathUtil {
 	}
 	public static Matrix getRotationZ(float angle) {
 		Matrix matrix = new Matrix(4);
-		float sin = (float) Math.sin(Math.toRadians(angle));
-		float cos = (float) Math.cos(Math.toRadians(angle));
+		float sin = (float) Math.sin(angle);
+		float cos = (float) Math.cos(angle);
 		matrix.set(0, 0, cos);
 		matrix.set(0, 1, sin);
 		matrix.set(1, 0, -sin);

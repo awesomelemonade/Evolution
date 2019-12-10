@@ -8,6 +8,7 @@ import org.lwjgl.BufferUtils;
 public class Matrix {
 	public static final Matrix IDENTITY_4 = Matrix.unmodifiableMatrix(Matrix.getIdentity(4));
 	private static final String unmodifiableMessage = "Cannot Modify Matrix";
+	private static final String ERROR_CANNOT_MULTIPLY = "You cannot multiply [%d x %d] by [%d x %d]";
 	private float[][] data;
 
 	public Matrix(int size) {
@@ -50,9 +51,9 @@ public class Matrix {
 		return buffer;
 	}
 	public Matrix multiply(Matrix matrix) {
-		if (getColumns() != matrix.getRows()) {
-			throw new IllegalArgumentException("You cannot multiply " + getRows() + " x " + getColumns() + " by "
-					+ matrix.getRows() + " x " + matrix.getColumns());
+		if (this.getColumns() != matrix.getRows()) {
+			throw new IllegalArgumentException(String.format(ERROR_CANNOT_MULTIPLY,
+					this.getRows(), this.getColumns(), matrix.getRows(), matrix.getColumns()));
 		}
 		Matrix product = new Matrix(getRows(), matrix.getColumns());
 		for (int i = 0; i < getRows(); ++i) {

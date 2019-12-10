@@ -24,11 +24,11 @@ public class Player {
 	}
 	public Vector3D getVectorDirection() {
 		return new Vector3D(
-				(float) (-(Math.sin(Math.toRadians(camera.getRotation().getY()))
-						* Math.cos(Math.toRadians(camera.getRotation().getX())))),
-				(float) (Math.sin(Math.toRadians(camera.getRotation().getX()))),
-				(float) (-(Math.cos(Math.toRadians(camera.getRotation().getX()))
-						* Math.cos(Math.toRadians(camera.getRotation().getY())))));
+				(float) (-(Math.sin(camera.getRotation().getY())
+						* Math.cos(camera.getRotation().getX()))),
+				(float) (Math.sin(camera.getRotation().getX())),
+				(float) (-(Math.cos(camera.getRotation().getX())
+						* Math.cos(camera.getRotation().getY()))));
 	}
 	public Vector3D getPosition() {
 		return camera.getPosition();

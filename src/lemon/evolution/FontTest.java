@@ -44,7 +44,8 @@ public enum FontTest implements Listener {
 		int window_height = height.get();
 		GL11.glViewport(0, 0, window_width, window_height);
 		Matrix projectionMatrix = MathUtil
-				.getPerspective(new Projection(60f, ((float) window_width) / ((float) window_height), 0.01f, 1000f));
+				.getPerspective(new Projection(MathUtil.toRadians(60f),
+						((float) window_width) / ((float) window_height), 0.01f, 1000f));
 		textProgram = new ShaderProgram(new int[] { 0, 1 }, new String[] { "position", "textureCoords" },
 				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/textVertexShader").orElseThrow()),
 				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textFragmentShader").orElseThrow()));
