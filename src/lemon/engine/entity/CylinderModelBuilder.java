@@ -2,9 +2,12 @@ package lemon.engine.entity;
 
 import lemon.engine.math.Vector3D;
 
-public class CylinderModelBuilder extends TriangularIndexedModel.Builder {
-	public CylinderModelBuilder(int n, float radius, float height) {
-		super();
+import java.util.List;
+import java.util.function.BiFunction;
+
+public class CylinderModelBuilder<T extends IndexedModel> extends IndexedModelBuilder<T> {
+	public CylinderModelBuilder(BiFunction<List<Vector3D>, List<Integer>, T> constructor, int n, float radius, float height) {
+		super(constructor);
 		this.addVertices(new Vector3D(0, -height / 2, 0), new Vector3D(0, height / 2, 0));
 		for (int i = 0; i < n; ++i) {
 			Vector3D x = new Vector3D((float) Math.cos(i * 2 * Math.PI / n), -height/2, (float) Math.sin(i * 2 * Math.PI / n));

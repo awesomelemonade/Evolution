@@ -1,5 +1,6 @@
 package lemon.evolution.puzzle;
 
+import lemon.engine.entity.RenderableIndexedModel;
 import lemon.engine.entity.SphereModelBuilder;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
@@ -18,7 +19,7 @@ public class PuzzleBall implements Renderable {
         this.position = position;
         this.velocity = velocity;
         if (sphere == null) {
-            sphere = new SphereModelBuilder(RADIUS, ITERATIONS).buildAndInit();
+            sphere = new SphereModelBuilder<>(RenderableIndexedModel::new, RADIUS, ITERATIONS).build();
         }
     }
 

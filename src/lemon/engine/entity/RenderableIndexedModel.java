@@ -17,53 +17,14 @@ import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 import lemon.engine.toolbox.Toolbox;
 
-public class TriangularIndexedModel implements IndexedModel, Initializable, Renderable {
+public class RenderableIndexedModel implements IndexedModel, Renderable {
 	private VertexArray vertexArray;
 	private List<Vector3D> vertices;
 	private List<Integer> indices;
 
-	private TriangularIndexedModel(List<Vector3D> vertices, List<Integer> indices) {
+	public RenderableIndexedModel(List<Vector3D> vertices, List<Integer> indices) {
 		this.vertices = vertices;
 		this.indices = indices;
-	}
-
-	public static class Builder {
-		private List<Vector3D> vertices;
-		private List<Integer> indices;
-
-		public Builder() {
-			vertices = new ArrayList<Vector3D>();
-			indices = new ArrayList<Integer>();
-		}
-		public Builder addVertices(Vector3D... vertices) {
-			for (Vector3D vertex : vertices) {
-				this.vertices.add(vertex);
-			}
-			return this;
-		}
-		public Builder addIndices(int... indices) {
-			for (int index : indices) {
-				this.indices.add(index);
-			}
-			return this;
-		}
-		public List<Vector3D> getVertices() {
-			return vertices;
-		}
-		public List<Integer> getIndices() {
-			return indices;
-		}
-		public TriangularIndexedModel build() {
-			return new TriangularIndexedModel(vertices, indices);
-		}
-		public TriangularIndexedModel buildAndInit() {
-			TriangularIndexedModel model = this.build();
-			model.init();
-			return model;
-		}
-	}
-
-	public void init() {
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
 			vao.generateVbo().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
