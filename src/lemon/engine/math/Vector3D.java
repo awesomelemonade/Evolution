@@ -57,6 +57,9 @@ public class Vector3D extends Vector {
 	public Vector3D normalize() {
 		float magnitude = (float) Math
 				.sqrt(Math.pow(this.getX(), 2) + Math.pow(this.getY(), 2) + Math.pow(this.getZ(), 2));
+		if (magnitude == 0) {
+			throw new IllegalStateException("Cannot normalize magnitude 0 vector");
+		}
 		return new Vector3D(this.getX() / magnitude, this.getY() / magnitude, this.getZ() / magnitude);
 	}
 	@Override

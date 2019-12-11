@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class CollisionPacket {
+	private static final float BUFFER_DISTANCE = 0.001f;
+	private static final int MAX_RECURSION_DEPTH = 5;
+
 	public Vector3D velocity; // temp public
 	private Vector3D normalizedVelocity;
 	public Vector3D basePoint; // temp public
@@ -131,7 +134,7 @@ public class CollisionPacket {
 		return Float.MAX_VALUE;
 	}
 	// response steps
-	public static void collideAndSlide(Vector3D position, Vector3D velocity, Vector3D gravity) {
+	public static void collideAndSlide(Vector3D position, Vector3D velocity) {
 		// Do collision detection
 		CollisionPacket packet = new CollisionPacket();
 		Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
@@ -155,13 +158,8 @@ public class CollisionPacket {
 		velocity.set(eSpaceVelocity);
 	}
 	public static VectorArray collideWithWorld(Vector3D position, Vector3D velocity, CollisionPacket packet, int collisionRecursionDepth, Vector3D remainingVelocity) {
-		final float unitsPerMeter = 1.0f; // Set this to match application scale
-		float unitScale = unitsPerMeter / 100.0f;
-		float veryCloseDistance = 0.005f * unitScale;
-		veryCloseDistance = 0.001f;
-
 		// do we need to worry?
-		if (collisionRecursionDepth > 5) {
+		if (collisionRecursionDepth > MAX_RECURSION_DEPTH) {
 			return new VectorArray(position, velocity);
 		}
 
@@ -186,16 +184,18 @@ public class CollisionPacket {
 		Vector3D newBasePoint = position;
 		float nearestDistance = packet.velocity.getAbsoluteValue() * packet.t;
 
-		if (nearestDistance >= veryCloseDistance) {
-			Vector3D v = remainingVelocity.scaleToLength(nearestDistance - veryCloseDistance);
+		if (nearestDistance >= BUFFER_DISTANCE) {
+			Vector3D v = remainingVelocity.scaleToLength(nearestDistance - BUFFER_DISTANCE);
 			newBasePoint = packet.basePoint.add(v);
-
-			v.normalize();
-			packet.intersectionPoint.selfSubtract(v.multiply(veryCloseDistance));
+			packet.intersectionPoint.selfSubtract(v.normalize().multiply(BUFFER_DISTANCE));
+		} else {
+			float dist = BUFFER_DISTANCE - nearestDistance;
+			Vector3D v = remainingVelocity.scaleToLength(dist);
+			newBasePoint = packet.basePoint.subtract(v);
 		}
 
 		// Determine the sliding plane
-		Vector3D slidePlaneOrigin = packet.intersectionPoint;
+		Vector3D slidePlaneOrigin = newBasePoint;
 		Vector3D slidePlaneNormal = newBasePoint.subtract(packet.intersectionPoint).normalize();
 		Plane slidingPlane = new Plane(slidePlaneOrigin, slidePlaneNormal);
 
@@ -203,13 +203,11 @@ public class CollisionPacket {
 				.multiply(slidingPlane.getSignedDistanceTo(destinationPoint)));
 
 		// Generate the slide vector, which will become our new velocity vector for the next iteration
-		Vector3D newRemainingVelocity = newDestinationPoint.subtract(packet.intersectionPoint);
-
-		Vector3D temp = destinationPoint.subtract(newDestinationPoint).normalize();
-		Vector3D newVelocity = velocity.subtract(temp.multiply(velocity.dotProduct(temp)));
+		Vector3D newRemainingVelocity = newDestinationPoint.subtract(newBasePoint);
+		Vector3D newVelocity = velocity.subtract(slidePlaneNormal.multiply(velocity.dotProduct(slidePlaneNormal)));
 
 		// Don't recurse if the remaining velocity is very small
-		if (newRemainingVelocity.getLengthSquared() < veryCloseDistance * veryCloseDistance) {
+		if (newRemainingVelocity.getLengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {
 			return new VectorArray(newBasePoint, newVelocity);
 		}
 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -89,6 +90,7 @@ public enum Game implements Listener {
 	@Override
 	public void onRegister() {
 		logger.log(Level.FINE, "Initializing");
+		//GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(GLFW.glfwGetCurrentContext(), width, height);
@@ -151,11 +153,9 @@ public enum Game implements Listener {
 
 		//puzzleBall = new PuzzleBall(new Vector3D(0, 20f, 0), new Vector3D(Vector3D.ZERO));
 		puzzleBalls = new ArrayList<PuzzleBall>();
-		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 20f, 0), new Vector3D(Vector3D.ZERO)));
-		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 30f, 0), new Vector3D(Vector3D.ZERO)));
-		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 40f, 0), new Vector3D(Vector3D.ZERO)));
-		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 50f, 0), new Vector3D(Vector3D.ZERO)));
-		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 60f, 0), new Vector3D(Vector3D.ZERO)));
+		for (int i = 20; i <= 500; i += 10) {
+			puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
+		}
 		puzzleGrid = new PuzzleGrid();
 
 		Game.triangles = terrain.getTriangles();
@@ -215,6 +215,7 @@ public enum Game implements Listener {
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed - maxSpeed * friction;
+	private static final Vector3D GRAVITY_VECTOR = Vector3D.unmodifiableVector(new Vector3D(0, -0.005f, 0));
 
 	@Subscribe
 	public void update(UpdateEvent event) {
@@ -254,8 +255,8 @@ public enum Game implements Listener {
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
 
 		for (PuzzleBall puzzleBall : puzzleBalls) {
-			puzzleBall.getVelocity().selfAdd(new Vector3D(0, -0.005f, 0));
-			CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity(), new Vector3D(0, -0.02f, 0));
+			puzzleBall.getVelocity().selfAdd(GRAVITY_VECTOR);
+			CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity());
 		}
 	}
 	@Subscribe
