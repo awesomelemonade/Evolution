@@ -4,7 +4,6 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,6 +15,7 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
+import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
 import lemon.evolution.puzzle.PuzzleGrid;
@@ -159,10 +159,9 @@ public enum Game implements Listener {
 		puzzleGrid = new PuzzleGrid();
 
 		Game.triangles = terrain.getTriangles();
-		//CollisionPacket.triangles.add(new Triangle(new Vector3D(0f, -10f, 1000f), new Vector3D(1000f, -30f, -1000f), new Vector3D(-1000f, -30f, -1000f)));
-		CollisionPacket.consumers.add(packet -> {
-			Vector3D origin = packet.basePoint;
-			float radius = packet.velocity.getAbsoluteValue() + 2f;
+		CollisionPacket.consumers.add((position, velocity) -> collision -> {
+			Vector3D origin = position;
+			float radius = velocity.getAbsoluteValue() + 2f;
 
 			int roundedX = Math.round(origin.getX() / TILE_SIZE);
 			int roundedZ = Math.round(origin.getZ() / TILE_SIZE);
@@ -170,7 +169,7 @@ public enum Game implements Listener {
 			for (int i = -indexRadius; i <= indexRadius; i++) {
 				for (int j = -indexRadius; j <= indexRadius; j++) {
 					if (i * i + j * j <= indexRadius * indexRadius) {
-						checkTriangle(packet, roundedX + i + triangles.length / 2, roundedZ + j + triangles[0].length / 2);
+						checkTriangle(position, velocity, collision, roundedX + i + triangles.length / 2, roundedZ + j + triangles[0].length / 2);
 					}
 				}
 			}
@@ -202,10 +201,10 @@ public enum Game implements Listener {
 	}
 	// temp
 	private static Triangle[][][] triangles;
-	private static void checkTriangle(CollisionPacket packet, int x, int y) {
+	private static void checkTriangle(Vector3D position, Vector3D velocity, Collision collision, int x, int y) {
 		if (x >= 0 && x < triangles.length && y >= 0 && y < triangles[0].length) {
-			CollisionPacket.checkTriangle(packet, triangles[x][y][0]);
-			CollisionPacket.checkTriangle(packet, triangles[x][y][1]);
+			CollisionPacket.checkTriangle(position, velocity, triangles[x][y][0], collision);
+			CollisionPacket.checkTriangle(position, velocity, triangles[x][y][1], collision);
 		}
 	}
 

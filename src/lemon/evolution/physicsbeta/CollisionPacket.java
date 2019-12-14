@@ -4,26 +4,20 @@ import lemon.engine.math.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public class CollisionPacket {
 	private static final float BUFFER_DISTANCE = 0.001f;
 	private static final int MAX_RECURSION_DEPTH = 5;
 
-	public Vector3D velocity; // temp public
-	private Vector3D normalizedVelocity;
-	public Vector3D basePoint; // temp public
-
-	private float t = Float.MAX_VALUE;
-	private Vector3D intersectionPoint;
-
-	public static void checkTriangle(CollisionPacket packet, Triangle triangle) {
+	public static void checkTriangle(Vector3D position, Vector3D velocity, Triangle triangle, Collision collision) {
 		Plane trianglePlane = new Plane(triangle);
-		if (trianglePlane.isFrontFacingTo(packet.normalizedVelocity)) {
-			float signedDistanceToTrianglePlane = trianglePlane.getSignedDistanceTo(packet.basePoint);
+		if (trianglePlane.isFrontFacingTo(velocity.normalize())) {
+			float signedDistanceToTrianglePlane = trianglePlane.getSignedDistanceTo(position);
 
 			// cache this as we're going to use it a few times below
-			float normalDotVelocity = trianglePlane.getNormal().dotProduct(packet.velocity);
+			float normalDotVelocity = trianglePlane.getNormal().dotProduct(velocity);
 
 			// if sphere is travelling parallel to the plane
 			if (normalDotVelocity == 0f) {
@@ -49,32 +43,27 @@ public class CollisionPacket {
 				if (t0 < 0) {
 					t0 = 0f;
 				}
-				Vector3D planeIntersectionPoint = packet.basePoint.subtract(trianglePlane.getNormal())
-						.add(packet.velocity.multiply(t0));
+				Vector3D planeIntersectionPoint = position.subtract(trianglePlane.getNormal())
+						.add(velocity.multiply(t0));
 				if (triangle.isInside(planeIntersectionPoint)) {
-					if (t0 < packet.t) {
-						packet.t = t0;
-						packet.intersectionPoint = planeIntersectionPoint;
-					}
+					collision.test(t0, planeIntersectionPoint);
 					return;
 				}
 			}
-			Vector3D velocity = packet.velocity;
-			Vector3D base = packet.basePoint;
 			float velocitySquaredLength = velocity.getAbsoluteValueSquared();
 
 			// Check vertices
-			checkVertex(velocitySquaredLength, velocity, base, triangle.getVertex1(), packet);
-			checkVertex(velocitySquaredLength, velocity, base, triangle.getVertex2(), packet);
-			checkVertex(velocitySquaredLength, velocity, base, triangle.getVertex3(), packet);
+			checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex1(), collision);
+			checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex2(), collision);
+			checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex3(), collision);
 
 			// Check against edges
-			checkEdge(velocitySquaredLength, velocity, base, triangle.getVertex1(), triangle.getVertex2(), packet);
-			checkEdge(velocitySquaredLength, velocity, base, triangle.getVertex2(), triangle.getVertex3(), packet);
-			checkEdge(velocitySquaredLength, velocity, base, triangle.getVertex3(), triangle.getVertex1(), packet);
+			checkEdge(velocitySquaredLength, velocity, position, triangle.getVertex1(), triangle.getVertex2(), collision);
+			checkEdge(velocitySquaredLength, velocity, position, triangle.getVertex2(), triangle.getVertex3(), collision);
+			checkEdge(velocitySquaredLength, velocity, position, triangle.getVertex3(), triangle.getVertex1(), collision);
 		}
 	}
-	private static void checkEdge(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertexA, Vector3D vertexB, CollisionPacket packet) {
+	private static void checkEdge(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertexA, Vector3D vertexB, Collision collision) {
 		Vector3D edge = vertexB.subtract(vertexA);
 		Vector3D baseToVertex = vertexA.subtract(base);
 		float edgeSquaredLength = edge.getAbsoluteValueSquared();
@@ -89,23 +78,20 @@ public class CollisionPacket {
 				edgeDotBaseToVertex * edgeDotBaseToVertex;
 
 		float t = getLowestRoot(a, b, c);
-		if (t < packet.t) {
+		if (t < collision.getT()) {
 			float f = (edgeDotVelocity * t - edgeDotBaseToVertex) / edgeSquaredLength;
 			if (f >= 0.0f && f <= 1.0f) {
-				packet.t = t;
-				packet.intersectionPoint = vertexA.add(edge.multiply(f));
+				collision.setT(t);
+				collision.setIntersection(vertexA.add(edge.multiply(f)));
 			}
 		}
 	}
-	private static void checkVertex(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertex, CollisionPacket packet) {
+	private static void checkVertex(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertex, Collision collision) {
 		// p1
 		float b = 2.0f * velocity.dotProduct(base.subtract(vertex));
 		float c = vertex.subtract(base).getAbsoluteValueSquared() - 1.0f;
 		float t = getLowestRoot(velocitySquaredLength, b, c);
-		if (t < packet.t) {
-			packet.t = t;
-			packet.intersectionPoint = vertex;
-		}
+		collision.test(t, vertex);
 	}
 	public static float getLowestRoot(float a, float b, float c) {
 		float determinant = b * b - 4.0f * a * c;
@@ -135,95 +121,82 @@ public class CollisionPacket {
 	}
 	// response steps
 	public static void collideAndSlide(Vector3D position, Vector3D velocity) {
-		// Do collision detection
-		CollisionPacket packet = new CollisionPacket();
 		Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
 
 		// calculate position and velocity in eSpace
-		Vector3D eSpacePosition = position.divide(eRadius);
-		Vector3D eSpaceVelocity = velocity.divide(eRadius);
+		position.selfDivide(eRadius);
+		velocity.selfDivide(eRadius);
 
 		// Iterate until we have our final position
-		VectorArray array = collideWithWorld(eSpacePosition, eSpaceVelocity, packet, 0, eSpaceVelocity);
-
-		Vector3D finalPosition = array.get(0);
-		Vector3D finalVelocity = array.get(1);
+		collideWithWorld(position, velocity, 0, velocity);
 
 		// Convert final result back to r3
-		finalPosition = finalPosition.multiply(eRadius);
-		eSpaceVelocity = finalVelocity.multiply(eRadius);
-
-		// Move the entity (application specific function)
-		position.set(finalPosition);
-		velocity.set(eSpaceVelocity);
+		position.selfMultiply(eRadius);
+		velocity.selfMultiply(eRadius);
 	}
-	public static VectorArray collideWithWorld(Vector3D position, Vector3D velocity, CollisionPacket packet, int collisionRecursionDepth, Vector3D remainingVelocity) {
-		// do we need to worry?
+	public static void collideWithWorld(Vector3D position, Vector3D velocity, int collisionRecursionDepth, Vector3D remainingVelocity) {
+		// Exceed recursion depth
 		if (collisionRecursionDepth > MAX_RECURSION_DEPTH) {
-			return new VectorArray(position, velocity);
+			return;
 		}
-
-		// Ok, we need to worry:
-		packet.velocity = remainingVelocity;
-		packet.normalizedVelocity = remainingVelocity.normalize();
-		packet.basePoint = position;
-		packet.t = Float.MAX_VALUE;
 
 		// Check for collision (calls the collision routines)
 		// Application specific
-		checkCollision(packet);
+		Collision collision = checkCollision(position, remainingVelocity);
 
 		// if no collision we just move along the velocity
-		if (packet.t > 1) {
-			return new VectorArray(position.add(remainingVelocity), velocity);
+		if (collision.getT() > 1) {
+			position.selfAdd(remainingVelocity);
+			return;
 		}
 
 		// Collision occurred
 
 		Vector3D destinationPoint = position.add(remainingVelocity);
-		Vector3D newBasePoint = position;
-		float nearestDistance = packet.velocity.getAbsoluteValue() * packet.t;
+		float nearestDistance = remainingVelocity.getAbsoluteValue() * collision.getT();
 
 		if (nearestDistance >= BUFFER_DISTANCE) {
 			Vector3D v = remainingVelocity.scaleToLength(nearestDistance - BUFFER_DISTANCE);
-			newBasePoint = packet.basePoint.add(v);
-			packet.intersectionPoint.selfSubtract(v.normalize().multiply(BUFFER_DISTANCE));
+			position.selfAdd(v);
+			collision.getIntersection().selfSubtract(v.normalize().multiply(BUFFER_DISTANCE));
 		} else {
 			float dist = BUFFER_DISTANCE - nearestDistance;
 			Vector3D v = remainingVelocity.scaleToLength(dist);
-			newBasePoint = packet.basePoint.subtract(v);
+			position.selfSubtract(v);
 		}
 
 		// Determine the sliding plane
-		Vector3D slidePlaneOrigin = newBasePoint;
-		Vector3D slidePlaneNormal = newBasePoint.subtract(packet.intersectionPoint).normalize();
+		Vector3D slidePlaneOrigin = position;
+		Vector3D slidePlaneNormal = position.subtract(collision.getIntersection()).normalize();
 		Plane slidingPlane = new Plane(slidePlaneOrigin, slidePlaneNormal);
 
 		Vector3D newDestinationPoint = destinationPoint.subtract(slidePlaneNormal
 				.multiply(slidingPlane.getSignedDistanceTo(destinationPoint)));
 
 		// Generate the slide vector, which will become our new velocity vector for the next iteration
-		Vector3D newRemainingVelocity = newDestinationPoint.subtract(newBasePoint);
-		Vector3D newVelocity = velocity.subtract(slidePlaneNormal.multiply(velocity.dotProduct(slidePlaneNormal)));
+		Vector3D newRemainingVelocity = newDestinationPoint.subtract(position);
+		velocity.selfSubtract(slidePlaneNormal.multiply(velocity.dotProduct(slidePlaneNormal)));
 
 		// Don't recurse if the remaining velocity is very small
 		if (newRemainingVelocity.getLengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {
-			return new VectorArray(newBasePoint, newVelocity);
+			return;
 		}
 
 		// Recurse
-		return collideWithWorld(newBasePoint, newVelocity, packet, collisionRecursionDepth + 1, newRemainingVelocity);
+		collideWithWorld(position, velocity, collisionRecursionDepth + 1, newRemainingVelocity);
 	}
 	// Super temporary stuff below
 	public static final List<Triangle> triangles = new ArrayList<Triangle>();
-	public static final List<Consumer<CollisionPacket>> consumers = new ArrayList<Consumer<CollisionPacket>>();
-	public static void checkCollision(CollisionPacket packet) {
+	public static final List<BiFunction<Vector3D, Vector3D, Consumer<Collision>>> consumers = new ArrayList<>();
+	public static Collision checkCollision(Vector3D position, Vector3D velocity) {
+		Collision collision = new Collision(Float.MAX_VALUE, null);
 		// transform packet.basePoint and packet.velocity from eSpace to r3 space?
-		for (Consumer<CollisionPacket> consumer : consumers) {
-			consumer.accept(packet);
+		for (BiFunction<Vector3D, Vector3D, Consumer<Collision>> consumer : consumers) {
+			consumer.apply(position, velocity).accept(collision);
 		}
 		for (Triangle triangle : triangles) {
-			CollisionPacket.checkTriangle(packet, triangle);
+			CollisionPacket.checkTriangle(position, velocity, triangle, collision);
 		}
+		return collision;
 	}
 }
