@@ -81,7 +81,7 @@ public enum Game implements Listener {
 
 	public TerrainLoader getTerrainLoader() {
 		if (terrainLoader == null) {
-			terrainLoader = new TerrainLoader(new TerrainGenerator(0), Math.max((int) (500f / TILE_SIZE), 2),
+			terrainLoader = new TerrainLoader(new TerrainGenerator(), Math.max((int) (500f / TILE_SIZE), 2),
 					Math.max((int) (500f / TILE_SIZE), 2));
 		}
 		return terrainLoader;

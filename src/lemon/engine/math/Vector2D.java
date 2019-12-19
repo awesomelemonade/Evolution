@@ -23,6 +23,7 @@ public class Vector2D extends Vector {
 		super(x, y);
 	}
 	public Vector2D(float[] data) {
+		super(2);
 		if (data.length != 2) {
 			throw new IllegalArgumentException("Only 2 Dimensions Allowed");
 		}

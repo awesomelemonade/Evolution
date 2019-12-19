@@ -155,7 +155,7 @@ public class CollisionPacket {
 		Vector3D destinationPoint = position.add(remainingVelocity);
 		float nearestDistance = remainingVelocity.getAbsoluteValue() * collision.getT();
 
-		if (nearestDistance >= BUFFER_DISTANCE) {
+		if (nearestDistance > BUFFER_DISTANCE) {
 			Vector3D v = remainingVelocity.scaleToLength(nearestDistance - BUFFER_DISTANCE);
 			position.selfAdd(v);
 			collision.getIntersection().selfSubtract(v.normalize().multiply(BUFFER_DISTANCE));
