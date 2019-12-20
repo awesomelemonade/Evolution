@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL20;
 
 import lemon.engine.control.RenderEvent;
 import lemon.engine.event.EventManager;
@@ -52,7 +51,7 @@ public enum Menu implements Listener {
 				if (buttons.get(i).getBox2D().intersect(mouseX, mouseY)) {
 					switch (i) {
 						case 0:
-							start(Loading.INSTANCE);
+							start(Game.INSTANCE);
 							break;
 						case 1:
 							start(Game2D.INSTANCE);
@@ -67,11 +66,11 @@ public enum Menu implements Listener {
 	}
 	@Subscribe
 	public void render(RenderEvent event) {
-		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
-		for (Quad2D button : buttons) {
-			button.render();
-		}
-		GL20.glUseProgram(0);
+		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+			for (Quad2D button : buttons) {
+				button.render();
+			}
+		});
 	}
 	public void start(Listener listener) {
 		EventManager.INSTANCE.registerListener(listener);

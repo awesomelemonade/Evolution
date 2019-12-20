@@ -70,8 +70,9 @@ public enum Game implements Listener {
 	INSTANCE;
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 
-	private Player player;
+	private boolean loaded;
 
+	private Player player;
 	private HeightMap terrain;
 
 	private static final float TILE_SIZE = 0.5f; // 0.2f 1f
@@ -79,12 +80,12 @@ public enum Game implements Listener {
 	private FrameBuffer frameBuffer;
 	private Texture colorTexture;
 	private Texture depthTexture;
-
 	private Texture skyboxTexture;
 
 	private Benchmarker benchmarker;
 
 	private TerrainLoader terrainLoader;
+	private MarchingCube marchingCube;
 
 	public TerrainLoader getTerrainLoader() {
 		if (terrainLoader == null) {
@@ -96,6 +97,26 @@ public enum Game implements Listener {
 
 	@Override
 	public void onRegister() {
+		if (!loaded) {
+			EventManager.INSTANCE.unregisterListener(this);
+			// Prepare loaders
+
+			SzudzikIntPair p = SzudzikIntPair.INSTANCE;
+			ToIntFunction<int[]> pairer = (b) -> p.applyAsInt(b[0], p.applyAsInt(b[1], b[2]));
+			PerlinNoise noise = new PerlinNoise(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
+			marchingCube = new MarchingCube(vector -> noise.apply(vector.divide(800f)),
+					new Vector3D(100f, 100f, 100f), 0.2f, 0f);
+
+			// Add loaders
+			Loading loading = new Loading(() -> {
+				EventManager.INSTANCE.registerListener(Game.INSTANCE);
+			}, Game.INSTANCE.getTerrainLoader(), marchingCube.getLoader());
+			EventManager.INSTANCE.registerListener(loading);
+			loaded = true;
+			return;
+		}
+
+
 		logger.log(Level.FINE, "Initializing");
 		//GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		IntBuffer width = BufferUtils.createIntBuffer(1);
@@ -183,12 +204,6 @@ public enum Game implements Listener {
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 
-		SzudzikIntPair p = SzudzikIntPair.INSTANCE;
-		ToIntFunction<int[]> pairer = (b) -> p.applyAsInt(b[0], p.applyAsInt(b[1], b[2]));
-		PerlinNoise noise = new PerlinNoise((s) -> MurmurHash.createWithSeed(s), pairer, x -> 1f, 6);
-		float[] stat = {10000f, -10000f};
-		MarchingCube marchingCube = new MarchingCube(vector -> noise.apply(vector.divide(800f)),
-				new Vector3D(100f, 100f, 100f), 1f, 0f);
 		marchingCubeModel = marchingCube.getIndexedModel();
 
 		EventManager.INSTANCE.registerListener(new Listener() {
@@ -349,7 +364,7 @@ public enum Game implements Listener {
 			//puzzleGrid.render();
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
-				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(0f, 10f, 0f)));
+				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(0f, 50f, 0f)));
 				marchingCubeModel.render();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);

@@ -1,8 +1,11 @@
 package lemon.evolution.destructible.beta;
 
+import lemon.engine.control.Loader;
 import lemon.engine.entity.IndexedModelBuilder;
 import lemon.engine.entity.RenderableIndexedModel;
+import lemon.engine.math.Percentage;
 import lemon.engine.math.Vector3D;
+import lemon.engine.thread.ThreadManager;
 
 public class MarchingCube {
 	private float[] offsets; // [offsetX, offsetY, offsetZ]
@@ -10,6 +13,7 @@ public class MarchingCube {
 	private float resolution;
 	private float threshold;
 	private float[][][] data;
+	private ScalarField<Vector3D> scalarField;
 	public MarchingCube(ScalarField<Vector3D> scalarField, Vector3D size, float resolution, float threshold) {
 		int ceilX = (int) Math.ceil(size.getX() / resolution);
 		int ceilY = (int) Math.ceil(size.getY() / resolution);
@@ -17,6 +21,7 @@ public class MarchingCube {
 		if (ceilX < 0 || ceilY < 0 || ceilZ < 0) {
 			throw new IllegalArgumentException("Calculated size cannot be less than 0");
 		}
+		this.scalarField = scalarField;
 		this.data = new float[ceilX][ceilY][ceilZ];
 		this.resolution = resolution;
 		this.threshold = threshold;
@@ -26,15 +31,31 @@ public class MarchingCube {
 				-(ceilZ - 1f) / 2f * resolution
 		};
 		this.strides = new float[] {resolution, resolution, resolution};
-		for (int i = 0; i < this.data.length; i++) {
-			for (int j = 0; j < this.data[0].length; j++) {
-				for (int k = 0; k < this.data[0][0].length; k++) {
-					this.data[i][j][k] = scalarField.get(
-							new Vector3D(offsets[0] + strides[0] * i,
-									offsets[1] + strides[1] * j, offsets[2] + strides[2] * k));
-				}
+	}
+	public Loader getLoader() {
+		float[][][] data = this.data;
+		return new Loader() {
+			Percentage percentage = new Percentage(data.length * data[0].length * data[0][0].length);
+			@Override
+			public void load() {
+				ThreadManager.INSTANCE.addThread(new Thread(() -> {
+					for (int i = 0; i < data.length; i++) {
+						for (int j = 0; j < data[0].length; j++) {
+							for (int k = 0; k < data[0][0].length; k++) {
+								data[i][j][k] = scalarField.get(
+										new Vector3D(offsets[0] + strides[0] * i,
+												offsets[1] + strides[1] * j, offsets[2] + strides[2] * k));
+								percentage.setPart(percentage.getPart() + 1);
+							}
+						}
+					}
+				})).start();
 			}
-		}
+			@Override
+			public Percentage getPercentage() {
+				return percentage;
+			}
+		};
 	}
 	public RenderableIndexedModel getIndexedModel() {
 		IndexedModelBuilder<RenderableIndexedModel> builder =

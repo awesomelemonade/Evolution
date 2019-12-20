@@ -26,4 +26,7 @@ public class Percentage {
 	public float getPercentage() {
 		return ((float) part) / ((float) whole);
 	}
+	public boolean isCompleted() {
+		return part >= whole;
+	}
 }
