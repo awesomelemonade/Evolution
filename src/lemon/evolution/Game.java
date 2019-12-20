@@ -5,9 +5,16 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.engine.function.LineLineIntersection;
+import lemon.engine.function.MollerTrumbore;
+import lemon.engine.function.MurmurHash;
+import lemon.engine.function.PerlinNoise;
+import lemon.engine.function.RaySphereIntersection;
+import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.math.Line;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
@@ -15,6 +22,9 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
+import lemon.engine.render.Renderable;
+import lemon.evolution.destructible.beta.MarchingCube;
+import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
@@ -39,9 +49,6 @@ import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
-import lemon.engine.function.LineLineIntersection;
-import lemon.engine.function.MollerTrumbore;
-import lemon.engine.function.RaySphereIntersection;
 import lemon.engine.game.Player;
 import lemon.engine.input.CursorPositionEvent;
 import lemon.engine.input.KeyEvent;
@@ -176,6 +183,13 @@ public enum Game implements Listener {
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 
+		SzudzikIntPair p = SzudzikIntPair.INSTANCE;
+		ToIntFunction<int[]> pairer = (b) -> p.applyAsInt(b[0], p.applyAsInt(b[1], b[2]));
+		PerlinNoise noise = new PerlinNoise((s) -> MurmurHash.createWithSeed(s), pairer, x -> 1f, 6);
+		float[] stat = {10000f, -10000f};
+		MarchingCube marchingCube = new MarchingCube(vector -> noise.apply(vector.divide(800f)),
+				new Vector3D(100f, 100f, 100f), 1f, 0f);
+		marchingCubeModel = marchingCube.getIndexedModel();
 
 		EventManager.INSTANCE.registerListener(new Listener() {
 			@Subscribe
@@ -210,6 +224,7 @@ public enum Game implements Listener {
 
 	private List<PuzzleBall> puzzleBalls;
 	private PuzzleGrid puzzleGrid;
+	private Renderable marchingCubeModel;
 
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -332,6 +347,12 @@ public enum Game implements Listener {
 				puzzleBall.render();
 			}
 			//puzzleGrid.render();
+			GL11.glEnable(GL11.GL_DEPTH_TEST);
+			CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(0f, 10f, 0f)));
+				marchingCubeModel.render();
+			});
+			GL11.glDisable(GL11.GL_DEPTH_TEST);
 		});
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
 			Quad.TEXTURED.render();
