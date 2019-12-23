@@ -6,23 +6,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public class IndexedModelBuilder<T extends IndexedModel> {
-    private BiFunction<List<Vector3D>, List<Integer>, T> constructor;
+public class ModelBuilder<T extends Model> {
+    private BiFunction<Vector3D[], int[], T> constructor;
     private List<Vector3D> vertices;
     private List<Integer> indices;
 
-    public IndexedModelBuilder(BiFunction<List<Vector3D>, List<Integer>, T> constructor) {
+    public ModelBuilder(BiFunction<Vector3D[], int[], T> constructor) {
         this.constructor = constructor;
         vertices = new ArrayList<Vector3D>();
         indices = new ArrayList<Integer>();
     }
-    public IndexedModelBuilder<T> addVertices(Vector3D... vertices) {
+    public ModelBuilder<T> addVertices(Vector3D... vertices) {
         for (Vector3D vertex : vertices) {
             this.vertices.add(vertex);
         }
         return this;
     }
-    public IndexedModelBuilder<T> addIndices(int... indices) {
+    public ModelBuilder<T> addIndices(int... indices) {
         for (int index : indices) {
             this.indices.add(index);
         }
@@ -35,6 +35,7 @@ public class IndexedModelBuilder<T extends IndexedModel> {
         return indices;
     }
     public T build() {
-        return constructor.apply(vertices, indices);
+        return constructor.apply(vertices.toArray(new Vector3D[0]),
+                indices.stream().mapToInt(i -> i).toArray());
     }
 }

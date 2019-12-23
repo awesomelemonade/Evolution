@@ -7,14 +7,14 @@ import java.util.function.BiFunction;
 
 import lemon.engine.math.Vector3D;
 
-public class SphereModelBuilder<T extends IndexedModel> extends IndexedModelBuilder<T> {
+public class SphereModelBuilder<T extends Model> extends ModelBuilder<T> {
 	private static final Vector3D[] OCTAHEDRON_VERTICES = new Vector3D[] { new Vector3D(0, -1, 0),
 			new Vector3D(0, 1, 0), new Vector3D(-1, 0, -1), new Vector3D(-1, 0, 1), new Vector3D(1, 0, -1),
 			new Vector3D(1, 0, 1) };
 	private static final int[] OCTAHEDRON_INDICES = new int[] { 0, 2, 3, 0, 3, 5, 0, 5, 4, 0, 4, 2, 1, 2, 3, 1, 3, 5, 1,
 			5, 4, 1, 4, 2 };
 
-	public SphereModelBuilder(BiFunction<List<Vector3D>, List<Integer>, T> constructor, float radius, int iterations) {
+	public SphereModelBuilder(BiFunction<Vector3D[], int[], T> constructor, float radius, int iterations) {
 		super(constructor);
 		// add vertices and indices
 		this.addVertices(OCTAHEDRON_VERTICES).addIndices(splitTriangles(OCTAHEDRON_INDICES, iterations));

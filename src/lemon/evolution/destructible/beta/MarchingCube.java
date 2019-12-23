@@ -1,11 +1,12 @@
 package lemon.evolution.destructible.beta;
 
 import lemon.engine.control.Loader;
-import lemon.engine.entity.IndexedModelBuilder;
-import lemon.engine.entity.RenderableIndexedModel;
+import lemon.engine.entity.ModelBuilder;
+import lemon.engine.entity.RenderableColoredModel;
 import lemon.engine.math.Percentage;
 import lemon.engine.math.Vector3D;
 import lemon.engine.thread.ThreadManager;
+import lemon.engine.toolbox.Color;
 
 public class MarchingCube {
 	private float[] offsets; // [offsetX, offsetY, offsetZ]
@@ -57,9 +58,9 @@ public class MarchingCube {
 			}
 		};
 	}
-	public RenderableIndexedModel getIndexedModel() {
-		IndexedModelBuilder<RenderableIndexedModel> builder =
-				new IndexedModelBuilder<>(RenderableIndexedModel::new);
+	public RenderableColoredModel getColoredModel() {
+		ModelBuilder<RenderableColoredModel> builder =
+				new ModelBuilder<>(RenderableColoredModel::new);
 		// TODO: some way to cache edge to rendered vertex
 		for (int i = 0; i < data.length - 1; i++) {
 			for (int j = 0; j < data[0].length - 1; j++) {

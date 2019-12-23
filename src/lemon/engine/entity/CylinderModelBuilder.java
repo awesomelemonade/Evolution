@@ -5,8 +5,8 @@ import lemon.engine.math.Vector3D;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public class CylinderModelBuilder<T extends IndexedModel> extends IndexedModelBuilder<T> {
-	public CylinderModelBuilder(BiFunction<List<Vector3D>, List<Integer>, T> constructor, int n, float radius, float height) {
+public class CylinderModelBuilder<T extends Model> extends ModelBuilder<T> {
+	public CylinderModelBuilder(BiFunction<Vector3D[], int[], T> constructor, int n, float radius, float height) {
 		super(constructor);
 		this.addVertices(new Vector3D(0, -height / 2, 0), new Vector3D(0, height / 2, 0));
 		for (int i = 0; i < n; ++i) {

@@ -2,6 +2,7 @@ package lemon.engine.font;
 
 import java.nio.FloatBuffer;
 
+import lemon.engine.render.Renderable;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -9,7 +10,6 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 import lemon.engine.font.Font.CharData;
-import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 
 public class Text implements Renderable {

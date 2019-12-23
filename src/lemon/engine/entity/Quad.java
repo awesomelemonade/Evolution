@@ -2,13 +2,13 @@ package lemon.engine.entity;
 
 import java.nio.FloatBuffer;
 
+import lemon.engine.render.Renderable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 import lemon.engine.control.Initializable;
-import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 import lemon.engine.toolbox.Toolbox;
 

@@ -60,4 +60,24 @@ public class Color extends Vector {
 	public String toString() {
 		return String.format("Color[%f, %f, %f, %f]", this.getRed(), this.getGreen(), this.getBlue(), this.getAlpha());
 	}
+	public static Color randomOpaque() {
+		return new Color((float) Math.random(), (float) Math.random(), (float) Math.random());
+	}
+	public static Color random() {
+		return new Color((float) Math.random(), (float) Math.random(), (float) Math.random(), (float) Math.random());
+	}
+	public static Color[] randomOpaque(int size) {
+		Color[] colors = new Color[size];
+		for (int i = 0; i < colors.length; i++) {
+			colors[i] = Color.randomOpaque();
+		}
+		return colors;
+	}
+	public static Color[] random(int size) {
+		Color[] colors = new Color[size];
+		for (int i = 0; i < colors.length; i++) {
+			colors[i] = Color.random();
+		}
+		return colors;
+	}
 }

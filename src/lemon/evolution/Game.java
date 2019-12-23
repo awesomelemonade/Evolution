@@ -24,7 +24,6 @@ import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.Renderable;
 import lemon.evolution.destructible.beta.MarchingCube;
-import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
@@ -105,7 +104,7 @@ public enum Game implements Listener {
 			ToIntFunction<int[]> pairer = (b) -> p.applyAsInt(b[0], p.applyAsInt(b[1], b[2]));
 			PerlinNoise noise = new PerlinNoise(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			marchingCube = new MarchingCube(vector -> noise.apply(vector.divide(800f)),
-					new Vector3D(100f, 100f, 100f), 0.2f, 0f);
+					new Vector3D(100f, 100f, 100f), 1f, 0f);
 
 			// Add loaders
 			Loading loading = new Loading(() -> {
@@ -148,25 +147,25 @@ public enum Game implements Listener {
 		updateViewMatrix(CommonPrograms3D.CUBEMAP);
 
 		frameBuffer = new FrameBuffer();
-		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, frameBuffer.getId());
-		GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
-		colorTexture = new Texture();
-		GL13.glActiveTexture(TextureBank.COLOR.getBind());
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, window_width, window_height, 0, GL11.GL_RGB,
-				GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
-		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
-		depthTexture = new Texture();
-		GL13.glActiveTexture(TextureBank.DEPTH.getBind());
-		GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
-		GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, window_width, window_height, 0,
-				GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
-		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-		GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-		GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
-		GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+		frameBuffer.bind(frameBuffer -> {
+			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
+			colorTexture = new Texture();
+			GL13.glActiveTexture(TextureBank.COLOR.getBind());
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
+			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, window_width, window_height, 0, GL11.GL_RGB,
+					GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+			GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
+			depthTexture = new Texture();
+			GL13.glActiveTexture(TextureBank.DEPTH.getBind());
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
+			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, window_width, window_height, 0,
+					GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
+			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+			GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
+		});
 		skyboxTexture = new Texture();
 		GL13.glActiveTexture(TextureBank.SKYBOX.getBind());
 		skyboxTexture
@@ -204,7 +203,7 @@ public enum Game implements Listener {
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 
-		marchingCubeModel = marchingCube.getIndexedModel();
+		marchingCubeModel = marchingCube.getColoredModel();
 
 		EventManager.INSTANCE.registerListener(new Listener() {
 			@Subscribe

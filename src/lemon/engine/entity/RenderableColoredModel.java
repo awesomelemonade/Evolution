@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import lemon.engine.toolbox.Color;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -17,14 +18,19 @@ import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 import lemon.engine.toolbox.Toolbox;
 
-public class RenderableIndexedModel implements IndexedModel, Renderable {
+public class RenderableColoredModel implements ColoredModel, Renderable {
 	private VertexArray vertexArray;
-	private List<Vector3D> vertices;
-	private List<Integer> indices;
+	private Vector3D[] vertices;
+	private int[] indices;
+	private Color[] colors;
 
-	public RenderableIndexedModel(List<Vector3D> vertices, List<Integer> indices) {
+	public RenderableColoredModel(Vector3D[] vertices, int[] indices) {
+		this(vertices, indices, Color.randomOpaque(vertices.length));
+	}
+	public RenderableColoredModel(Vector3D[] vertices, int[] indices, Color[] colors) {
 		this.vertices = vertices;
 		this.indices = indices;
+		this.colors = colors;
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
 			vao.generateVbo().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
@@ -40,31 +46,35 @@ public class RenderableIndexedModel implements IndexedModel, Renderable {
 		});
 	}
 	private FloatBuffer getFloatBuffer() {
-		FloatBuffer buffer = BufferUtils.createFloatBuffer(vertices.size() * 3 * 4);
-		for (Vector3D vertex : vertices) {
-			buffer.put(vertex.getX());
-			buffer.put(vertex.getY());
-			buffer.put(vertex.getZ());
-			buffer.put((float) Math.random());
-			buffer.put((float) Math.random());
-			buffer.put((float) Math.random());
-			buffer.put(1f);
+		FloatBuffer buffer = BufferUtils.createFloatBuffer(vertices.length * 3 * 4);
+		for (int i = 0; i < vertices.length; i++) {
+			buffer.put(vertices[i].getX());
+			buffer.put(vertices[i].getY());
+			buffer.put(vertices[i].getZ());
+			buffer.put(colors[i].getRed());
+			buffer.put(colors[i].getGreen());
+			buffer.put(colors[i].getBlue());
+			buffer.put(colors[i].getAlpha());
 		}
 		buffer.flip();
 		return buffer;
 	}
 	@Override
-	public List<Vector3D> getVertices() {
-		return Collections.unmodifiableList(vertices);
+	public Vector3D[] getVertices() {
+		return vertices;
 	}
 	@Override
-	public List<Integer> getIndices() {
-		return Collections.unmodifiableList(indices);
+	public int[] getIndices() {
+		return indices;
+	}
+	@Override
+	public Color[] getColors() {
+		return colors;
 	}
 	@Override
 	public void render() {
 		vertexArray.bind(vao -> {
-			GL11.glDrawElements(GL11.GL_TRIANGLES, indices.size(), GL11.GL_UNSIGNED_INT, 0);
+			GL11.glDrawElements(GL11.GL_TRIANGLES, indices.length, GL11.GL_UNSIGNED_INT, 0);
 		});
 	}
 }

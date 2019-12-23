@@ -1,7 +1,7 @@
 package lemon.evolution.puzzle;
 
-import lemon.engine.entity.IndexedModelBuilder;
-import lemon.engine.entity.RenderableIndexedModel;
+import lemon.engine.entity.ModelBuilder;
+import lemon.engine.entity.RenderableColoredModel;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
@@ -30,7 +30,7 @@ public class PuzzleGrid implements Renderable {
     };
     private Renderable renderable;
     public PuzzleGrid() {
-        renderable = new IndexedModelBuilder<>(RenderableIndexedModel::new)
+        renderable = new ModelBuilder<>(RenderableColoredModel::new)
                 .addVertices(VERTICES).addIndices(INDICES).build();
     }
     @Override

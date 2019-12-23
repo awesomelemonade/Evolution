@@ -2,6 +2,7 @@ package lemon.engine.game2d;
 
 import java.nio.FloatBuffer;
 
+import lemon.engine.render.Renderable;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -9,7 +10,6 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 import lemon.engine.math.Box2D;
-import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 import lemon.engine.toolbox.Color;
 
