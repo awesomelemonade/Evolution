@@ -1,7 +1,9 @@
 package lemon.evolution.puzzle;
 
-import lemon.engine.entity.ModelBuilder;
-import lemon.engine.entity.RenderableColoredModel;
+import lemon.engine.draw.CommonDrawables;
+import lemon.engine.draw.Drawable;
+import lemon.engine.model.AbstractColoredModel;
+import lemon.engine.model.ModelBuilder;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
@@ -28,10 +30,11 @@ public class PuzzleGrid implements Renderable {
             0, 2, 4, 2, 4, 6, // -z face
             1, 3, 5, 3, 5, 7  // +z face
     };
-    private Renderable renderable;
+    private Drawable drawable;
     public PuzzleGrid() {
-        renderable = new ModelBuilder<>(RenderableColoredModel::new)
-                .addVertices(VERTICES).addIndices(INDICES).build();
+        drawable = CommonDrawables.fromColoredModel(
+        		new ModelBuilder<>(AbstractColoredModel::new)
+                .addVertices(VERTICES).addIndices(INDICES).build());
     }
     @Override
     public void render() {
@@ -40,7 +43,7 @@ public class PuzzleGrid implements Renderable {
         GL11.glEnable(GL11.GL_DEPTH_TEST);
         CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
             program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getScalar(new Vector3D(10f, 1f, 10f)));
-            renderable.render();
+            drawable.draw();
         });
         GL11.glDisable(GL11.GL_DEPTH_TEST);
         GL11.glDisable(GL11.GL_BLEND);

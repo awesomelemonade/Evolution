@@ -9,6 +9,8 @@ import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.engine.draw.CommonDrawables;
+import lemon.engine.draw.Drawable;
 import lemon.engine.function.LineLineIntersection;
 import lemon.engine.function.MollerTrumbore;
 import lemon.engine.function.MurmurHash;
@@ -22,7 +24,6 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
-import lemon.engine.render.Renderable;
 import lemon.evolution.destructible.beta.MarchingCube;
 import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
@@ -40,10 +41,8 @@ import org.lwjgl.opengl.GL32;
 
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
-import lemon.engine.entity.HeightMap;
-import lemon.engine.entity.LineGraph;
-import lemon.engine.entity.Quad;
-import lemon.engine.entity.Skybox;
+import lemon.engine.model.HeightMap;
+import lemon.engine.model.LineGraph;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -126,9 +125,6 @@ public enum Game implements Listener {
 
 		GL11.glViewport(0, 0, window_width, window_height);
 
-		Skybox.INSTANCE.init();
-		Quad.TEXTURED.init();
-		Quad.COLORED.init();
 		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 
 		benchmarker = new Benchmarker();
@@ -203,7 +199,7 @@ public enum Game implements Listener {
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 
-		marchingCubeModel = marchingCube.getColoredModel();
+		marchingCubeModel = CommonDrawables.fromColoredModel(marchingCube.getColoredModel());
 
 		EventManager.INSTANCE.registerListener(new Listener() {
 			@Subscribe
@@ -238,7 +234,7 @@ public enum Game implements Listener {
 
 	private List<PuzzleBall> puzzleBalls;
 	private PuzzleGrid puzzleGrid;
-	private Renderable marchingCubeModel;
+	private Drawable marchingCubeModel;
 
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -364,12 +360,12 @@ public enum Game implements Listener {
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(0f, 50f, 0f)));
-				marchingCubeModel.render();
+				marchingCubeModel.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
 		});
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
-			Quad.TEXTURED.render();
+			CommonDrawables.TEXTURED_QUAD.draw();
 		});
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			renderFPS();
@@ -400,7 +396,7 @@ public enum Game implements Listener {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL20.glUseProgram(CommonPrograms3D.CUBEMAP.getShaderProgram().getId());
-		Skybox.INSTANCE.render();
+		CommonDrawables.SKYBOX.draw();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_BLEND);
 	}

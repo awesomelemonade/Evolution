@@ -1,0 +1,70 @@
+package lemon.engine.draw;
+
+import java.nio.FloatBuffer;
+
+import lemon.engine.math.Vector;
+import lemon.engine.render.VertexArray;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL20;
+
+public class IndexedDrawable implements Drawable {
+	private VertexArray vertexArray;
+	private Vector[][] vertices;
+	private int[] indices;
+	private int stride;
+	private int drawMode;
+
+	public IndexedDrawable(Vector[][] vertices, int[] indices, int drawMode) {
+		this.vertices = vertices;
+		this.indices = indices;
+		this.drawMode = drawMode;
+		this.stride = getStride(vertices);
+		vertexArray = new VertexArray();
+		vertexArray.bind(vao -> {
+			vao.generateVbo().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
+				GL15.glBufferData(target, indices, GL15.GL_STATIC_DRAW);
+			}, false);
+			vao.generateVbo().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+				GL15.glBufferData(target, getFloatBuffer(), GL15.GL_STATIC_DRAW);
+				int offset = 0;
+				for (int i = 0; i < vertices.length; i++) {
+					int dimensions = vertices[i][0].getDimensions();
+					GL20.glVertexAttribPointer(i, dimensions, GL11.GL_FLOAT, false,
+							stride * BYTES_PER_FLOAT, offset * BYTES_PER_FLOAT);
+					offset += dimensions;
+				}
+			});
+			for (int i = 0; i < vertices.length; i++) {
+				GL20.glEnableVertexAttribArray(i);
+			}
+		});
+	}
+	private int getStride(Vector[][] vertices) {
+		int stride = 0;
+		for (int i = 0; i < vertices.length; i++) {
+			stride += vertices[i][0].getDimensions();
+		}
+		return stride;
+	}
+	private FloatBuffer getFloatBuffer() {
+		int numVertices = vertices[0].length;
+		FloatBuffer buffer = BufferUtils.createFloatBuffer(numVertices * stride);
+		for (int i = 0; i < numVertices; i++) {
+			for (int j = 0; j < vertices.length; j++) {
+				for (int k = 0; k < vertices[j][i].getDimensions(); k++) {
+					buffer.put(vertices[j][i].get(k));
+				}
+			}
+		}
+		buffer.flip();
+		return buffer;
+	}
+	@Override
+	public void draw() {
+		vertexArray.bind(vao -> {
+			GL11.glDrawElements(drawMode, indices.length, GL11.GL_UNSIGNED_INT, 0);
+		});
+	}
+}

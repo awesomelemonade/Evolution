@@ -1,8 +1,7 @@
-package lemon.engine.entity;
+package lemon.engine.model;
 
 import lemon.engine.math.Vector3D;
 
-import java.util.List;
 import java.util.function.BiFunction;
 
 public class CylinderModelBuilder<T extends Model> extends ModelBuilder<T> {

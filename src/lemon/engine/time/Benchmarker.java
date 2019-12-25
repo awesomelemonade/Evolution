@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import lemon.engine.entity.LineGraph;
+import lemon.engine.model.LineGraph;
 
 public class Benchmarker {
 	private Map<String, LineGraph> graphs;

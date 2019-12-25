@@ -1,4 +1,4 @@
-package lemon.engine.entity;
+package lemon.engine.model;
 
 import lemon.engine.math.Vector3D;
 
