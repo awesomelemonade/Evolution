@@ -30,30 +30,23 @@ public class LineGraph implements Renderable {
 		}
 		ensureCapacity();
 		vertexArray = new VertexArray();
-		GL30.glBindVertexArray(vertexArray.getId());
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, (vertexBuffer = vertexArray.generateVbo()).getId());
-		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer(this.values.size() * 2);
-		int n = 0;
-		for (float f : this.values) {
-			dataBuffer.put(n++);
-			dataBuffer.put((f / max * 2f) - 1f);
-		}
-		dataBuffer.flip();
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, dataBuffer, GL15.GL_STREAM_DRAW);
-		GL20.glVertexAttribPointer(0, 1, GL11.GL_FLOAT, false, 2 * 4, 0);
-		GL20.glVertexAttribPointer(1, 1, GL11.GL_FLOAT, false, 2 * 4, 1 * 4);
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
-		GL20.glEnableVertexAttribArray(0);
-		GL20.glEnableVertexAttribArray(1);
-		GL30.glBindVertexArray(0);
+		vertexArray.bind(vao -> {
+			vertexBuffer = vao.generateVbo();
+			vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+				GL15.glBufferData(target, getDataBuffer(), GL15.GL_STREAM_DRAW);
+				GL20.glVertexAttribPointer(0, 1, GL11.GL_FLOAT, false, 2 * 4, 0);
+				GL20.glVertexAttribPointer(1, 1, GL11.GL_FLOAT, false, 2 * 4, 1 * 4);
+			});
+			GL20.glEnableVertexAttribArray(0);
+			GL20.glEnableVertexAttribArray(1);
+		});
 	}
 	public void add(float f) {
 		values.removeFirst();
 		values.add(f);
 		updateVbo();
 	}
-	private void updateVbo() {
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vertexBuffer.getId());
+	private FloatBuffer getDataBuffer() {
 		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer(size * 2);
 		int n = 0;
 		for (float f : values) {
@@ -61,8 +54,12 @@ public class LineGraph implements Renderable {
 			dataBuffer.put((f / max * 2f) - 1f);
 		}
 		dataBuffer.flip();
-		GL15.glBufferData(GL15.GL_ARRAY_BUFFER, dataBuffer, GL15.GL_STREAM_DRAW);
-		GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+		return dataBuffer;
+	}
+	private void updateVbo() {
+		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			GL15.glBufferSubData(target, 0, getDataBuffer());
+		});
 	}
 	private void ensureCapacity() {
 		while (this.values.size() > size) {
@@ -74,9 +71,9 @@ public class LineGraph implements Renderable {
 	}
 	@Override
 	public void render() {
-		GL30.glBindVertexArray(vertexArray.getId());
-		GL11.glDrawArrays(GL11.GL_LINE_STRIP, 0, this.values.size());
-		GL30.glBindVertexArray(0);
+		vertexArray.bind(vao -> {
+			GL11.glDrawArrays(GL11.GL_LINE_STRIP, 0, this.values.size());
+		});
 	}
 	public int getSize() {
 		return size;
