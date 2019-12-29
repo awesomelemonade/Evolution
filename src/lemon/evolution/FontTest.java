@@ -2,7 +2,12 @@ package lemon.evolution;
 
 import java.io.File;
 import java.nio.IntBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
+import lemon.engine.render.MatrixType;
+import lemon.evolution.setup.CommonProgramsSetup;
+import lemon.evolution.util.CommonPrograms2D;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -26,14 +31,8 @@ import lemon.engine.toolbox.Toolbox;
 
 public enum FontTest implements Listener {
 	INSTANCE;
-	private ShaderProgram textProgram;
-	private UniformVariable uniform_textModelMatrix;
-	private UniformVariable uniform_textViewMatrix;
-	private UniformVariable uniform_textProjectionMatrix;
-	private UniformVariable uniform_textColor;
-	private UniformVariable uniform_textSampler;
 	private Font font;
-	private Text text;
+	private Map<Text, Matrix> text;
 
 	@Override
 	public void onRegister() {
@@ -46,33 +45,33 @@ public enum FontTest implements Listener {
 		Matrix projectionMatrix = MathUtil
 				.getPerspective(new Projection(MathUtil.toRadians(60f),
 						((float) window_width) / ((float) window_height), 0.01f, 1000f));
-		textProgram = new ShaderProgram(new int[] { 0, 1 }, new String[] { "position", "textureCoords" },
-				new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders2d/textVertexShader").orElseThrow()),
-				new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders2d/textFragmentShader").orElseThrow()));
-		uniform_textModelMatrix = textProgram.getUniformVariable("modelMatrix");
-		uniform_textViewMatrix = textProgram.getUniformVariable("viewMatrix");
-		uniform_textProjectionMatrix = textProgram.getUniformVariable("projectionMatrix");
-		uniform_textColor = textProgram.getUniformVariable("color");
-		uniform_textSampler = textProgram.getUniformVariable("sampler");
-		GL20.glUseProgram(textProgram.getId());
-		uniform_textModelMatrix.loadMatrix(Matrix.IDENTITY_4);
-		uniform_textViewMatrix.loadMatrix(MathUtil.getTranslation(new Vector3D(0f, 0f, -500f)));
-		uniform_textProjectionMatrix.loadMatrix(projectionMatrix);
-		uniform_textColor.loadVector(new Vector3D(1f, 1f, 1f));
-		uniform_textSampler.loadInt(TextureBank.REUSE.getId());
-		GL20.glUseProgram(0);
+		CommonProgramsSetup.setup2D();
+		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.VIEW_MATRIX, MathUtil.getTranslation(new Vector3D(-300f, 0f, -500f)));
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+			program.loadVector("color", new Vector3D(1f, 1f, 1f));
+			program.loadInt("sampler", TextureBank.REUSE.getId());
+		});
 		font = new Font(new File("res/fonts/FreeSans.fnt"));
-		text = new Text(font, "Testing 123");
+		text = new HashMap<Text, Matrix>();
+		//text = new Text(font, "Evolution");
+
+		text.put(new Text(font, "the quick brown"), Matrix.IDENTITY_4);
+		text.put(new Text(font, "fox jumped over"), MathUtil.getTranslation(new Vector3D(0f, -100f, 0f)));
+		text.put(new Text(font, "the lazy dog"), MathUtil.getTranslation(new Vector3D(0f, -200f, 0f)));
 	}
 	@Subscribe
 	public void render(RenderEvent event) {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
-		GL20.glUseProgram(textProgram.getId());
-		text.render();
-		GL20.glUseProgram(0);
+		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
+			for (Text t : text.keySet()) {
+				program.loadMatrix(MatrixType.MODEL_MATRIX, text.get(t));
+				t.draw();
+			}
+		});
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}

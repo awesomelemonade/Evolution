@@ -8,7 +8,6 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 
 import java.nio.FloatBuffer;
-import java.util.Arrays;
 
 public class UnindexedDrawable implements Drawable {
 	private VertexArray vertexArray;

@@ -50,4 +50,9 @@ public class Texture implements Listener {
 	public void cleanUp(CleanUpEvent event) {
 		GL11.glDeleteTextures(id);
 	}
+	public void bind(int target, Runnable runnable) {
+		GL11.glBindTexture(target, id);
+		runnable.run();
+		GL11.glBindTexture(target, 0);
+	}
 }
