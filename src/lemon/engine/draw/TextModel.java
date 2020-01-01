@@ -1,25 +1,24 @@
-package lemon.engine.font;
+package lemon.engine.draw;
 
 import java.nio.FloatBuffer;
 
-import lemon.engine.draw.Drawable;
+import lemon.engine.font.CharData;
+import lemon.engine.font.Font;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 
-import lemon.engine.font.Font.CharData;
 import lemon.engine.render.VertexArray;
 
-public class Text implements Drawable {
+public class TextModel implements Drawable {
 	private VertexArray vertexArray;
 	private Font font;
 	private String text;
 
-	public Text(Font font, String text) {
+	public TextModel(Font font, String text) {
 		if (text.isEmpty()) {
-			throw new IllegalStateException("Text is empty!");
+			throw new IllegalStateException("Text cannot be empty");
 		}
 		this.font = font;
 		this.text = text;
