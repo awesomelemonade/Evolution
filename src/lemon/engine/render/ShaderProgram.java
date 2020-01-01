@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
@@ -63,6 +64,12 @@ public class ShaderProgram implements Listener {
 	}
 	public void loadVector(String name, Vector3D vector) {
 		this.getUniformVariable(name).loadVector(vector);
+	}
+	public void loadColor(Color color) {
+		this.getUniformVariable("color").loadColor(color);
+	}
+	public void loadColor(String name, Color color) {
+		this.getUniformVariable(name).loadColor(color);
 	}
 	public void loadBoolean(String name, boolean value) {
 		this.getUniformVariable(name).loadBoolean(value);

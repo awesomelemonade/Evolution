@@ -25,6 +25,7 @@ import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 import lemon.evolution.destructible.beta.MarchingCube;
+import lemon.evolution.particle.beta.ParticleSystem;
 import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
@@ -84,6 +85,7 @@ public enum Game implements Listener {
 
 	private TerrainLoader terrainLoader;
 	private MarchingCube marchingCube;
+	private ParticleSystem particleSystem;
 
 	public TerrainLoader getTerrainLoader() {
 		if (terrainLoader == null) {
@@ -140,7 +142,8 @@ public enum Game implements Listener {
 
 		updateViewMatrix(CommonPrograms3D.COLOR);
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
-		updateViewMatrix(CommonPrograms3D.CUBEMAP);
+		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
+		updateViewMatrix(CommonPrograms3D.PARTICLE);
 
 		frameBuffer = new FrameBuffer();
 		frameBuffer.bind(frameBuffer -> {
@@ -200,6 +203,7 @@ public enum Game implements Listener {
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 
 		marchingCubeModel = CommonDrawables.fromColoredModel(marchingCube.getColoredModel());
+		particleSystem = new ParticleSystem(2000);
 
 		EventManager.INSTANCE.registerListener(new Listener() {
 			@Subscribe
@@ -277,6 +281,7 @@ public enum Game implements Listener {
 		updateViewMatrix(CommonPrograms3D.COLOR);
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
+		updateViewMatrix(CommonPrograms3D.PARTICLE);
 
 		for (PuzzleBall puzzleBall : puzzleBalls) {
 			puzzleBall.getVelocity().selfAdd(GRAVITY_VECTOR);
@@ -294,6 +299,7 @@ public enum Game implements Listener {
 		updateProjectionMatrix(CommonPrograms3D.COLOR);
 		updateProjectionMatrix(CommonPrograms3D.TEXTURE);
 		updateProjectionMatrix(CommonPrograms3D.CUBEMAP);
+		updateProjectionMatrix(CommonPrograms3D.PARTICLE);
 	}
 
 	private double lastMouseX;
@@ -324,6 +330,7 @@ public enum Game implements Listener {
 		updateViewMatrix(CommonPrograms3D.COLOR);
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
+		updateViewMatrix(CommonPrograms3D.PARTICLE);
 	}
 	public void updateViewMatrix(ShaderProgramHolder holder) {
 		ShaderProgram program = holder.getShaderProgram();
@@ -362,6 +369,7 @@ public enum Game implements Listener {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(0f, 50f, 0f)));
 				marchingCubeModel.draw();
 			});
+			particleSystem.render();
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
 		});
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {

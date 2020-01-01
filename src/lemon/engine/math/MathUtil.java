@@ -70,6 +70,10 @@ public class MathUtil {
 		matrix.set(2, 3, vector.getZ());
 		return matrix;
 	}
+	public static Matrix getRotation(Vector3D rotation) {
+		return MathUtil.getRotationX(rotation.getX())
+				.multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
+	}
 	public static Matrix getRotationX(float angle) {
 		Matrix matrix = new Matrix(4);
 		float sin = (float) Math.sin(angle);

@@ -1,0 +1,17 @@
+#version 400 core
+
+in vec3 position;
+in mat4 transformationMatrix;
+
+out vec4 passColor;
+
+uniform vec4 color;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+
+void main(void) {
+	gl_Position = projectionMatrix * viewMatrix * modelMatrix * transformationMatrix * vec4(position, 1.0);
+
+	passColor = color;
+}

@@ -1,8 +1,5 @@
 package lemon.engine.math;
 
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Matrix;
-
 public class Camera {
 	private Vector3D position;
 	private Vector3D rotation;
@@ -29,9 +26,7 @@ public class Camera {
 		return MathUtil.getTranslation(this.position.getInvert());
 	}
 	public Matrix getInvertedRotationMatrix() {
-		Vector3D rotation = this.rotation.getInvert();
-		return MathUtil.getRotationX(rotation.getX())
-				.multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
+		return MathUtil.getRotation(rotation.getInvert());
 	}
 	public Matrix getProjectionMatrix() {
 		return MathUtil.getPerspective(projection);

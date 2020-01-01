@@ -1,5 +1,6 @@
 package lemon.evolution.setup;
 
+import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL20;
 
 import lemon.engine.math.Matrix;
@@ -35,6 +36,12 @@ public class CommonProgramsSetup {
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
 			program.loadInt("colorSampler", TextureBank.COLOR.getId());
 			program.loadInt("depthSampler", TextureBank.DEPTH.getId());
+		});
+
+		CommonPrograms3D.PARTICLE.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+			program.loadColor(Color.WHITE);
 		});
 	}
 	public static void setup2D() {

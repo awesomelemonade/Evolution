@@ -18,7 +18,10 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/cubemapFragmentShader").orElseThrow())),
 	POST_PROCESSING(new int[] { 0, 1 }, new String[] { "position", "textureCoords" },
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/postVertexShader").orElseThrow()),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/postFragmentShader").orElseThrow()));
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/postFragmentShader").orElseThrow())),
+	PARTICLE(new int[] { 0, 1 }, new String[] { "position", "transformationMatrix" },
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("shaders/particleVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("shaders/particleFragmentShader").orElseThrow()));
 	private ShaderProgram shaderProgram;
 	private int[] indices;
 	private String[] names;

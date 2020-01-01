@@ -6,6 +6,7 @@ import java.util.Arrays;
 import org.lwjgl.BufferUtils;
 
 public class Matrix {
+	public static final Matrix ZERO_4 = Matrix.unmodifiableMatrix(new Matrix(4));
 	public static final Matrix IDENTITY_4 = Matrix.unmodifiableMatrix(Matrix.getIdentity(4));
 	private static final String unmodifiableMessage = "Cannot Modify Matrix";
 	private static final String ERROR_CANNOT_MULTIPLY = "You cannot multiply [%d x %d] by [%d x %d]";
@@ -42,13 +43,16 @@ public class Matrix {
 	}
 	public FloatBuffer toFloatBuffer() {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length * data[0].length);
-		for (int j = 0; j < this.getColumns(); ++j) {
-			for (int i = 0; i < this.getRows(); ++i) {
+		addToFloatBuffer(buffer);
+		buffer.flip();
+		return buffer;
+	}
+	public void addToFloatBuffer(FloatBuffer buffer) {
+		for (int j = 0; j < this.getColumns(); j++) {
+			for (int i = 0; i < this.getRows(); i++) {
 				buffer.put(this.get(i, j));
 			}
 		}
-		buffer.flip();
-		return buffer;
 	}
 	public Matrix multiply(Matrix matrix) {
 		if (this.getColumns() != matrix.getRows()) {

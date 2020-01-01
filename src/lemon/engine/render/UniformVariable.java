@@ -3,6 +3,7 @@ package lemon.engine.render;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 
+import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL20;
 
 public class UniformVariable {
@@ -21,6 +22,9 @@ public class UniformVariable {
 	}
 	public void loadVector(Vector3D vector) {
 		GL20.glUniform3f(id, vector.getX(), vector.getY(), vector.getZ());
+	}
+	public void loadColor(Color color) {
+		GL20.glUniform4f(id, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
 	}
 	public void loadBoolean(boolean value) {
 		loadFloat(value ? 1 : 0);
