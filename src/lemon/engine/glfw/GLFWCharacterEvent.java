@@ -3,31 +3,19 @@ package lemon.engine.glfw;
 import lemon.engine.input.CharacterEvent;
 import lemon.engine.math.MathUtil;
 
-public class GLFWCharacterEvent implements CharacterEvent, GLFWEvent {
+public class GLFWCharacterEvent implements CharacterEvent, GLFWEvent, GLFWKeyMods {
 	private long window;
 	private int codepoint;
-	private boolean[] mods;
+	private int mods;
 
 	public GLFWCharacterEvent(long window, int codepoint, int mods) {
 		this.window = window;
 		this.codepoint = codepoint;
-		this.mods = MathUtil.convertMods(mods);
+		this.mods = mods;
 	}
 	@Override
-	public boolean isShiftDown() {
-		return mods[0];
-	}
-	@Override
-	public boolean isAltDown() {
-		return mods[1];
-	}
-	@Override
-	public boolean isCtrlDown() {
-		return mods[2];
-	}
-	@Override
-	public boolean isCommandDown() {
-		return mods[3];
+	public int getMods() {
+		return mods;
 	}
 	@Override
 	public int getCodepoint() {
