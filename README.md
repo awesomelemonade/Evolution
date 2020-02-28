@@ -1,9 +1,9 @@
 Evolution
 =========
-A project created by awesomelemonade. First versions created in 2012 (Not uploaded to github). First commit in this version dates back to 2015. This project is a playground for experimenting with various ideas I have learned throughout my experience with programming.
+A project created by awesomelemonade. First versions created in 2012 (Not uploaded to github). First commit in this version dates back to 2015. This project is a playground for experimenting with various ideas I have learned throughout my experience with computer graphics.
 
-Notable Highlights
-------------------
+Features
+--------
 * Reflection: Dynamic loading of classes via Java's reflection and annotations
 * Event system using Java reflection (@Subscribe annotation)
 * Signed Distance Field Font Rendering: Implemented a technique shown in [this Valve paper](https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf) by Chris Green
@@ -42,3 +42,5 @@ Ideas
 Other
 -----
 LWJGL Version: 3.2.3 release (Downloaded 27 Nov 19)
+Requires Java 11
+Semantic Versioning 2.0.0: https://semver.org

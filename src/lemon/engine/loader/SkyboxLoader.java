@@ -1,10 +1,10 @@
 package lemon.engine.loader;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.StringTokenizer;
 
@@ -14,26 +14,28 @@ import lemon.engine.texture.CubeMapData;
 import lemon.engine.toolbox.Toolbox;
 
 public class SkyboxLoader {
-	private File directory;
-	private File config;
+	private String directory;
+	private String configFilename;
 
-	public SkyboxLoader(File directory, File config) {
+	public SkyboxLoader(String directory, String configFilename) {
 		this.directory = directory;
-		this.config = config;
+		this.configFilename = configFilename;
 	}
 	public CubeMapData load() {
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(config));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					SkyboxLoader.class.getResourceAsStream(directory + "/" + configFilename)));
 			StringTokenizer tokenizer = new StringTokenizer(reader.readLine());
 			ByteBuffer[] data = new ByteBuffer[6];
 			for (int i = 0; i < data.length; ++i) {
-				data[i] = Toolbox.toByteBuffer(ImageIO.read(new File(directory, reader.readLine())));
+				InputStream stream = SkyboxLoader.class.getResourceAsStream(directory + "/" + reader.readLine());
+				data[i] = Toolbox.toByteBuffer(ImageIO.read(stream));
 			}
 			reader.close();
 			return new CubeMapData(Integer.parseInt(tokenizer.nextToken()), Integer.parseInt(tokenizer.nextToken()),
 					data);
 		} catch (FileNotFoundException e) {
-			throw new IllegalStateException("File Not Found: " + config.getAbsolutePath());
+			throw new IllegalStateException(String.format("File Not Found: %s/%s", directory, configFilename));
 		} catch (IOException e) {
 			throw new IllegalStateException("IOException: " + e.getMessage());
 		}

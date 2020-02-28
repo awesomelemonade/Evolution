@@ -5,6 +5,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import lemon.engine.control.UpdateEvent;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 
@@ -63,6 +64,10 @@ public enum Menu implements Listener {
 				}
 			}
 		}
+	}
+	@Subscribe
+	public void update(UpdateEvent event) {
+		start(Game.INSTANCE);
 	}
 	@Subscribe
 	public void render(RenderEvent event) {

@@ -167,8 +167,7 @@ public enum Game implements Listener {
 		});
 		skyboxTexture = new Texture();
 		GL13.glActiveTexture(TextureBank.SKYBOX.getBind());
-		skyboxTexture
-				.load(new SkyboxLoader(new File("res/darkskies/"), new File("res/darkskies/darkskies.cfg")).load());
+		skyboxTexture.load(new SkyboxLoader("/res/darkskies", "darkskies.cfg").load());
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 

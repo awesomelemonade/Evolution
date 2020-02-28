@@ -2,10 +2,9 @@ package lemon.engine.toolbox;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -20,7 +19,7 @@ public class Toolbox {
 
 	public static Optional<StringBuilder> getFile(String path) {
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(new File(path)));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(Toolbox.class.getResourceAsStream(path)));
 			StringBuilder builder = new StringBuilder();
 			String line;
 			while ((line = reader.readLine()) != null) {
