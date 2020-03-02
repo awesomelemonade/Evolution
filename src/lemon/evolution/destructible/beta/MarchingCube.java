@@ -11,51 +11,16 @@ import lemon.engine.thread.ThreadManager;
 public class MarchingCube {
 	private float[] offsets; // [offsetX, offsetY, offsetZ]
 	private float[] strides; // [strideX, strideY, strideZ]
-	private float resolution;
 	private float threshold;
 	private float[][][] data;
-	private ScalarField<Vector3D> scalarField;
-	public MarchingCube(ScalarField<Vector3D> scalarField, Vector3D size, float resolution, float threshold) {
-		int ceilX = (int) Math.ceil(size.getX() / resolution);
-		int ceilY = (int) Math.ceil(size.getY() / resolution);
-		int ceilZ = (int) Math.ceil(size.getZ() / resolution);
-		if (ceilX < 0 || ceilY < 0 || ceilZ < 0) {
-			throw new IllegalArgumentException("Calculated size cannot be less than 0");
-		}
-		this.scalarField = scalarField;
-		this.data = new float[ceilX][ceilY][ceilZ];
-		this.resolution = resolution;
+	public MarchingCube(float[][][] data, Vector3D size, float threshold) {
+		this.data = data;
 		this.threshold = threshold;
-		this.offsets = new float[] {
-				-(ceilX - 1f) / 2f * resolution,
-				-(ceilY - 1f) / 2f * resolution,
-				-(ceilZ - 1f) / 2f * resolution
-		};
-		this.strides = new float[] {resolution, resolution, resolution};
-	}
-	public Loader getLoader() {
-		float[][][] data = this.data;
-		return new Loader() {
-			Percentage percentage = new Percentage(data.length * data[0].length * data[0][0].length);
-			@Override
-			public void load() {
-				ThreadManager.INSTANCE.addThread(new Thread(() -> {
-					for (int i = 0; i < data.length; i++) {
-						for (int j = 0; j < data[0].length; j++) {
-							for (int k = 0; k < data[0][0].length; k++) {
-								data[i][j][k] = scalarField.get(
-										new Vector3D(offsets[0] + strides[0] * i,
-												offsets[1] + strides[1] * j, offsets[2] + strides[2] * k));
-								percentage.setPart(percentage.getPart() + 1);
-							}
-						}
-					}
-				})).start();
-			}
-			@Override
-			public Percentage getPercentage() {
-				return percentage;
-			}
+		this.offsets = new float[] {-size.getX() / 2f, -size.getY() / 2f, -size.getZ() / 2f};
+		this.strides = new float[] {
+				data.length / size.getX(),
+				data[0].length / size.getY(),
+				data[0][0].length / size.getZ()
 		};
 	}
 	public ColoredModel getColoredModel() {

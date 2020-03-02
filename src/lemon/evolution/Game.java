@@ -25,6 +25,7 @@ import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 import lemon.evolution.destructible.beta.MarchingCube;
+import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.particle.beta.ParticleSystem;
 import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
@@ -103,14 +104,16 @@ public enum Game implements Listener {
 
 			SzudzikIntPair p = SzudzikIntPair.INSTANCE;
 			ToIntFunction<int[]> pairer = (b) -> p.applyAsInt(b[0], p.applyAsInt(b[1], b[2]));
-			PerlinNoise noise = new PerlinNoise(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			marchingCube = new MarchingCube(vector -> noise.apply(vector.divide(800f)),
-					new Vector3D(100f, 100f, 100f), 1f, 0f);
+			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
+			ScalarField<Vector3D> scalarField = vector -> noise.apply(vector.divide(800f));
+			float[][][] data = new float[100][100][100];
+			marchingCube = new MarchingCube(data, new Vector3D(100f, 100f, 100f), 0f);
 
 			// Add loaders
 			Loading loading = new Loading(() -> {
 				EventManager.INSTANCE.registerListener(Game.INSTANCE);
-			}, Game.INSTANCE.getTerrainLoader(), marchingCube.getLoader());
+			}, Game.INSTANCE.getTerrainLoader(),
+					ScalarField.getLoader(scalarField, Vector3D.ZERO, new Vector3D(5f, 5f, 5f), data));
 			EventManager.INSTANCE.registerListener(loading);
 			loaded = true;
 			return;
