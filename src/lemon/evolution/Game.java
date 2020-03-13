@@ -1,6 +1,5 @@
 package lemon.evolution;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -24,6 +23,7 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
+import lemon.engine.toolbox.ObjLoader;
 import lemon.evolution.destructible.beta.MarchingCube;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.particle.beta.ParticleSystem;
@@ -54,7 +54,7 @@ import lemon.engine.input.CursorPositionEvent;
 import lemon.engine.input.KeyEvent;
 import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
-import lemon.engine.loader.SkyboxLoader;
+import lemon.engine.toolbox.SkyboxLoader;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.ShaderProgram;
 import lemon.engine.terrain.TerrainGenerator;
@@ -88,6 +88,10 @@ public enum Game implements Listener {
 	private MarchingCube marchingCube;
 	private ParticleSystem particleSystem;
 
+	private ObjLoader dragonLoader;
+	private Drawable dragonModel;
+	private Vector3D lightPosition;
+
 	public TerrainLoader getTerrainLoader() {
 		if (terrainLoader == null) {
 			terrainLoader = new TerrainLoader(new TerrainGenerator(), Math.max((int) (500f / TILE_SIZE), 2),
@@ -109,10 +113,12 @@ public enum Game implements Listener {
 			float[][][] data = new float[100][100][100];
 			marchingCube = new MarchingCube(data, new Vector3D(100f, 100f, 100f), 0f);
 
+			dragonLoader = new ObjLoader("/res/dragon.obj");
+
 			// Add loaders
 			Loading loading = new Loading(() -> {
 				EventManager.INSTANCE.registerListener(Game.INSTANCE);
-			}, Game.INSTANCE.getTerrainLoader(),
+			}, Game.INSTANCE.getTerrainLoader(), dragonLoader,
 					ScalarField.getLoader(scalarField, Vector3D.ZERO, new Vector3D(5f, 5f, 5f), data));
 			EventManager.INSTANCE.registerListener(loading);
 			loaded = true;
@@ -143,10 +149,7 @@ public enum Game implements Listener {
 		CommonProgramsSetup.setup2D();
 		CommonProgramsSetup.setup3D(player.getCamera().getProjectionMatrix());
 
-		updateViewMatrix(CommonPrograms3D.COLOR);
-		updateViewMatrix(CommonPrograms3D.TEXTURE);
-		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
-		updateViewMatrix(CommonPrograms3D.PARTICLE);
+		updateViewMatrices();
 
 		frameBuffer = new FrameBuffer();
 		frameBuffer.bind(frameBuffer -> {
@@ -205,7 +208,10 @@ public enum Game implements Listener {
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 
 		marchingCubeModel = CommonDrawables.fromColoredModel(marchingCube.getColoredModel());
-		particleSystem = new ParticleSystem(2000);
+		particleSystem = new ParticleSystem(20000);
+
+		dragonModel = dragonLoader.toIndexedDrawable();
+		lightPosition = new Vector3D(player.getPosition());
 
 		EventManager.INSTANCE.registerListener(new Listener() {
 			@Subscribe
@@ -214,6 +220,7 @@ public enum Game implements Listener {
 					if (event.getKey() == GLFW.GLFW_KEY_R) {
 						System.out.println("Set Origin: " + player.getPosition());
 						line.set(0, new Vector3D(player.getPosition()));
+						lightPosition = new Vector3D(player.getPosition());
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_T) {
 						line.set(1, new Vector3D(player.getPosition().subtract(line.getOrigin())));
@@ -280,10 +287,7 @@ public enum Game implements Listener {
 		player.getVelocity().selfMultiply(friction);
 
 		player.update(event);
-		updateViewMatrix(CommonPrograms3D.COLOR);
-		updateViewMatrix(CommonPrograms3D.TEXTURE);
-		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
-		updateViewMatrix(CommonPrograms3D.PARTICLE);
+		updateViewMatrices();
 
 		for (PuzzleBall puzzleBall : puzzleBalls) {
 			puzzleBall.getVelocity().selfAdd(GRAVITY_VECTOR);
@@ -298,10 +302,7 @@ public enum Game implements Listener {
 		}
 		player.getCamera().getProjection()
 				.setFov(player.getCamera().getProjection().getFov() + ((float) (event.getYOffset() / 10000f)));
-		updateProjectionMatrix(CommonPrograms3D.COLOR);
-		updateProjectionMatrix(CommonPrograms3D.TEXTURE);
-		updateProjectionMatrix(CommonPrograms3D.CUBEMAP);
-		updateProjectionMatrix(CommonPrograms3D.PARTICLE);
+		updateProjectionMatrices();
 	}
 
 	private double lastMouseX;
@@ -328,11 +329,22 @@ public enum Game implements Listener {
 			if (player.getCamera().getRotation().getX() > MathUtil.PI / 2f) {
 				player.getCamera().getRotation().setX(MathUtil.PI / 2f);
 			}
+			updateViewMatrices();
 		}
+	}
+	public void updateViewMatrices() {
 		updateViewMatrix(CommonPrograms3D.COLOR);
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
 		updateViewMatrix(CommonPrograms3D.PARTICLE);
+		updateViewMatrix(CommonPrograms3D.LIGHT);
+	}
+	public void updateProjectionMatrices() {
+		updateProjectionMatrix(CommonPrograms3D.COLOR);
+		updateProjectionMatrix(CommonPrograms3D.TEXTURE);
+		updateProjectionMatrix(CommonPrograms3D.CUBEMAP);
+		updateProjectionMatrix(CommonPrograms3D.PARTICLE);
+		updateProjectionMatrix(CommonPrograms3D.LIGHT);
 	}
 	public void updateViewMatrix(ShaderProgramHolder holder) {
 		ShaderProgram program = holder.getShaderProgram();
@@ -372,6 +384,14 @@ public enum Game implements Listener {
 				marchingCubeModel.draw();
 			});
 			particleSystem.render();
+			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
+				Vector3D position = new Vector3D(96f, 40f, 0f);
+				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(position)
+						.multiply(MathUtil.getScalar(new Vector3D(8f, 8f, 8f))));
+				program.loadVector("sunlightDirection", lightPosition.subtract(position).normalize());
+				program.loadVector("viewPos", player.getPosition());
+				dragonModel.draw();
+			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
 		});
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {

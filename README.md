@@ -4,11 +4,9 @@ A project created by awesomelemonade. First versions created in 2012 (Not upload
 
 Features
 --------
-* Reflection: Dynamic loading of classes via Java's reflection and annotations
-* Event system using Java reflection (@Subscribe annotation)
+* Event system via Java's reflection (@Subscribe annotation)
 * Signed Distance Field Font Rendering: Implemented a technique shown in [this Valve paper](https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf) by Chris Green
 * OpenGL 3+ Rendering (Vertex Arrays, Vertex Buffers, Shaders, Shader Programs, GLSL, Uniform Variables, etc)
-* Object model loading (ObjLoader) using .obj files for 3D rendering
 * TimeSync using lwjgl's implementation of sync() to sync frame rates - [discussion here](http://forum.lwjgl.org/index.php?topic=5653.0)
 * Multithreading (Splitting of update() and render(), Calculating Perlin Noise)
 * Cubemap rendering technique for skyboxes
@@ -23,6 +21,8 @@ Features
 * Java lambda expressions for convenient binding and unbinding of various OpenGL objects
 * Particle System using OpenGL's instanced rendering with glDrawElementsInstanced and glVertexAttribDivisor
 * Marching Cube - [0fps](https://0fps.net/2012/07/12/smooth-voxel-terrain-part-2/), [paulbourke](http://paulbourke.net/geometry/polygonise/), [Stanford-mdfisher](https://graphics.stanford.edu/~mdfisher/MarchingCubes.html)
+* Phong (Ambient + Diffuse + Specular) lighting
+* Object model loading (ObjLoader) using .obj files for 3D rendering
 
 Plans
 -----
@@ -38,6 +38,8 @@ Ideas
 * Icosphere generation
 * Compute shaders for marching cube
 * Improvement to Marching Cube/Tetrahedra - [caltech paper](http://www.geometry.caltech.edu/pubs/ACTD07.pdf)
+* Shadows - [Shaddow Mapping](https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping)
+* Deferred lighting scheme
 
 Other
 -----

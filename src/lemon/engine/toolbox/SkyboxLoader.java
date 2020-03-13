@@ -1,4 +1,4 @@
-package lemon.engine.loader;
+package lemon.engine.toolbox;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -11,7 +11,6 @@ import java.util.StringTokenizer;
 import javax.imageio.ImageIO;
 
 import lemon.engine.texture.CubeMapData;
-import lemon.engine.toolbox.Toolbox;
 
 public class SkyboxLoader {
 	private String directory;

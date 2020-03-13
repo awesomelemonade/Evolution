@@ -95,8 +95,11 @@ public class ParticleSystem implements Renderable {
 			particles.poll();
 		}
 		if (particles.size() < maxParticles) {
-			if (particles.isEmpty() || particles.peekLast().getAge().compareTo(Duration.ofMillis(50)) >= 0) {
-				particles.add(new Particle(new Vector3D(Vector3D.ZERO), randomVelocityVector().multiply(0.2f),
+			if (particles.isEmpty() || particles.peekLast().getAge().compareTo(Duration.ofMillis(5)) >= 0) {
+				particles.add(new Particle(new Vector3D(Vector3D.ZERO),
+						new Vector3D((float) (-Math.random() * 3 - 2),
+								(float) ((Math.random() - 0.5) * 1.4),
+								(float) ((Math.random() - 0.5) * 1.4)),
 						randomVector(), randomVector().multiply(0.05f)));
 			}
 		}
@@ -107,8 +110,8 @@ public class ParticleSystem implements Renderable {
 		}
 		updateVbo();
 		CommonPrograms3D.PARTICLE.getShaderProgram().use(program -> {
-			program.loadColor(Color.WHITE);
-			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(0f, 30f, 0f)));
+			program.loadColor(Color.RED);
+			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(65f, 98f, 0f)));
 			vertexArray.bind(vao -> {
 				GL31.glDrawElementsInstanced(GL11.GL_TRIANGLES, INDICES.length, GL11.GL_UNSIGNED_INT, 0, particles.size());
 			});
