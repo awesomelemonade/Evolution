@@ -41,7 +41,7 @@ public class CommonProgramsSetup {
 		CommonPrograms3D.PARTICLE.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
-			program.loadColor(Color.WHITE);
+			program.loadColor4f(Color.WHITE);
 		});
 
 		CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
@@ -50,12 +50,12 @@ public class CommonProgramsSetup {
 			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 		});
 	}
-	public static void setup2D() {
+	public static void setup2D(Matrix projectionMatrix) {
 		CommonPrograms2D.initAll();
 
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
-			program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 		});
 
 		CommonPrograms2D.LINE.getShaderProgram().use(program -> {
@@ -67,7 +67,7 @@ public class CommonProgramsSetup {
 		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-			program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 			program.loadVector("color", Vector3D.ZERO);
 			program.loadInt("textureSampler", TextureBank.REUSE.getId());
 		});

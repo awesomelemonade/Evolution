@@ -110,7 +110,7 @@ public class ParticleSystem implements Renderable {
 		}
 		updateVbo();
 		CommonPrograms3D.PARTICLE.getShaderProgram().use(program -> {
-			program.loadColor(Color.RED);
+			program.loadColor4f(Color.RED);
 			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(65f, 98f, 0f)));
 			vertexArray.bind(vao -> {
 				GL31.glDrawElementsInstanced(GL11.GL_TRIANGLES, INDICES.length, GL11.GL_UNSIGNED_INT, 0, particles.size());

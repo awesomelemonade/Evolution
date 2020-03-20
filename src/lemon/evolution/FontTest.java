@@ -41,17 +41,10 @@ public enum FontTest implements Listener {
 		int window_width = width.get();
 		int window_height = height.get();
 		GL11.glViewport(0, 0, window_width, window_height);
-		CommonProgramsSetup.setup2D();
-		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.PROJECTION_MATRIX, MathUtil.getOrtho(window_width, window_height, -1, 1));
-		});
+		Matrix projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1, 1);
+		CommonProgramsSetup.setup2D(projectionMatrix);
 		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
-			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-			//program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-			program.loadMatrix(MatrixType.PROJECTION_MATRIX, MathUtil.getOrtho(window_width, window_height, -1, 1));
 			program.loadVector("color", new Vector3D(0f, 1f, 1f));
-			program.loadInt("sampler", TextureBank.REUSE.getId());
 		});
 		font = new Font(new File("res/fonts/FreeSans.fnt"));
 		text = new HashMap<TextModel, Matrix>();

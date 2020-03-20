@@ -1,5 +1,6 @@
 package lemon.evolution;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -10,6 +11,8 @@ import java.util.logging.Logger;
 
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
+import lemon.engine.draw.TextModel;
+import lemon.engine.font.Font;
 import lemon.engine.function.LineLineIntersection;
 import lemon.engine.function.MollerTrumbore;
 import lemon.engine.function.MurmurHash;
@@ -23,6 +26,7 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
+import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.evolution.destructible.beta.MarchingCube;
 import lemon.evolution.destructible.beta.ScalarField;
@@ -37,6 +41,7 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
@@ -92,6 +97,8 @@ public enum Game implements Listener {
 	private Drawable dragonModel;
 	private Vector3D lightPosition;
 
+	private TextModel debugTextModel;
+
 	public TerrainLoader getTerrainLoader() {
 		if (terrainLoader == null) {
 			terrainLoader = new TerrainLoader(new TerrainGenerator(), Math.max((int) (500f / TILE_SIZE), 2),
@@ -146,7 +153,8 @@ public enum Game implements Listener {
 		player = new Player(new Projection(MathUtil.toRadians(60f),
 				((float) window_width) / ((float) window_height), 0.01f, 1000f));
 
-		CommonProgramsSetup.setup2D();
+		Matrix orthoProjectionMatrix = MathUtil.getOrtho(window_width, window_height, -1, 1);
+		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
 		CommonProgramsSetup.setup3D(player.getCamera().getProjectionMatrix());
 
 		updateViewMatrices();
@@ -212,6 +220,9 @@ public enum Game implements Listener {
 
 		dragonModel = dragonLoader.toIndexedDrawable();
 		lightPosition = new Vector3D(player.getPosition());
+
+		Font font = new Font(new File("res/fonts/FreeSans.fnt"));
+		debugTextModel = new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW);
 
 		EventManager.INSTANCE.registerListener(new Listener() {
 			@Subscribe
@@ -292,6 +303,14 @@ public enum Game implements Listener {
 		for (PuzzleBall puzzleBall : puzzleBalls) {
 			puzzleBall.getVelocity().selfAdd(GRAVITY_VECTOR);
 			CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity());
+		}
+		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, Time=%d",
+				EventManager.INSTANCE.getListenersRegistered(),
+				EventManager.INSTANCE.getListenerMethodsRegistered(),
+				EventManager.INSTANCE.getPreloadedMethodsRegistered(),
+				System.currentTimeMillis());
+		if (!debugTextModel.getText().equals(message)) {
+			debugTextModel.setText(message);
 		}
 	}
 	@Subscribe
@@ -397,7 +416,26 @@ public enum Game implements Listener {
 			CommonDrawables.TEXTURED_QUAD.draw();
 		});
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
-			renderFPS();
+			// render graphs
+			CommonPrograms2D.LINE.getShaderProgram().use(program -> {
+				byte color = 1; // Not Black
+				for (String benchmarker : this.benchmarker.getNames()) {
+					program.loadVector("color", new Vector3D((((color & 0x01) != 0) ? 1f : 0f),
+							(((color & 0x02) != 0) ? 1f : 0f), (((color & 0x04) != 0) ? 1f : 0f)));
+					program.loadFloat("spacing",
+							2f / (this.benchmarker.getLineGraph(benchmarker).getSize() - 1));
+					this.benchmarker.getLineGraph(benchmarker).render();
+					color++;
+				}
+			});
+			// render debug text
+			CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
+				program.loadMatrix(MatrixType.MODEL_MATRIX,
+						MathUtil.getTranslation(new Vector3D(0f, 550f, 0f))
+								.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 0.2f))));
+				program.loadColor3f("color", Color.WHITE);
+				debugTextModel.draw();
+			});
 		}
 	}
 	public void renderHeightMap() {
@@ -414,19 +452,6 @@ public enum Game implements Listener {
 	public void renderSkybox() {
 		CommonPrograms3D.CUBEMAP.getShaderProgram().use(program -> {
 			CommonDrawables.SKYBOX.draw();
-		});
-	}
-	public void renderFPS() {
-		CommonPrograms2D.LINE.getShaderProgram().use(program -> {
-			byte color = 1; // Not Black
-			for (String benchmarker : this.benchmarker.getNames()) {
-				program.loadVector("color", new Vector3D((((color & 0x01) != 0) ? 1f : 0f),
-						(((color & 0x02) != 0) ? 1f : 0f), (((color & 0x04) != 0) ? 1f : 0f)));
-				program.loadFloat("spacing",
-						2f / (this.benchmarker.getLineGraph(benchmarker).getSize() - 1));
-				this.benchmarker.getLineGraph(benchmarker).render();
-				color++;
-			}
 		});
 	}
 	@Subscribe

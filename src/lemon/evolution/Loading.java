@@ -3,6 +3,7 @@ package lemon.evolution;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.engine.math.Matrix;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
 
@@ -34,7 +35,7 @@ public class Loading implements Listener {
 
 	@Override
 	public void onRegister() {
-		CommonProgramsSetup.setup2D();
+		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
 		this.loadingBar = new LoadingBar(loaders[loaderIndex].getPercentage(),
 				new Box2D(-1f, -1.1f, 2f, 0.3f),
 				new Color(1f, 0f, 0f), new Color(1f, 0f, 0f),
