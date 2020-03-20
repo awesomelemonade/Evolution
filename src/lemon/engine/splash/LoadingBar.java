@@ -30,7 +30,7 @@ public class LoadingBar implements Renderable {
 		}
 		this.box = box;
 		vertexArray.bind(vao -> {
-			vertexBuffer = vao.generateVbo();
+			vertexBuffer = new VertexBuffer();
 			vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 				GL15.glBufferData(target, this.getFloatBuffer(), GL15.GL_DYNAMIC_DRAW);
 				GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 6 * 4, 0);

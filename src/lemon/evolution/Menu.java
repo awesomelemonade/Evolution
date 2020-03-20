@@ -67,7 +67,7 @@ public enum Menu implements Listener {
 	}
 	@Subscribe
 	public void update(UpdateEvent event) {
-		start(Game.INSTANCE);
+		//start(Game.INSTANCE);
 	}
 	@Subscribe
 	public void render(RenderEvent event) {

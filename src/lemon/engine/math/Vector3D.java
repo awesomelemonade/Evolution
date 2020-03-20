@@ -4,7 +4,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 public class Vector3D extends Vector {
-	public static final Function<float[], Vector3D> supplier = (data) -> new Vector3D(data);
+	public static final Function<float[], Vector3D> supplier = Vector3D::new;
 	public static final Vector3D[] EMPTY_ARRAY = new Vector3D[] {};
 	public static final Vector3D ZERO = Vector3D.unmodifiableVector(new Vector3D());
 

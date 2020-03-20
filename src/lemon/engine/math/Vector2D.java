@@ -4,7 +4,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 public class Vector2D extends Vector {
-	public static final Function<float[], Vector2D> supplier = (data) -> new Vector2D(data);
+	public static final Function<float[], Vector2D> supplier = Vector2D::new;
 	public static final Vector2D[] EMPTY_ARRAY = new Vector2D[] {};
 	public static final Vector2D ZERO = Vector2D.unmodifiableVector(new Vector2D());
 	public static final Vector2D TOP_LEFT = Vector2D.unmodifiableVector(new Vector2D(-1f, 1f).normalize());

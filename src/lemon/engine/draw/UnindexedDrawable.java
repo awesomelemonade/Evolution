@@ -2,6 +2,7 @@ package lemon.engine.draw;
 
 import lemon.engine.math.Vector;
 import lemon.engine.render.VertexArray;
+import lemon.engine.render.VertexBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -23,7 +24,7 @@ public class UnindexedDrawable implements Drawable {
 		this.count = vertices[0].length;
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
-			vao.generateVbo().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			new VertexBuffer().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 				GL15.glBufferData(target, getFloatBuffer(), GL15.GL_STATIC_DRAW);
 				int offset = 0;
 				for (int i = 0; i < vertices.length; i++) {

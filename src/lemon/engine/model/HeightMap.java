@@ -29,7 +29,8 @@ public class HeightMap implements Renderable {
 		}
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
-			(dataBuffer = vao.generateVbo()).bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			dataBuffer = new VertexBuffer();
+			dataBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 				FloatBuffer dataBuffer = BufferUtils.createFloatBuffer((6 * (map.length - 1) * (map[0].length - 1)) * 7);
 				for (int i = 0; i < map.length - 1; ++i) {
 					for (int j = 0; j < map[0].length - 1; ++j) {

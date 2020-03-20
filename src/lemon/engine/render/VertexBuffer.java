@@ -1,14 +1,19 @@
 package lemon.engine.render;
 
+import lemon.engine.control.CleanUpEvent;
+import lemon.engine.event.EventManager;
+import lemon.engine.event.Listener;
+import lemon.engine.event.Subscribe;
 import org.lwjgl.opengl.GL15;
 
 import java.util.function.BiConsumer;
 
-public class VertexBuffer {
+public class VertexBuffer implements Listener {
 	private int id;
 
 	public VertexBuffer() {
 		id = GL15.glGenBuffers();
+		EventManager.INSTANCE.registerListener(this);
 	}
 	public int getId() {
 		return id;
@@ -23,5 +28,9 @@ public class VertexBuffer {
 		if (unbind) {
 			GL15.glBindBuffer(target, 0);
 		}
+	}
+	@Subscribe
+	public void cleanUp(CleanUpEvent event) {
+		GL15.glDeleteBuffers(id);
 	}
 }

@@ -31,7 +31,7 @@ public class LineGraph implements Renderable {
 		ensureCapacity();
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
-			vertexBuffer = vao.generateVbo();
+			vertexBuffer = new VertexBuffer();
 			vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 				GL15.glBufferData(target, getDataBuffer(), GL15.GL_STREAM_DRAW);
 				GL20.glVertexAttribPointer(0, 1, GL11.GL_FLOAT, false, 2 * 4, 0);

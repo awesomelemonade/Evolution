@@ -22,7 +22,7 @@ public class TerrainGenerator {
 		biomeNoise = ((Function<Vector2D, Vector2D>) ((x) -> x.divide(root2)))
 				.andThen(baseFunction).andThen(x -> (x + 2.5f) * (goldenRatio - root2 - (root2 / 2f)));*/
 		biomeNoise = (x) -> 1f;
-		noise = new PerlinNoise((s) -> MurmurHash.createWithSeed(s), pairer, biomeNoise, 6);
+		noise = new PerlinNoise<Vector2D>(MurmurHash::createWithSeed, pairer, biomeNoise, 6);
 	}
 	public float generate(float x, float y) {
 		return (noise.apply(new Vector2D(x, y).divide(1200f)) - 0.85f) * 35f;

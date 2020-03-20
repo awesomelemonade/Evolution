@@ -28,6 +28,15 @@ public enum EventManager {
 		preloaded = new HashMap<Class<? extends Event>, List<ListenerMethod>>();
 		listeners = new HashSet<Listener>();
 	}
+	public int getListenersRegistered() {
+		return listeners.size();
+	}
+	public int getListenerMethodsRegistered() {
+		return methods.values().stream().mapToInt(List::size).sum();
+	}
+	public int getPreloadedMethodsRegistered() {
+		return preloaded.values().stream().mapToInt(List::size).sum();
+	}
 	public void registerListener(Listener listener) {
 		internalRegisterListener(listener);
 	}

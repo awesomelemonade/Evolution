@@ -35,14 +35,14 @@ public class ParticleSystem implements Renderable {
 		this.particles = new ArrayDeque<Particle>();
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
-			vao.generateVbo().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
+			new VertexBuffer().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
 				GL15.glBufferData(target, INDICES, GL15.GL_STATIC_DRAW);
 			}, false);
-			vao.generateVbo().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			new VertexBuffer().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 				GL15.glBufferData(target, VERTICES, GL15.GL_STATIC_DRAW);
 				GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 3 * 4, 0);
 			});
-			vertexBuffer = vao.generateVbo();
+			vertexBuffer = new VertexBuffer();
 			vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 				GL15.glBufferData(target, getInitialFloatBuffer(), GL15.GL_STREAM_DRAW);
 				GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 16 * 4, 0);

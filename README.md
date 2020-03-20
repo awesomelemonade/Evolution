@@ -32,8 +32,6 @@ Ideas
 -----
 * Multitexturing for terrain
 * Normal mapping for textures
-* Reimplement Phong Lighting
-* "Flood-Fill" lighting for marching cube models
 * Remove magic values from creation of vertexArray and vertexBuffer in favor of linking them with ShaderProgram
 * Icosphere generation
 * Compute shaders for marching cube

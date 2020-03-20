@@ -373,7 +373,6 @@ public enum Game implements Listener {
 			renderSkybox();
 			GL11.glDepthMask(true);
 			renderHeightMap();
-			renderPlatforms();
 			for (PuzzleBall puzzleBall : puzzleBalls) {
 				puzzleBall.render();
 			}
@@ -412,39 +411,23 @@ public enum Game implements Listener {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
-	public void renderPlatforms() {
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		
-		
-		
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
-	}
 	public void renderSkybox() {
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL20.glUseProgram(CommonPrograms3D.CUBEMAP.getShaderProgram().getId());
-		CommonDrawables.SKYBOX.draw();
-		GL20.glUseProgram(0);
-		GL11.glDisable(GL11.GL_BLEND);
+		CommonPrograms3D.CUBEMAP.getShaderProgram().use(program -> {
+			CommonDrawables.SKYBOX.draw();
+		});
 	}
 	public void renderFPS() {
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL20.glUseProgram(CommonPrograms2D.LINE.getShaderProgram().getId());
-		byte color = 1; // Not Black
-		for (String benchmarker : this.benchmarker.getNames()) {
-			CommonPrograms2D.LINE.getShaderProgram().loadVector("color", new Vector3D((((color & 0x01) != 0) ? 1f : 0f),
-					(((color & 0x02) != 0) ? 1f : 0f), (((color & 0x04) != 0) ? 1f : 0f)));
-			CommonPrograms2D.LINE.getShaderProgram().loadFloat("spacing",
-					2f / (this.benchmarker.getLineGraph(benchmarker).getSize() - 1));
-			this.benchmarker.getLineGraph(benchmarker).render();
-			color++;
-		}
-		GL20.glUseProgram(0);
-		GL11.glDisable(GL11.GL_BLEND);
+		CommonPrograms2D.LINE.getShaderProgram().use(program -> {
+			byte color = 1; // Not Black
+			for (String benchmarker : this.benchmarker.getNames()) {
+				program.loadVector("color", new Vector3D((((color & 0x01) != 0) ? 1f : 0f),
+						(((color & 0x02) != 0) ? 1f : 0f), (((color & 0x04) != 0) ? 1f : 0f)));
+				program.loadFloat("spacing",
+						2f / (this.benchmarker.getLineGraph(benchmarker).getSize() - 1));
+				this.benchmarker.getLineGraph(benchmarker).render();
+				color++;
+			}
+		});
 	}
 	@Subscribe
 	public void onBenchmark(BenchmarkEvent event) {
