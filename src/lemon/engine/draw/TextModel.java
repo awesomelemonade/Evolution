@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 
 import lemon.engine.font.CharData;
 import lemon.engine.font.Font;
+import lemon.engine.render.VertexBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -13,19 +14,29 @@ import lemon.engine.render.VertexArray;
 
 public class TextModel implements Drawable {
 	private VertexArray vertexArray;
+	private VertexBuffer vertexBuffer;
 	private Font font;
 	private String text;
+	private int bufferSize;
+	private int hint;
 
 	public TextModel(Font font, String text) {
+		this(font, text, GL15.GL_STATIC_DRAW);
+	}
+	public TextModel(Font font, String text, int hint) {
 		if (text.isEmpty()) {
 			throw new IllegalStateException("Text cannot be empty");
 		}
 		this.font = font;
 		this.text = text;
+		this.hint = hint;
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
-			vertexArray.generateVbo().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
-				GL15.glBufferData(target, this.getFloatBuffer(), GL15.GL_STATIC_DRAW);
+			vertexBuffer = new VertexBuffer();
+			vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+				FloatBuffer buffer = this.getFloatBuffer(text);
+				bufferSize = buffer.capacity();
+				GL15.glBufferData(target, buffer, hint);
 				GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 4 * 4, 0);
 				GL20.glVertexAttribPointer(1, 2, GL11.GL_FLOAT, false, 4 * 4, 2 * 4);
 			});
@@ -33,16 +44,11 @@ public class TextModel implements Drawable {
 			GL20.glEnableVertexAttribArray(1);
 		});
 	}
-	private FloatBuffer getFloatBuffer() {
+	private FloatBuffer getFloatBuffer(String text) {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(text.length() * 4 * 6);
-		char prevChar = text.charAt(0);
+		char prevChar = '\0';
 		int cursor = 0;
-		{
-			CharData data = font.getCharData(prevChar);
-			putChar(buffer, font.getCharData(prevChar), cursor);
-			cursor += data.getXAdvance();
-		}
-		for (int i = 1; i < text.length(); ++i) {
+		for (int i = 0; i < text.length(); ++i) {
 			char currentChar = text.charAt(i);
 			CharData data = font.getCharData(currentChar);
 			int kerning = font.getKerning(prevChar, currentChar);
@@ -61,7 +67,7 @@ public class TextModel implements Drawable {
 		float textureWidth = data.getWidth() / scaleWidth;
 		float textureHeight = data.getHeight() / scaleHeight;
 		float x = cursor + data.getXOffset();
-		float y = font.getLineHeight() - data.getYOffset();
+		float y = font.getLineHeight() - data.getYOffset() - font.getBase() / 2f;
 		float width = data.getWidth();
 		float height = data.getHeight();
 
@@ -85,5 +91,21 @@ public class TextModel implements Drawable {
 			});
 		});
 		GL11.glDisable(GL11.GL_BLEND);
+	}
+	public void setText(String text) {
+		this.text = text;
+		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			FloatBuffer newBuffer = this.getFloatBuffer(text);
+			int newBufferSize = newBuffer.capacity();
+			if (newBufferSize > bufferSize) {
+				bufferSize = newBufferSize;
+				GL15.glBufferData(target, newBuffer, hint);
+			} else {
+				GL15.glBufferSubData(target, 0, newBuffer);
+			}
+		});
+	}
+	public String getText() {
+		return text;
 	}
 }

@@ -5,8 +5,10 @@ import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import lemon.engine.control.UpdateEvent;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.TextModel;
+import lemon.engine.event.EventManager;
 import lemon.engine.render.MatrixType;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
@@ -24,6 +26,7 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
 import lemon.engine.texture.TextureBank;
+import org.lwjgl.opengl.GL15;
 
 public enum FontTest implements Listener {
 	INSTANCE;
@@ -38,14 +41,15 @@ public enum FontTest implements Listener {
 		int window_width = width.get();
 		int window_height = height.get();
 		GL11.glViewport(0, 0, window_width, window_height);
-		Matrix projectionMatrix = MathUtil
-				.getPerspective(new Projection(MathUtil.toRadians(60f),
-						((float) window_width) / ((float) window_height), 0.01f, 1000f));
 		CommonProgramsSetup.setup2D();
+		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, MathUtil.getOrtho(window_width, window_height, -1, 1));
+		});
 		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-			program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+			//program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, MathUtil.getOrtho(window_width, window_height, -1, 1));
 			program.loadVector("color", new Vector3D(0f, 1f, 1f));
 			program.loadInt("sampler", TextureBank.REUSE.getId());
 		});
@@ -54,9 +58,26 @@ public enum FontTest implements Listener {
 		//text = new Text(font, "Evolution");
 
 		text.put(new TextModel(font, "ABCDEFG"), MathUtil.getScalar(new Vector3D(0.005f, 0.005f, 0.005f)));
-		text.put(new TextModel(font, "the quick brown"), Matrix.IDENTITY_4);
-		text.put(new TextModel(font, "fox jumped over"), MathUtil.getTranslation(new Vector3D(0f, -100f, 0f)));
-		text.put(new TextModel(font, "the lazy dog"), MathUtil.getTranslation(new Vector3D(0f, -200f, 0f)));
+		text.put(new TextModel(font, "the quick brown fox jumped over the lazy dog"), MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 0.2f)));
+		text.put(new TextModel(font, "fox jumped over"), MathUtil.getTranslation(new Vector3D(0f, 100f, 0f)));
+		text.put(new TextModel(font, "the lazy dog"), MathUtil.getTranslation(new Vector3D(0f, 200f, 0f)));
+		text.put(new TextModel(font, "[UNKNOWN: Listeners]", GL15.GL_DYNAMIC_DRAW),
+				MathUtil.getTranslation(new Vector3D(0f, 50f, 0f))
+						.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 0.2f))));
+	}
+	@Subscribe
+	public void update(UpdateEvent event) {
+		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d",
+				EventManager.INSTANCE.getListenersRegistered(),
+				EventManager.INSTANCE.getListenerMethodsRegistered(),
+				EventManager.INSTANCE.getPreloadedMethodsRegistered());
+		text.keySet().forEach(textModel -> {
+			if (textModel.getText().contains("Listeners")) {
+				if (!textModel.getText().equals(message)) {
+					textModel.setText(message);
+				}
+			}
+		});
 	}
 	@Subscribe
 	public void render(RenderEvent event) {
@@ -64,7 +85,9 @@ public enum FontTest implements Listener {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, MathUtil.getScalar(new Vector3D(0.5f, 0.5f, 0.5f)));
+			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
+					MathUtil.getTranslation(new Vector3D(150f, 150f, 0f))
+					.multiply(MathUtil.getScalar(new Vector3D(100f, 100f, 100f))));
 			CommonDrawables.COLORED_QUAD.draw();
 		});
 		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
