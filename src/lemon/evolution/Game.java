@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
+import lemon.engine.draw.DynamicIndexedDrawable;
 import lemon.engine.draw.TextModel;
 import lemon.engine.font.Font;
 import lemon.engine.function.LineLineIntersection;
@@ -232,7 +233,7 @@ public enum Game implements Listener {
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 
-		marchingCubeModel = CommonDrawables.fromColoredModel(marchingCube.getColoredModel());
+		marchingCubeModel = marchingCube.getColoredModel().map(DynamicIndexedDrawable::new);
 		particleSystem = new ParticleSystem(20000);
 
 		dragonModel = dragonLoader.toIndexedDrawable();
@@ -263,7 +264,9 @@ public enum Game implements Listener {
 								}
 							}
 						}
-						marchingCubeModel = CommonDrawables.fromColoredModel(marchingCube.getColoredModel());
+						marchingCube.getColoredModel().use((vertices, indices) -> {
+							marchingCubeModel.setData(vertices, indices);
+						});
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_R) {
 						System.out.println("Set Origin: " + player.getPosition());
@@ -295,7 +298,7 @@ public enum Game implements Listener {
 
 	private List<PuzzleBall> puzzleBalls;
 	private PuzzleGrid puzzleGrid;
-	private Drawable marchingCubeModel;
+	private DynamicIndexedDrawable marchingCubeModel;
 
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -353,7 +356,9 @@ public enum Game implements Listener {
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event) {
 		marchingCube.setThreshold(marchingCube.getThreshold() + ((float) event.getYOffset()) / 20f);
-		marchingCubeModel = CommonDrawables.fromColoredModel(marchingCube.getColoredModel());
+		marchingCube.getColoredModel().use((vertices, indices) -> {
+			marchingCubeModel.setData(vertices, indices);
+		});
 		System.out.println(marchingCube.getThreshold());
 		/*
 		playerSpeed += (float) (event.getYOffset() / 100f);

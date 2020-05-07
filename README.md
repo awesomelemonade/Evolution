@@ -36,8 +36,10 @@ Ideas
 * Icosphere generation
 * Compute shaders for marching cube
 * Improvement to Marching Cube/Tetrahedra - [caltech paper](http://www.geometry.caltech.edu/pubs/ACTD07.pdf)
-* Shadows - [Shaddow Mapping](https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping)
+* Shadows - [Shadow Mapping](https://learnopengl.com/Advanced-Lighting/Shadows/Shadow-Mapping)
 * Deferred lighting scheme
+* Dual Contouring alternative to marching cube
+* Audio with OpenAL
 
 Other
 -----

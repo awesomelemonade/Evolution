@@ -10,28 +10,39 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 
-public class IndexedDrawable implements Drawable {
+public class DynamicIndexedDrawable implements Drawable {
 	private VertexArray vertexArray;
 	private Vector[][] vertices;
 	private int[] indices;
 	private int stride;
 	private int drawMode;
+	private VertexBuffer indexBuffer;
+	private int indexBufferSize;
+	private VertexBuffer vertexBuffer;
+	private int vertexBufferSize;
+	private int hint;
 
-	public IndexedDrawable(Vector[][] vertices, int[] indices) {
-		this(vertices, indices, GL11.GL_TRIANGLES);
+	public DynamicIndexedDrawable(Vector[][] vertices, int[] indices) {
+		this(vertices, indices, GL11.GL_TRIANGLES, GL15.GL_DYNAMIC_DRAW);
 	}
-	public IndexedDrawable(Vector[][] vertices, int[] indices, int drawMode) {
+	public DynamicIndexedDrawable(Vector[][] vertices, int[] indices, int drawMode, int hint) {
 		this.vertices = vertices;
 		this.indices = indices;
 		this.drawMode = drawMode;
+		this.hint = hint;
 		this.stride = getStride(vertices);
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
-			new VertexBuffer().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
-				GL15.glBufferData(target, indices, GL15.GL_STATIC_DRAW);
+			indexBuffer = new VertexBuffer();
+			indexBuffer.bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
+				this.indexBufferSize = indices.length;
+				GL15.glBufferData(target, indices, hint);
 			}, false);
-			new VertexBuffer().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
-				GL15.glBufferData(target, getFloatBuffer(), GL15.GL_STATIC_DRAW);
+			vertexBuffer = new VertexBuffer();
+			vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+				FloatBuffer buffer = this.getFloatBuffer();
+				this.vertexBufferSize = buffer.capacity();
+				GL15.glBufferData(target, buffer, hint);
 				int offset = 0;
 				for (int i = 0; i < vertices.length; i++) {
 					if (vertices[i].length > 0) {
@@ -68,6 +79,31 @@ public class IndexedDrawable implements Drawable {
 		}
 		buffer.flip();
 		return buffer;
+	}
+	public void setData(Vector[][] vertices, int[] indices) {
+		this.vertices = vertices;
+		this.indices = indices;
+		indexBuffer.bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
+			if (indices.length > indexBufferSize) {
+				indexBufferSize = indices.length;
+				GL15.glBufferData(target, indices, hint);
+			} else {
+				GL15.glBufferSubData(target, 0, indices);
+			}
+		});
+		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			FloatBuffer newBuffer = this.getFloatBuffer();
+			int newBufferSize = newBuffer.capacity();
+			if (newBufferSize != 0 && getStride(vertices) != this.stride) {
+				throw new IllegalArgumentException("Data Stride Mismatch");
+			}
+			if (newBufferSize > vertexBufferSize) {
+				vertexBufferSize = newBufferSize;
+				GL15.glBufferData(target, newBuffer, hint);
+			} else {
+				GL15.glBufferSubData(target, 0, newBuffer);
+			}
+		});
 	}
 	@Override
 	public void draw() {

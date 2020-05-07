@@ -1,6 +1,5 @@
 package lemon.engine.draw;
 
-import lemon.engine.model.ColoredModel;
 import lemon.engine.math.Vector;
 import org.lwjgl.opengl.GL11;
 
@@ -12,7 +11,7 @@ public class CommonDrawables {
 	public static final Drawable TEXTURED_QUAD = new UnindexedDrawable(new Vector[][] {
 			// Positions
 			QUAD_VERTICES,
-			// Colors
+			// Texture Coordinates
 			{v(0f, 1f), v(0f, 0f), v(1f, 1f), v(1f, 0f)}
 	}, GL11.GL_TRIANGLE_STRIP);
 
@@ -30,10 +29,6 @@ public class CommonDrawables {
 			2, 0, 4, 4, 6, 2, 1, 0, 2, 2, 3, 1, 4, 5, 7, 7, 6, 4,
 			1, 3, 7, 7, 5, 1, 2, 6, 7, 7, 3, 2, 0, 1, 4, 4, 1, 5
 	}, GL11.GL_TRIANGLES);
-
-	public static Drawable fromColoredModel(ColoredModel model) {
-		return new IndexedDrawable(new Vector[][] {model.getVertices(), model.getColors()}, model.getIndices(), GL11.GL_TRIANGLES);
-	}
 
 	// Shortcuts
 	private static Vector v(float... values) {

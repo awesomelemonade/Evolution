@@ -1,7 +1,7 @@
 package lemon.evolution.puzzle;
 
-import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
+import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.model.AbstractColoredModel;
 import lemon.engine.model.SphereModelBuilder;
 import lemon.engine.math.MathUtil;
@@ -21,8 +21,8 @@ public class PuzzleBall implements Renderable {
 		this.position = position;
 		this.velocity = velocity;
 		if (sphere == null) {
-			sphere = CommonDrawables.fromColoredModel(
-					new SphereModelBuilder<>(AbstractColoredModel::new, RADIUS, ITERATIONS).build());
+			sphere = new SphereModelBuilder<>(AbstractColoredModel::new, RADIUS, ITERATIONS)
+					.build().map(IndexedDrawable::new);
 		}
 	}
 
