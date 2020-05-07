@@ -1,12 +1,12 @@
 package lemon.evolution.destructible.beta;
 
-import lemon.engine.control.Loader;
 import lemon.engine.model.AbstractColoredModel;
 import lemon.engine.model.ColoredModel;
 import lemon.engine.model.ModelBuilder;
-import lemon.engine.math.Percentage;
 import lemon.engine.math.Vector3D;
-import lemon.engine.thread.ThreadManager;
+import lemon.engine.toolbox.Color;
+
+import java.util.Arrays;
 
 public class MarchingCube {
 	private float[] offsets; // [offsetX, offsetY, offsetZ]
@@ -18,14 +18,24 @@ public class MarchingCube {
 		this.threshold = threshold;
 		this.offsets = new float[] {-size.getX() / 2f, -size.getY() / 2f, -size.getZ() / 2f};
 		this.strides = new float[] {
-				data.length / size.getX(),
-				data[0].length / size.getY(),
-				data[0][0].length / size.getZ()
+				size.getX() / data.length,
+				size.getY() / data[0].length,
+				size.getZ() / data[0][0].length
 		};
+	}
+	public void setThreshold(float threshold) {
+		this.threshold = threshold;
+	}
+	public float getThreshold() {
+		return threshold;
 	}
 	public ColoredModel getColoredModel() {
 		ModelBuilder<ColoredModel> builder =
-				new ModelBuilder<>(AbstractColoredModel::new);
+				new ModelBuilder<>((vertices, indices) -> {
+					Color[] colors = new Color[indices.length];
+					Arrays.fill(colors, Color.BLUE);
+					return new AbstractColoredModel(vertices, Color.randomOpaque(indices.length), indices);
+				});
 		// TODO: some way to cache edge to rendered vertex
 		for (int i = 0; i < data.length - 1; i++) {
 			for (int j = 0; j < data[0].length - 1; j++) {

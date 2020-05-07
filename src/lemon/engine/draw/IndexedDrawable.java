@@ -31,10 +31,12 @@ public class IndexedDrawable implements Drawable {
 				GL15.glBufferData(target, getFloatBuffer(), GL15.GL_STATIC_DRAW);
 				int offset = 0;
 				for (int i = 0; i < vertices.length; i++) {
-					int dimensions = vertices[i][0].getDimensions();
-					GL20.glVertexAttribPointer(i, dimensions, GL11.GL_FLOAT, false,
-							stride * BYTES_PER_FLOAT, offset * BYTES_PER_FLOAT);
-					offset += dimensions;
+					if (vertices[i].length > 0) {
+						int dimensions = vertices[i][0].getDimensions();
+						GL20.glVertexAttribPointer(i, dimensions, GL11.GL_FLOAT, false,
+								stride * BYTES_PER_FLOAT, offset * BYTES_PER_FLOAT);
+						offset += dimensions;
+					}
 				}
 			});
 			for (int i = 0; i < vertices.length; i++) {
@@ -45,7 +47,9 @@ public class IndexedDrawable implements Drawable {
 	private int getStride(Vector[][] vertices) {
 		int stride = 0;
 		for (int i = 0; i < vertices.length; i++) {
-			stride += vertices[i][0].getDimensions();
+			if (vertices[i].length > 0) {
+				stride += vertices[i][0].getDimensions();
+			}
 		}
 		return stride;
 	}

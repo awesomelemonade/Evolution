@@ -35,7 +35,7 @@ public class ModelBuilder<T extends Model> {
         return indices;
     }
     public T build() {
-        return constructor.apply(vertices.toArray(new Vector3D[0]),
+        return constructor.apply(vertices.toArray(Vector3D.EMPTY_ARRAY),
                 indices.stream().mapToInt(i -> i).toArray());
     }
 }

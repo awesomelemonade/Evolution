@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -91,6 +92,7 @@ public enum Game implements Listener {
 
 	private TerrainLoader terrainLoader;
 	private MarchingCube marchingCube;
+	private float[][][] marchingCubeData;
 	private ParticleSystem particleSystem;
 
 	private ObjLoader dragonLoader;
@@ -107,6 +109,22 @@ public enum Game implements Listener {
 		return terrainLoader;
 	}
 
+	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, Predicate<Vector3D> predicate) {
+		float count = 0;
+		float total = 0;
+		for (float x = lower.getX(); x <= upper.getX(); x += resolution) {
+			for (float y = lower.getY(); y <= upper.getY(); y += resolution) {
+				for (float z = lower.getZ(); z <= upper.getZ(); z += resolution) {
+					if (predicate.test(new Vector3D(x, y, z))) {
+						count++;
+					}
+					total++;
+				}
+			}
+		}
+		return count / total;
+	}
+
 	@Override
 	public void onRegister() {
 		if (!loaded) {
@@ -117,16 +135,15 @@ public enum Game implements Listener {
 			ToIntFunction<int[]> pairer = (b) -> p.applyAsInt(b[0], p.applyAsInt(b[1], b[2]));
 			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> noise.apply(vector.divide(800f));
-			float[][][] data = new float[100][100][100];
-			marchingCube = new MarchingCube(data, new Vector3D(100f, 100f, 100f), 0f);
-
+			marchingCubeData = new float[20][20][20];
+			marchingCube = new MarchingCube(marchingCubeData, new Vector3D(100f, 100f, 100f), 0f);
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			// Add loaders
 			Loading loading = new Loading(() -> {
 				EventManager.INSTANCE.registerListener(Game.INSTANCE);
 			}, Game.INSTANCE.getTerrainLoader(), dragonLoader,
-					ScalarField.getLoader(scalarField, Vector3D.ZERO, new Vector3D(5f, 5f, 5f), data));
+					ScalarField.getLoader(scalarField, Vector3D.ZERO, new Vector3D(5f, 5f, 5f), marchingCubeData));
 			EventManager.INSTANCE.registerListener(loading);
 			loaded = true;
 			return;
@@ -134,7 +151,7 @@ public enum Game implements Listener {
 
 
 		logger.log(Level.FINE, "Initializing");
-		//GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+		GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(GLFW.glfwGetCurrentContext(), width, height);
@@ -228,6 +245,26 @@ public enum Game implements Listener {
 			@Subscribe
 			public void onKeyRelease(KeyEvent event) {
 				if(event.getAction() == GLFW.GLFW_RELEASE) {
+					if (event.getKey() == GLFW.GLFW_KEY_Y) {
+						int x = marchingCubeData.length / 2;
+						int y = marchingCubeData[0].length / 2;
+						int z = marchingCubeData[0][0].length / 2;
+						Vector3D sphereCenter = new Vector3D(x, y, z);
+						for (int i = 0; i < marchingCubeData.length; i++) {
+							for (int j = 0; j < marchingCubeData[0].length; j++) {
+								for (int k = 0; k < marchingCubeData[0][0].length; k++) {
+									Vector3D center = new Vector3D(i, j, k);
+									Vector3D lower = center.subtract(new Vector3D(0.5f, 0.5f, 0.5f));
+									Vector3D upper = center.add(new Vector3D(0.5f, 0.5f, 0.5f));
+									marchingCubeData[i][j][k] = Math.min(marchingCubeData[i][j][k],
+											1f - getPercentage(lower, upper, 0.1f, (v) -> {
+												return v.getDistanceSquared(sphereCenter) <= 7 * 7;
+											}) * 2f);
+								}
+							}
+						}
+						marchingCubeModel = CommonDrawables.fromColoredModel(marchingCube.getColoredModel());
+					}
 					if (event.getKey() == GLFW.GLFW_KEY_R) {
 						System.out.println("Set Origin: " + player.getPosition());
 						line.set(0, new Vector3D(player.getPosition()));
@@ -315,6 +352,10 @@ public enum Game implements Listener {
 	}
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event) {
+		marchingCube.setThreshold(marchingCube.getThreshold() + ((float) event.getYOffset()) / 20f);
+		marchingCubeModel = CommonDrawables.fromColoredModel(marchingCube.getColoredModel());
+		System.out.println(marchingCube.getThreshold());
+		/*
 		playerSpeed += (float) (event.getYOffset() / 100f);
 		if (playerSpeed < 0) {
 			playerSpeed = 0;
@@ -322,6 +363,7 @@ public enum Game implements Listener {
 		player.getCamera().getProjection()
 				.setFov(player.getCamera().getProjection().getFov() + ((float) (event.getYOffset() / 10000f)));
 		updateProjectionMatrices();
+		 */
 	}
 
 	private double lastMouseX;
