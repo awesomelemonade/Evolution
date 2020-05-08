@@ -135,9 +135,11 @@ public enum Game implements Listener {
 			SzudzikIntPair p = SzudzikIntPair.INSTANCE;
 			ToIntFunction<int[]> pairer = (b) -> p.applyAsInt(b[0], p.applyAsInt(b[1], b[2]));
 			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			ScalarField<Vector3D> scalarField = vector -> noise.apply(vector.divide(800f));
+			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(500f)) * 20f);
 			marchingCubeData = new float[20][20][20];
-			marchingCube = new MarchingCube(marchingCubeData, new Vector3D(100f, 100f, 100f), 0f);
+			marchingCube = new MarchingCube(marchingCubeData,
+					new Vector3D(marchingCubeData.length * 5f, marchingCubeData[0].length * 5f, marchingCubeData[0][0].length * 5f),
+					0f);
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			// Add loaders

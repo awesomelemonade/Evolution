@@ -13,7 +13,7 @@ Features
 * Terrain generation using [perlin noise](https://web.archive.org/web/20160325134143/http://freespace.virgin.net/hugo.elias/models/m_perlin.htm)
 * Raytracing with Moller Trumbore Intersection algorithm
 * Linear Algebra library (Matrix, Vector)
-* 3D continuous collision detection and response with ([Kasper Fauerby's paper](http://www.peroxide.dk/papers/collision/collision.pdf))
+* 3D continuous collision detection and response with [Kasper Fauerby's paper](http://www.peroxide.dk/papers/collision/collision.pdf)
 * Window & Input Handling with GLFW + LWJGL 3
 * Animations & Interpolations using Bezier Curves
 * Cantor & [Szudzik Pairing](http://szudzik.com/ElegantPairing.pdf) function implementations
