@@ -30,6 +30,7 @@ import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.ObjLoader;
+import lemon.evolution.destructible.beta.BoundedScalarGrid3D;
 import lemon.evolution.destructible.beta.MarchingCube;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.particle.beta.ParticleSystem;
@@ -131,13 +132,11 @@ public enum Game implements Listener {
 		if (!loaded) {
 			EventManager.INSTANCE.unregisterListener(this);
 			// Prepare loaders
-
-			SzudzikIntPair p = SzudzikIntPair.INSTANCE;
-			ToIntFunction<int[]> pairer = (b) -> p.applyAsInt(b[0], p.applyAsInt(b[1], b[2]));
+			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(500f)) * 20f);
 			marchingCubeData = new float[20][20][20];
-			marchingCube = new MarchingCube(marchingCubeData,
+			marchingCube = new MarchingCube(BoundedScalarGrid3D.of(marchingCubeData),
 					new Vector3D(marchingCubeData.length * 5f, marchingCubeData[0].length * 5f, marchingCubeData[0][0].length * 5f),
 					0f);
 			dragonLoader = new ObjLoader("/res/dragon.obj");

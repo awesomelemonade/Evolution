@@ -16,7 +16,7 @@ Features
 * 3D continuous collision detection and response with [Kasper Fauerby's paper](http://www.peroxide.dk/papers/collision/collision.pdf)
 * Window & Input Handling with GLFW + LWJGL 3
 * Animations & Interpolations using Bezier Curves
-* Cantor & [Szudzik Pairing](http://szudzik.com/ElegantPairing.pdf) function implementations
+* Cantor & [Szudzik Pairing](http://szudzik.com/ElegantPairing.pdf) function implementations ([3D variant](https://dmauro.com/post/77011214305/a-hashing-function-for-x-y-z-coordinates))
 * MurMur hash implementation
 * Java lambda expressions for convenient binding and unbinding of various OpenGL objects
 * Particle System using OpenGL's instanced rendering with glDrawElementsInstanced and glVertexAttribDivisor

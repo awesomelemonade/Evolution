@@ -1,18 +1,36 @@
 package lemon.engine.function;
 
-import java.util.function.IntBinaryOperator;
-
-public enum SzudzikIntPair implements IntBinaryOperator {
-	INSTANCE;
-	@Override
-	public int applyAsInt(int x, int y) {
+public class SzudzikIntPair {
+	public static int pair(int x, int y) {
 		if (x < 0 || y < 0) {
-			throw new IllegalArgumentException("Out of Range: " + x + " " + y);
+			throw new IllegalArgumentException(String.format("Out of Range: (%d, %d)", x, y));
 		}
-		long z = (x >= y ? x * x + x + y : x + y * y);
+		long longX = x;
+		long longY = y;
+		long z = (x >= y ? longX * longX + longX + longY : longX + longY * longY);
 		if (z < Integer.MIN_VALUE || z > Integer.MAX_VALUE) {
-			throw new IllegalArgumentException("Out of Range: " + z);
+			throw new IllegalArgumentException(String.format("Out of Range: (%d, %d) -> %d", x, y, z));
 		}
 		return (int) z;
+	}
+	public static long pair(int x, int y, int z) {
+		if (x < 0 || y < 0 || z < 0) {
+			throw new IllegalArgumentException(String.format("Out of Range: (%d, %d, %d)", x, y, z));
+		}
+		long longX = x;
+		long longY = y;
+		long longZ = z;
+		long maxXY = Math.max(longX, longY);
+		long max = Math.max(maxXY, longZ);
+		long hash = max * max * max + (2 * max * longZ) + longZ;
+		if (max == longZ) {
+			hash += maxXY * maxXY;
+		}
+		if (longY >= longX) {
+			hash += longX + longY;
+		} else {
+			hash += longY;
+		}
+		return hash;
 	}
 }

@@ -15,7 +15,7 @@ public class TerrainGenerator {
 	private static final float root2 = (float) (1f / Math.sqrt(2));
 
 	public TerrainGenerator() {
-		ToIntFunction<int[]> pairer = (b) -> SzudzikIntPair.INSTANCE.applyAsInt(b[0], b[1]);
+		ToIntFunction<int[]> pairer = (b) -> SzudzikIntPair.pair(b[0], b[1]);
 		/*Function<Vector2D, Float> baseFunction =
 				new PerlinNoise((s) -> MurmurHash.createWithSeed(s - 6),
 				pairer, (x) -> 0f, 1);
