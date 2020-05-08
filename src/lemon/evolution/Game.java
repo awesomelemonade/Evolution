@@ -10,9 +10,9 @@ import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
-import lemon.engine.draw.DynamicIndexedDrawable;
 import lemon.engine.draw.TextModel;
 import lemon.engine.font.Font;
 import lemon.engine.function.LineLineIntersection;
@@ -24,15 +24,17 @@ import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.math.Line;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Percentage;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
+import lemon.engine.thread.ThreadManager;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.ObjLoader;
-import lemon.evolution.destructible.beta.BoundedScalarGrid3D;
-import lemon.evolution.destructible.beta.MarchingCube;
 import lemon.evolution.destructible.beta.ScalarField;
+import lemon.evolution.destructible.beta.Terrain;
+import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.particle.beta.ParticleSystem;
 import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
@@ -81,7 +83,7 @@ public enum Game implements Listener {
 	private boolean loaded;
 
 	private Player player;
-	private HeightMap terrain;
+	private HeightMap heightMap;
 
 	private static final float TILE_SIZE = 0.5f; // 0.2f 1f
 
@@ -92,9 +94,8 @@ public enum Game implements Listener {
 
 	private Benchmarker benchmarker;
 
+	private Terrain terrain;
 	private TerrainLoader terrainLoader;
-	private MarchingCube marchingCube;
-	private float[][][] marchingCubeData;
 	private ParticleSystem particleSystem;
 
 	private ObjLoader dragonLoader;
@@ -134,18 +135,35 @@ public enum Game implements Listener {
 			// Prepare loaders
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(500f)) * 20f);
-			marchingCubeData = new float[20][20][20];
-			marchingCube = new MarchingCube(BoundedScalarGrid3D.of(marchingCubeData),
-					new Vector3D(marchingCubeData.length * 5f, marchingCubeData[0].length * 5f, marchingCubeData[0][0].length * 5f),
-					0f);
+			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
+			terrain = new Terrain(scalarField);
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
+			int n = 5;
+			int numChunksToPreload = (2 * n + 1) * (2 * n + 1) * (2 * n + 1);
+			Percentage terrainLoaderPercentage = new Percentage(numChunksToPreload);
 			// Add loaders
 			Loading loading = new Loading(() -> {
 				EventManager.INSTANCE.registerListener(Game.INSTANCE);
-			}, Game.INSTANCE.getTerrainLoader(), dragonLoader,
-					ScalarField.getLoader(scalarField, Vector3D.ZERO, new Vector3D(5f, 5f, 5f), marchingCubeData));
+			}, Game.INSTANCE.getTerrainLoader(), dragonLoader, new Loader() {
+				@Override
+				public void load() {
+					ThreadManager.INSTANCE.addThread(new Thread(() -> {
+						for (int i = -n; i <= n; i++) {
+							for (int j = -n; j <= n; j++) {
+								for (int k = -n; k <= n; k++) {
+									terrain.preloadChunk(i, j, k);
+									terrainLoaderPercentage.setPart(terrainLoaderPercentage.getPart() + 1);
+								}
+							}
+						}
+					})).start();
+				}
+				@Override
+				public Percentage getPercentage() {
+					return terrainLoaderPercentage;
+				}
+			});
 			EventManager.INSTANCE.registerListener(loading);
 			loaded = true;
 			return;
@@ -162,7 +180,7 @@ public enum Game implements Listener {
 
 		GL11.glViewport(0, 0, window_width, window_height);
 
-		terrain = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
+		heightMap = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
 
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -216,7 +234,7 @@ public enum Game implements Listener {
 		}
 		puzzleGrid = new PuzzleGrid();
 
-		Game.triangles = terrain.getTriangles();
+		Game.triangles = heightMap.getTriangles();
 		CollisionPacket.consumers.add((position, velocity) -> collision -> {
 			Vector3D origin = position;
 			float radius = velocity.getAbsoluteValue() + 2f;
@@ -234,7 +252,6 @@ public enum Game implements Listener {
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 
-		marchingCubeModel = marchingCube.getColoredModel().map(DynamicIndexedDrawable::new);
 		particleSystem = new ParticleSystem(20000);
 
 		dragonModel = dragonLoader.toIndexedDrawable();
@@ -248,7 +265,8 @@ public enum Game implements Listener {
 			public void onKeyRelease(KeyEvent event) {
 				if(event.getAction() == GLFW.GLFW_RELEASE) {
 					if (event.getKey() == GLFW.GLFW_KEY_Y) {
-						int x = marchingCubeData.length / 2;
+						// TODO
+						/*int x = marchingCubeData.length / 2;
 						int y = marchingCubeData[0].length / 2;
 						int z = marchingCubeData[0][0].length / 2;
 						Vector3D sphereCenter = new Vector3D(x, y, z);
@@ -267,7 +285,7 @@ public enum Game implements Listener {
 						}
 						marchingCube.getColoredModel().use((vertices, indices) -> {
 							marchingCubeModel.setData(vertices, indices);
-						});
+						});*/
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_R) {
 						System.out.println("Set Origin: " + player.getPosition());
@@ -299,7 +317,6 @@ public enum Game implements Listener {
 
 	private List<PuzzleBall> puzzleBalls;
 	private PuzzleGrid puzzleGrid;
-	private DynamicIndexedDrawable marchingCubeModel;
 
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -356,11 +373,11 @@ public enum Game implements Listener {
 	}
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event) {
-		marchingCube.setThreshold(marchingCube.getThreshold() + ((float) event.getYOffset()) / 20f);
+		/*marchingCube.setThreshold(marchingCube.getThreshold() + ((float) event.getYOffset()) / 20f);
 		marchingCube.getColoredModel().use((vertices, indices) -> {
 			marchingCubeModel.setData(vertices, indices);
 		});
-		System.out.println(marchingCube.getThreshold());
+		System.out.println(marchingCube.getThreshold());*/
 		/*
 		playerSpeed += (float) (event.getYOffset() / 100f);
 		if (playerSpeed < 0) {
@@ -446,8 +463,17 @@ public enum Game implements Listener {
 			//puzzleGrid.render();
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
-				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(0f, 50f, 0f)));
-				marchingCubeModel.draw();
+				int playerChunkX = Math.floorDiv((int) (player.getPosition().getX() / 5f), TerrainChunk.SIZE);
+				int playerChunkY = Math.floorDiv((int) (player.getPosition().getY() / 5f), TerrainChunk.SIZE);
+				int playerChunkZ = Math.floorDiv((int) (player.getPosition().getZ() / 5f), TerrainChunk.SIZE);
+				System.out.printf("Player -> [%d, %d, %d]\n", playerChunkX, playerChunkY, playerChunkZ);
+				for (int i = -1; i <= 1; i++) {
+					for (int j = -1; j <= 1; j++) {
+						for (int k = -1; k <= 1; k++) {
+							drawChunk(program, playerChunkX + i, playerChunkY + j, playerChunkZ + k);
+						}
+					}
+				}
 			});
 			particleSystem.render();
 			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
@@ -486,13 +512,24 @@ public enum Game implements Listener {
 			});
 		}
 	}
+	public void drawChunk(ShaderProgram program, int chunkX, int chunkY, int chunkZ) {
+		Vector3D translation = new Vector3D(
+				5f * chunkX * TerrainChunk.SIZE,
+				5f * chunkY * TerrainChunk.SIZE,
+				5f * chunkZ * TerrainChunk.SIZE);
+		Vector3D scalar = new Vector3D(5f, 5f, 5f);
+		program.loadMatrix(MatrixType.MODEL_MATRIX,
+				MathUtil.getTranslation(translation)
+						.multiply(MathUtil.getScalar(scalar)));
+		terrain.getDrawableChunk(chunkX, chunkY, chunkZ).draw();
+	}
 	public void renderHeightMap() {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
 		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
-		terrain.render();
+		heightMap.render();
 		GL20.glUseProgram(0);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);

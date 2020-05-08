@@ -16,11 +16,7 @@ public class MarchingCube {
 	public MarchingCube(BoundedScalarGrid3D grid, Vector3D size, float threshold) {
 		this.grid = grid;
 		this.threshold = threshold;
-		this.offsets = new float[] {
-				-size.getX() / 2f,
-				-size.getY() / 2f,
-				-size.getZ() / 2f
-		};
+		this.offsets = new float[] {0f, 0f, 0f};
 		this.strides = new float[] {
 				size.getX() / grid.getSizeX(),
 				size.getY() / grid.getSizeY(),
