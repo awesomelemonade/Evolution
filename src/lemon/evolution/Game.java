@@ -5,11 +5,14 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.engine.control.CleanUpEvent;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
@@ -29,12 +32,12 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
-import lemon.engine.thread.ThreadManager;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
+import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.particle.beta.ParticleSystem;
 import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
@@ -67,7 +70,7 @@ import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.toolbox.SkyboxLoader;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.ShaderProgram;
-import lemon.engine.terrain.TerrainGenerator;
+import lemon.engine.terrain.HeightMapGenerator;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
 import lemon.engine.time.BenchmarkEvent;
@@ -95,7 +98,7 @@ public enum Game implements Listener {
 	private Benchmarker benchmarker;
 
 	private Terrain terrain;
-	private TerrainLoader terrainLoader;
+	private HeightMapLoader heightMapLoader;
 	private ParticleSystem particleSystem;
 
 	private ObjLoader dragonLoader;
@@ -104,12 +107,12 @@ public enum Game implements Listener {
 
 	private TextModel debugTextModel;
 
-	public TerrainLoader getTerrainLoader() {
-		if (terrainLoader == null) {
-			terrainLoader = new TerrainLoader(new TerrainGenerator(), Math.max((int) (500f / TILE_SIZE), 2),
+	public HeightMapLoader getHeightMapLoader() {
+		if (heightMapLoader == null) {
+			heightMapLoader = new HeightMapLoader(new HeightMapGenerator(), Math.max((int) (500f / TILE_SIZE), 2),
 					Math.max((int) (500f / TILE_SIZE), 2));
 		}
-		return terrainLoader;
+		return heightMapLoader;
 	}
 
 	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, Predicate<Vector3D> predicate) {
@@ -136,7 +139,15 @@ public enum Game implements Listener {
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
-			terrain = new Terrain(scalarField);
+			ExecutorService pool = Executors.newCachedThreadPool();
+			EventManager.INSTANCE.registerListener(new Listener() {
+				@Subscribe
+				public void cleanUp(CleanUpEvent event) {
+					pool.shutdownNow();
+				}
+			});
+			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
+			terrain = new Terrain(generator::queueChunk);
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			int n = 5;
@@ -145,22 +156,20 @@ public enum Game implements Listener {
 			// Add loaders
 			Loading loading = new Loading(() -> {
 				EventManager.INSTANCE.registerListener(Game.INSTANCE);
-			}, Game.INSTANCE.getTerrainLoader(), dragonLoader, new Loader() {
+			}, Game.INSTANCE.getHeightMapLoader(), dragonLoader, new Loader() {
 				@Override
 				public void load() {
-					ThreadManager.INSTANCE.addThread(new Thread(() -> {
-						for (int i = -n; i <= n; i++) {
-							for (int j = -n; j <= n; j++) {
-								for (int k = -n; k <= n; k++) {
-									terrain.preloadChunk(i, j, k);
-									terrainLoaderPercentage.setPart(terrainLoaderPercentage.getPart() + 1);
-								}
+					for (int i = -n; i <= n; i++) {
+						for (int j = -n; j <= n; j++) {
+							for (int k = -n; k <= n; k++) {
+								terrain.preloadChunk(i, j, k);
 							}
 						}
-					})).start();
+					}
 				}
 				@Override
 				public Percentage getPercentage() {
+					terrainLoaderPercentage.setPart(numChunksToPreload - generator.getQueueSize());
 					return terrainLoaderPercentage;
 				}
 			});
@@ -180,7 +189,7 @@ public enum Game implements Listener {
 
 		GL11.glViewport(0, 0, window_width, window_height);
 
-		heightMap = new HeightMap(terrainLoader.getTerrain(), TILE_SIZE);
+		heightMap = new HeightMap(heightMapLoader.getTerrain(), TILE_SIZE);
 
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -373,12 +382,6 @@ public enum Game implements Listener {
 	}
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event) {
-		/*marchingCube.setThreshold(marchingCube.getThreshold() + ((float) event.getYOffset()) / 20f);
-		marchingCube.getColoredModel().use((vertices, indices) -> {
-			marchingCubeModel.setData(vertices, indices);
-		});
-		System.out.println(marchingCube.getThreshold());*/
-		/*
 		playerSpeed += (float) (event.getYOffset() / 100f);
 		if (playerSpeed < 0) {
 			playerSpeed = 0;
@@ -386,7 +389,6 @@ public enum Game implements Listener {
 		player.getCamera().getProjection()
 				.setFov(player.getCamera().getProjection().getFov() + ((float) (event.getYOffset() / 10000f)));
 		updateProjectionMatrices();
-		 */
 	}
 
 	private double lastMouseX;
@@ -466,10 +468,10 @@ public enum Game implements Listener {
 				int playerChunkX = Math.floorDiv((int) (player.getPosition().getX() / 5f), TerrainChunk.SIZE);
 				int playerChunkY = Math.floorDiv((int) (player.getPosition().getY() / 5f), TerrainChunk.SIZE);
 				int playerChunkZ = Math.floorDiv((int) (player.getPosition().getZ() / 5f), TerrainChunk.SIZE);
-				System.out.printf("Player -> [%d, %d, %d]\n", playerChunkX, playerChunkY, playerChunkZ);
-				for (int i = -1; i <= 1; i++) {
-					for (int j = -1; j <= 1; j++) {
-						for (int k = -1; k <= 1; k++) {
+				int n = 5;
+				for (int i = -n; i <= n; i++) {
+					for (int j = -n; j <= n; j++) {
+						for (int k = -n; k <= n; k++) {
 							drawChunk(program, playerChunkX + i, playerChunkY + j, playerChunkZ + k);
 						}
 					}
@@ -513,6 +515,9 @@ public enum Game implements Listener {
 		}
 	}
 	public void drawChunk(ShaderProgram program, int chunkX, int chunkY, int chunkZ) {
+		if (!terrain.queueForDrawable(chunkX, chunkY, chunkZ)) {
+			return;
+		}
 		Vector3D translation = new Vector3D(
 				5f * chunkX * TerrainChunk.SIZE,
 				5f * chunkY * TerrainChunk.SIZE,

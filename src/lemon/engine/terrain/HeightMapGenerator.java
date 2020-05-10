@@ -8,13 +8,13 @@ import lemon.engine.math.Vector2D;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
-public class TerrainGenerator {
+public class HeightMapGenerator {
 	private Function<Vector2D, Float> biomeNoise;
 	private PerlinNoise<Vector2D> noise;
 	private static final float goldenRatio = (float) ((1f + Math.sqrt(5)) / 2f);
 	private static final float root2 = (float) (1f / Math.sqrt(2));
 
-	public TerrainGenerator() {
+	public HeightMapGenerator() {
 		ToIntFunction<int[]> pairer = (b) -> SzudzikIntPair.pair(b[0], b[1]);
 		/*Function<Vector2D, Float> baseFunction =
 				new PerlinNoise((s) -> MurmurHash.createWithSeed(s - 6),

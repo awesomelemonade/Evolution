@@ -7,42 +7,37 @@ import lemon.engine.math.Vector3D;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class Terrain {
-	private ScalarField<Vector3D> generator;
 	private Map<Long, TerrainChunk> chunks;
 	private Map<Long, MarchingCube> marchingCubes;
 	private Map<Long, DynamicIndexedDrawable> drawables;
-	public Terrain(ScalarField<Vector3D> generator) {
-		this.generator = generator;
+	private Consumer<TerrainChunk> generator;
+	public Terrain(Consumer<TerrainChunk> generator) {
 		this.chunks = new HashMap<>();
 		this.marchingCubes = new HashMap<>();
 		this.drawables = new HashMap<>();
+		this.generator = generator;
 	}
-	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {
+	public boolean preloadChunk(int chunkX, int chunkY, int chunkZ) {
 		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
-		if (!chunks.containsKey(hashed)) {
-			chunks.put(hashed, generate(chunkX, chunkY, chunkZ));
+		boolean loaded = true;
+		if (chunks.containsKey(hashed)) {
+			if (!chunks.get(hashed).isGenerated()) {
+				loaded = false;
+			}
+		} else {
+			TerrainChunk chunk = new TerrainChunk(chunkX, chunkY, chunkZ);
+			chunks.put(hashed, chunk);
+			generator.accept(chunk);
+			loaded = false;
 		}
 		if (!marchingCubes.containsKey(hashed)) {
-			getMarchingCube(chunkX, chunkY, chunkZ);
-		}
-	}
-	public DynamicIndexedDrawable getDrawableChunk(int chunkX, int chunkY, int chunkZ) {
-		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
-		if (!drawables.containsKey(hashed)) {
-			drawables.put(hashed, getMarchingCube(chunkX, chunkY, chunkZ)
-					.getColoredModel().map(DynamicIndexedDrawable::new));
-		}
-		return drawables.get(hashed);
-	}
-	public MarchingCube getMarchingCube(int chunkX, int chunkY, int chunkZ) {
-		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
-		int offsetX = chunkX * TerrainChunk.SIZE;
-		int offsetY = chunkY * TerrainChunk.SIZE;
-		int offsetZ = chunkZ * TerrainChunk.SIZE;
-		int subTerrainSize = TerrainChunk.SIZE + 1;
-		if (!marchingCubes.containsKey(hashed)) {
+			int offsetX = chunkX * TerrainChunk.SIZE;
+			int offsetY = chunkY * TerrainChunk.SIZE;
+			int offsetZ = chunkZ * TerrainChunk.SIZE;
+			int subTerrainSize = TerrainChunk.SIZE + 1;
 			MarchingCube marchingCube = new MarchingCube(
 					getSubTerrain(offsetX, offsetY, offsetZ,
 							subTerrainSize, subTerrainSize, subTerrainSize),
@@ -50,26 +45,29 @@ public class Terrain {
 					0f);
 			marchingCubes.put(hashed, marchingCube);
 		}
-		return marchingCubes.get(hashed);
+		return loaded;
+	}
+	public boolean queueForDrawable(int chunkX, int chunkY, int chunkZ) {
+		boolean loaded = true;
+		for (int i = 0; i < 8; i++) {
+			if (!preloadChunk(chunkX + (i & 0b1),
+					chunkY + ((i >> 1) & 0b1),
+					chunkZ + ((i >> 2) & 0b1))) {
+				loaded = false;
+			}
+		}
+		return loaded;
+	}
+	public DynamicIndexedDrawable getDrawableChunk(int chunkX, int chunkY, int chunkZ) {
+		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
+		if (!drawables.containsKey(hashed)) {
+			drawables.put(hashed, marchingCubes.get(hashed)
+					.getColoredModel().map(DynamicIndexedDrawable::new));
+		}
+		return drawables.get(hashed);
 	}
 	private BoundedScalarGrid3D getSubTerrain(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
 		return BoundedScalarGrid3D.of((a, b, c) -> this.get(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
-	}
-	private TerrainChunk generate(int chunkX, int chunkY, int chunkZ) {
-		int offsetX = chunkX * TerrainChunk.SIZE;
-		int offsetY = chunkY * TerrainChunk.SIZE;
-		int offsetZ = chunkZ * TerrainChunk.SIZE;
-		TerrainChunk chunk = new TerrainChunk();
-		float[][][] data = chunk.getData();
-		for (int i = 0; i < TerrainChunk.SIZE; i++) {
-			for (int j = 0; j < TerrainChunk.SIZE; j++) {
-				for (int k = 0; k < TerrainChunk.SIZE; k++) {
-					data[i][j][k] = generator.get(
-							new Vector3D(offsetX + i, offsetY + j, offsetZ + k));
-				}
-			}
-		}
-		return chunk;
 	}
 	public float get(int x, int y, int z) {
 		int chunkX = Math.floorDiv(x, TerrainChunk.SIZE);
@@ -80,9 +78,18 @@ public class Terrain {
 		int localZ = Math.floorMod(z, TerrainChunk.SIZE);
 		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
 		if (!chunks.containsKey(hashed)) {
-			chunks.put(hashed, generate(chunkX, chunkY, chunkZ));
+			throw new IllegalArgumentException(
+					String.format("Chunk [(%d, %d, %d)=%d] has not been queued for generation",
+							chunkX, chunkY, chunkZ, hashed));
 		}
-		return chunks.get(hashed).get(localX, localY, localZ);
+		TerrainChunk chunk = chunks.get(hashed);
+		if (!chunk.isGenerated()) {
+			throw new IllegalArgumentException(
+					String.format("Chunk [(%d, %d, %d)=%d] has not been generated",
+							chunkX, chunkY, chunkZ, hashed));
+
+		}
+		return chunk.get(localX, localY, localZ);
 	}
 	private static long hashChunkCoordinates(int chunkX, int chunkY, int chunkZ) {
 		chunkX = AbsoluteIntValue.HASHED.applyAsInt(chunkX);

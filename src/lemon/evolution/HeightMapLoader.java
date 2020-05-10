@@ -2,16 +2,16 @@ package lemon.evolution;
 
 import lemon.engine.control.Loader;
 import lemon.engine.math.Percentage;
-import lemon.engine.terrain.TerrainGenerator;
+import lemon.engine.terrain.HeightMapGenerator;
 import lemon.engine.thread.ThreadManager;
 
-public class TerrainLoader implements Loader {
-	private TerrainGenerator terrainGenerator;
+public class HeightMapLoader implements Loader {
+	private HeightMapGenerator heightMapGenerator;
 	private float[][] terrain;
 	private Percentage percentage;
 
-	public TerrainLoader(TerrainGenerator terrainGenerator, int width, int height) {
-		this.terrainGenerator = terrainGenerator;
+	public HeightMapLoader(HeightMapGenerator heightMapGenerator, int width, int height) {
+		this.heightMapGenerator = heightMapGenerator;
 		this.terrain = new float[width][height];
 		this.percentage = new Percentage(width * height);
 	}
@@ -33,7 +33,7 @@ public class TerrainLoader implements Loader {
 							if (Thread.currentThread().isInterrupted()) {
 								return;
 							}
-							terrain[j][k] = terrainGenerator.generate(j, k);
+							terrain[j][k] = heightMapGenerator.generate(j, k);
 							synchronized (percentage) {
 								percentage.setPart(percentage.getPart() + 1);
 							}
@@ -50,7 +50,7 @@ public class TerrainLoader implements Loader {
 						if (Thread.currentThread().isInterrupted()) {
 							return;
 						}
-						terrain[i][j] = terrainGenerator.generate(i, j);
+						terrain[i][j] = heightMapGenerator.generate(i, j);
 						synchronized (percentage) {
 							percentage.setPart(percentage.getPart() + 1);
 						}
