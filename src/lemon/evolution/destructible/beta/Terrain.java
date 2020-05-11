@@ -3,6 +3,8 @@ package lemon.evolution.destructible.beta;
 import lemon.engine.draw.DynamicIndexedDrawable;
 import lemon.engine.function.AbsoluteIntValue;
 import lemon.engine.function.SzudzikIntPair;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 
 import java.util.HashMap;
@@ -12,13 +14,17 @@ import java.util.function.Consumer;
 public class Terrain {
 	private Map<Long, TerrainChunk> chunks;
 	private Map<Long, MarchingCube> marchingCubes;
+	private Map<Long, Matrix> transformationMatrices;
 	private Map<Long, DynamicIndexedDrawable> drawables;
 	private Consumer<TerrainChunk> generator;
-	public Terrain(Consumer<TerrainChunk> generator) {
+	private Vector3D scalar;
+	public Terrain(Consumer<TerrainChunk> generator, Vector3D scalar) {
 		this.chunks = new HashMap<>();
 		this.marchingCubes = new HashMap<>();
+		this.transformationMatrices = new HashMap<>();
 		this.drawables = new HashMap<>();
 		this.generator = generator;
+		this.scalar = scalar;
 	}
 	public boolean preloadChunk(int chunkX, int chunkY, int chunkZ) {
 		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
@@ -58,13 +64,23 @@ public class Terrain {
 		}
 		return loaded;
 	}
+	public Matrix getTransformationMatrix(int chunkX, int chunkY, int chunkZ) {
+		return transformationMatrices.computeIfAbsent(
+				hashChunkCoordinates(chunkX, chunkY, chunkZ), (x) -> {
+					Vector3D translation = new Vector3D(
+							scalar.getX() * chunkX * TerrainChunk.SIZE,
+							scalar.getY() * chunkY * TerrainChunk.SIZE,
+							scalar.getZ() * chunkZ * TerrainChunk.SIZE
+					);
+					return MathUtil.getTranslation(translation)
+							.multiply(MathUtil.getScalar(scalar));
+				});
+	}
 	public DynamicIndexedDrawable getDrawableChunk(int chunkX, int chunkY, int chunkZ) {
-		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
-		if (!drawables.containsKey(hashed)) {
-			drawables.put(hashed, marchingCubes.get(hashed)
-					.getColoredModel().map(DynamicIndexedDrawable::new));
-		}
-		return drawables.get(hashed);
+		return drawables.computeIfAbsent(
+				hashChunkCoordinates(chunkX, chunkY, chunkZ),
+				(hashed) -> marchingCubes.get(hashed).getColoredModel().map(DynamicIndexedDrawable::new)
+		);
 	}
 	private BoundedScalarGrid3D getSubTerrain(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
 		return BoundedScalarGrid3D.of((a, b, c) -> this.get(a + x, b + y, c + z), sizeX, sizeY, sizeZ);

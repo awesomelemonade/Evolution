@@ -147,7 +147,7 @@ public enum Game implements Listener {
 				}
 			});
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
-			terrain = new Terrain(generator::queueChunk);
+			terrain = new Terrain(generator::queueChunk, new Vector3D(5f, 5f, 5f));
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			int n = 5;
@@ -195,6 +195,9 @@ public enum Game implements Listener {
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
 		benchmarker.put("renderData", new LineGraph(1000, 100000000));
 		benchmarker.put("fpsData", new LineGraph(1000, 100));
+		benchmarker.put("debugData", new LineGraph(1000, 100));
+		benchmarker.put("memory", new LineGraph(1000, 3000000000f));
+		benchmarker.put("memoryDerivative", new LineGraph(1000, 30000000f));
 
 		player = new Player(new Projection(MathUtil.toRadians(60f),
 				((float) window_width) / ((float) window_height), 0.01f, 1000f));
@@ -367,10 +370,17 @@ public enum Game implements Listener {
 		player.update(event);
 		updateViewMatrices();
 
+		float totalLength = 0;
 		for (PuzzleBall puzzleBall : puzzleBalls) {
 			puzzleBall.getVelocity().selfAdd(GRAVITY_VECTOR);
 			CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity());
+			totalLength += puzzleBall.getVelocity().getLength();
 		}
+		benchmarker.getLineGraph("debugData").add(totalLength);
+		float last = benchmarker.getLineGraph("memory").getLast();
+		float current = Runtime.getRuntime().freeMemory();
+		benchmarker.getLineGraph("memory").add(current);
+		benchmarker.getLineGraph("memoryDerivative").add(last - current);
 		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, Time=%d",
 				EventManager.INSTANCE.getListenersRegistered(),
 				EventManager.INSTANCE.getListenerMethodsRegistered(),
@@ -518,14 +528,8 @@ public enum Game implements Listener {
 		if (!terrain.queueForDrawable(chunkX, chunkY, chunkZ)) {
 			return;
 		}
-		Vector3D translation = new Vector3D(
-				5f * chunkX * TerrainChunk.SIZE,
-				5f * chunkY * TerrainChunk.SIZE,
-				5f * chunkZ * TerrainChunk.SIZE);
-		Vector3D scalar = new Vector3D(5f, 5f, 5f);
 		program.loadMatrix(MatrixType.MODEL_MATRIX,
-				MathUtil.getTranslation(translation)
-						.multiply(MathUtil.getScalar(scalar)));
+				terrain.getTransformationMatrix(chunkX, chunkY, chunkZ));
 		terrain.getDrawableChunk(chunkX, chunkY, chunkZ).draw();
 	}
 	public void renderHeightMap() {

@@ -13,9 +13,13 @@ public class Benchmarker {
 		graphs = new LinkedHashMap<String, LineGraph>();
 	}
 	public void benchmark(Benchmark benchmark) {
+		float[] data = benchmark.getData();
 		int n = 0;
 		for (LineGraph graph : graphs.values()) {
-			graph.add(benchmark.getData()[n++]);
+			if (n >= data.length) {
+				break;
+			}
+			graph.add(data[n++]);
 		}
 	}
 	public void put(String name, LineGraph graph) {

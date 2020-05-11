@@ -24,13 +24,12 @@ Features
 * Phong (Ambient + Diffuse + Specular) lighting
 * Object model loading (ObjLoader) using .obj files for 3D rendering
 * Infinite Terrain generation with overhangs and caves - [stackoverflow](https://stackoverflow.com/questions/39695764/generating-voxel-overhangs-with-3d-noise), [sourceforge](http://accidentalnoise.sourceforge.net/minecraftworlds.html)
+* Multithread terrain generation on the fly with ThreadPoolExecutor
 
 Plans
 -----
-* Multithread terrain generation on the fly
 * Explosions in destructible terrain
 * Efficient collision detection & response on marching cube mesh
-* Redo loader system for better synchronization
 
 Ideas
 -----
@@ -44,7 +43,7 @@ Ideas
 * Deferred lighting scheme
 * Dual Contouring alternative to marching cube
 * Audio with OpenAL
-* Use of ThreadPoolExecutor
+* Redo loader system for better synchronization
 
 Other
 -----
