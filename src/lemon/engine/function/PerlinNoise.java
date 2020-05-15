@@ -7,7 +7,7 @@ import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.ToIntFunction;
 
-public class PerlinNoise<T extends Vector> implements Function<T, Float> {
+public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 	private IntUnaryOperator abs = AbsoluteIntValue.HASHED;
 	private IntUnaryOperator[] hashFunctions;
 	private ToIntFunction<int[]> pairFunction;
@@ -27,23 +27,23 @@ public class PerlinNoise<T extends Vector> implements Function<T, Float> {
 	@Override
 	public Float apply(T x) {
 		float output = 0;
+		int[] intX = new int[x.getDimensions()];
+		float[] fractionalX = new float[x.getDimensions()];
+		float[] values = new float[0b1 << x.getDimensions()]; // 2 ^ n
+		int[] a = new int[x.getDimensions()];
 		for (int i = 0; i < iterations; ++i) {
-			float frequency = (float) Math.pow(2, i);
 			float amplitude = (float) Math.pow(persistence.apply(x), i);
-			output += interpolatedNoise(x.copy().multiply(frequency), hashFunctions[i]) * amplitude;
+			output += interpolatedNoise(x, hashFunctions[i], intX, fractionalX, values, a) * amplitude;
+			x.multiply(2); // frequency
 		}
 		return output;
 	}
-	public float interpolatedNoise(Vector x, IntUnaryOperator hashFunction) {
-		int[] intX = new int[x.getDimensions()];
-		float[] fractionalX = new float[x.getDimensions()];
+	public float interpolatedNoise(Vector<T> x, IntUnaryOperator hashFunction, int[] intX, float[] fractionalX, float[] values, int[] a) {
 		for (int i = 0; i < intX.length; i++) {
 			intX[i] = (int) Math.floor(x.get(i));
 			fractionalX[i] = x.get(i) - intX[i];
 		}
-		float[] values = new float[0b1 << x.getDimensions()]; // 2 ^ n
 		for (int i = 0; i < values.length; i++) {
-			int[] a = new int[x.getDimensions()];
 			for (int j = 0; j < a.length; j++) {
 				a[j] = abs.applyAsInt(intX[j] + ((i >>> j) & 0b1));
 			}

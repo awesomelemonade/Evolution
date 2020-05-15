@@ -30,6 +30,7 @@ public class TerrainGenerator {
 		}
 	}
 	private void generate(TerrainChunk chunk) {
+		Vector3D temp = new Vector3D();
 		int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
 		int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
 		int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
@@ -37,8 +38,8 @@ public class TerrainGenerator {
 		for (int i = 0; i < TerrainChunk.SIZE; i++) {
 			for (int j = 0; j < TerrainChunk.SIZE; j++) {
 				for (int k = 0; k < TerrainChunk.SIZE; k++) {
-					data[i][j][k] = scalarField.get(
-							new Vector3D(offsetX + i, offsetY + j, offsetZ + k));
+					temp.set(offsetX + i, offsetY + j, offsetZ + k);
+					data[i][j][k] = scalarField.get(temp);
 				}
 			}
 		}

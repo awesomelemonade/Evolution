@@ -54,7 +54,7 @@ public class Vector<T extends Vector<T>> {
 			data[i] = vector.get(i);
 		}
 	}
-	public void set(float[] data) {
+	public void set(float... data) {
 		checkDimensions(data);
 		this.data = data;
 	}

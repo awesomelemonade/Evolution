@@ -138,7 +138,7 @@ public enum Game implements Listener {
 			// Prepare loaders
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.copy().divide(100f)) * 5f);
+			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
 			ExecutorService pool = Executors.newFixedThreadPool(3);
 			EventManager.INSTANCE.registerListener(new Listener() {
 				@Subscribe
