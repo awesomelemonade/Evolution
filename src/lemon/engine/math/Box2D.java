@@ -2,7 +2,10 @@ package lemon.engine.math;
 
 public class Box2D extends Vector<Box2D> {
 	public Box2D(float x, float y, float width, float height) {
-		super(Box2D.class, x, y, width, height);
+		super(Box2D.class, Box2D::new, x, y, width, height);
+	}
+	public Box2D(Box2D box) {
+		this(box.getX(), box.getY(), box.getWidth(), box.getHeight());
 	}
 	public boolean intersect(float x, float y) {
 		return x > this.getX() && x < this.getX() + this.getWidth() && y > this.getY()

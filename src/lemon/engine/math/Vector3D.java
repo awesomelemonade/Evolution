@@ -8,7 +8,7 @@ public class Vector3D extends Vector<Vector3D> {
 		this(0f, 0f, 0f);
 	}
 	public Vector3D(float x, float y, float z) {
-		super(Vector3D.class, x, y, z);
+		super(Vector3D.class, Vector3D::new, x, y, z);
 	}
 	public Vector3D(Vector3D vector) {
 		this(vector.getX(), vector.getY(), vector.getZ());

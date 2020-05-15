@@ -16,7 +16,7 @@ public class Vector2D extends Vector<Vector2D> {
 		this(0, 0);
 	}
 	public Vector2D(float x, float y) {
-		super(Vector2D.class, x, y);
+		super(Vector2D.class, Vector2D::new, x, y);
 	}
 	public Vector2D(Vector2D vector) {
 		this(vector.getX(), vector.getY());

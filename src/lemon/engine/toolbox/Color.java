@@ -24,7 +24,7 @@ public class Color extends Vector<Color> {
 		this(red, green, blue, 1f);
 	}
 	public Color(float red, float green, float blue, float alpha) {
-		super(Color.class, red, green, blue, alpha);
+		super(Color.class, Color::new, red, green, blue, alpha);
 	}
 	public Color(Color color) {
 		this(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());

@@ -1,20 +1,39 @@
 package lemon.engine.math;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 public class Vector<T extends Vector<T>> {
-	protected static final String unmodifiableMessage = "Cannot Modify Vector";
 	private Class<T> clazz;
+	private Function<T, T> copier;
 	private T self;
 	private float[] data;
 
-	protected Vector(Class<T> clazz, float... data) {
+	protected Vector(Class<T> clazz, Function<T, T> copier, float... data) {
 		this.clazz = clazz;
 		this.self = clazz.cast(this);
 		this.data = data;
+		this.copier = copier;
+		if (this.copier == null) {
+			try {
+				final Constructor<T> constructor = clazz.getDeclaredConstructor(clazz);
+				this.copier = (x) -> {
+					try {
+						return constructor.newInstance(x);
+					} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+						throw new IllegalStateException(e);
+					}
+				};
+			} catch (NoSuchMethodException e) {
+				this.copier = (x) -> {
+					throw new UnsupportedOperationException(
+							String.format("%s does not have a copier", clazz.getName()));
+				};
+			}
+		}
 	}
 	public int getDimensions() {
 		return data.length;
@@ -151,13 +170,7 @@ public class Vector<T extends Vector<T>> {
 		return sum;
 	}
 	public T copy() {
-		try {
-			return clazz.getDeclaredConstructor(clazz).newInstance(self);
-		} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-			throw new IllegalStateException(e);
-		} catch (NoSuchMethodException e) {
-			throw new UnsupportedOperationException(String.format("%s does not have a copy constructor", clazz.getName()));
-		}
+		return copier.apply(self);
 	}
 	public static <T extends Vector<T>> T unmodifiableVector(Vector<T> vector) {
 		// dummy - does not make it actually unmodifiable
