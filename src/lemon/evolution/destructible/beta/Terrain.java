@@ -54,6 +54,9 @@ public class Terrain {
 		return loaded;
 	}
 	public boolean queueForDrawable(int chunkX, int chunkY, int chunkZ) {
+		if (drawables.containsKey(hashChunkCoordinates(chunkX, chunkY, chunkZ))) {
+			return true;
+		}
 		boolean loaded = true;
 		for (int i = 0; i < 8; i++) {
 			if (!preloadChunk(chunkX + (i & 0b1),

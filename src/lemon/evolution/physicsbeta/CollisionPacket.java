@@ -12,12 +12,14 @@ public class CollisionPacket {
 	private static final int MAX_RECURSION_DEPTH = 5;
 
 	public static void checkTriangle(Vector3D position, Vector3D velocity, Triangle triangle, Collision collision) {
-		Plane trianglePlane = new Plane(triangle);
-		if (trianglePlane.isFrontFacingTo(velocity.copy().normalize())) {
-			float signedDistanceToTrianglePlane = trianglePlane.getSignedDistanceTo(position);
+		// isFrontFacingTo
+		if (triangle.getNormal().dotProduct(velocity.copy().normalize()) <= 0) {
+			// trianglePlane.getSignedDistanceTo(position)
+			float signedDistanceToTrianglePlane =
+					position.dotProduct(triangle.getNormal()) - triangle.getNormal().dotProduct(triangle.getVertex1());
 
 			// cache this as we're going to use it a few times below
-			float normalDotVelocity = trianglePlane.getNormal().dotProduct(velocity);
+			float normalDotVelocity = triangle.getNormal().dotProduct(velocity);
 
 			// if sphere is travelling parallel to the plane
 			if (normalDotVelocity == 0f) {
@@ -43,8 +45,7 @@ public class CollisionPacket {
 				if (t0 < 0) {
 					t0 = 0f;
 				}
-				// TODO: Convert to stream-like to prevent unnecessary allocation
-				Vector3D planeIntersectionPoint = position.copy().subtract(trianglePlane.getNormal())
+				Vector3D planeIntersectionPoint = position.copy().subtract(triangle.getNormal())
 						.add(velocity.copy().multiply(t0));
 				if (triangle.isInside(planeIntersectionPoint)) {
 					collision.test(t0, planeIntersectionPoint);
@@ -122,24 +123,24 @@ public class CollisionPacket {
 	}
 	// response steps
 	public static void collideAndSlide(Vector3D position, Vector3D velocity) {
-		Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
+		// Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
 
 		// calculate position and velocity in eSpace
-		position.divide(eRadius);
-		velocity.divide(eRadius);
+		// position.divide(eRadius);
+		// velocity.divide(eRadius);
 
 		// Iterate until we have our final position
-		collideWithWorld(position, velocity, 0, velocity);
+		collideWithWorld(position, velocity, 0, velocity.copy());
 
 		// Convert final result back to r3
-		position.multiply(eRadius);
-		velocity.multiply(eRadius);
+		// position.multiply(eRadius);
+		// velocity.multiply(eRadius);
 	}
 	public static void collideWithWorld(Vector3D position, Vector3D velocity, int collisionRecursionDepth, Vector3D remainingVelocity) {
 		// Exceed recursion depth
 		if (collisionRecursionDepth > MAX_RECURSION_DEPTH) {
 			// Remaining velocity should be removed from velocity
-			velocity.subtract(remainingVelocity.copy().multiply(remainingVelocity.dotProduct(velocity) / remainingVelocity.getLength()));
+			velocity.subtract(remainingVelocity.scaleToLength(remainingVelocity.dotProduct(velocity)));
 			return;
 		}
 
@@ -159,12 +160,12 @@ public class CollisionPacket {
 		float nearestDistance = remainingVelocity.getAbsoluteValue() * collision.getT();
 
 		if (nearestDistance > BUFFER_DISTANCE) {
-			Vector3D v = remainingVelocity.copy().scaleToLength(nearestDistance - BUFFER_DISTANCE);
+			Vector3D v = remainingVelocity.scaleToLength(nearestDistance - BUFFER_DISTANCE);
 			position.add(v);
 			collision.getIntersection().subtract(v.scaleToLength(BUFFER_DISTANCE));
 		} else {
 			float dist = BUFFER_DISTANCE - nearestDistance;
-			Vector3D v = remainingVelocity.copy().scaleToLength(dist);
+			Vector3D v = remainingVelocity.scaleToLength(dist);
 			position.subtract(v);
 		}
 
@@ -173,12 +174,12 @@ public class CollisionPacket {
 		Vector3D slidePlaneNormal = position.copy().subtract(collision.getIntersection()).normalize();
 		Plane slidingPlane = new Plane(slidePlaneOrigin, slidePlaneNormal);
 
-		Vector3D newDestinationPoint = destinationPoint.copy().subtract(slidePlaneNormal
+		Vector3D newDestinationPoint = destinationPoint.subtract(slidePlaneNormal
 				.copy().multiply(slidingPlane.getSignedDistanceTo(destinationPoint)));
 
 		// Generate the slide vector, which will become our new velocity vector for the next iteration
-		Vector3D newRemainingVelocity = newDestinationPoint.copy().subtract(position);
-		velocity.subtract(slidePlaneNormal.copy().multiply(velocity.dotProduct(slidePlaneNormal)));
+		Vector3D newRemainingVelocity = newDestinationPoint.subtract(position);
+		velocity.subtract(slidePlaneNormal.multiply(velocity.dotProduct(slidePlaneNormal)));
 
 		// Don't recurse if the remaining velocity is very small
 		if (newRemainingVelocity.getLengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {

@@ -1,11 +1,13 @@
 package lemon.engine.math;
 
 public class Triangle extends VectorArray {
+	private Vector3D normal;
 	public Triangle() {
 		super(3);
 	}
-	public Triangle(Vector3D vector, Vector3D vector2, Vector3D vector3) {
-		super(vector, vector2, vector3);
+	public Triangle(Vector3D a, Vector3D b, Vector3D c) {
+		super(a, b, c);
+		this.normal = b.copy().subtract(a).crossProduct(c.copy().subtract(a)).normalize();
 	}
 	public Vector3D getVertex1() {
 		return this.get(0);
@@ -15,6 +17,9 @@ public class Triangle extends VectorArray {
 	}
 	public Vector3D getVertex3() {
 		return this.get(2);
+	}
+	public Vector3D getNormal() {
+		return normal;
 	}
 
 	public boolean isInside(Vector3D point) {
