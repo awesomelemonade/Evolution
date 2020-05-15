@@ -125,21 +125,21 @@ public class CollisionPacket {
 		Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
 
 		// calculate position and velocity in eSpace
-		position.selfDivide(eRadius);
-		velocity.selfDivide(eRadius);
+		position.divide(eRadius);
+		velocity.divide(eRadius);
 
 		// Iterate until we have our final position
 		collideWithWorld(position, velocity, 0, velocity);
 
 		// Convert final result back to r3
-		position.selfMultiply(eRadius);
-		velocity.selfMultiply(eRadius);
+		position.multiply(eRadius);
+		velocity.multiply(eRadius);
 	}
 	public static void collideWithWorld(Vector3D position, Vector3D velocity, int collisionRecursionDepth, Vector3D remainingVelocity) {
 		// Exceed recursion depth
 		if (collisionRecursionDepth > MAX_RECURSION_DEPTH) {
 			// Remaining velocity should be removed from velocity
-			velocity.selfSubtract(remainingVelocity.copy().multiply(remainingVelocity.dotProduct(velocity) / remainingVelocity.getLength()));
+			velocity.subtract(remainingVelocity.copy().multiply(remainingVelocity.dotProduct(velocity) / remainingVelocity.getLength()));
 			return;
 		}
 
@@ -149,7 +149,7 @@ public class CollisionPacket {
 
 		// if no collision we just move along the velocity
 		if (collision.getT() > 1) {
-			position.selfAdd(remainingVelocity);
+			position.add(remainingVelocity);
 			return;
 		}
 
@@ -160,12 +160,12 @@ public class CollisionPacket {
 
 		if (nearestDistance > BUFFER_DISTANCE) {
 			Vector3D v = remainingVelocity.copy().scaleToLength(nearestDistance - BUFFER_DISTANCE);
-			position.selfAdd(v);
-			collision.getIntersection().selfSubtract(v.scaleToLength(BUFFER_DISTANCE));
+			position.add(v);
+			collision.getIntersection().subtract(v.scaleToLength(BUFFER_DISTANCE));
 		} else {
 			float dist = BUFFER_DISTANCE - nearestDistance;
 			Vector3D v = remainingVelocity.copy().scaleToLength(dist);
-			position.selfSubtract(v);
+			position.subtract(v);
 		}
 
 		// Determine the sliding plane
@@ -178,7 +178,7 @@ public class CollisionPacket {
 
 		// Generate the slide vector, which will become our new velocity vector for the next iteration
 		Vector3D newRemainingVelocity = newDestinationPoint.copy().subtract(position);
-		velocity.selfSubtract(slidePlaneNormal.copy().multiply(velocity.dotProduct(slidePlaneNormal)));
+		velocity.subtract(slidePlaneNormal.copy().multiply(velocity.dotProduct(slidePlaneNormal)));
 
 		// Don't recurse if the remaining velocity is very small
 		if (newRemainingVelocity.getLengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {

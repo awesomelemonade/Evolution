@@ -10,7 +10,7 @@ public enum LineLineIntersection implements BinaryOperator<Line> {
 	INSTANCE;
 	@Override
 	public Line apply(Line line, Line line2) {
-		System.out.println(line+" - "+line2);
+		System.out.println(line + " - " + line2);
 		Vector3D n = line.getDirection().crossProduct(line2.getDirection());
 		float nAbs = n.getAbsoluteValue();
 		if(nAbs==0){
@@ -19,10 +19,10 @@ public enum LineLineIntersection implements BinaryOperator<Line> {
 		}
 		Vector n1 = line.getDirection().crossProduct(n);
 		Vector n2 = line2.getDirection().crossProduct(n);
-		Vector offset = line2.getOrigin().subtract(line.getOrigin());
-		System.out.println("Distance: " + Math.abs(n.divide(nAbs).dotProduct(offset)));
+		Vector offset = line2.getOrigin().copy().subtract(line.getOrigin());
+		System.out.println("Distance: " + Math.abs(n.copy().divide(nAbs).dotProduct(offset)));
 		// Warning: Not updated for new Vector
-		return new Line(line.getOrigin().add(line.getDirection().multiply(offset.dotProduct(n2)/line.getDirection().dotProduct(n2))), 
-				line2.getOrigin().add(line.getDirection().multiply(offset.dotProduct(n1)/line2.getDirection().dotProduct(n1))));
+		return new Line(line.getOrigin().copy().add(line.getDirection().copy().multiply(offset.dotProduct(n2) / line.getDirection().dotProduct(n2))),
+				line2.getOrigin().copy().add(line.getDirection().copy().multiply(offset.dotProduct(n1) / line2.getDirection().dotProduct(n1))));
 	}
 }

@@ -36,7 +36,7 @@ public class Evolution {
 				/*GLFWVidMode vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
 				return GLFW.glfwCreateWindow(vidmode.width(), vidmode.height(),
 						"LWJGL version: " + Version.getVersion(), GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);*/
-				return GLFW.glfwCreateWindow(800, 600, "Title", MemoryUtil.NULL, MemoryUtil.NULL);
+				return GLFW.glfwCreateWindow(1600, 900, "Evolution", MemoryUtil.NULL, MemoryUtil.NULL);
 			}
 			@Override
 			public int getTargetFrameRate() {

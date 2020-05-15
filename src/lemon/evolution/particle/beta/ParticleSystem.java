@@ -104,8 +104,8 @@ public class ParticleSystem implements Renderable {
 			}
 		}
 		for (Particle particle : particles) {
-			particle.getTranslationalVelocity().selfAdd(GRAVITY);
-			particle.getTranslationalVelocity().selfMultiply(0.95f);
+			particle.getTranslationalVelocity().add(GRAVITY);
+			particle.getTranslationalVelocity().multiply(0.95f);
 			particle.update();
 		}
 		updateVbo();

@@ -22,7 +22,7 @@ public class Player2D {
 		quad = new Quad2D(new Box2D(-0.5f, -0.5f, 1f, 1f), Color.RED);
 	}
 	public void render() {
-		position.selfAdd(new Vector3D(0f, -0.01f, 0f));
+		position.add(new Vector3D(0f, -0.01f, 0f));
 		GL20.glUseProgram(CommonPrograms2D.COLOR.getShaderProgram().getId());
 		CommonPrograms2D.COLOR.getShaderProgram().loadMatrix(MatrixType.TRANSFORMATION_MATRIX, MathUtil.getTranslation(position));
 		quad.render();

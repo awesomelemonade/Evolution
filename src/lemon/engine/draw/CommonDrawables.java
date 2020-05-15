@@ -26,7 +26,7 @@ public class CommonDrawables {
 	}, GL11.GL_TRIANGLE_STRIP);
 
 	public static final Drawable SKYBOX = new IndexedDrawable(new Vector[][] {
-		split(3, -1f, -1f, -1f, -1f, -1f, 1f, -1f, 1f, -1f, -1f,
+		split(-1f, -1f, -1f, -1f, -1f, 1f, -1f, 1f, -1f, -1f,
 				1f, 1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f, 1f)
 	}, new int[] {
 			2, 0, 4, 4, 6, 2, 1, 0, 2, 2, 3, 1, 4, 5, 7, 7, 6, 4,

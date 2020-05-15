@@ -21,8 +21,8 @@ public class Particle {
 		this.creationTime = Instant.now();
 	}
 	public void update() {
-		translation.selfAdd(translationalVelocity);
-		rotation.selfAdd(rotationalVelocity);
+		translation.add(translationalVelocity);
+		rotation.add(rotationalVelocity);
 	}
 	public Matrix getTransformationMatrix() {
 		return MathUtil.getTranslation(translation).multiply(MathUtil.getRotation(rotation));

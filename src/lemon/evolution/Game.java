@@ -365,14 +365,14 @@ public enum Game implements Listener {
 		if (GameControls.MOVE_DOWN.isActivated()) {
 			player.getVelocity().setY(player.getVelocity().getY() - ((float) (playerSpeed)));
 		}
-		player.getVelocity().selfMultiply(friction);
+		player.getVelocity().multiply(friction);
 
 		player.update(event);
 		updateViewMatrices();
 
 		float totalLength = 0;
 		for (PuzzleBall puzzleBall : puzzleBalls) {
-			puzzleBall.getVelocity().selfAdd(GRAVITY_VECTOR);
+			puzzleBall.getVelocity().add(GRAVITY_VECTOR);
 			CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity());
 			totalLength += puzzleBall.getVelocity().getLength();
 		}
