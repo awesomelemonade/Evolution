@@ -20,7 +20,8 @@ public enum LineLineIntersection implements BinaryOperator<Line> {
 		Vector n1 = line.getDirection().crossProduct(n);
 		Vector n2 = line2.getDirection().crossProduct(n);
 		Vector offset = line2.getOrigin().subtract(line.getOrigin());
-		System.out.println("Distance: "+Math.abs(n.divide(nAbs).dotProduct(offset)));
+		System.out.println("Distance: " + Math.abs(n.divide(nAbs).dotProduct(offset)));
+		// Warning: Not updated for new Vector
 		return new Line(line.getOrigin().add(line.getDirection().multiply(offset.dotProduct(n2)/line.getDirection().dotProduct(n2))), 
 				line2.getOrigin().add(line.getDirection().multiply(offset.dotProduct(n1)/line2.getDirection().dotProduct(n1))));
 	}

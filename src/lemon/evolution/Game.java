@@ -138,7 +138,7 @@ public enum Game implements Listener {
 			// Prepare loaders
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
+			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.copy().divide(100f)) * 5f);
 			ExecutorService pool = Executors.newFixedThreadPool(3);
 			EventManager.INSTANCE.registerListener(new Listener() {
 				@Subscribe
@@ -305,7 +305,7 @@ public enum Game implements Listener {
 						lightPosition = new Vector3D(player.getPosition());
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_T) {
-						line.set(1, new Vector3D(player.getPosition().subtract(line.getOrigin())));
+						line.set(1, player.getPosition().copy().subtract(line.getOrigin()));
 						System.out.println("Set Direction: " + line.getDirection());
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_G) {
@@ -492,7 +492,7 @@ public enum Game implements Listener {
 				Vector3D position = new Vector3D(96f, 40f, 0f);
 				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(position)
 						.multiply(MathUtil.getScalar(new Vector3D(8f, 8f, 8f))));
-				program.loadVector("sunlightDirection", lightPosition.subtract(position).normalize());
+				program.loadVector("sunlightDirection", lightPosition.copy().subtract(position).normalize());
 				program.loadVector("viewPos", player.getPosition());
 				dragonModel.draw();
 			});

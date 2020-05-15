@@ -9,7 +9,7 @@ public class Plane {
 	}
 	public Plane(Vector3D a, Vector3D b, Vector3D c) {
 		this.origin = a;
-		this.normal = b.subtract(a).crossProduct(c.subtract(a)).normalize();
+		this.normal = b.copy().subtract(a).crossProduct(c.copy().subtract(a)).normalize();
 		this.calculateEquation();
 	}
 	public Plane(Vector3D origin, Vector3D normal) {

@@ -13,7 +13,7 @@ public class CollisionPacket {
 
 	public static void checkTriangle(Vector3D position, Vector3D velocity, Triangle triangle, Collision collision) {
 		Plane trianglePlane = new Plane(triangle);
-		if (trianglePlane.isFrontFacingTo(velocity.normalize())) {
+		if (trianglePlane.isFrontFacingTo(velocity.copy().normalize())) {
 			float signedDistanceToTrianglePlane = trianglePlane.getSignedDistanceTo(position);
 
 			// cache this as we're going to use it a few times below
@@ -43,8 +43,9 @@ public class CollisionPacket {
 				if (t0 < 0) {
 					t0 = 0f;
 				}
-				Vector3D planeIntersectionPoint = position.subtract(trianglePlane.getNormal())
-						.add(velocity.multiply(t0));
+				// TODO: Convert to stream-like to prevent unnecessary allocation
+				Vector3D planeIntersectionPoint = position.copy().subtract(trianglePlane.getNormal())
+						.add(velocity.copy().multiply(t0));
 				if (triangle.isInside(planeIntersectionPoint)) {
 					collision.test(t0, planeIntersectionPoint);
 					return;
@@ -64,8 +65,8 @@ public class CollisionPacket {
 		}
 	}
 	private static void checkEdge(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertexA, Vector3D vertexB, Collision collision) {
-		Vector3D edge = vertexB.subtract(vertexA);
-		Vector3D baseToVertex = vertexA.subtract(base);
+		Vector3D edge = vertexB.copy().subtract(vertexA);
+		Vector3D baseToVertex = vertexA.copy().subtract(base);
 		float edgeSquaredLength = edge.getAbsoluteValueSquared();
 		float edgeDotVelocity = edge.dotProduct(velocity);
 		float edgeDotBaseToVertex = edge.dotProduct(baseToVertex);
@@ -82,14 +83,14 @@ public class CollisionPacket {
 			float f = (edgeDotVelocity * t - edgeDotBaseToVertex) / edgeSquaredLength;
 			if (f >= 0.0f && f <= 1.0f) {
 				collision.setT(t);
-				collision.setIntersection(vertexA.add(edge.multiply(f)));
+				collision.setIntersection(vertexA.copy().add(edge.copy().multiply(f)));
 			}
 		}
 	}
 	private static void checkVertex(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertex, Collision collision) {
 		// p1
-		float b = 2.0f * velocity.dotProduct(base.subtract(vertex));
-		float c = vertex.subtract(base).getAbsoluteValueSquared() - 1.0f;
+		float b = 2.0f * velocity.dotProduct(base.copy().subtract(vertex));
+		float c = vertex.getDistanceSquared(base) - 1.0f;
 		float t = getLowestRoot(velocitySquaredLength, b, c);
 		collision.test(t, vertex);
 	}
@@ -137,6 +138,8 @@ public class CollisionPacket {
 	public static void collideWithWorld(Vector3D position, Vector3D velocity, int collisionRecursionDepth, Vector3D remainingVelocity) {
 		// Exceed recursion depth
 		if (collisionRecursionDepth > MAX_RECURSION_DEPTH) {
+			// Remaining velocity should be removed from velocity
+			velocity.selfSubtract(remainingVelocity.copy().multiply(remainingVelocity.dotProduct(velocity) / remainingVelocity.getLength()));
 			return;
 		}
 
@@ -152,30 +155,30 @@ public class CollisionPacket {
 
 		// Collision occurred
 
-		Vector3D destinationPoint = position.add(remainingVelocity);
+		Vector3D destinationPoint = position.copy().add(remainingVelocity);
 		float nearestDistance = remainingVelocity.getAbsoluteValue() * collision.getT();
 
 		if (nearestDistance > BUFFER_DISTANCE) {
-			Vector3D v = remainingVelocity.scaleToLength(nearestDistance - BUFFER_DISTANCE);
+			Vector3D v = remainingVelocity.copy().scaleToLength(nearestDistance - BUFFER_DISTANCE);
 			position.selfAdd(v);
-			collision.getIntersection().selfSubtract(v.normalize().multiply(BUFFER_DISTANCE));
+			collision.getIntersection().selfSubtract(v.scaleToLength(BUFFER_DISTANCE));
 		} else {
 			float dist = BUFFER_DISTANCE - nearestDistance;
-			Vector3D v = remainingVelocity.scaleToLength(dist);
+			Vector3D v = remainingVelocity.copy().scaleToLength(dist);
 			position.selfSubtract(v);
 		}
 
 		// Determine the sliding plane
 		Vector3D slidePlaneOrigin = position;
-		Vector3D slidePlaneNormal = position.subtract(collision.getIntersection()).normalize();
+		Vector3D slidePlaneNormal = position.copy().subtract(collision.getIntersection()).normalize();
 		Plane slidingPlane = new Plane(slidePlaneOrigin, slidePlaneNormal);
 
-		Vector3D newDestinationPoint = destinationPoint.subtract(slidePlaneNormal
-				.multiply(slidingPlane.getSignedDistanceTo(destinationPoint)));
+		Vector3D newDestinationPoint = destinationPoint.copy().subtract(slidePlaneNormal
+				.copy().multiply(slidingPlane.getSignedDistanceTo(destinationPoint)));
 
 		// Generate the slide vector, which will become our new velocity vector for the next iteration
-		Vector3D newRemainingVelocity = newDestinationPoint.subtract(position);
-		velocity.selfSubtract(slidePlaneNormal.multiply(velocity.dotProduct(slidePlaneNormal)));
+		Vector3D newRemainingVelocity = newDestinationPoint.copy().subtract(position);
+		velocity.selfSubtract(slidePlaneNormal.copy().multiply(velocity.dotProduct(slidePlaneNormal)));
 
 		// Don't recurse if the remaining velocity is very small
 		if (newRemainingVelocity.getLengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {

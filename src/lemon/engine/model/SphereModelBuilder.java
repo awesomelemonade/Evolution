@@ -67,12 +67,12 @@ public class SphereModelBuilder<T extends Model> extends ModelBuilder<T> {
 			vertices.put(a, new HashMap<Vector3D, Integer>());
 		}
 		vertices.get(a).put(b, this.getVertices().size());
-		this.addVertices(a.average(b));
+		this.addVertices(a.copy().average(b));
 		return this.getVertices().size() - 1;
 	}
 	public void normalize(float radius) {
 		for (Vector3D vertex : this.getVertices()) {
-			vertex.set(vertex.multiply(radius).divide(vertex.getAbsoluteValue()));
+			vertex.scaleToLength(radius);
 		}
 	}
 }

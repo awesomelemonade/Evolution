@@ -6,12 +6,11 @@ import lemon.engine.game2d.Quad2D;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
-import lemon.engine.physics.DynamicCollidable;
 import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
 import lemon.evolution.util.CommonPrograms2D;
 
-public class Player2D implements DynamicCollidable {
+public class Player2D {
 	private static final float BASE_MASS = 1f;
 	private Vector3D position;
 	private Vector3D velocity;
@@ -29,15 +28,12 @@ public class Player2D implements DynamicCollidable {
 		quad.render();
 		GL20.glUseProgram(0);
 	}
-	@Override
 	public Vector3D getPosition() {
 		return position;
 	}
-	@Override
 	public Vector3D getVelocity() {
 		return velocity;
 	}
-	@Override
 	public float getMass() {
 		return BASE_MASS;
 	}

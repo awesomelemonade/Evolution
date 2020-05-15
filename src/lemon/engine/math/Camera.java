@@ -23,10 +23,10 @@ public class Camera {
 		return projection;
 	}
 	public Matrix getInvertedTranslationMatrix() {
-		return MathUtil.getTranslation(this.position.getInvert());
+		return MathUtil.getTranslation(this.position.copy().invert());
 	}
 	public Matrix getInvertedRotationMatrix() {
-		return MathUtil.getRotation(rotation.getInvert());
+		return MathUtil.getRotation(rotation.copy().invert());
 	}
 	public Matrix getProjectionMatrix() {
 		return MathUtil.getPerspective(projection);

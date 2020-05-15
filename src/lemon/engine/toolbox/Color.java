@@ -3,7 +3,7 @@ package lemon.engine.toolbox;
 import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
 
-public class Color extends Vector {
+public class Color extends Vector<Color> {
 	public static final Color WHITE = new Color(1f, 1f, 1f);
 	public static final Color RED = new Color(1f, 0f, 0f);
 	public static final Color GREEN = new Color(0f, 1f, 0f);
@@ -24,7 +24,7 @@ public class Color extends Vector {
 		this(red, green, blue, 1f);
 	}
 	public Color(float red, float green, float blue, float alpha) {
-		super(red, green, blue, alpha);
+		super(Color.class, red, green, blue, alpha);
 	}
 	public Color(Color color) {
 		this(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());

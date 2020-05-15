@@ -1,6 +1,9 @@
 package lemon.engine.draw;
 
 import lemon.engine.math.Vector;
+import lemon.engine.math.Vector2D;
+import lemon.engine.math.Vector3D;
+import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL11;
 
 import java.util.Arrays;
@@ -19,7 +22,7 @@ public class CommonDrawables {
 			// Positions
 			QUAD_VERTICES,
 			// Colors
-			r(4, 1f, 1f, 1f, 1f)
+			r(4, c(1f, 1f, 1f, 1f))
 	}, GL11.GL_TRIANGLE_STRIP);
 
 	public static final Drawable SKYBOX = new IndexedDrawable(new Vector[][] {
@@ -31,23 +34,30 @@ public class CommonDrawables {
 	}, GL11.GL_TRIANGLES);
 
 	// Shortcuts
-	private static Vector v(float... values) {
-		return new Vector(values);
+	private static Vector2D v(float x, float y) {
+		return new Vector2D(x, y);
 	}
-	private static Vector[] r(int count, float... values) {
-		Vector[] vectors = new Vector[count];
+	private static Vector3D v(float x, float y, float z) {
+		return new Vector3D(x, y, z);
+	}
+	private static Color c(float r, float g, float b, float a) {
+		return new Color(r, g, b, a);
+	}
+	// repeat w/ shallow copy
+	private static Vector<?>[] r(int count, Vector<?> vector) {
+		Vector<?>[] vectors = new Vector<?>[count];
 		for (int i = 0; i < count; i++) {
-			vectors[i] = v(values);
+			vectors[i] = vector;
 		}
 		return vectors;
 	}
-	private static Vector[] split(int dimensions, float... values) {
-		if (values.length % dimensions != 0) {
-			throw new IllegalArgumentException("length of values must be divisible by dimensions");
+	private static Vector3D[] split(float... values) {
+		if (values.length % 3 != 0) {
+			throw new IllegalArgumentException("length of values must be divisible by 3");
 		}
-		Vector[] vectors = new Vector[values.length / dimensions];
+		Vector3D[] vectors = new Vector3D[values.length / 3];
 		for (int i = 0; i < vectors.length; i++) {
-			vectors[i] = new Vector(Arrays.copyOfRange(values, i * dimensions, i * dimensions + dimensions));
+			vectors[i] = new Vector3D(values[i * 3], values[i * 3 + 1], values[i * 3 + 2]);
 		}
 		return vectors;
 	}

@@ -5,17 +5,14 @@ import lemon.engine.control.UpdateEvent;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.math.Matrix;
-import lemon.engine.physics.CollisionManager;
 import lemon.evolution.setup.CommonProgramsSetup;
 
 public enum Game2D implements Listener {
 	INSTANCE;
-	private CollisionManager manager;
 	private Player2D player;
 	@Override
 	public void onRegister() {
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
-		manager = new CollisionManager();
 		player = new Player2D();
 	}
 	@Subscribe

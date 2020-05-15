@@ -1,25 +1,19 @@
 package lemon.engine.math;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
-public class Vector {
-	public static final Function<float[], Vector> supplier = (data) -> new Vector(data);
+public class Vector<T extends Vector<T>> {
 	protected static final String unmodifiableMessage = "Cannot Modify Vector";
+	private Class<T> clazz;
+	private T self;
 	private float[] data;
 
-	public Vector(int length) {
-		this.data = new float[length];
-	}
-	public Vector(Vector vector) {
-		float[] data = new float[vector.getDimensions()];
-		for (int i = 0; i < data.length; ++i) {
-			data[i] = vector.get(i);
-		}
-		this.data = data;
-	}
-	public Vector(float... data) {
+	protected Vector(Class<T> clazz, float... data) {
+		this.clazz = clazz;
+		this.self = clazz.cast(this);
 		this.data = data;
 	}
 	public int getDimensions() {
@@ -51,38 +45,33 @@ public class Vector {
 	public float get(int index) {
 		return data[index];
 	}
-	public Vector normalize() {
-		return normalize(supplier);
-	}
-	public <T extends Vector> T normalize(Function<float[], T> supplier) {
+	public T normalize() {
 		float magnitude = 0;
-		for (int i = 0; i < data.length; ++i) {
-			magnitude += Math.pow(data[i], 2);
+		for (int i = 0; i < data.length; i++) {
+			magnitude += data[i] * data[i];
+		}
+		if (magnitude == 0) {
+			throw new IllegalStateException("Cannot normalize a 0 magnitude vector");
 		}
 		magnitude = (float) Math.sqrt(magnitude);
-		float[] data = new float[this.data.length];
 		for (int i = 0; i < data.length; ++i) {
-			data[i] = this.data[i] / magnitude;
+			data[i] /= magnitude;
 		}
-		return supplier.apply(data);
+		return self;
 	}
-	public Vector getInvert() {
-		return getInvert(supplier);
-	}
-	public <T extends Vector> T getInvert(Function<float[], T> supplier) {
-		float[] data = new float[this.data.length];
-		for (int i = 0; i < data.length; ++i) {
-			data[i] = -this.data[i];
+	public T invert() {
+		for (int i = 0; i < data.length; i++) {
+			data[i] = -data[i];
 		}
-		return supplier.apply(data);
+		return self;
 	}
 	public float getAbsoluteValue() {
 		return (float) Math.sqrt(getAbsoluteValueSquared());
 	}
 	public float getAbsoluteValueSquared() {
 		float sum = 0;
-		for (int i = 0; i < data.length; ++i) {
-			sum += Math.pow(data[i], 2);
+		for (int i = 0; i < data.length; i++) {
+			sum += data[i] * data[i];
 		}
 		return sum;
 	}
@@ -98,105 +87,60 @@ public class Vector {
 	public float getDistanceSquared(Vector vector) {
 		checkDimensions(vector);
 		float sum = 0;
-		for (int i = 0; i < data.length; ++i) {
-			sum += Math.pow(vector.get(i) - data[i], 2);
+		for (int i = 0; i < data.length; i++) {
+			float delta = vector.get(i) - data[i];
+			sum += delta * delta;
 		}
 		return sum;
 	}
-	public void selfAdd(Vector vector) {
-		selfOperate(vector, BasicFloatOperator.ADDITION);
-	}
-	public void selfSubtract(Vector vector) {
-		selfOperate(vector, BasicFloatOperator.SUBTRACTION);
-	}
-	public void selfMultiply(Vector vector) {
-		selfOperate(vector, BasicFloatOperator.MULTIPLICATION);
-	}
-	public void selfMultiply(float scale) {
-		selfOperate(scale, BasicFloatOperator.MULTIPLICATION);
-	}
-	public void selfDivide(Vector vector) {
-		selfOperate(vector, BasicFloatOperator.DIVISION);
-	}
-	public void selfDivide(float scale) {
-		selfOperate(scale, BasicFloatOperator.DIVISION);
-	}
-	public void selfAverage(Vector vector) {
-		selfOperate(vector, BasicFloatOperator.AVERAGE);
-	}
-	public Vector add(Vector vector) {
-		return add(vector, supplier);
-	}
-	public Vector subtract(Vector vector) {
-		return subtract(vector, supplier);
-	}
-	public Vector multiply(Vector vector) {
-		return multiply(vector, supplier);
-	}
-	public Vector multiply(float scale) {
-		return multiply(scale, supplier);
-	}
-	public Vector divide(Vector vector) {
-		return divide(vector, supplier);
-	}
-	public Vector divide(float scale) {
-		return divide(scale, supplier);
-	}
-	public Vector average(Vector vector) {
-		return average(vector, supplier);
-	}
-	public Vector scaleToLength(float length) {
-		return scaleToLength(length, supplier);
-	}
-	public <T extends Vector> T add(T vector, Function<float[], T> supplier) {
-		return operate(vector, BasicFloatOperator.ADDITION, supplier);
-	}
-	public <T extends Vector> T subtract(T vector, Function<float[], T> supplier) {
-		return operate(vector, BasicFloatOperator.SUBTRACTION, supplier);
-	}
-	public <T extends Vector> T multiply(T vector, Function<float[], T> supplier) {
-		return operate(vector, BasicFloatOperator.MULTIPLICATION, supplier);
-	}
-	public <T extends Vector> T multiply(float scale, Function<float[], T> supplier) {
-		return operate(scale, BasicFloatOperator.MULTIPLICATION, supplier);
-	}
-	public <T extends Vector> T divide(T vector, Function<float[], T> supplier) {
-		return operate(vector, BasicFloatOperator.DIVISION, supplier);
-	}
-	public <T extends Vector> T divide(float scale, Function<float[], T> supplier) {
-		return operate(scale, BasicFloatOperator.DIVISION, supplier);
-	}
-	public <T extends Vector> T average(T vector, Function<float[], T> supplier) {
-		return operate(vector, BasicFloatOperator.AVERAGE, supplier);
-	}
-	public <T extends Vector> T scaleToLength(float length, Function<float[], T> supplier) {
-		return multiply(length / this.getLength(), supplier);
-	}
-	public <T extends Vector> T operate(float scale, BinaryOperator<Float> operator, Function<float[], T> supplier) {
-		float[] data = new float[this.data.length];
-		for (int i = 0; i < data.length; ++i) {
-			data[i] = operator.apply(this.data[i], scale);
-		}
-		return supplier.apply(data);
-	}
-	public <T extends Vector> T operate(T vector, BinaryOperator<Float> operator, Function<float[], T> supplier) {
+	public T add(Vector<T> vector) {
 		checkDimensions(vector);
-		float[] data = new float[this.data.length];
-		for (int i = 0; i < data.length; ++i) {
-			data[i] = operator.apply(this.data[i], vector.get(i));
+		for (int i = 0; i < data.length; i++) {
+			data[i] += vector.get(i);
 		}
-		return supplier.apply(data);
+		return self;
 	}
-	public void selfOperate(float scale, BinaryOperator<Float> operator) {
-		for (int i = 0; i < data.length; ++i) {
-			data[i] = operator.apply(data[i], scale);
-		}
-	}
-	public void selfOperate(Vector vector, BinaryOperator<Float> operator) {
+	public T subtract(Vector<T> vector) {
 		checkDimensions(vector);
-		for (int i = 0; i < data.length; ++i) {
-			data[i] = operator.apply(data[i], vector.get(i));
+		for (int i = 0; i < data.length; i++) {
+			data[i] -= vector.get(i);
 		}
+		return self;
+	}
+	public T multiply(Vector<T> vector) {
+		checkDimensions(vector);
+		for (int i = 0; i < data.length; i++) {
+			data[i] *= vector.get(i);
+		}
+		return self;
+	}
+	public T divide(Vector<T> vector) {
+		checkDimensions(vector);
+		for (int i = 0; i < data.length; i++) {
+			data[i] /= vector.get(i);
+		}
+		return self;
+	}
+	public T multiply(float factor) {
+		for (int i = 0; i < data.length; i++) {
+			data[i] *= factor;
+		}
+		return self;
+	}
+	public T divide(float factor) {
+		for (int i = 0; i < data.length; i++) {
+			data[i] /= factor;
+		}
+		return self;
+	}
+	public T average(Vector<T> vector) {
+		for (int i = 0; i < data.length; i++) {
+			data[i] = (data[i] + vector.get(i)) / 2;
+		}
+		return self;
+	}
+	public T scaleToLength(float length) {
+		return multiply(length / this.getLength());
 	}
 	public float dotProduct(Vector vector) {
 		checkDimensions(vector);
@@ -205,6 +149,19 @@ public class Vector {
 			sum += data[i] * vector.get(i);
 		}
 		return sum;
+	}
+	public T copy() {
+		try {
+			return clazz.getDeclaredConstructor(clazz).newInstance(self);
+		} catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+			throw new IllegalStateException(e);
+		} catch (NoSuchMethodException e) {
+			throw new UnsupportedOperationException(String.format("%s does not have a copy constructor", clazz.getName()));
+		}
+	}
+	public static <T extends Vector<T>> T unmodifiableVector(Vector<T> vector) {
+		// dummy - does not make it actually unmodifiable
+		return vector.clazz.cast(vector);
 	}
 	@Override
 	public String toString() {
@@ -229,28 +186,8 @@ public class Vector {
 		}
 		return false;
 	}
-	public static Vector unmodifiableVector(Vector vector) {
-		return new Vector(vector) {
-			@Override
-			public void set(Vector x) {
-				throw new IllegalStateException(unmodifiableMessage);
-			}
-			@Override
-			public void set(float[] data) {
-				throw new IllegalStateException(unmodifiableMessage);
-			}
-			@Override
-			public void set(int index, float data) {
-				throw new IllegalStateException(unmodifiableMessage);
-			}
-			@Override
-			public void selfOperate(float scale, BinaryOperator<Float> operator) {
-				throw new IllegalStateException(unmodifiableMessage);
-			}
-			@Override
-			public void selfOperate(Vector vector, BinaryOperator<Float> operator) {
-				throw new IllegalStateException(unmodifiableMessage);
-			}
-		};
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(data);
 	}
 }

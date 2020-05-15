@@ -30,7 +30,7 @@ public class PerlinNoise<T extends Vector> implements Function<T, Float> {
 		for (int i = 0; i < iterations; ++i) {
 			float frequency = (float) Math.pow(2, i);
 			float amplitude = (float) Math.pow(persistence.apply(x), i);
-			output += interpolatedNoise(x.multiply(frequency), hashFunctions[i]) * amplitude;
+			output += interpolatedNoise(x.copy().multiply(frequency), hashFunctions[i]) * amplitude;
 		}
 		return output;
 	}
