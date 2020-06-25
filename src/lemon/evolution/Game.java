@@ -1,6 +1,7 @@
 package lemon.evolution;
 
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -107,6 +108,9 @@ public enum Game implements Listener {
 
 	private TextModel debugTextModel;
 
+	private int windowWidth;
+	private int windowHeight;
+
 	public HeightMapLoader getHeightMapLoader() {
 		if (heightMapLoader == null) {
 			heightMapLoader = new HeightMapLoader(new HeightMapGenerator(), Math.max((int) (500f / TILE_SIZE), 2),
@@ -138,8 +142,7 @@ public enum Game implements Listener {
 			// Prepare loaders
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			//ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
-			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() * 5f);
+			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
 			ExecutorService pool = Executors.newFixedThreadPool(3);
 			EventManager.INSTANCE.registerListener(new Listener() {
 				@Subscribe
@@ -185,10 +188,10 @@ public enum Game implements Listener {
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(GLFW.glfwGetCurrentContext(), width, height);
-		int window_width = width.get();
-		int window_height = height.get();
+		windowWidth = width.get();
+		windowHeight = height.get();
 
-		GL11.glViewport(0, 0, window_width, window_height);
+		GL11.glViewport(0, 0, windowWidth, windowHeight);
 
 		heightMap = new HeightMap(heightMapLoader.getTerrain(), TILE_SIZE);
 
@@ -201,9 +204,9 @@ public enum Game implements Listener {
 		benchmarker.put("memoryDerivative", new LineGraph(1000, 30000000f));
 
 		player = new Player(new Projection(MathUtil.toRadians(60f),
-				((float) window_width) / ((float) window_height), 0.01f, 1000f));
+				((float) windowWidth) / ((float) windowHeight), 0.01f, 1000f));
 
-		Matrix orthoProjectionMatrix = MathUtil.getOrtho(window_width, window_height, -1, 1);
+		Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
 		CommonProgramsSetup.setup3D(player.getCamera().getProjectionMatrix());
 
@@ -215,7 +218,7 @@ public enum Game implements Listener {
 			colorTexture = new Texture();
 			GL13.glActiveTexture(TextureBank.COLOR.getBind());
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
-			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, window_width, window_height, 0, GL11.GL_RGB,
+			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, windowWidth, windowHeight, 0, GL11.GL_RGB,
 					GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
 			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -223,7 +226,7 @@ public enum Game implements Listener {
 			depthTexture = new Texture();
 			GL13.glActiveTexture(TextureBank.DEPTH.getBind());
 			GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
-			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, window_width, window_height, 0,
+			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, windowWidth, windowHeight, 0,
 					GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
 			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
@@ -278,29 +281,7 @@ public enum Game implements Listener {
 			public void onKeyRelease(KeyEvent event) {
 				if(event.getAction() == GLFW.GLFW_RELEASE) {
 					if (event.getKey() == GLFW.GLFW_KEY_Y) {
-						// TODO
-						/*int x = marchingCubeData.length / 2;
-						int y = marchingCubeData[0].length / 2;
-						int z = marchingCubeData[0][0].length / 2;
-						Vector3D sphereCenter = new Vector3D(x, y, z);
-						for (int i = 0; i < marchingCubeData.length; i++) {
-							for (int j = 0; j < marchingCubeData[0].length; j++) {
-								for (int k = 0; k < marchingCubeData[0][0].length; k++) {
-									Vector3D center = new Vector3D(i, j, k);
-									Vector3D lower = center.subtract(new Vector3D(0.5f, 0.5f, 0.5f));
-									Vector3D upper = center.add(new Vector3D(0.5f, 0.5f, 0.5f));
-									marchingCubeData[i][j][k] = Math.min(marchingCubeData[i][j][k],
-											1f - getPercentage(lower, upper, 0.1f, (v) -> {
-												return v.getDistanceSquared(sphereCenter) <= 7 * 7;
-											}) * 2f);
-								}
-							}
-						}
-						marchingCube.getColoredModel().use((vertices, indices) -> {
-							marchingCubeModel.setData(vertices, indices);
-						});*/
-						Vector3D position = player.getPosition().copy();
-						terrain.generateExplosion(position, 10f);
+						generateExplosionAtCrosshair();
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_R) {
 						System.out.println("Set Origin: " + player.getPosition());
@@ -321,6 +302,14 @@ public enum Game implements Listener {
 			}
 		});
 	}
+	public void generateExplosionAtCrosshair() {
+		if (depthDistance != 1f) {
+			float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
+			Vector3D position = player.getPosition().copy().add(player.getVectorDirection().multiply(realDistance));
+			terrain.generateExplosion(position, 10f);
+		}
+	}
+	float depthDistance = 0;
 	// temp
 	private static Triangle[][][] triangles;
 	private static void checkTriangle(Vector3D position, Vector3D velocity, Collision collision, int x, int y) {
@@ -500,9 +489,19 @@ public enum Game implements Listener {
 				dragonModel.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
+			FloatBuffer buffer = BufferUtils.createFloatBuffer(1);
+			GL11.glReadPixels(windowWidth / 2, windowHeight / 2, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, buffer);
+			depthDistance = buffer.get(); // far plane
 		});
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
+		});
+		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
+					MathUtil.getTranslation(new Vector3D(windowWidth / 2f, windowHeight / 2f, 0f))
+							.multiply(MathUtil.getScalar(new Vector3D(10f, 10f, 10f))));
+			// Render crosshair
+			CommonDrawables.COLORED_QUAD.draw();
 		});
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			// render graphs
@@ -561,12 +560,15 @@ public enum Game implements Listener {
 	@Subscribe
 	public void onClick(MouseButtonEvent event){
 		if(event.getAction() == GLFW.GLFW_RELEASE){
-			if(event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1){
+			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1){
 				Line line = new Line(player.getCamera().getPosition(), player.getVectorDirection());
 				System.out.println(rayTriangleIntersection.apply(new Triangle(new Vector3D(-1f, 0f, -1f), new Vector3D(-1f, 0f, 1f), new Vector3D(1f, 0f, 0f)),
 						line));
 				System.out.println(raySphereIntersection.apply(line, new Sphere(Vector3D.ZERO, 1f)));
 				System.out.println(LineLineIntersection.INSTANCE.apply(line, this.line));
+			}
+			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2) {
+				generateExplosionAtCrosshair();
 			}
 		}
 	}
