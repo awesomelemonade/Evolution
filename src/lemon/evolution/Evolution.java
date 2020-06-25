@@ -10,6 +10,7 @@ import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryUtil;
 
 import lemon.engine.control.GLFWWindow;
@@ -54,6 +55,8 @@ public class Evolution {
 				}
 			});
 			window.init();
+			logger.log(Level.INFO, String.format("LWJGL Version %s", Version.getVersion()));
+			logger.log(Level.INFO, String.format("OpenGL Version %s", GL11.glGetString(GL11.GL_VERSION)));
 			EventManager.INSTANCE.registerListener(Menu.INSTANCE);
 			window.run();
 		} catch (Exception ex) {

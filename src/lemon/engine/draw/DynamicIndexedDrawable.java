@@ -84,24 +84,40 @@ public class DynamicIndexedDrawable implements Drawable {
 		this.vertices = vertices;
 		this.indices = indices;
 		indexBuffer.bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
-			if (indices.length > indexBufferSize) {
-				indexBufferSize = indices.length;
-				GL15.glBufferData(target, indices, hint);
-			} else {
-				GL15.glBufferSubData(target, 0, indices);
+			if (indices.length > 0) {
+				if (indices.length > indexBufferSize) {
+					indexBufferSize = indices.length;
+					GL15.glBufferData(target, indices, hint);
+				} else {
+					GL15.glBufferSubData(target, 0, indices);
+				}
 			}
 		});
 		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			int oldStride = stride;
+			stride = getStride(vertices);
 			FloatBuffer newBuffer = this.getFloatBuffer();
 			int newBufferSize = newBuffer.capacity();
-			if (newBufferSize != 0 && getStride(vertices) != this.stride) {
-				throw new IllegalArgumentException("Data Stride Mismatch");
+			if (newBufferSize > 0) {
+				if (newBufferSize > vertexBufferSize) {
+					vertexBufferSize = newBufferSize;
+					GL15.glBufferData(target, newBuffer, hint);
+				} else {
+					GL15.glBufferSubData(target, 0, newBuffer);
+				}
 			}
-			if (newBufferSize > vertexBufferSize) {
-				vertexBufferSize = newBufferSize;
-				GL15.glBufferData(target, newBuffer, hint);
-			} else {
-				GL15.glBufferSubData(target, 0, newBuffer);
+			if (stride != 0 && stride != oldStride) {
+				vertexArray.bind(vao -> {
+					int offset = 0;
+					for (int i = 0; i < vertices.length; i++) {
+						if (vertices[i].length > 0) {
+							int dimensions = vertices[i][0].getDimensions();
+							GL20.glVertexAttribPointer(i, dimensions, GL11.GL_FLOAT, false,
+									stride * BYTES_PER_FLOAT, offset * BYTES_PER_FLOAT);
+							offset += dimensions;
+						}
+					}
+				});
 			}
 		});
 	}

@@ -29,21 +29,22 @@ public class MarchingCube {
 	public float getThreshold() {
 		return threshold;
 	}
-	public ColoredModel getColoredModel() {
+	public ColoredModel getColoredModela() {
+		return getColoredModel(Color.randomOpaque());
+	}
+	public ColoredModel getColoredModel(Color color) {
 		ModelBuilder<ColoredModel> builder =
 				new ModelBuilder<>((vertices, indices) -> {
 					Color[] colors = new Color[indices.length];
-					Arrays.fill(colors, Color.BLUE);
-					return new AbstractColoredModel(vertices, Color.randomOpaque(indices.length), indices);
+					Arrays.fill(colors, color);
+					return new AbstractColoredModel(vertices, colors, indices);
 				});
-		// TODO: some way to cache edge to rendered vertex
+		int[] vectorIndices = new int[12];
 		for (int i = 0; i < grid.getSizeX() - 1; i++) {
 			for (int j = 0; j < grid.getSizeY() - 1; j++) {
 				for (int k = 0; k < grid.getSizeZ() - 1; k++) {
 					int index = getIndex(i, j, k);
 					int edges = MarchingCubeConstants.EDGE_TABLE[index];
-					Vector3D[] vectors = new Vector3D[12];
-					int[] vectorIndices = new int[12];
 					for (int l = 0; l < 12; l++) {
 						vectorIndices[l] = -1;
 						if (((edges >> l) & 0b1) == 1) {
@@ -54,9 +55,8 @@ public class MarchingCube {
 									offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
 							float dataA = grid.get(i + o[0], j + o[1], k + o[2]);
 							float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
-							vectors[l] = interpolate(a, b, (threshold - dataA) / (dataB - dataA));
 							vectorIndices[l] = builder.getVertices().size();
-							builder.addVertices(vectors[l]);
+							builder.addVertices(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
 						}
 					}
 					int[] triangles = MarchingCubeConstants.TRIANGLE_TABLE[index];

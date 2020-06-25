@@ -1,8 +1,8 @@
 package lemon.evolution;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -138,7 +138,8 @@ public enum Game implements Listener {
 			// Prepare loaders
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
+			//ScalarField<Vector3D> scalarField = vector -> -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
+			ScalarField<Vector3D> scalarField = vector -> -(vector.getY() * 5f);
 			ExecutorService pool = Executors.newFixedThreadPool(3);
 			EventManager.INSTANCE.registerListener(new Listener() {
 				@Subscribe
@@ -269,7 +270,7 @@ public enum Game implements Listener {
 		dragonModel = dragonLoader.toIndexedDrawable();
 		lightPosition = new Vector3D(player.getPosition());
 
-		Font font = new Font(new File("res/fonts/FreeSans.fnt"));
+		Font font = new Font(Paths.get("/res/fonts/FreeSans.fnt"));
 		debugTextModel = new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW);
 
 		EventManager.INSTANCE.registerListener(new Listener() {
@@ -298,6 +299,8 @@ public enum Game implements Listener {
 						marchingCube.getColoredModel().use((vertices, indices) -> {
 							marchingCubeModel.setData(vertices, indices);
 						});*/
+						Vector3D position = player.getPosition().copy();
+						terrain.generateExplosion(position, 10f);
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_R) {
 						System.out.println("Set Origin: " + player.getPosition());
@@ -468,7 +471,7 @@ public enum Game implements Listener {
 			GL11.glDepthMask(false);
 			renderSkybox();
 			GL11.glDepthMask(true);
-			renderHeightMap();
+			//renderHeightMap();
 			for (PuzzleBall puzzleBall : puzzleBalls) {
 				puzzleBall.render();
 			}

@@ -50,13 +50,12 @@ public class Loading implements Listener {
 		} else {
 			Loader currentLoader = loaders[loaderIndex];
 			if (currentLoader.isCompleted()) {
+				logger.log(Level.INFO, String.format("Loaded %s", currentLoader.toString()));
 				loaderIndex++;
 				if (loaderIndex < loaders.length) {
 					loadingBar.setPercentage(loaders[loaderIndex].getPercentage());
 					loaders[loaderIndex].load();
 				}
-			} else {
-				logger.log(Level.INFO, (currentLoader.getPercentage().getPercentage() * 100f) + "%");
 			}
 		}
 	}

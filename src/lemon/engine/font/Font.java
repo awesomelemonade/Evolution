@@ -1,9 +1,7 @@
 package lemon.engine.font;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -22,12 +20,12 @@ public class Font {
 	private Map<Integer, CharData> data;
 	private Map<Integer, Map<Integer, Integer>> kernings;
 
-	public Font(File file) {
+	public Font(Path path) {
 		texture = new Texture();
 		data = new HashMap<Integer, CharData>();
 		kernings = new HashMap<Integer, Map<Integer, Integer>>();
 		try {
-			BufferedReader reader = new BufferedReader(new FileReader(file));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(Font.class.getResourceAsStream(path.toString())));
 			reader.readLine(); // String info = reader.readLine();
 			String common = reader.readLine();
 			String page = reader.readLine();
@@ -35,7 +33,7 @@ public class Font {
 			String filename = page.substring("page id=0 file=\"".length(), page.length() - "\"".length());
 			processCommon(common);
 			int charCount = Integer.parseInt(chars.substring("chars count=".length()));
-			texture.load(new TextureData(ImageIO.read(new File(file.getParentFile(), filename))));
+			texture.load(new TextureData(ImageIO.read(Font.class.getResourceAsStream(path.getParent().toString() + "/" + filename))));
 			for (int i = 0; i < charCount; ++i) {
 				processCharData(reader.readLine());
 			}

@@ -28,6 +28,10 @@ public class MathUtil {
 	}
 	public static Matrix getPerspective(Projection projection) {
 		Matrix matrix = new Matrix(4);
+		getPerspective(matrix, projection);
+		return matrix;
+	}
+	public static void getPerspective(Matrix matrix, Projection projection) {
 		float yScale = (float) (1f / Math.tan(projection.getFov() / 2f));
 		float xScale = yScale / projection.getAspectRatio();
 		matrix.set(0, 0, xScale);
@@ -38,7 +42,6 @@ public class MathUtil {
 				/ (projection.getFarPlane() - projection.getNearPlane()));
 		matrix.set(3, 2, -1);
 		matrix.set(3, 3, 0);
-		return matrix;
 	}
 	public static Matrix getOrtho(float width, float height, float near, float far) {
 		Matrix matrix = new Matrix(4);

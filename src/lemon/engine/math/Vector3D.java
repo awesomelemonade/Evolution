@@ -13,6 +13,11 @@ public class Vector3D extends Vector<Vector3D> {
 	public Vector3D(Vector3D vector) {
 		this(vector.getX(), vector.getY(), vector.getZ());
 	}
+	public void set(float x, float y, float z) {
+		setX(x);
+		setY(y);
+		setZ(z);
+	}
 	public void setX(float x) {
 		this.set(0, x);
 	}

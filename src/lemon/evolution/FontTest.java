@@ -1,7 +1,7 @@
 package lemon.evolution;
 
-import java.io.File;
 import java.nio.IntBuffer;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +46,7 @@ public enum FontTest implements Listener {
 		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
 			program.loadVector("color", new Vector3D(0f, 1f, 1f));
 		});
-		font = new Font(new File("res/fonts/FreeSans.fnt"));
+		font = new Font(Paths.get("/res/fonts/FreeSans.fnt"));
 		text = new HashMap<TextModel, Matrix>();
 		//text = new Text(font, "Evolution");
 
