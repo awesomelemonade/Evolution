@@ -23,54 +23,53 @@ public class Terrain {
 		this.generator = generator;
 		this.scalar = scalar;
 	}
-	public boolean preloadChunk(int chunkX, int chunkY, int chunkZ) {
-		return preloadChunk(chunkX, chunkY, chunkZ, hashChunkCoordinates(chunkX, chunkY, chunkZ));
+	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {
+		getChunk(chunkX, chunkY, chunkZ);
 	}
-	public boolean preloadChunk(int chunkX, int chunkY, int chunkZ, long hashed) {
-		TerrainChunk chunk = chunks.computeIfAbsent(hashed, x -> {
+	public TerrainChunk getChunk(int chunkX, int chunkY, int chunkZ) {
+		return getChunk(chunkX, chunkY, chunkZ, hashChunkCoordinates(chunkX, chunkY, chunkZ));
+	}
+	public TerrainChunk getChunk(int chunkX, int chunkY, int chunkZ, long hashed) {
+		return chunks.computeIfAbsent(hashed, x -> {
 			int offsetX = chunkX * TerrainChunk.SIZE;
 			int offsetY = chunkY * TerrainChunk.SIZE;
 			int offsetZ = chunkZ * TerrainChunk.SIZE;
 			int subTerrainSize = TerrainChunk.SIZE + 1;
 			TerrainChunk newChunk = new TerrainChunk(chunkX, chunkY, chunkZ,
 					getSubTerrain(offsetX, offsetY, offsetZ,
-						subTerrainSize, subTerrainSize, subTerrainSize),
+							subTerrainSize, subTerrainSize, subTerrainSize),
 					new Vector3D(subTerrainSize, subTerrainSize, subTerrainSize),
 					scalar);
 			generator.accept(newChunk);
 			return newChunk;
 		});
-		return chunk.isGenerated();
 	}
 	public void drawOrQueue(int chunkX, int chunkY, int chunkZ, BiConsumer<Matrix, Drawable> drawer) {
-		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
-		if (chunks.containsKey(hashed)) {
-			TerrainChunk chunk = chunks.get(hashed);
-			if (chunk.isQueuedForUpdate()) {
-				chunk.getDrawable().ifPresent(drawable -> {
-					chunk.setQueuedForUpdate(false);
-					chunk.getColoredModel().use(drawable::setData);
-				});
-			}
-			chunk.getDrawableOrSet(() -> {
-				boolean loaded = preloadChunk(chunkX, chunkY, chunkZ, hashed);
-				for (int i = 1; i < 8; i++) {
-					if (!preloadChunk(chunkX + (i & 0b1),
-							chunkY + ((i >> 1) & 0b1),
-							chunkZ + ((i >> 2) & 0b1))) {
-						loaded = false;
-					}
-				}
-				if (loaded) {
-					chunk.setQueuedForUpdate(false);
-					return Optional.of(chunk.getColoredModel().map(DynamicIndexedDrawable::new));
-				} else {
-					return Optional.empty();
-				}
-			}).ifPresent(drawable -> {
-				drawer.accept(chunk.getTransformationMatrix(), drawable);
+		TerrainChunk chunk = getChunk(chunkX, chunkY, chunkZ);
+		if (chunk.isQueuedForUpdate()) {
+			chunk.getDrawable().ifPresent(drawable -> {
+				chunk.setQueuedForUpdate(false);
+				chunk.getColoredModel().use(drawable::setData);
 			});
 		}
+		chunk.getDrawableOrSet(() -> {
+			boolean allGenerated = chunk.isGenerated();
+			for (int i = 1; i < 8; i++) {
+				if (!getChunk(chunkX + (i & 0b1),
+						chunkY + ((i >> 1) & 0b1),
+						chunkZ + ((i >> 2) & 0b1)).isGenerated()) {
+					allGenerated = false;
+				}
+			}
+			if (allGenerated) {
+				chunk.setQueuedForUpdate(false);
+				return Optional.of(chunk.getColoredModel().map(DynamicIndexedDrawable::new));
+			} else {
+				return Optional.empty();
+			}
+		}).ifPresent(drawable -> {
+			drawer.accept(chunk.getTransformationMatrix(), drawable);
+		});
 	}
 	private BoundedScalarGrid3D getSubTerrain(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
 		return BoundedScalarGrid3D.of((a, b, c) -> this.get(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
