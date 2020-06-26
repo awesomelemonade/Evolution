@@ -77,10 +77,12 @@ public class Terrain {
 	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, Predicate<Vector3D> predicate) {
 		float count = 0;
 		float total = 0;
+		Vector3D temp = new Vector3D();
 		for (float x = lower.getX(); x <= upper.getX(); x += resolution) {
 			for (float y = lower.getY(); y <= upper.getY(); y += resolution) {
 				for (float z = lower.getZ(); z <= upper.getZ(); z += resolution) {
-					if (predicate.test(new Vector3D(x, y, z))) {
+					temp.set(x, y, z);
+					if (predicate.test(temp)) {
 						count++;
 					}
 					total++;
