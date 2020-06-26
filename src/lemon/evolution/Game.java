@@ -474,7 +474,12 @@ public enum Game implements Listener {
 				for (int i = -n; i <= n; i++) {
 					for (int j = -n; j <= n; j++) {
 						for (int k = -n; k <= n; k++) {
-							drawChunk(program, playerChunkX + i, playerChunkY + j, playerChunkZ + k);
+							terrain.drawOrQueue(
+									playerChunkX + i, playerChunkY + j, playerChunkZ + k,
+									(matrix, drawable) -> {
+								program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
+								drawable.draw();
+							});
 						}
 					}
 				}
@@ -525,14 +530,6 @@ public enum Game implements Listener {
 				debugTextModel.draw();
 			});
 		}
-	}
-	public void drawChunk(ShaderProgram program, int chunkX, int chunkY, int chunkZ) {
-		if (!terrain.queueForDrawable(chunkX, chunkY, chunkZ)) {
-			return;
-		}
-		program.loadMatrix(MatrixType.MODEL_MATRIX,
-				terrain.getTransformationMatrix(chunkX, chunkY, chunkZ));
-		terrain.getDrawableChunk(chunkX, chunkY, chunkZ).draw();
 	}
 	public void renderHeightMap() {
 		GL11.glEnable(GL11.GL_BLEND);

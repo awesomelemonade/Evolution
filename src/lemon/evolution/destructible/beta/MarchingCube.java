@@ -29,7 +29,7 @@ public class MarchingCube {
 	public float getThreshold() {
 		return threshold;
 	}
-	public ColoredModel getColoredModela() {
+	public ColoredModel getColoredModel() {
 		return getColoredModel(Color.randomOpaque());
 	}
 	public ColoredModel getColoredModel(Color color) {

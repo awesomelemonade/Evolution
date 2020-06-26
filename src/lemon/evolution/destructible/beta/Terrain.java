@@ -1,112 +1,75 @@
 package lemon.evolution.destructible.beta;
 
+import lemon.engine.draw.Drawable;
 import lemon.engine.draw.DynamicIndexedDrawable;
 import lemon.engine.function.AbsoluteIntValue;
 import lemon.engine.function.SzudzikIntPair;
-import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
-import lemon.engine.toolbox.Color;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.function.UnaryOperator;
 
 public class Terrain {
 	private Map<Long, TerrainChunk> chunks;
-	private Map<Long, MarchingCube> marchingCubes;
-	private Map<Long, Matrix> transformationMatrices;
-	private Map<Long, DynamicIndexedDrawable> drawables;
-	private Map<Long, Color> colors;
-	private Set<Long> queuedForUpdate;
 	private Consumer<TerrainChunk> generator;
 	private Vector3D scalar;
 	public Terrain(Consumer<TerrainChunk> generator, Vector3D scalar) {
 		this.chunks = new HashMap<>();
-		this.marchingCubes = new HashMap<>();
-		this.transformationMatrices = new HashMap<>();
-		this.drawables = new HashMap<>();
-		this.queuedForUpdate = new HashSet<>();
-		this.colors = new HashMap<>();
 		this.generator = generator;
 		this.scalar = scalar;
 	}
 	public boolean preloadChunk(int chunkX, int chunkY, int chunkZ) {
-		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
-		boolean loaded = true;
-		if (chunks.containsKey(hashed)) {
-			if (!chunks.get(hashed).isGenerated()) {
-				loaded = false;
-			}
-		} else {
-			TerrainChunk chunk = new TerrainChunk(chunkX, chunkY, chunkZ);
-			chunks.put(hashed, chunk);
-			generator.accept(chunk);
-			loaded = false;
-		}
-		if (!marchingCubes.containsKey(hashed)) {
+		return preloadChunk(chunkX, chunkY, chunkZ, hashChunkCoordinates(chunkX, chunkY, chunkZ));
+	}
+	public boolean preloadChunk(int chunkX, int chunkY, int chunkZ, long hashed) {
+		TerrainChunk chunk = chunks.computeIfAbsent(hashed, x -> {
 			int offsetX = chunkX * TerrainChunk.SIZE;
 			int offsetY = chunkY * TerrainChunk.SIZE;
 			int offsetZ = chunkZ * TerrainChunk.SIZE;
 			int subTerrainSize = TerrainChunk.SIZE + 1;
-			MarchingCube marchingCube = new MarchingCube(
+			TerrainChunk newChunk = new TerrainChunk(chunkX, chunkY, chunkZ,
 					getSubTerrain(offsetX, offsetY, offsetZ,
-							subTerrainSize, subTerrainSize, subTerrainSize),
+						subTerrainSize, subTerrainSize, subTerrainSize),
 					new Vector3D(subTerrainSize, subTerrainSize, subTerrainSize),
-					0f);
-			marchingCubes.put(hashed, marchingCube);
-		}
-		return loaded;
+					scalar);
+			generator.accept(newChunk);
+			return newChunk;
+		});
+		return chunk.isGenerated();
 	}
-	public boolean queueForDrawable(int chunkX, int chunkY, int chunkZ) {
-		if (drawables.containsKey(hashChunkCoordinates(chunkX, chunkY, chunkZ))) {
-			return true;
-		}
-		boolean loaded = true;
-		for (int i = 0; i < 8; i++) {
-			if (!preloadChunk(chunkX + (i & 0b1),
-					chunkY + ((i >> 1) & 0b1),
-					chunkZ + ((i >> 2) & 0b1))) {
-				loaded = false;
-			}
-		}
-		return loaded;
-	}
-	public Matrix getTransformationMatrix(int chunkX, int chunkY, int chunkZ) {
-		return transformationMatrices.computeIfAbsent(
-				hashChunkCoordinates(chunkX, chunkY, chunkZ), (x) -> {
-					Vector3D translation = new Vector3D(
-							scalar.getX() * chunkX * TerrainChunk.SIZE,
-							scalar.getY() * chunkY * TerrainChunk.SIZE,
-							scalar.getZ() * chunkZ * TerrainChunk.SIZE
-					);
-					return MathUtil.getTranslation(translation)
-							.multiply(MathUtil.getScalar(scalar));
-				});
-	}
-	public DynamicIndexedDrawable getDrawableChunk(int chunkX, int chunkY, int chunkZ) {
+	public void drawOrQueue(int chunkX, int chunkY, int chunkZ, BiConsumer<Matrix, Drawable> drawer) {
 		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
-		Color color = colors.computeIfAbsent(hashed, (x) -> Color.randomOpaque());
-		if (queuedForUpdate.contains(hashed)) {
-			queuedForUpdate.remove(hashed);
-			return drawables.compute(hashed, (key, value) -> {
-				MarchingCube marchingCube = marchingCubes.get(hashed);
-				if (value == null) {
-					return marchingCube.getColoredModel(color).map(DynamicIndexedDrawable::new);
-				} else {
-					marchingCube.getColoredModel(color).use(value::setData);
-					return value;
+		if (chunks.containsKey(hashed)) {
+			TerrainChunk chunk = chunks.get(hashed);
+			if (chunk.isQueuedForUpdate()) {
+				chunk.getDrawable().ifPresent(drawable -> {
+					chunk.setQueuedForUpdate(false);
+					chunk.getColoredModel().use(drawable::setData);
+				});
+			}
+			chunk.getDrawableOrSet(() -> {
+				boolean loaded = preloadChunk(chunkX, chunkY, chunkZ, hashed);
+				for (int i = 1; i < 8; i++) {
+					if (!preloadChunk(chunkX + (i & 0b1),
+							chunkY + ((i >> 1) & 0b1),
+							chunkZ + ((i >> 2) & 0b1))) {
+						loaded = false;
+					}
 				}
+				if (loaded) {
+					chunk.setQueuedForUpdate(false);
+					return Optional.of(chunk.getColoredModel().map(DynamicIndexedDrawable::new));
+				} else {
+					return Optional.empty();
+				}
+			}).ifPresent(drawable -> {
+				drawer.accept(chunk.getTransformationMatrix(), drawable);
 			});
-		} else {
-			return drawables.computeIfAbsent(
-					hashed,
-					(x) -> marchingCubes.get(x).getColoredModel(color).map(DynamicIndexedDrawable::new)
-			);
 		}
 	}
 	private BoundedScalarGrid3D getSubTerrain(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
@@ -170,14 +133,13 @@ public class Terrain {
 				}
 			}
 		}
-		queuedForUpdate.add(hashed);
-		queuedForUpdate.add(hashChunkCoordinates(chunk, -1, 0, 0));
-		queuedForUpdate.add(hashChunkCoordinates(chunk, 0, -1, 0));
-		queuedForUpdate.add(hashChunkCoordinates(chunk, 0, 0, -1));
-		queuedForUpdate.add(hashChunkCoordinates(chunk, -1, -1, 0));
-		queuedForUpdate.add(hashChunkCoordinates(chunk, 0, -1, -1));
-		queuedForUpdate.add(hashChunkCoordinates(chunk, -1, 0, -1));
-		queuedForUpdate.add(hashChunkCoordinates(chunk, -1, -1, -1));
+		chunk.setQueuedForUpdate(true);
+		for (int i = 1; i < 8; i++) {
+			TerrainChunk neighborChunk = chunks.get(
+					hashChunkCoordinates(chunk, -(i & 0b1), -((i >> 1) & 0b1), -((i >> 2) & 0b1)));
+			// Could potentially be null (not preloaded)
+			neighborChunk.setQueuedForUpdate(true);
+		}
 	}
 	public float get(int x, int y, int z) {
 		int chunkX = Math.floorDiv(x, TerrainChunk.SIZE);
