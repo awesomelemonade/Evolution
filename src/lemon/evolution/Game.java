@@ -106,6 +106,7 @@ public enum Game implements Listener {
 	private Vector3D lightPosition;
 
 	private TextModel debugTextModel;
+	private TextModel keyTextModel;
 
 	private int windowWidth;
 	private int windowHeight;
@@ -274,6 +275,7 @@ public enum Game implements Listener {
 
 		Font font = new Font(Paths.get("/res/fonts/FreeSans.fnt"));
 		debugTextModel = new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW);
+		keyTextModel = new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW);
 
 		EventManager.INSTANCE.registerListener(new Listener() {
 			@Subscribe
@@ -496,30 +498,52 @@ public enum Game implements Listener {
 			CommonDrawables.TEXTURED_QUAD.draw();
 		});
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+			// Render crosshair
 			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
 					MathUtil.getTranslation(new Vector3D(windowWidth / 2f, windowHeight / 2f, 0f))
-							.multiply(MathUtil.getScalar(new Vector3D(10f, 10f, 10f))));
-			// Render crosshair
+							.multiply(MathUtil.getScalar(new Vector3D(5f, 1f, 1f))));
+			CommonDrawables.COLORED_QUAD.draw();
+			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
+					MathUtil.getTranslation(new Vector3D(windowWidth / 2f, windowHeight / 2f, 0f))
+							.multiply(MathUtil.getScalar(new Vector3D(1f, 5f, 1f))));
 			CommonDrawables.COLORED_QUAD.draw();
 		});
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			// render graphs
-			CommonPrograms2D.LINE.getShaderProgram().use(program -> {
-				byte color = 1; // Not Black
-				for (String benchmarker : this.benchmarker.getNames()) {
-					program.loadVector("color", new Vector3D((((color & 0x01) != 0) ? 1f : 0f),
-							(((color & 0x02) != 0) ? 1f : 0f), (((color & 0x04) != 0) ? 1f : 0f)));
+			byte counter = 1; // Not Black
+			for (String benchmarker : this.benchmarker.getNames()) {
+				Color color = new Color((((counter & 0x01) != 0) ? 1f : 0f),
+						(((counter & 0x02) != 0) ? 1f : 0f), (((counter & 0x04) != 0) ? 1f : 0f));
+				CommonPrograms2D.LINE.getShaderProgram().use(program -> {
+					program.loadColor3f(color);
 					program.loadFloat("spacing",
 							2f / (this.benchmarker.getLineGraph(benchmarker).getSize() - 1));
 					this.benchmarker.getLineGraph(benchmarker).render();
-					color++;
-				}
-			});
+				});
+				byte finalCounter = counter;
+				CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+					program.loadColor4f("filterColor", color);
+					program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
+							MathUtil.getTranslation(new Vector3D(windowWidth - 200f, windowHeight - 20f - (finalCounter * 30f), 0f))
+									.multiply(MathUtil.getScalar(new Vector3D(10f, 10f, 1f))));
+					CommonDrawables.COLORED_QUAD.draw();
+					program.loadColor4f("filterColor", Color.WHITE);
+				});
+				CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
+					program.loadMatrix(MatrixType.MODEL_MATRIX,
+							MathUtil.getTranslation(new Vector3D(windowWidth - 170f, windowHeight - 25f - (finalCounter * 30f), 0f))
+									.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 1f))));
+					program.loadColor3f("color", Color.WHITE);
+					keyTextModel.setText(benchmarker);
+					keyTextModel.draw();
+				});
+				counter++;
+			}
 			// render debug text
 			CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
 				program.loadMatrix(MatrixType.MODEL_MATRIX,
-						MathUtil.getTranslation(new Vector3D(0f, 550f, 0f))
-								.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 0.2f))));
+						MathUtil.getTranslation(new Vector3D(5f, windowHeight - 20, 0f))
+								.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 1f))));
 				program.loadColor3f("color", Color.WHITE);
 				debugTextModel.draw();
 			});

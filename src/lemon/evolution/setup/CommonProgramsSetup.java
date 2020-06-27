@@ -1,7 +1,6 @@
 package lemon.evolution.setup;
 
 import lemon.engine.toolbox.Color;
-import org.lwjgl.opengl.GL20;
 
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
@@ -56,6 +55,7 @@ public class CommonProgramsSetup {
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
 			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+			program.loadColor4f("filterColor", Color.WHITE);
 		});
 
 		CommonPrograms2D.LINE.getShaderProgram().use(program -> {

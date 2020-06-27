@@ -44,8 +44,14 @@ public class TextModel implements Drawable {
 			GL20.glEnableVertexAttribArray(1);
 		});
 	}
+	private FloatBuffer buffer;
 	private FloatBuffer getFloatBuffer(String text) {
-		FloatBuffer buffer = BufferUtils.createFloatBuffer(text.length() * 4 * 6);
+		int newCapacity = text.length() * 4 * 6;
+		if (buffer == null || buffer.capacity() < newCapacity) {
+			buffer = BufferUtils.createFloatBuffer(newCapacity);
+		} else {
+			buffer.clear();
+		}
 		char prevChar = '\0';
 		int cursor = 0;
 		for (int i = 0; i < text.length(); ++i) {
