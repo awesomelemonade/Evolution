@@ -48,8 +48,14 @@ public class Matrix {
 	public int getColumns() {
 		return data[0].length;
 	}
+
+	private FloatBuffer buffer;
 	public FloatBuffer toFloatBuffer() {
-		FloatBuffer buffer = BufferUtils.createFloatBuffer(data.length * data[0].length);
+		if (buffer == null) {
+			buffer = BufferUtils.createFloatBuffer(data.length * data[0].length);
+		} else {
+			buffer.clear();
+		}
 		addToFloatBuffer(buffer);
 		buffer.flip();
 		return buffer;
