@@ -29,6 +29,13 @@ public class Matrix {
 	public Matrix(Matrix matrix) {
 		this(matrix.data);
 	}
+	public void clear() {
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[0].length; j++) {
+				data[i][j] = 0;
+			}
+		}
+	}
 	public void set(int m, int n, float data) {
 		this.data[m][n] = data;
 	}
@@ -60,16 +67,19 @@ public class Matrix {
 					this.getRows(), this.getColumns(), matrix.getRows(), matrix.getColumns()));
 		}
 		Matrix product = new Matrix(getRows(), matrix.getColumns());
-		for (int i = 0; i < getRows(); ++i) {
-			for (int j = 0; j < matrix.getColumns(); ++j) {
+		multiply(product, this, matrix);
+		return product;
+	}
+	public static void multiply(Matrix result, Matrix left, Matrix right) {
+		for (int i = 0; i < left.getRows(); ++i) {
+			for (int j = 0; j < right.getColumns(); ++j) {
 				float sum = 0;
-				for (int k = 0; k < matrix.getRows(); ++k) {
-					sum += get(i, k) * matrix.get(k, j);
+				for (int k = 0; k < right.getRows(); ++k) {
+					sum += left.get(i, k) * right.get(k, j);
 				}
-				product.set(i, j, sum);
+				result.set(i, j, sum);
 			}
 		}
-		return product;
 	}
 	@Override
 	public String toString() {
@@ -79,6 +89,10 @@ public class Matrix {
 		return new Matrix(matrix) {
 			@Override
 			public void set(int x, int y, float data) {
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+			@Override
+			public void clear() {
 				throw new IllegalStateException(unmodifiableMessage);
 			}
 		};

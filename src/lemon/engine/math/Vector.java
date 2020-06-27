@@ -176,6 +176,11 @@ public class Vector<T extends Vector<T>> {
 		// dummy - does not make it actually unmodifiable
 		return vector.clazz.cast(vector);
 	}
+	public static void invert(Vector result, Vector vector) {
+		for (int i = 0; i < vector.getDimensions(); i++) {
+			result.set(i, -vector.get(i));
+		}
+	}
 	@Override
 	public String toString() {
 		return Arrays.toString(data);

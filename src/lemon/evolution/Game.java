@@ -360,7 +360,6 @@ public enum Game implements Listener {
 		player.getVelocity().multiply(friction);
 
 		player.update(event);
-		updateViewMatrices();
 
 		float totalLength = 0;
 		for (PuzzleBall puzzleBall : puzzleBalls) {
@@ -417,7 +416,6 @@ public enum Game implements Listener {
 			if (player.getCamera().getRotation().getX() > MathUtil.PI / 2f) {
 				player.getCamera().getRotation().setX(MathUtil.PI / 2f);
 			}
-			updateViewMatrices();
 		}
 	}
 	public void updateViewMatrices() {
@@ -435,26 +433,23 @@ public enum Game implements Listener {
 		updateProjectionMatrix(CommonPrograms3D.LIGHT);
 	}
 	public void updateViewMatrix(ShaderProgramHolder holder) {
-		ShaderProgram program = holder.getShaderProgram();
-		GL20.glUseProgram(program.getId());
-		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix()
-				.multiply(player.getCamera().getInvertedTranslationMatrix()));
-		GL20.glUseProgram(0);
+		holder.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getTransformationMatrix());
+		});
 	}
 	public void updateCubeMapMatrix(ShaderProgramHolder holder) {
-		ShaderProgram program = holder.getShaderProgram();
-		GL20.glUseProgram(program.getId());
-		program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix());
-		GL20.glUseProgram(0);
+		holder.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix());
+		});
 	}
 	public void updateProjectionMatrix(ShaderProgramHolder holder) {
-		ShaderProgram program = holder.getShaderProgram();
-		GL20.glUseProgram(program.getId());
-		program.loadMatrix(MatrixType.PROJECTION_MATRIX, player.getCamera().getProjectionMatrix());
-		GL20.glUseProgram(0);
+		holder.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, player.getCamera().getProjectionMatrix());
+		});
 	}
 	@Subscribe
 	public void render(RenderEvent event) {
+		updateViewMatrices();
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			GL11.glDepthMask(false);

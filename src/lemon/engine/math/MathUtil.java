@@ -2,6 +2,7 @@ package lemon.engine.math;
 
 import java.nio.IntBuffer;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
@@ -54,19 +55,60 @@ public class MathUtil {
 		matrix.set(3, 3, 1);
 		return matrix;
 	}
+	public static Supplier<Matrix> getTransformationSupplier(Vector3D translation, Vector3D rotation) {
+		Matrix a = new Matrix(4);
+		Matrix b = new Matrix(4);
+		Matrix c = new Matrix(4);
+		return () -> {
+			MathUtil.getRotationX(a, rotation.getX());
+			MathUtil.getRotationY(b, rotation.getY());
+			Matrix.multiply(c, a, b);
+			MathUtil.getRotationZ(a, rotation.getZ());
+			Matrix.multiply(b, c, a);
+			MathUtil.getTranslation(a, translation);
+			Matrix.multiply(c, b, a);
+			return c;
+		};
+	}
 	public static Matrix getTranslation(Vector3D vector) {
 		Matrix matrix = Matrix.getIdentity(4);
+		getTranslation(matrix, vector);
+		return matrix;
+	}
+	public static void getTranslation(Matrix matrix, Vector3D vector) {
+		matrix.clear();
+		matrix.set(0, 0, 1f);
+		matrix.set(1, 1, 1f);
+		matrix.set(2, 2, 1f);
+		matrix.set(3, 3, 1f);
 		matrix.set(0, 3, vector.getX());
 		matrix.set(1, 3, vector.getY());
 		matrix.set(2, 3, vector.getZ());
-		return matrix;
 	}
 	public static Matrix getRotation(Vector3D rotation) {
 		return MathUtil.getRotationX(rotation.getX())
 				.multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
 	}
+	public static Supplier<Matrix> getRotationSupplier(Vector3D rotation) {
+		Matrix a = new Matrix(4);
+		Matrix b = new Matrix(4);
+		Matrix c = new Matrix(4);
+		return () -> {
+			MathUtil.getRotationX(a, rotation.getX());
+			MathUtil.getRotationY(b, rotation.getY());
+			Matrix.multiply(c, a, b);
+			MathUtil.getRotationZ(a, rotation.getZ());
+			Matrix.multiply(b, c, a);
+			return b;
+		};
+	}
 	public static Matrix getRotationX(float angle) {
 		Matrix matrix = new Matrix(4);
+		getRotationX(matrix, angle);
+		return matrix;
+	}
+	public static void getRotationX(Matrix matrix, float angle) {
+		matrix.clear();
 		float sin = (float) Math.sin(angle);
 		float cos = (float) Math.cos(angle);
 		matrix.set(0, 0, 1);
@@ -75,10 +117,14 @@ public class MathUtil {
 		matrix.set(1, 2, -sin);
 		matrix.set(2, 2, cos);
 		matrix.set(3, 3, 1);
-		return matrix;
 	}
 	public static Matrix getRotationY(float angle) {
 		Matrix matrix = new Matrix(4);
+		getRotationY(matrix, angle);
+		return matrix;
+	}
+	public static void getRotationY(Matrix matrix, float angle) {
+		matrix.clear();
 		float sin = (float) Math.sin(angle);
 		float cos = (float) Math.cos(angle);
 		matrix.set(0, 0, cos);
@@ -87,10 +133,14 @@ public class MathUtil {
 		matrix.set(0, 2, sin);
 		matrix.set(2, 2, cos);
 		matrix.set(3, 3, 1);
-		return matrix;
 	}
 	public static Matrix getRotationZ(float angle) {
 		Matrix matrix = new Matrix(4);
+		getRotationZ(matrix, angle);
+		return matrix;
+	}
+	public static void getRotationZ(Matrix matrix, float angle) {
+		matrix.clear();
 		float sin = (float) Math.sin(angle);
 		float cos = (float) Math.cos(angle);
 		matrix.set(0, 0, cos);
@@ -99,15 +149,18 @@ public class MathUtil {
 		matrix.set(1, 1, cos);
 		matrix.set(2, 2, 1);
 		matrix.set(3, 3, 1);
-		return matrix;
 	}
 	public static Matrix getScalar(Vector3D vector) {
 		Matrix matrix = new Matrix(4);
+		getScalar(matrix, vector);
+		return matrix;
+	}
+	public static void getScalar(Matrix matrix, Vector3D vector) {
+		matrix.clear();
 		matrix.set(0, 0, vector.getX());
 		matrix.set(1, 1, vector.getY());
 		matrix.set(2, 2, vector.getZ());
 		matrix.set(3, 3, 1);
-		return matrix;
 	}
 
 	/**
