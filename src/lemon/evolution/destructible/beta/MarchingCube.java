@@ -73,28 +73,28 @@ public class MarchingCube {
 	}
 	private int getIndex(int i, int j, int k) {
 		int index = 0;
-		if (grid.get(i, j, k) < threshold) {
+		if (grid.get(i, j, k) <= threshold) {
 			index |= 1;
 		}
-		if (grid.get(i + 1, j, k) < threshold) {
+		if (grid.get(i + 1, j, k) <= threshold) {
 			index |= 2;
 		}
-		if (grid.get(i + 1, j, k + 1) < threshold) {
+		if (grid.get(i + 1, j, k + 1) <= threshold) {
 			index |= 4;
 		}
-		if (grid.get(i, j, k + 1) < threshold) {
+		if (grid.get(i, j, k + 1) <= threshold) {
 			index |= 8;
 		}
-		if (grid.get(i, j + 1, k) < threshold) {
+		if (grid.get(i, j + 1, k) <= threshold) {
 			index |= 16;
 		}
-		if (grid.get(i + 1, j + 1, k) < threshold) {
+		if (grid.get(i + 1, j + 1, k) <= threshold) {
 			index |= 32;
 		}
-		if (grid.get(i + 1, j + 1, k + 1) < threshold) {
+		if (grid.get(i + 1, j + 1, k + 1) <= threshold) {
 			index |= 64;
 		}
-		if (grid.get(i, j + 1, k + 1) < threshold) {
+		if (grid.get(i, j + 1, k + 1) <= threshold) {
 			index |= 128;
 		}
 		return index;
