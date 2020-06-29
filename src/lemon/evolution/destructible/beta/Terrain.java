@@ -10,6 +10,7 @@ import lemon.engine.math.Vector3D;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -17,10 +18,28 @@ import java.util.function.Predicate;
 public class Terrain {
 	private Map<Long, TerrainChunk> chunks;
 	private Consumer<TerrainChunk> generator;
+	private Consumer<TerrainChunk> constructor;
 	private Vector3D scalar;
 	public Terrain(Consumer<TerrainChunk> generator, Vector3D scalar) {
+		this(generator, (chunk) -> {
+			chunk.generateColoredModel();
+			chunk.setQueuedForConstruction(false);
+			chunk.setQueuedForUpdate(true);
+		}, scalar);
+	}
+	public Terrain(Consumer<TerrainChunk> generator, ExecutorService pool, Vector3D scalar) {
+		this(generator, (chunk) -> {
+			pool.submit(() -> {
+				chunk.generateColoredModel();
+				chunk.setQueuedForConstruction(false);
+				chunk.setQueuedForUpdate(true);
+			});
+		}, scalar);
+	}
+	public Terrain(Consumer<TerrainChunk> generator, Consumer<TerrainChunk> constructor, Vector3D scalar) {
 		this.chunks = new HashMap<>();
 		this.generator = generator;
+		this.constructor = constructor;
 		this.scalar = scalar;
 	}
 	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {
@@ -46,13 +65,17 @@ public class Terrain {
 	}
 	public void drawOrQueue(int chunkX, int chunkY, int chunkZ, BiConsumer<Matrix, Drawable> drawer) {
 		TerrainChunk chunk = getChunk(chunkX, chunkY, chunkZ);
+		DynamicIndexedDrawable drawable = chunk.getDrawable();
 		if (chunk.isQueuedForUpdate()) {
-			chunk.getDrawable().ifPresent(drawable -> {
-				chunk.setQueuedForUpdate(false);
+			chunk.setQueuedForUpdate(false);
+			if (drawable == null) {
+				drawable = chunk.getColoredModel().map(DynamicIndexedDrawable::new);
+				chunk.setDrawable(drawable);
+			} else {
 				chunk.getColoredModel().use(drawable::setData);
-			});
+			}
 		}
-		chunk.getDrawableOrSet(() -> {
+		if (drawable == null) {
 			boolean allGenerated = chunk.isGenerated();
 			for (int i = 1; i < 8; i++) {
 				if (!getChunk(chunkX + (i & 0b1),
@@ -62,14 +85,17 @@ public class Terrain {
 				}
 			}
 			if (allGenerated) {
-				chunk.setQueuedForUpdate(false);
-				return Optional.of(chunk.getColoredModel().map(DynamicIndexedDrawable::new));
-			} else {
-				return Optional.empty();
+				updateChunk(chunk);
+				if (chunk.getColoredModel() != null) {
+					chunk.setQueuedForUpdate(false);
+					drawable = chunk.getColoredModel().map(DynamicIndexedDrawable::new);
+					chunk.setDrawable(drawable);
+				}
 			}
-		}).ifPresent(drawable -> {
+		}
+		if (drawable != null) {
 			drawer.accept(chunk.getTransformationMatrix(), drawable);
-		});
+		}
 	}
 	private BoundedScalarGrid3D getSubTerrain(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
 		return BoundedScalarGrid3D.of((a, b, c) -> this.get(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
@@ -90,6 +116,12 @@ public class Terrain {
 			}
 		}
 		return count / total;
+	}
+	public void updateChunk(TerrainChunk chunk) {
+		if (!chunk.isQueuedForConstruction()) {
+			chunk.setQueuedForConstruction(true);
+			constructor.accept(chunk);
+		}
 	}
 	public void generateExplosion(Vector3D point, float radius) {
 		int floorX = (int) Math.floor((point.getX() - radius) / scalar.getX());
@@ -134,12 +166,12 @@ public class Terrain {
 				}
 			}
 		}
-		chunk.setQueuedForUpdate(true);
+		updateChunk(chunk);
 		for (int i = 1; i < 8; i++) {
 			TerrainChunk neighborChunk = chunks.get(
 					hashChunkCoordinates(chunk, -(i & 0b1), -((i >> 1) & 0b1), -((i >> 2) & 0b1)));
 			// Could potentially be null (not preloaded)
-			neighborChunk.setQueuedForUpdate(true);
+			updateChunk(neighborChunk);
 		}
 	}
 	public float get(int x, int y, int z) {

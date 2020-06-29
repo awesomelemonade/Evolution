@@ -7,9 +7,6 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.model.ColoredModel;
 import lemon.engine.toolbox.Color;
 
-import java.util.Optional;
-import java.util.function.Supplier;
-
 public class TerrainChunk {
 	public static final int SIZE = 16;
 	private int chunkX;
@@ -18,10 +15,12 @@ public class TerrainChunk {
 	private float[][][] data;
 	private volatile boolean generated;
 	private MarchingCube marchingCube;
+	private ColoredModel model;
 	private DynamicIndexedDrawable drawable;
 	private Matrix transformationMatrix;
 	private Color color;
 	private boolean queuedForUpdate;
+	private boolean queuedForConstruction;
 	public TerrainChunk(int chunkX, int chunkY, int chunkZ, BoundedScalarGrid3D scalarGrid, Vector3D size, Vector3D scalar) {
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
@@ -59,26 +58,29 @@ public class TerrainChunk {
 	public boolean isGenerated() {
 		return generated;
 	}
+	public void generateColoredModel() {
+		model = marchingCube.getColoredModel(color);
+	}
 	public ColoredModel getColoredModel() {
-		return marchingCube.getColoredModel(color);
+		return model;
 	}
-	public Optional<DynamicIndexedDrawable> getDrawableOrSet(Supplier<Optional<DynamicIndexedDrawable>> supplier) {
-		if (drawable != null) {
-			return Optional.of(drawable);
-		}
-		supplier.get().ifPresent(drawable -> {
-			this.drawable = drawable;
-		});
-		return Optional.ofNullable(drawable);
+	public void setDrawable(DynamicIndexedDrawable drawable) {
+		this.drawable = drawable;
 	}
-	public Optional<DynamicIndexedDrawable> getDrawable() {
-		return Optional.ofNullable(drawable);
+	public DynamicIndexedDrawable getDrawable() {
+		return drawable;
 	}
 	public void setQueuedForUpdate(boolean queuedForUpdate) {
 		this.queuedForUpdate = queuedForUpdate;
 	}
 	public boolean isQueuedForUpdate() {
 		return queuedForUpdate;
+	}
+	public void setQueuedForConstruction(boolean queuedForConstruction) {
+		this.queuedForConstruction = queuedForConstruction;
+	}
+	public boolean isQueuedForConstruction() {
+		return queuedForConstruction;
 	}
 	public Matrix getTransformationMatrix() {
 		return transformationMatrix;

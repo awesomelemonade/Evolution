@@ -151,7 +151,7 @@ public enum Game implements Listener {
 				}
 			});
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
-			terrain = new Terrain(generator::queueChunk, new Vector3D(5f, 5f, 5f));
+			terrain = new Terrain(generator::queueChunk, pool, new Vector3D(5f, 5f, 5f));
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			int n = 5;
