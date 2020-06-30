@@ -44,6 +44,10 @@ import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
 import lemon.evolution.puzzle.PuzzleGrid;
+import lemon.evolution.util.BasicControlActivator;
+import lemon.evolution.util.CommonPrograms2D;
+import lemon.evolution.util.CommonPrograms3D;
+import lemon.evolution.util.PlayerControl;
 import lemon.evolution.util.ShaderProgramHolder;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
@@ -76,8 +80,6 @@ import lemon.engine.texture.TextureBank;
 import lemon.engine.time.BenchmarkEvent;
 import lemon.engine.time.Benchmarker;
 import lemon.evolution.setup.CommonProgramsSetup;
-import lemon.evolution.util.CommonPrograms2D;
-import lemon.evolution.util.CommonPrograms3D;
 
 public enum Game implements Listener {
 	INSTANCE;
@@ -239,6 +241,7 @@ public enum Game implements Listener {
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 
 		GameControls.setup();
+		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_Y, EXPLODE);
 
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
@@ -281,9 +284,6 @@ public enum Game implements Listener {
 			@Subscribe
 			public void onKeyRelease(KeyEvent event) {
 				if(event.getAction() == GLFW.GLFW_RELEASE) {
-					if (event.getKey() == GLFW.GLFW_KEY_Y) {
-						generateExplosionAtCrosshair();
-					}
 					if (event.getKey() == GLFW.GLFW_KEY_R) {
 						System.out.println("Set Origin: " + player.getPosition());
 						line.set(0, new Vector3D(player.getPosition()));
@@ -303,6 +303,7 @@ public enum Game implements Listener {
 			}
 		});
 	}
+	private PlayerControl EXPLODE = new PlayerControl();
 	public void generateExplosionAtCrosshair() {
 		if (depthDistance != 1f) {
 			float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
@@ -330,6 +331,10 @@ public enum Game implements Listener {
 
 	@Subscribe
 	public void update(UpdateEvent event) {
+		if (EXPLODE.isActivated()) {
+			generateExplosionAtCrosshair();
+		}
+
 		float angle = (player.getCamera().getRotation().getY() + MathUtil.PI / 2f);
 		float sin = (float) Math.sin(angle);
 		float cos = (float) Math.cos(angle);

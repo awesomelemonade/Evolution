@@ -9,7 +9,6 @@ import lemon.engine.math.Vector3D;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -30,8 +29,8 @@ public class Terrain {
 	public Terrain(Consumer<TerrainChunk> generator, ExecutorService pool, Vector3D scalar) {
 		this(generator, (chunk) -> {
 			pool.submit(() -> {
-				chunk.generateColoredModel();
 				chunk.setQueuedForConstruction(false);
+				chunk.generateColoredModel();
 				chunk.setQueuedForUpdate(true);
 			});
 		}, scalar);
@@ -171,7 +170,9 @@ public class Terrain {
 			TerrainChunk neighborChunk = chunks.get(
 					hashChunkCoordinates(chunk, -(i & 0b1), -((i >> 1) & 0b1), -((i >> 2) & 0b1)));
 			// Could potentially be null (not preloaded)
-			updateChunk(neighborChunk);
+			if (neighborChunk != null) {
+				updateChunk(neighborChunk);
+			}
 		}
 	}
 	public float get(int x, int y, int z) {
