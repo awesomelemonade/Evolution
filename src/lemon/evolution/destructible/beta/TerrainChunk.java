@@ -6,9 +6,12 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 import lemon.engine.model.ColoredModel;
 import lemon.engine.toolbox.Color;
+import lemon.evolution.pool.MatrixPool;
+import lemon.evolution.pool.VectorPool;
 
 public class TerrainChunk {
 	public static final int SIZE = 16;
+	public static final Vector3D MARCHING_CUBE_SIZE = new Vector3D(SIZE + 1, SIZE + 1, SIZE + 1);
 	private int chunkX;
 	private int chunkY;
 	private int chunkZ;
@@ -21,20 +24,21 @@ public class TerrainChunk {
 	private Color color;
 	private boolean queuedForUpdate;
 	private boolean queuedForConstruction;
-	public TerrainChunk(int chunkX, int chunkY, int chunkZ, BoundedScalarGrid3D scalarGrid, Vector3D size, Vector3D scalar) {
+	public TerrainChunk(int chunkX, int chunkY, int chunkZ, BoundedScalarGrid3D scalarGrid, Vector3D scalar) {
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
 		this.chunkZ = chunkZ;
 		this.data = new float[SIZE][SIZE][SIZE];
 		this.generated = false;
-		this.marchingCube = new MarchingCube(scalarGrid, size, 0f);
-		Vector3D translation = new Vector3D(
+		this.marchingCube = new MarchingCube(scalarGrid, MARCHING_CUBE_SIZE, 0f);
+		this.transformationMatrix = new Matrix(4);
+		try (var translationMatrix = MatrixPool.ofTranslation(
 				scalar.getX() * chunkX * TerrainChunk.SIZE,
 				scalar.getY() * chunkY * TerrainChunk.SIZE,
-				scalar.getZ() * chunkZ * TerrainChunk.SIZE
-		);
-		this.transformationMatrix = MathUtil.getTranslation(translation)
-				.multiply(MathUtil.getScalar(scalar));
+				scalar.getZ() * chunkZ * TerrainChunk.SIZE);
+			 var scalarMatrix = MatrixPool.ofScalar(scalar);) {
+			Matrix.multiply(transformationMatrix, translationMatrix, scalarMatrix);
+		}
 		this.color = Color.randomOpaque();
 	}
 	public int getChunkX() {

@@ -6,6 +6,7 @@ import lemon.engine.function.AbsoluteIntValue;
 import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
+import lemon.evolution.pool.VectorPool;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,7 +57,6 @@ public class Terrain {
 			TerrainChunk newChunk = new TerrainChunk(chunkX, chunkY, chunkZ,
 					getSubTerrain(offsetX, offsetY, offsetZ,
 							subTerrainSize, subTerrainSize, subTerrainSize),
-					new Vector3D(subTerrainSize, subTerrainSize, subTerrainSize),
 					scalar);
 			generator.accept(newChunk);
 			return newChunk;
@@ -102,15 +102,16 @@ public class Terrain {
 	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, Predicate<Vector3D> predicate) {
 		float count = 0;
 		float total = 0;
-		Vector3D temp = new Vector3D();
-		for (float x = lower.getX(); x <= upper.getX(); x += resolution) {
-			for (float y = lower.getY(); y <= upper.getY(); y += resolution) {
-				for (float z = lower.getZ(); z <= upper.getZ(); z += resolution) {
-					temp.set(x, y, z);
-					if (predicate.test(temp)) {
-						count++;
+		try (var temp = VectorPool.ofEmpty()) {
+			for (float x = lower.getX(); x <= upper.getX(); x += resolution) {
+				for (float y = lower.getY(); y <= upper.getY(); y += resolution) {
+					for (float z = lower.getZ(); z <= upper.getZ(); z += resolution) {
+						temp.set(x, y, z);
+						if (predicate.test(temp)) {
+							count++;
+						}
+						total++;
 					}
-					total++;
 				}
 			}
 		}
@@ -146,22 +147,23 @@ public class Terrain {
 	}
 	public void generateExplosionInChunk(long hashed, Vector3D point, float radius) {
 		TerrainChunk chunk = chunks.get(hashed);
-		Vector3D lower = new Vector3D();
-		Vector3D upper = new Vector3D();
 		int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
 		int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
 		int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
-		for (int i = 0; i < TerrainChunk.SIZE; i++) {
-			for (int j = 0; j < TerrainChunk.SIZE; j++) {
-				for (int k = 0; k < TerrainChunk.SIZE; k++) {
-					lower.set(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f);
-					lower.multiply(scalar);
-					upper.set(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f);
-					upper.multiply(scalar);
-					chunk.getData()[i][j][k] = Math.min(chunk.getData()[i][j][k],
-							1f - getPercentage(lower, upper, scalar.getX() / 4f, (v) -> {
-						return v.getDistanceSquared(point) <= radius * radius;
-					}) * 2f);
+		try (var lower = VectorPool.ofEmpty();
+			 var upper = VectorPool.ofEmpty()) {
+			for (int i = 0; i < TerrainChunk.SIZE; i++) {
+				for (int j = 0; j < TerrainChunk.SIZE; j++) {
+					for (int k = 0; k < TerrainChunk.SIZE; k++) {
+						lower.set(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f);
+						lower.multiply(scalar);
+						upper.set(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f);
+						upper.multiply(scalar);
+						chunk.getData()[i][j][k] = Math.min(chunk.getData()[i][j][k],
+								1f - getPercentage(lower, upper, scalar.getX() / 4f, (v) -> {
+									return v.getDistanceSquared(point) <= radius * radius;
+								}) * 2f);
+					}
 				}
 			}
 		}

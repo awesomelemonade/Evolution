@@ -1,6 +1,7 @@
 package lemon.evolution.destructible.beta;
 
 import lemon.engine.math.Vector3D;
+import lemon.evolution.pool.VectorPool;
 
 import java.util.concurrent.ExecutorService;
 
@@ -30,16 +31,17 @@ public class TerrainGenerator {
 		}
 	}
 	private void generate(TerrainChunk chunk) {
-		Vector3D temp = new Vector3D();
-		int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
-		int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
-		int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
-		float[][][] data = chunk.getData();
-		for (int i = 0; i < TerrainChunk.SIZE; i++) {
-			for (int j = 0; j < TerrainChunk.SIZE; j++) {
-				for (int k = 0; k < TerrainChunk.SIZE; k++) {
-					temp.set(offsetX + i, offsetY + j, offsetZ + k);
-					data[i][j][k] = scalarField.get(temp);
+		try (var temp = VectorPool.ofEmpty()) {
+			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
+			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
+			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
+			float[][][] data = chunk.getData();
+			for (int i = 0; i < TerrainChunk.SIZE; i++) {
+				for (int j = 0; j < TerrainChunk.SIZE; j++) {
+					for (int k = 0; k < TerrainChunk.SIZE; k++) {
+						temp.set(offsetX + i, offsetY + j, offsetZ + k);
+						data[i][j][k] = scalarField.get(temp);
+					}
 				}
 			}
 		}

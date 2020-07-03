@@ -133,7 +133,7 @@ public enum Game implements Listener {
 			EventManager.INSTANCE.unregisterListener(this);
 			// Prepare loaders
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
-			PerlinNoise<Vector3D> noise = new PerlinNoise<Vector3D>(MurmurHash::createWithSeed, pairer, x -> 1f, 6);
+			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> vector.getY() < -30f ? 0f : -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
 			ExecutorService pool = Executors.newFixedThreadPool(3);
 			EventManager.INSTANCE.registerListener(new Listener() {
@@ -192,8 +192,8 @@ public enum Game implements Listener {
 		benchmarker.put("renderData", new LineGraph(1000, 100000000));
 		benchmarker.put("fpsData", new LineGraph(1000, 100));
 		benchmarker.put("debugData", new LineGraph(1000, 100));
-		benchmarker.put("memory", new LineGraph(1000, 3000000000f));
-		benchmarker.put("memoryDerivative", new LineGraph(1000, 30000000f));
+		benchmarker.put("freeMemory", new LineGraph(1000, 5000000000f));
+		benchmarker.put("totalMemory", new LineGraph(1000, 5000000000f));
 
 		player = new Player(new Projection(MathUtil.toRadians(60f),
 				((float) windowWidth) / ((float) windowHeight), 0.01f, 1000f));
@@ -364,10 +364,10 @@ public enum Game implements Listener {
 			totalLength += puzzleBall.getVelocity().getLength();
 		}
 		benchmarker.getLineGraph("debugData").add(totalLength);
-		float last = benchmarker.getLineGraph("memory").getLast();
 		float current = Runtime.getRuntime().freeMemory();
-		benchmarker.getLineGraph("memory").add(current);
-		benchmarker.getLineGraph("memoryDerivative").add(last - current);
+		float available = Runtime.getRuntime().totalMemory();
+		benchmarker.getLineGraph("freeMemory").add(current);
+		benchmarker.getLineGraph("totalMemory").add(available);
 		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Time=%d",
 				EventManager.INSTANCE.getListenersRegistered(),
 				EventManager.INSTANCE.getListenerMethodsRegistered(),

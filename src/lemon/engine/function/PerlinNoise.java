@@ -13,9 +13,15 @@ public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 	private ToIntFunction<int[]> pairFunction;
 	private Function<T, Float> persistence;
 	private int iterations;
+	private int numDimensions;
+	private ThreadLocal<int[]> intX;
+	private ThreadLocal<float[]> fractionalX;
+	private ThreadLocal<float[]> values;
+	private ThreadLocal<int[]> a;
 
-	public PerlinNoise(IntFunction<IntUnaryOperator> hashFunctions, ToIntFunction<int[]> pairFunction,
+	public PerlinNoise(int numDimensions, IntFunction<IntUnaryOperator> hashFunctions, ToIntFunction<int[]> pairFunction,
 					   Function<T, Float> persistence, int iterations) {
+		this.numDimensions = numDimensions;
 		this.hashFunctions = new IntUnaryOperator[iterations];
 		this.pairFunction = pairFunction;
 		this.persistence = persistence;
@@ -23,14 +29,18 @@ public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 		for (int i = 0; i < iterations; i++) {
 			this.hashFunctions[i] = hashFunctions.apply(i);
 		}
+		intX = ThreadLocal.withInitial(() -> new int[numDimensions]);
+		fractionalX = ThreadLocal.withInitial(() -> new float[numDimensions]);
+		values = ThreadLocal.withInitial(() -> new float[0b1 << numDimensions]); // 2 ^ n
+		a = ThreadLocal.withInitial(() -> new int[numDimensions]);
 	}
 	@Override
 	public Float apply(T x) {
 		float output = 0;
-		int[] intX = new int[x.getDimensions()];
-		float[] fractionalX = new float[x.getDimensions()];
-		float[] values = new float[0b1 << x.getDimensions()]; // 2 ^ n
-		int[] a = new int[x.getDimensions()];
+		int[] intX = this.intX.get();
+		float[] fractionalX = this.fractionalX.get();
+		float[] values = this.values.get();
+		int[] a = this.a.get();
 		for (int i = 0; i < iterations; ++i) {
 			float amplitude = (float) Math.pow(persistence.apply(x), i);
 			output += interpolatedNoise(x, hashFunctions[i], intX, fractionalX, values, a) * amplitude;
@@ -51,7 +61,7 @@ public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 			values[i] = ((float) hashFunction.applyAsInt(paired)) / ((float) Integer.MAX_VALUE);
 		}
 		int size = values.length / 2;
-		for (int i = 0; i < x.getDimensions(); i++) {
+		for (int i = 0; i < numDimensions; i++) {
 			for (int j = 0; j < size; j++) {
 				values[j] = interpolate(values[2 * j], values[2 * j + 1], fractionalX[i]);
 			}
