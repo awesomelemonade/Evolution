@@ -47,8 +47,10 @@ import lemon.evolution.puzzle.PuzzleGrid;
 import lemon.evolution.util.BasicControlActivator;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
+import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.PlayerControl;
 import lemon.evolution.util.ShaderProgramHolder;
+import lemon.evolution.pool.VectorPool;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -113,28 +115,16 @@ public enum Game implements Listener {
 	private int windowWidth;
 	private int windowHeight;
 
+	private static final Color[] DEBUG_GRAPH_COLORS = {
+			Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN
+	};
+
 	public HeightMapLoader getHeightMapLoader() {
 		if (heightMapLoader == null) {
 			heightMapLoader = new HeightMapLoader(new HeightMapGenerator(), Math.max((int) (500f / TILE_SIZE), 2),
 					Math.max((int) (500f / TILE_SIZE), 2));
 		}
 		return heightMapLoader;
-	}
-
-	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, Predicate<Vector3D> predicate) {
-		float count = 0;
-		float total = 0;
-		for (float x = lower.getX(); x <= upper.getX(); x += resolution) {
-			for (float y = lower.getY(); y <= upper.getY(); y += resolution) {
-				for (float z = lower.getZ(); z <= upper.getZ(); z += resolution) {
-					if (predicate.test(new Vector3D(x, y, z))) {
-						count++;
-					}
-					total++;
-				}
-			}
-		}
-		return count / total;
 	}
 
 	@Override
@@ -286,8 +276,8 @@ public enum Game implements Listener {
 				if(event.getAction() == GLFW.GLFW_RELEASE) {
 					if (event.getKey() == GLFW.GLFW_KEY_R) {
 						System.out.println("Set Origin: " + player.getPosition());
-						line.set(0, new Vector3D(player.getPosition()));
-						lightPosition = new Vector3D(player.getPosition());
+						line.getOrigin().set(player.getPosition());
+						lightPosition.set(player.getPosition());
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_T) {
 						line.set(1, player.getPosition().copy().subtract(line.getOrigin()));
@@ -485,40 +475,44 @@ public enum Game implements Listener {
 					}
 				}
 			});
-			particleSystem.render();
+			//particleSystem.render();
 			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
-				Vector3D position = new Vector3D(96f, 40f, 0f);
-				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(position)
-						.multiply(MathUtil.getScalar(new Vector3D(8f, 8f, 8f))));
-				program.loadVector("sunlightDirection", lightPosition.copy().subtract(position).normalize());
-				program.loadVector("viewPos", player.getPosition());
+				try (var position = VectorPool.of(96f, 40f, 0f);
+					 var translationMatrix = MatrixPool.ofTranslation(position);
+					 var scalarMatrix = MatrixPool.ofScalar(8f, 8f, 8f);
+					 var sunlightDirection = VectorPool.of(lightPosition, v -> v.subtract(position).normalize())) {
+					program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(scalarMatrix));
+					program.loadVector("sunlightDirection", sunlightDirection);
+					program.loadVector("viewPos", player.getPosition());
+				}
 				dragonModel.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
-			FloatBuffer buffer = BufferUtils.createFloatBuffer(1);
-			GL11.glReadPixels(windowWidth / 2, windowHeight / 2, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, buffer);
-			depthDistance = buffer.get(); // far plane
+			FloatBuffer depthPixelBuffer = BufferUtils.createFloatBuffer(1);
+			GL11.glReadPixels(windowWidth / 2, windowHeight / 2, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, depthPixelBuffer);
+			depthDistance = depthPixelBuffer.get(); // far plane
 		});
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
 		});
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 			// Render crosshair
-			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
-					MathUtil.getTranslation(new Vector3D(windowWidth / 2f, windowHeight / 2f, 0f))
-							.multiply(MathUtil.getScalar(new Vector3D(5f, 1f, 1f))));
-			CommonDrawables.COLORED_QUAD.draw();
-			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
-					MathUtil.getTranslation(new Vector3D(windowWidth / 2f, windowHeight / 2f, 0f))
-							.multiply(MathUtil.getScalar(new Vector3D(1f, 5f, 1f))));
-			CommonDrawables.COLORED_QUAD.draw();
+			try (var translationMatrix = MatrixPool.ofTranslation(windowWidth / 2f, windowHeight / 2f, 0f);
+				 var scalarMatrixA = MatrixPool.ofScalar(5f, 1f, 1f);
+				 var scalarMatrixB = MatrixPool.ofScalar(1f, 5f, 1f);
+				 var matrixA = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixA);
+				 var matrixB = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixB)) {
+				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixA);
+				CommonDrawables.COLORED_QUAD.draw();
+				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixB);
+				CommonDrawables.COLORED_QUAD.draw();
+			}
 		});
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			// render graphs
-			byte counter = 1; // Not Black
+			byte counter = 0;
 			for (String benchmarker : this.benchmarker.getNames()) {
-				Color color = new Color((((counter & 0x01) != 0) ? 1f : 0f),
-						(((counter & 0x02) != 0) ? 1f : 0f), (((counter & 0x04) != 0) ? 1f : 0f));
+				Color color = DEBUG_GRAPH_COLORS[counter % DEBUG_GRAPH_COLORS.length];
 				CommonPrograms2D.LINE.getShaderProgram().use(program -> {
 					program.loadColor3f(color);
 					program.loadFloat("spacing",
@@ -528,16 +522,20 @@ public enum Game implements Listener {
 				byte finalCounter = counter;
 				CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 					program.loadColor4f("filterColor", color);
-					program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
-							MathUtil.getTranslation(new Vector3D(windowWidth - 200f, windowHeight - 20f - (finalCounter * 30f), 0f))
-									.multiply(MathUtil.getScalar(new Vector3D(10f, 10f, 1f))));
+					try (var translationMatrix = MatrixPool.ofTranslation(windowWidth - 200f, windowHeight - 50f - (finalCounter * 30f), 0f);
+						 var scalarMatrix = MatrixPool.ofScalar(10f, 10f, 1f);
+						 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+						program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, transformationMatrix);
+					}
 					CommonDrawables.COLORED_QUAD.draw();
 					program.loadColor4f("filterColor", Color.WHITE);
 				});
 				CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
-					program.loadMatrix(MatrixType.MODEL_MATRIX,
-							MathUtil.getTranslation(new Vector3D(windowWidth - 170f, windowHeight - 25f - (finalCounter * 30f), 0f))
-									.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 1f))));
+					try (var translationMatrix = MatrixPool.ofTranslation(windowWidth - 170f, windowHeight - 55f - (finalCounter * 30f), 0f);
+						 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 1f);
+						 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+						program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
+					}
 					program.loadColor3f("color", Color.WHITE);
 					keyTextModel.setText(benchmarker);
 					keyTextModel.draw();
@@ -546,9 +544,11 @@ public enum Game implements Listener {
 			}
 			// render debug text
 			CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
-				program.loadMatrix(MatrixType.MODEL_MATRIX,
-						MathUtil.getTranslation(new Vector3D(5f, windowHeight - 20, 0f))
-								.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 1f))));
+				try (var translationMatrix = MatrixPool.ofTranslation(5f, windowHeight - 20, 0f);
+					 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 1f);
+					 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+					program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
+				}
 				program.loadColor3f("color", Color.WHITE);
 				debugTextModel.draw();
 			});
@@ -578,14 +578,16 @@ public enum Game implements Listener {
 	private RaySphereIntersection raySphereIntersection;
 	private Line line = new Line();
 	@Subscribe
-	public void onClick(MouseButtonEvent event){
-		if(event.getAction() == GLFW.GLFW_RELEASE){
-			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1){
+	public void onClick(MouseButtonEvent event) {
+		if (event.getAction() == GLFW.GLFW_RELEASE) {
+			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1) {
+				/*
 				Line line = new Line(player.getCamera().getPosition(), player.getVectorDirection());
 				System.out.println(rayTriangleIntersection.apply(new Triangle(new Vector3D(-1f, 0f, -1f), new Vector3D(-1f, 0f, 1f), new Vector3D(1f, 0f, 0f)),
 						line));
 				System.out.println(raySphereIntersection.apply(line, new Sphere(Vector3D.ZERO, 1f)));
 				System.out.println(LineLineIntersection.INSTANCE.apply(line, this.line));
+				*/
 			}
 			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2) {
 				generateExplosionAtCrosshair();

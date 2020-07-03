@@ -8,6 +8,9 @@ public class Color extends Vector<Color> {
 	public static final Color RED = new Color(1f, 0f, 0f);
 	public static final Color GREEN = new Color(0f, 1f, 0f);
 	public static final Color BLUE = new Color(0f, 0f, 1f);
+	public static final Color YELLOW = new Color(1f, 1f, 0f);
+	public static final Color CYAN = new Color(0f, 1f, 1f);
+	public static final Color MAGENTA = new Color(1f, 0f, 1f);
 
 	private static final int RED_INDEX = 0;
 	private static final int GREEN_INDEX = 1;
@@ -28,6 +31,15 @@ public class Color extends Vector<Color> {
 	}
 	public Color(Color color) {
 		this(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+	}
+	public void set(float red, float green, float blue) {
+		set(red, green, blue, 1f);
+	}
+	public void set(float red, float green, float blue, float alpha) {
+		setRed(red);
+		setGreen(green);
+		setBlue(blue);
+		setAlpha(alpha);
 	}
 	public void setRed(float red) {
 		super.set(RED_INDEX, red);

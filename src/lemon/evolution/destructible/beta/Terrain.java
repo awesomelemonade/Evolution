@@ -21,8 +21,8 @@ public class Terrain {
 	private Vector3D scalar;
 	public Terrain(Consumer<TerrainChunk> generator, Vector3D scalar) {
 		this(generator, (chunk) -> {
-			chunk.generateColoredModel();
 			chunk.setQueuedForConstruction(false);
+			chunk.generateColoredModel();
 			chunk.setQueuedForUpdate(true);
 		}, scalar);
 	}
