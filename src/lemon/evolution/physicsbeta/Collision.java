@@ -9,20 +9,18 @@ public class Collision {
 		this.t = t;
 		this.intersection = intersection;
 	}
+	public void set(float t, Vector3D intersection) {
+		this.t = t;
+		this.intersection.set(intersection);
+	}
 	public void test(float t, Vector3D intersection) {
 		if (t < this.t) {
 			this.t = t;
-			this.intersection = intersection;
+			this.intersection.set(intersection);
 		}
-	}
-	public void setT(float t) {
-		this.t = t;
 	}
 	public float getT() {
 		return t;
-	}
-	public void setIntersection(Vector3D intersection) {
-		this.intersection = intersection;
 	}
 	public Vector3D getIntersection() {
 		return intersection;

@@ -368,10 +368,11 @@ public enum Game implements Listener {
 		float current = Runtime.getRuntime().freeMemory();
 		benchmarker.getLineGraph("memory").add(current);
 		benchmarker.getLineGraph("memoryDerivative").add(last - current);
-		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, Time=%d",
+		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Time=%d",
 				EventManager.INSTANCE.getListenersRegistered(),
 				EventManager.INSTANCE.getListenerMethodsRegistered(),
 				EventManager.INSTANCE.getPreloadedMethodsRegistered(),
+				VectorPool.getCount(),
 				System.currentTimeMillis());
 		if (!debugTextModel.getText().equals(message)) {
 			debugTextModel.setText(message);
