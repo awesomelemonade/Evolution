@@ -8,6 +8,7 @@ import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.Renderable;
+import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms3D;
 import org.lwjgl.opengl.GL11;
 
@@ -32,7 +33,9 @@ public class PuzzleBall implements Renderable {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(position));
+			try (var translationMatrix = MatrixPool.ofTranslation(position)) {
+				program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix);
+			}
 			sphere.draw();
 		});
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
@@ -44,5 +47,34 @@ public class PuzzleBall implements Renderable {
 	}
 	public Vector3D getVelocity() {
 		return velocity;
+	}
+
+	public static void render(Vector3D position) {
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+			try (var translationMatrix = MatrixPool.ofTranslation(position)) {
+				program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix);
+			}
+			sphere.draw();
+		});
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glDisable(GL11.GL_BLEND);
+	}
+	public static void render(Vector3D position, Vector3D scalar) {
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+			try (var translationMatrix = MatrixPool.ofTranslation(position);
+				 var scalarMatrix = MatrixPool.ofScalar(scalar);
+				 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+				program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
+			}
+			sphere.draw();
+		});
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glDisable(GL11.GL_BLEND);
 	}
 }

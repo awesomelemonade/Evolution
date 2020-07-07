@@ -15,6 +15,20 @@ public class MarchingCubeConstants {
 			{1, 0, 1, 1, 1, 1},
 			{0, 0, 1, 0, 1, 1}
 	};
+	public static final int[][] VECTOR_CACHE_OFFSETS = new int[][] {
+			{0, 0, 0, 0},
+			{1, 0, 0, 2},
+			{0, 0, 1, 0},
+			{0, 0, 0, 2},
+			{0, 1, 0, 0},
+			{1, 1, 0, 2},
+			{0, 1, 1, 0},
+			{0, 1, 0, 2},
+			{0, 0, 0, 1},
+			{1, 0, 0, 1},
+			{1, 0, 1, 1},
+			{0, 0, 1, 1}
+	};
 	// http://paulbourke.net/geometry/polygonise/
 	public static final int[] EDGE_TABLE = new int[] {
 			0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,

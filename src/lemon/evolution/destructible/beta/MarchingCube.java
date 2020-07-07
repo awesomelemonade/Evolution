@@ -5,6 +5,7 @@ import lemon.engine.model.ColoredModel;
 import lemon.engine.model.ModelBuilder;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Color;
+import lemon.evolution.pool.VectorPool;
 
 import java.util.Arrays;
 
@@ -39,6 +40,15 @@ public class MarchingCube {
 					Arrays.fill(colors, color);
 					return new AbstractColoredModel(vertices, colors, indices);
 				});
+		int[][][][] edgeIndices = new int[grid.getSizeX()][grid.getSizeY()][grid.getSizeZ()][3];
+		for (int[][][] a : edgeIndices) {
+			for (int[][] b : a) {
+				for (int[] c : b) {
+					Arrays.fill(c, -1);
+				}
+			}
+		}
+		// TODO: we gotta determine normals somehow at the edges?
 		int[] vectorIndices = new int[12];
 		for (int i = 0; i < grid.getSizeX() - 1; i++) {
 			for (int j = 0; j < grid.getSizeY() - 1; j++) {
@@ -46,17 +56,25 @@ public class MarchingCube {
 					int index = getIndex(i, j, k);
 					int edges = MarchingCubeConstants.EDGE_TABLE[index];
 					for (int l = 0; l < 12; l++) {
-						vectorIndices[l] = -1;
 						if (((edges >> l) & 0b1) == 1) {
-							int[] o = MarchingCubeConstants.INTERPOLATE_OFFSETS[l];
-							Vector3D a = new Vector3D(offsets[0] + strides[0] * (i + o[0]),
-									offsets[1] + strides[1] * (j + o[1]), offsets[2] + strides[2] * (k + o[2]));
-							Vector3D b = new Vector3D(offsets[0] + strides[0] * (i + o[3]),
-									offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
-							float dataA = grid.get(i + o[0], j + o[1], k + o[2]);
-							float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
-							vectorIndices[l] = builder.getVertices().size();
-							builder.addVertices(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
+							int[] cacheOffsets = MarchingCubeConstants.VECTOR_CACHE_OFFSETS[l];
+							int x = i + cacheOffsets[0];
+							int y = j + cacheOffsets[1];
+							int z = k + cacheOffsets[2];
+							int w = cacheOffsets[3];
+							if (edgeIndices[x][y][z][w] == -1) {
+								int[] o = MarchingCubeConstants.INTERPOLATE_OFFSETS[l];
+								try (var a = VectorPool.of(offsets[0] + strides[0] * (i + o[0]),
+										offsets[1] + strides[1] * (j + o[1]), offsets[2] + strides[2] * (k + o[2]))) {
+									Vector3D b = new Vector3D(offsets[0] + strides[0] * (i + o[3]),
+											offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
+									float dataA = grid.get(i + o[0], j + o[1], k + o[2]);
+									float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
+									edgeIndices[x][y][z][w] = builder.getVertices().size();
+									builder.addVertices(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
+								}
+							}
+							vectorIndices[l] = edgeIndices[x][y][z][w];
 						}
 					}
 					int[] triangles = MarchingCubeConstants.TRIANGLE_TABLE[index];

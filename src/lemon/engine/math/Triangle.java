@@ -41,6 +41,7 @@ public class Triangle extends VectorArray {
 			float y = (e * a) - (d * b);
 			float z = x + y - ac_bb;
 
+			// Equivalent to z < 0 && x >= 0 && y >= 0
 			return ((Float.floatToRawIntBits(z) & ~(Float.floatToRawIntBits(x) | Float.floatToRawIntBits(y))) & 0x80000000) != 0;
 		}
 	}

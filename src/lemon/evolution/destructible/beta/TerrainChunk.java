@@ -1,13 +1,16 @@
 package lemon.evolution.destructible.beta;
 
 import lemon.engine.draw.DynamicIndexedDrawable;
-import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 import lemon.engine.model.ColoredModel;
 import lemon.engine.toolbox.Color;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.pool.VectorPool;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TerrainChunk {
 	public static final int SIZE = 16;
@@ -24,6 +27,7 @@ public class TerrainChunk {
 	private Color color;
 	private boolean queuedForUpdate;
 	private boolean queuedForConstruction;
+	private List<Triangle> triangles;
 	public TerrainChunk(int chunkX, int chunkY, int chunkZ, BoundedScalarGrid3D scalarGrid, Vector3D scalar) {
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
@@ -36,10 +40,11 @@ public class TerrainChunk {
 				scalar.getX() * chunkX * TerrainChunk.SIZE,
 				scalar.getY() * chunkY * TerrainChunk.SIZE,
 				scalar.getZ() * chunkZ * TerrainChunk.SIZE);
-			 var scalarMatrix = MatrixPool.ofScalar(scalar);) {
+			 var scalarMatrix = MatrixPool.ofScalar(scalar)) {
 			Matrix.multiply(transformationMatrix, translationMatrix, scalarMatrix);
 		}
 		this.color = Color.randomOpaque();
+		this.triangles = new ArrayList<>();
 	}
 	public int getChunkX() {
 		return chunkX;
@@ -64,6 +69,22 @@ public class TerrainChunk {
 	}
 	public void generateColoredModel() {
 		model = marchingCube.getColoredModel(color);
+		triangles = new ArrayList<>();
+		Vector3D[] vertices = model.getVertices();
+		Vector3D[] transformed = new Vector3D[vertices.length];
+
+		for (int i = 0; i < vertices.length; i++) {
+			try (var x = VectorPool.of(5f * chunkX * TerrainChunk.SIZE,
+					5f * chunkY * TerrainChunk.SIZE, 5f * chunkZ * TerrainChunk.SIZE)) {
+				transformed[i] = vertices[i].copy().multiply(5f).add(x);
+			}
+		}
+
+		int[] indices = model.getIndices();
+		for (int i = 0; i < indices.length; i += 3) {
+			//triangles.add(new Triangle(transformed[indices[i]], transformed[indices[i + 1]], transformed[indices[i + 2]]));
+			triangles.add(new Triangle(transformed[indices[i]], transformed[indices[i + 2]], transformed[indices[i + 1]]));
+		}
 	}
 	public ColoredModel getColoredModel() {
 		return model;
@@ -88,5 +109,8 @@ public class TerrainChunk {
 	}
 	public Matrix getTransformationMatrix() {
 		return transformationMatrix;
+	}
+	public List<Triangle> getTriangles() {
+		return triangles;
 	}
 }

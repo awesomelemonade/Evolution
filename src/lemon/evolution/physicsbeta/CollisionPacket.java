@@ -1,10 +1,12 @@
 package lemon.evolution.physicsbeta;
 
 import lemon.engine.math.*;
+import lemon.evolution.Game;
 import lemon.evolution.pool.VectorPool;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -15,7 +17,7 @@ public class CollisionPacket {
 	public static void checkTriangle(Vector3D position, Vector3D velocity, Triangle triangle, Collision collision) {
 		// isFrontFacingTo
 		try (var normalizedVelocity = VectorPool.of(velocity, Vector::normalize)) {
-			if (triangle.getNormal().dotProduct(normalizedVelocity) <= 0) {
+			if (triangle.getNormal().dotProduct(normalizedVelocity) <= 0f) {
 				// trianglePlane.getSignedDistanceTo(position)
 				float signedDistanceToTrianglePlane =
 						position.dotProduct(triangle.getNormal()) - triangle.getNormal().dotProduct(triangle.getVertex1());
@@ -24,7 +26,7 @@ public class CollisionPacket {
 				float normalDotVelocity = triangle.getNormal().dotProduct(velocity);
 
 				// if sphere is travelling parallel to the plane
-				if (normalDotVelocity == 0f) {
+				if (Math.abs(normalDotVelocity) <= 0.00001f) {
 					if (Math.abs(signedDistanceToTrianglePlane) >= 1.0f) {
 						// Sphere is not embedded in plane
 						// No collision possible
@@ -36,18 +38,31 @@ public class CollisionPacket {
 					}
 				} else {
 					// Calculate intersection interval
-					float t0 = Math.max(0f, Math.min((-1.0f - signedDistanceToTrianglePlane) / normalDotVelocity,
-							(1.0f - signedDistanceToTrianglePlane) / normalDotVelocity));
-					if (t0 > 1.0) {
+					//float t0 = Math.max(0f, Math.min((-1.0f - signedDistanceToTrianglePlane) / normalDotVelocity,
+					//		(1.0f - signedDistanceToTrianglePlane) / normalDotVelocity));
+					float a = (-1.0f - signedDistanceToTrianglePlane) / normalDotVelocity;
+					float b = (1.0f - signedDistanceToTrianglePlane) / normalDotVelocity;
+					if (a > b) {
+						// swap
+						float temp = a;
+						a = b;
+						b = temp;
+					}
+					if (a > 1.0f || b < 0f) {
+						return;
+					}
+					a = MathUtil.clamp(a, 0f, 1f);
+					/*if (t0 > 1.0) {
 						// [t0, t1] is outside of [0, 1]
 						// No collisions possible
 						return;
-					}
-					try (var scaledVelocity = VectorPool.of(velocity, v -> v.multiply(t0));
+					}*/
+					float finalA = a;
+					try (var scaledVelocity = VectorPool.of(velocity, v -> v.multiply(finalA));
 						 var planeIntersectionPoint = VectorPool.of(position,
 								 v -> v.subtract(triangle.getNormal()).add(scaledVelocity))) {
 						if (triangle.isInside(planeIntersectionPoint)) {
-							collision.test(t0, planeIntersectionPoint);
+							collision.test(a, planeIntersectionPoint, triangle, "Face");
 							return;
 						}
 					}
@@ -55,19 +70,18 @@ public class CollisionPacket {
 				float velocitySquaredLength = velocity.getAbsoluteValueSquared();
 
 				// Check vertices
-				checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex1(), collision);
-				checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex2(), collision);
-				checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex3(), collision);
+				checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex1(), collision, triangle);
+				checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex2(), collision, triangle);
+				checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex3(), collision, triangle);
 
 				// Check against edges
-				checkEdge(velocitySquaredLength, velocity, position, triangle.getVertex1(), triangle.getVertex2(), collision);
-				checkEdge(velocitySquaredLength, velocity, position, triangle.getVertex2(), triangle.getVertex3(), collision);
-				checkEdge(velocitySquaredLength, velocity, position, triangle.getVertex3(), triangle.getVertex1(), collision);
+				checkEdge(velocitySquaredLength, velocity, position, triangle.getVertex1(), triangle.getVertex2(), collision, triangle);
+				checkEdge(velocitySquaredLength, velocity, position, triangle.getVertex2(), triangle.getVertex3(), collision, triangle);
+				checkEdge(velocitySquaredLength, velocity, position, triangle.getVertex3(), triangle.getVertex1(), collision, triangle);
 			}
 		}
-
 	}
-	private static void checkEdge(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertexA, Vector3D vertexB, Collision collision) {
+	private static void checkEdge(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertexA, Vector3D vertexB, Collision collision, Triangle triangle) {
 		try (var edge = VectorPool.of(vertexB, v -> v.subtract(vertexA));
 			 var baseToVertex = VectorPool.of(vertexA, v -> v.subtract(base))) {
 			float edgeSquaredLength = edge.getAbsoluteValueSquared();
@@ -86,19 +100,18 @@ public class CollisionPacket {
 				float f = (edgeDotVelocity * t - edgeDotBaseToVertex) / edgeSquaredLength;
 				if (f >= 0.0f && f <= 1.0f) {
 					try (var intersection = VectorPool.of(vertexA, v -> v.add(edge.multiply(f)))) {
-						collision.set(t, intersection);
+						collision.set(t, intersection, triangle, "Edge");
 					}
 				}
 			}
 		}
 	}
-	private static void checkVertex(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertex, Collision collision) {
-		// p1
+	private static void checkVertex(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertex, Collision collision, Triangle triangle) {
 		try (var temp = VectorPool.of(base, v -> v.subtract(vertex))) {
 			float b = 2.0f * velocity.dotProduct(temp);
 			float c = vertex.getDistanceSquared(base) - 1.0f;
 			float t = getLowestRoot(velocitySquaredLength, b, c);
-			collision.test(t, vertex);
+			collision.test(t, vertex, triangle, "Vertex");
 		}
 	}
 	public static float getLowestRoot(float a, float b, float c) {
@@ -137,66 +150,57 @@ public class CollisionPacket {
 
 		// Iterate until we have our final position
 		try (var remainingVelocity = VectorPool.of(velocity)) {
-			collideWithWorld(position, velocity, 0, remainingVelocity);
+			collideWithWorld(position, velocity, 0, remainingVelocity, new StringBuilder());
 		}
 
 		// Convert final result back to r3
 		// position.multiply(eRadius);
 		// velocity.multiply(eRadius);
 	}
-	public static void collideWithWorld(Vector3D position, Vector3D velocity, int collisionRecursionDepth, Vector3D remainingVelocity) {
-		// Exceed recursion depth
+	public static void collideWithWorld(Vector3D position, Vector3D velocity, int collisionRecursionDepth, Vector3D remainingVelocity, StringBuilder builder) {
 		if (collisionRecursionDepth > MAX_RECURSION_DEPTH) {
-			// Remaining velocity should be removed from velocity
-			velocity.subtract(remainingVelocity.scaleToLength(remainingVelocity.dotProduct(velocity)));
+			System.out.println(builder.toString());
 			return;
 		}
-
-		// Check for collision (calls the collision routines)
-		// Application specific
 		Collision collision = checkCollision(position, remainingVelocity);
-
-		// if no collision we just move along the velocity
-		if (collision.getT() > 1) {
+		String info = String.format("depth=%d, pos=%s, vel=%s, rem=%s, t=%f, intersection=%s, tri=%s\n",
+				collisionRecursionDepth, position, velocity, remainingVelocity, collision.getT(), collision.getIntersection(), collision.getTriangle());
+		builder.append(info);
+		if (collision.getT() < 1f) {
+			String info2 = String.format("triNormal=%s, dot=%f, dist=%f, reason=%s\n",
+					collision.getTriangle().getNormal(), remainingVelocity.dotProduct(collision.getTriangle().getNormal()), collision.getIntersection().getDistance(position), collision.reason);
+			builder.append(info2);
+		}
+		if (collision.getTriangle() != null) {
+			Game.INSTANCE.debug.add(collision.getTriangle().getVertex1());
+			Game.INSTANCE.debug.add(collision.getTriangle().getVertex2());
+			Game.INSTANCE.debug.add(collision.getTriangle().getVertex3());
+			Game.INSTANCE.debug.add(collision.getIntersection().copy());
+		}
+		if (collision.getT() >= 1f) {
 			position.add(remainingVelocity);
 			return;
 		}
-
-		// Collision occurred
-
-		try (var destinationPoint = VectorPool.of(position, v -> v.add(remainingVelocity))) {
-			float nearestDistance = remainingVelocity.getAbsoluteValue() * collision.getT();
-
-			if (nearestDistance > BUFFER_DISTANCE) {
-				Vector3D v = remainingVelocity.scaleToLength(nearestDistance - BUFFER_DISTANCE);
-				position.add(v);
-				collision.getIntersection().subtract(v.scaleToLength(BUFFER_DISTANCE));
-			} else {
-				float dist = BUFFER_DISTANCE - nearestDistance;
-				Vector3D v = remainingVelocity.scaleToLength(dist);
-				position.subtract(v);
+		try (var usedVelocity = VectorPool.of(remainingVelocity, x -> x.multiply(collision.getT()));
+			 var collisionPosition = VectorPool.of(position, x -> x.add(usedVelocity));
+			 var negSlidePlaneNormal = VectorPool.of(collision.getIntersection(), x -> x.subtract(collisionPosition).normalize())) {
+			remainingVelocity.subtract(usedVelocity);
+			try (var scaled = VectorPool.of(negSlidePlaneNormal, x -> x.multiply(x.dotProduct(remainingVelocity)))) {
+				remainingVelocity.subtract(scaled);
 			}
-
-			// Determine the sliding plane
-			Vector3D slidePlaneOrigin = position;
-			try (var slidePlaneNormal = VectorPool.of(position, v -> v.subtract(collision.getIntersection()).normalize());
-				 var scaledNormal = VectorPool.of(slidePlaneNormal, v -> v.multiply(
-				 		destinationPoint.dotProduct(slidePlaneNormal) + -slidePlaneNormal.dotProduct(slidePlaneOrigin)))) {
-				Vector3D newDestinationPoint = destinationPoint.subtract(scaledNormal);
-				// Generate the slide vector, which will become our new velocity vector for the next iteration
-				Vector3D newRemainingVelocity = newDestinationPoint.subtract(position);
-				velocity.subtract(slidePlaneNormal.multiply(velocity.dotProduct(slidePlaneNormal)));
-				// Don't recurse if the remaining velocity is very small
-				if (newRemainingVelocity.getLengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {
-					return;
-				}
-				// Recurse
-				collideWithWorld(position, velocity, collisionRecursionDepth + 1, newRemainingVelocity);
+			try (var scaled = VectorPool.of(negSlidePlaneNormal, x -> x.multiply(x.dotProduct(velocity)))) {
+				velocity.subtract(scaled);
 			}
+			position.add(usedVelocity);
+			// TODO: Incorporate friction & elasticity
+			if (remainingVelocity.getLengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {
+				return;
+			}
+			collideWithWorld(position, velocity, collisionRecursionDepth + 1, remainingVelocity, builder);
 		}
 	}
 	// Super temporary stuff below
-	public static final List<Triangle> triangles = new ArrayList<Triangle>();
+	public static final List<Triangle> triangles = new ArrayList<>();
 	public static final List<BiFunction<Vector3D, Vector3D, Consumer<Collision>>> consumers = new ArrayList<>();
 	public static Collision checkCollision(Vector3D position, Vector3D velocity) {
 		Collision collision = new Collision(Float.MAX_VALUE, new Vector3D());

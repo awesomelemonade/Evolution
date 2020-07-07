@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,7 +18,6 @@ import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
 import lemon.engine.draw.TextModel;
 import lemon.engine.font.Font;
-import lemon.engine.function.LineLineIntersection;
 import lemon.engine.function.MollerTrumbore;
 import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
@@ -30,7 +28,6 @@ import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Percentage;
 import lemon.engine.math.Projection;
-import lemon.engine.math.Sphere;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Color;
@@ -39,11 +36,8 @@ import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
-import lemon.evolution.particle.beta.ParticleSystem;
-import lemon.evolution.physicsbeta.Collision;
 import lemon.evolution.physicsbeta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
-import lemon.evolution.puzzle.PuzzleGrid;
 import lemon.evolution.util.BasicControlActivator;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
@@ -57,13 +51,11 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import lemon.engine.control.RenderEvent;
 import lemon.engine.control.UpdateEvent;
-import lemon.engine.model.HeightMap;
 import lemon.engine.model.LineGraph;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
@@ -76,7 +68,6 @@ import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.toolbox.SkyboxLoader;
 import lemon.engine.render.MatrixType;
-import lemon.engine.terrain.HeightMapGenerator;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
 import lemon.engine.time.BenchmarkEvent;
@@ -90,9 +81,6 @@ public enum Game implements Listener {
 	private boolean loaded;
 
 	private Player player;
-	private HeightMap heightMap;
-
-	private static final float TILE_SIZE = 0.5f; // 0.2f 1f
 
 	private FrameBuffer frameBuffer;
 	private Texture colorTexture;
@@ -102,8 +90,7 @@ public enum Game implements Listener {
 	private Benchmarker benchmarker;
 
 	private Terrain terrain;
-	private HeightMapLoader heightMapLoader;
-	private ParticleSystem particleSystem;
+	private Vector3D terrainScalar;
 
 	private ObjLoader dragonLoader;
 	private Drawable dragonModel;
@@ -115,17 +102,11 @@ public enum Game implements Listener {
 	private int windowWidth;
 	private int windowHeight;
 
+	public List<Vector3D> debug;
+
 	private static final Color[] DEBUG_GRAPH_COLORS = {
 			Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN
 	};
-
-	public HeightMapLoader getHeightMapLoader() {
-		if (heightMapLoader == null) {
-			heightMapLoader = new HeightMapLoader(new HeightMapGenerator(), Math.max((int) (500f / TILE_SIZE), 2),
-					Math.max((int) (500f / TILE_SIZE), 2));
-		}
-		return heightMapLoader;
-	}
 
 	@Override
 	public void onRegister() {
@@ -143,7 +124,8 @@ public enum Game implements Listener {
 				}
 			});
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
-			terrain = new Terrain(generator::queueChunk, pool, new Vector3D(5f, 5f, 5f));
+			terrainScalar = new Vector3D(5f, 5f, 5f);
+			terrain = new Terrain(generator::queueChunk, pool, terrainScalar);
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			int n = 5;
@@ -152,7 +134,7 @@ public enum Game implements Listener {
 			// Add loaders
 			Loading loading = new Loading(() -> {
 				EventManager.INSTANCE.registerListener(Game.INSTANCE);
-			}, Game.INSTANCE.getHeightMapLoader(), dragonLoader, new Loader() {
+			}, dragonLoader, new Loader() {
 				@Override
 				public void load() {
 					for (int i = -n; i <= n; i++) {
@@ -176,7 +158,7 @@ public enum Game implements Listener {
 
 
 		logger.log(Level.FINE, "Initializing");
-		GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+		//GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(GLFW.glfwGetCurrentContext(), width, height);
@@ -184,8 +166,6 @@ public enum Game implements Listener {
 		windowHeight = height.get();
 
 		GL11.glViewport(0, 0, windowWidth, windowHeight);
-
-		heightMap = new HeightMap(heightMapLoader.getTerrain(), TILE_SIZE);
 
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -238,30 +218,34 @@ public enum Game implements Listener {
 
 		//puzzleBall = new PuzzleBall(new Vector3D(0, 20f, 0), new Vector3D(Vector3D.ZERO));
 		puzzleBalls = new ArrayList<PuzzleBall>();
+		puzzleBalls.add(new PuzzleBall(new Vector3D(2f, 100f, 2f), Vector3D.ZERO.copy()));
 		for (int i = 20; i <= 500; i += 10) {
-			puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
+			//puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
 		}
-		puzzleGrid = new PuzzleGrid();
 
-		Game.triangles = heightMap.getTriangles();
+		debug = new ArrayList<>();
 		CollisionPacket.consumers.add((position, velocity) -> collision -> {
-			Vector3D origin = position;
 			float radius = velocity.getAbsoluteValue() + 2f;
 
-			int roundedX = Math.round(origin.getX() / TILE_SIZE);
-			int roundedZ = Math.round(origin.getZ() / TILE_SIZE);
-			int indexRadius = (int) Math.ceil(radius / TILE_SIZE);
+			int chunkX = Math.floorDiv((int) (position.getX() / terrainScalar.getX()), TerrainChunk.SIZE);
+			int chunkY = Math.floorDiv((int) (position.getY() / terrainScalar.getY()), TerrainChunk.SIZE);
+			int chunkZ = Math.floorDiv((int) (position.getZ() / terrainScalar.getZ()), TerrainChunk.SIZE);
+			int indexRadius = (int) Math.ceil((radius / 5f) / TerrainChunk.SIZE);
 			for (int i = -indexRadius; i <= indexRadius; i++) {
 				for (int j = -indexRadius; j <= indexRadius; j++) {
-					if (i * i + j * j <= indexRadius * indexRadius) {
-						checkTriangle(position, velocity, collision, roundedX + i + triangles.length / 2, roundedZ + j + triangles[0].length / 2);
+					for (int k = -indexRadius; k <= indexRadius; k++) {
+						if (i * i + j * j + k * k <= indexRadius * indexRadius) {
+							// check chunk [chunkX + i, chunkY + j, chunkZ + k]
+							TerrainChunk chunk = terrain.getChunk(chunkX + i, chunkY + j, chunkZ + k);
+							for (Triangle triangle : chunk.getTriangles()) {
+								CollisionPacket.checkTriangle(position, velocity, triangle, collision);
+							}
+						}
 					}
 				}
 			}
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
-
-		particleSystem = new ParticleSystem(20000);
 
 		dragonModel = dragonLoader.toIndexedDrawable();
 		lightPosition = new Vector3D(player.getPosition());
@@ -302,17 +286,8 @@ public enum Game implements Listener {
 		}
 	}
 	float depthDistance = 0;
-	// temp
-	private static Triangle[][][] triangles;
-	private static void checkTriangle(Vector3D position, Vector3D velocity, Collision collision, int x, int y) {
-		if (x >= 0 && x < triangles.length && y >= 0 && y < triangles[0].length) {
-			CollisionPacket.checkTriangle(position, velocity, triangles[x][y][0], collision);
-			CollisionPacket.checkTriangle(position, velocity, triangles[x][y][1], collision);
-		}
-	}
 
 	private List<PuzzleBall> puzzleBalls;
-	private PuzzleGrid puzzleGrid;
 
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -363,6 +338,7 @@ public enum Game implements Listener {
 			CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity());
 			totalLength += puzzleBall.getVelocity().getLength();
 		}
+		puzzleBalls.removeIf(x -> x.getPosition().getY() <= -300f);
 		benchmarker.getLineGraph("debugData").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();
 		float available = Runtime.getRuntime().totalMemory();
@@ -452,16 +428,22 @@ public enum Game implements Listener {
 			GL11.glDepthMask(false);
 			renderSkybox();
 			GL11.glDepthMask(true);
-			//renderHeightMap();
 			for (PuzzleBall puzzleBall : puzzleBalls) {
 				puzzleBall.render();
 			}
-			//puzzleGrid.render();
+			for (Vector3D x : debug) {
+				try (var translation = VectorPool.of(x);
+					 var scalar = VectorPool.of(0.2f, 0.2f, 0.2f)) {
+					PuzzleBall.render(translation, scalar);
+				}
+			}
+			debug.clear();
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
-				int playerChunkX = Math.floorDiv((int) (player.getPosition().getX() / 5f), TerrainChunk.SIZE);
-				int playerChunkY = Math.floorDiv((int) (player.getPosition().getY() / 5f), TerrainChunk.SIZE);
-				int playerChunkZ = Math.floorDiv((int) (player.getPosition().getZ() / 5f), TerrainChunk.SIZE);
+				//GL11.glEnable(GL11.GL_CULL_FACE);
+				int playerChunkX = Math.floorDiv((int) (player.getPosition().getX() / terrainScalar.getX()), TerrainChunk.SIZE);
+				int playerChunkY = Math.floorDiv((int) (player.getPosition().getY() / terrainScalar.getY()), TerrainChunk.SIZE);
+				int playerChunkZ = Math.floorDiv((int) (player.getPosition().getZ() / terrainScalar.getZ()), TerrainChunk.SIZE);
 				int n = 5;
 				for (int i = -n; i <= n; i++) {
 					for (int j = -n; j <= n; j++) {
@@ -475,8 +457,8 @@ public enum Game implements Listener {
 						}
 					}
 				}
+				//GL11.glDisable(GL11.GL_CULL_FACE);
 			});
-			//particleSystem.render();
 			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
 				try (var position = VectorPool.of(96f, 40f, 0f);
 					 var translationMatrix = MatrixPool.ofTranslation(position);
@@ -554,17 +536,6 @@ public enum Game implements Listener {
 				debugTextModel.draw();
 			});
 		}
-	}
-	public void renderHeightMap() {
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		GL20.glUseProgram(CommonPrograms3D.COLOR.getShaderProgram().getId());
-		CommonPrograms3D.COLOR.getShaderProgram().loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
-		heightMap.render();
-		GL20.glUseProgram(0);
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
 	}
 	public void renderSkybox() {
 		CommonPrograms3D.CUBEMAP.getShaderProgram().use(program -> {

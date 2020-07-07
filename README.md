@@ -31,6 +31,7 @@ Features
 Plans
 -----
 * Efficient collision detection & response on marching cube mesh
+* MarchingCube normal calculation for terrain coloring
 
 Ideas
 -----
