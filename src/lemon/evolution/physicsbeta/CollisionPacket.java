@@ -43,7 +43,7 @@ public class CollisionPacket {
 							 var planeIntersectionPoint = VectorPool.of(position,
 									 v -> v.subtract(triangle.getNormal()).add(scaledVelocity))) {
 							if (triangle.isInside(planeIntersectionPoint)) {
-								collision.test(t, planeIntersectionPoint, triangle, "Face");
+								collision.test(t, planeIntersectionPoint);
 								return;
 							}
 						}
@@ -92,7 +92,7 @@ public class CollisionPacket {
 						float edgeT = conditionA / edge.getLengthSquared();
 						try (var scaledEdge = VectorPool.of(edge, x -> x.multiply(edgeT));
 							 var intersectionPoint = VectorPool.of(vertexA, x -> x.add(scaledEdge))) {
-							collision.set(root1, intersectionPoint, triangle, "Edge");
+							collision.set(root1, intersectionPoint);
 						}
 					}
 				}
@@ -108,7 +108,7 @@ public class CollisionPacket {
 						float edgeT = conditionA / edge.getLengthSquared();
 						try (var scaledEdge = VectorPool.of(edge, x -> x.multiply(edgeT));
 							 var intersectionPoint = VectorPool.of(vertexA, x -> x.add(scaledEdge))) {
-							collision.set(root2, intersectionPoint, triangle, "Edge");
+							collision.set(root2, intersectionPoint);
 						}
 					}
 				}
@@ -120,7 +120,7 @@ public class CollisionPacket {
 			float b = 2.0f * velocity.dotProduct(temp);
 			float c = vertex.getDistanceSquared(base) - 1.0f;
 			float t = getLowestRoot(velocitySquaredLength, b, c);
-			collision.test(t, vertex, triangle, "Vertex");
+			collision.test(t, vertex);
 		}
 	}
 	public static float getLowestRoot(float a, float b, float c) {

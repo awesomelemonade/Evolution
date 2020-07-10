@@ -82,7 +82,6 @@ public class TerrainChunk {
 
 		int[] indices = model.getIndices();
 		for (int i = 0; i < indices.length; i += 3) {
-			//triangles.add(new Triangle(transformed[indices[i]], transformed[indices[i + 1]], transformed[indices[i + 2]]));
 			triangles.add(new Triangle(transformed[indices[i]], transformed[indices[i + 2]], transformed[indices[i + 1]]));
 		}
 		this.triangles = triangles;
@@ -114,4 +113,5 @@ public class TerrainChunk {
 	public List<Triangle> getTriangles() {
 		return triangles;
 	}
+	public boolean filled = false;
 }

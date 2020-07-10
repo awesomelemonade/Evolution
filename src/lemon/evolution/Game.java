@@ -215,28 +215,28 @@ public enum Game implements Listener {
 		raySphereIntersection = new RaySphereIntersection();
 
 		puzzleBalls = new ArrayList<>();
-		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 100f, 0), new Vector3D(Vector3D.ZERO)));
 		for (int i = 100; i <= 600; i += 10) {
-			//puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
+			puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
 		}
 
 		debug = new ArrayList<>();
 		CollisionPacket.consumers.add((position, velocity) -> collision -> {
-			float radius = velocity.getAbsoluteValue() + 2f;
-			int chunkX = terrain.getChunkX(position.getX());
-			int chunkY = terrain.getChunkY(position.getY());
-			int chunkZ = terrain.getChunkZ(position.getZ());
-			int indexRadius = (int) Math.ceil((radius / 5f) / TerrainChunk.SIZE) + 1;
-			for (int i = -indexRadius; i <= indexRadius; i++) {
-				for (int j = -indexRadius; j <= indexRadius; j++) {
-					for (int k = -indexRadius; k <= indexRadius; k++) {
-						if (i * i + j * j + k * k <= indexRadius * indexRadius) {
-							// check chunk [chunkX + i, chunkY + j, chunkZ + k]
-							TerrainChunk chunk = terrain.getChunk(chunkX + i, chunkY + j, chunkZ + k);
+			try (var after = VectorPool.of(position, x -> x.add(velocity))) {
+				int minChunkX = terrain.getChunkX(Math.min(position.getX(), after.getX()) - 1f);
+				int maxChunkX = terrain.getChunkX(Math.max(position.getX(), after.getX()) + 1f);
+				int minChunkY = terrain.getChunkX(Math.min(position.getY(), after.getY()) - 1f);
+				int maxChunkY = terrain.getChunkX(Math.max(position.getY(), after.getY()) + 1f);
+				int minChunkZ = terrain.getChunkX(Math.min(position.getZ(), after.getZ()) - 1f);
+				int maxChunkZ = terrain.getChunkX(Math.max(position.getZ(), after.getZ()) + 1f);
+				for (int i = minChunkX; i <= maxChunkX; i++) {
+					for (int j = minChunkY; j <= maxChunkY; j++) {
+						for (int k = minChunkZ; k <= maxChunkZ; k++) {
+							// TODO: something similar to i * i + j * j + k * k <= indexRadius * indexRadius
+							TerrainChunk chunk = terrain.getChunk(i, j, k);
 							for (Triangle triangle : chunk.getTriangles()) {
 								CollisionPacket.checkTriangle(position, velocity, triangle, collision);
 							}
-							//chunk.filled = true;
+							chunk.filled = true;
 						}
 					}
 				}
