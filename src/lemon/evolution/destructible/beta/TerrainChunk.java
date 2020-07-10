@@ -69,7 +69,7 @@ public class TerrainChunk {
 	}
 	public void generateColoredModel() {
 		model = marchingCube.getColoredModel(color);
-		triangles = new ArrayList<>();
+		List<Triangle> triangles = new ArrayList<>();
 		Vector3D[] vertices = model.getVertices();
 		Vector3D[] transformed = new Vector3D[vertices.length];
 
@@ -85,6 +85,7 @@ public class TerrainChunk {
 			//triangles.add(new Triangle(transformed[indices[i]], transformed[indices[i + 1]], transformed[indices[i + 2]]));
 			triangles.add(new Triangle(transformed[indices[i]], transformed[indices[i + 2]], transformed[indices[i + 1]]));
 		}
+		this.triangles = triangles;
 	}
 	public ColoredModel getColoredModel() {
 		return model;

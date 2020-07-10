@@ -7,6 +7,7 @@ import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 import lemon.evolution.pool.VectorPool;
+import org.lwjgl.opengl.GL11;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -207,5 +208,14 @@ public class Terrain {
 	}
 	private static long hashChunkCoordinates(TerrainChunk chunk, int offsetX, int offsetY, int offsetZ) {
 		return hashChunkCoordinates(chunk.getChunkX() + offsetX, chunk.getChunkY() + offsetY, chunk.getChunkZ() + offsetZ);
+	}
+	public int getChunkX(float x) {
+		return Math.floorDiv((int) Math.floor(x / scalar.getX()), TerrainChunk.SIZE);
+	}
+	public int getChunkY(float y) {
+		return Math.floorDiv((int) Math.floor(y / scalar.getY()), TerrainChunk.SIZE);
+	}
+	public int getChunkZ(float z) {
+		return Math.floorDiv((int) Math.floor(z / scalar.getZ()), TerrainChunk.SIZE);
 	}
 }

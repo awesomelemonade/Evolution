@@ -19,9 +19,6 @@ public class Collision {
 		this.reason = reason;
 	}
 	public void test(float t, Vector3D intersection, Triangle triangle, String reason) {
-		if (t < 0) {
-			throw new IllegalStateException();
-		}
 		if (t < this.t) {
 			this.t = t;
 			this.intersection.set(intersection);

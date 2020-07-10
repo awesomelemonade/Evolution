@@ -90,7 +90,6 @@ public enum Game implements Listener {
 	private Benchmarker benchmarker;
 
 	private Terrain terrain;
-	private Vector3D terrainScalar;
 
 	private ObjLoader dragonLoader;
 	private Drawable dragonModel;
@@ -124,8 +123,7 @@ public enum Game implements Listener {
 				}
 			});
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
-			terrainScalar = new Vector3D(5f, 5f, 5f);
-			terrain = new Terrain(generator::queueChunk, pool, terrainScalar);
+			terrain = new Terrain(generator::queueChunk, pool, new Vector3D(5f, 5f, 5f));
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			int n = 5;
@@ -216,21 +214,19 @@ public enum Game implements Listener {
 		rayTriangleIntersection = new MollerTrumbore(true);
 		raySphereIntersection = new RaySphereIntersection();
 
-		//puzzleBall = new PuzzleBall(new Vector3D(0, 20f, 0), new Vector3D(Vector3D.ZERO));
-		puzzleBalls = new ArrayList<PuzzleBall>();
-		puzzleBalls.add(new PuzzleBall(new Vector3D(2f, 100f, 2f), Vector3D.ZERO.copy()));
-		for (int i = 20; i <= 500; i += 10) {
+		puzzleBalls = new ArrayList<>();
+		puzzleBalls.add(new PuzzleBall(new Vector3D(0, 100f, 0), new Vector3D(Vector3D.ZERO)));
+		for (int i = 100; i <= 600; i += 10) {
 			//puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
 		}
 
 		debug = new ArrayList<>();
 		CollisionPacket.consumers.add((position, velocity) -> collision -> {
 			float radius = velocity.getAbsoluteValue() + 2f;
-
-			int chunkX = Math.floorDiv((int) (position.getX() / terrainScalar.getX()), TerrainChunk.SIZE);
-			int chunkY = Math.floorDiv((int) (position.getY() / terrainScalar.getY()), TerrainChunk.SIZE);
-			int chunkZ = Math.floorDiv((int) (position.getZ() / terrainScalar.getZ()), TerrainChunk.SIZE);
-			int indexRadius = (int) Math.ceil((radius / 5f) / TerrainChunk.SIZE);
+			int chunkX = terrain.getChunkX(position.getX());
+			int chunkY = terrain.getChunkY(position.getY());
+			int chunkZ = terrain.getChunkZ(position.getZ());
+			int indexRadius = (int) Math.ceil((radius / 5f) / TerrainChunk.SIZE) + 1;
 			for (int i = -indexRadius; i <= indexRadius; i++) {
 				for (int j = -indexRadius; j <= indexRadius; j++) {
 					for (int k = -indexRadius; k <= indexRadius; k++) {
@@ -240,6 +236,7 @@ public enum Game implements Listener {
 							for (Triangle triangle : chunk.getTriangles()) {
 								CollisionPacket.checkTriangle(position, velocity, triangle, collision);
 							}
+							//chunk.filled = true;
 						}
 					}
 				}
@@ -272,6 +269,7 @@ public enum Game implements Listener {
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_C) {
 						puzzleBalls.clear();
+						debug.clear();
 					}
 				}
 			}
@@ -344,14 +342,18 @@ public enum Game implements Listener {
 		float available = Runtime.getRuntime().totalMemory();
 		benchmarker.getLineGraph("freeMemory").add(current);
 		benchmarker.getLineGraph("totalMemory").add(available);
-		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Time=%d",
-				EventManager.INSTANCE.getListenersRegistered(),
-				EventManager.INSTANCE.getListenerMethodsRegistered(),
-				EventManager.INSTANCE.getPreloadedMethodsRegistered(),
-				VectorPool.getCount(),
-				System.currentTimeMillis());
-		if (!debugTextModel.getText().equals(message)) {
-			debugTextModel.setText(message);
+		if (GameControls.DEBUG_TOGGLE.isActivated()) {
+			String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Position=[%.02f, %.02f, %.02f]",
+					EventManager.INSTANCE.getListenersRegistered(),
+					EventManager.INSTANCE.getListenerMethodsRegistered(),
+					EventManager.INSTANCE.getPreloadedMethodsRegistered(),
+					VectorPool.getCount(),
+					player.getPosition().getX(),
+					player.getPosition().getY(),
+					player.getPosition().getZ());
+			if (!debugTextModel.getText().equals(message)) {
+				debugTextModel.setText(message);
+			}
 		}
 	}
 	@Subscribe
@@ -441,9 +443,10 @@ public enum Game implements Listener {
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
 				//GL11.glEnable(GL11.GL_CULL_FACE);
-				int playerChunkX = Math.floorDiv((int) (player.getPosition().getX() / terrainScalar.getX()), TerrainChunk.SIZE);
-				int playerChunkY = Math.floorDiv((int) (player.getPosition().getY() / terrainScalar.getY()), TerrainChunk.SIZE);
-				int playerChunkZ = Math.floorDiv((int) (player.getPosition().getZ() / terrainScalar.getZ()), TerrainChunk.SIZE);
+				//GL11.glCullFace(GL11.GL_FRONT);
+				int playerChunkX = terrain.getChunkX(player.getPosition().getX());
+				int playerChunkY = terrain.getChunkX(player.getPosition().getY());
+				int playerChunkZ = terrain.getChunkX(player.getPosition().getZ());
 				int n = 5;
 				for (int i = -n; i <= n; i++) {
 					for (int j = -n; j <= n; j++) {
