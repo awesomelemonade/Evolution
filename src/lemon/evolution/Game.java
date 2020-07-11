@@ -29,6 +29,7 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.Percentage;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Triangle;
+import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.ObjLoader;
@@ -113,8 +114,16 @@ public enum Game implements Listener {
 			EventManager.INSTANCE.unregisterListener(this);
 			// Prepare loaders
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
+			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> vector.getY() < -30f ? 0f : -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
+			ThreadLocal<Vector2D> threadLocal = ThreadLocal.withInitial(Vector2D::new);
+			scalarField = vector -> {
+				Vector2D temp = threadLocal.get();
+				temp.setX(vector.getX() / 500f);
+				temp.setY(vector.getY() / 500f);
+				return -vector.getY() + noise2d.apply(temp) * 20f + noise.apply(vector.divide(800f)) * 10f;
+			};
 			ExecutorService pool = Executors.newFixedThreadPool(3);
 			EventManager.INSTANCE.registerListener(new Listener() {
 				@Subscribe
@@ -215,6 +224,11 @@ public enum Game implements Listener {
 		raySphereIntersection = new RaySphereIntersection();
 
 		puzzleBalls = new ArrayList<>();
+		for (int i = -20; i <= 20; i += 5) {
+			for (int j = -20; j <= 20; j += 5) {
+				puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO.copy()));
+			}
+		}
 		for (int i = 100; i <= 600; i += 10) {
 			puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
 		}
@@ -236,7 +250,6 @@ public enum Game implements Listener {
 							for (Triangle triangle : chunk.getTriangles()) {
 								CollisionPacket.checkTriangle(position, velocity, triangle, collision);
 							}
-							chunk.filled = true;
 						}
 					}
 				}
@@ -270,6 +283,13 @@ public enum Game implements Listener {
 					if (event.getKey() == GLFW.GLFW_KEY_C) {
 						puzzleBalls.clear();
 						debug.clear();
+					}
+					if (event.getKey() == GLFW.GLFW_KEY_K) {
+						for (int i = -20; i <= 20; i += 5) {
+							for (int j = -20; j <= 20; j += 5) {
+								puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO.copy()));
+							}
+						}
 					}
 				}
 			}
@@ -343,14 +363,17 @@ public enum Game implements Listener {
 		benchmarker.getLineGraph("freeMemory").add(current);
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
-			String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Position=[%.02f, %.02f, %.02f]",
+			String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d]",
 					EventManager.INSTANCE.getListenersRegistered(),
 					EventManager.INSTANCE.getListenerMethodsRegistered(),
 					EventManager.INSTANCE.getPreloadedMethodsRegistered(),
 					VectorPool.getCount(),
 					player.getPosition().getX(),
 					player.getPosition().getY(),
-					player.getPosition().getZ());
+					player.getPosition().getZ(),
+					terrain.getChunkX(player.getPosition().getX()),
+					terrain.getChunkY(player.getPosition().getY()),
+					terrain.getChunkZ(player.getPosition().getZ()));
 			if (!debugTextModel.getText().equals(message)) {
 				debugTextModel.setText(message);
 			}

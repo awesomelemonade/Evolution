@@ -1,12 +1,10 @@
 package lemon.evolution.physicsbeta;
 
 import lemon.engine.math.*;
-import lemon.evolution.Game;
 import lemon.evolution.pool.VectorPool;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -15,18 +13,21 @@ public class CollisionPacket {
 	private static final int MAX_RECURSION_DEPTH = 5;
 
 	public static void checkTriangle(Vector3D position, Vector3D velocity, Triangle triangle, Collision collision) {
+		float minDistanceSquared = Math.min(position.getDistanceSquared(triangle.getVertex1()),
+				Math.min(position.getDistanceSquared(triangle.getVertex2()), position.getDistanceSquared(triangle.getVertex3())));
+		float bufferedVelocityLength = velocity.getLength() + 5f; // TODO: temp
+		if (minDistanceSquared > bufferedVelocityLength * bufferedVelocityLength) {
+			return;
+		}
 		// isFrontFacingTo
 		try (var normalizedVelocity = VectorPool.of(velocity, Vector::normalize)) {
 			if (triangle.getNormal().dotProduct(normalizedVelocity) <= 0f) {
-				// trianglePlane.getSignedDistanceTo(position)
-				float signedDistanceToTrianglePlane =
-						position.dotProduct(triangle.getNormal()) - triangle.getNormal().dotProduct(triangle.getVertex1());
-
-				// cache this as we're going to use it a few times below
 				float normalDotVelocity = triangle.getNormal().dotProduct(velocity);
-
 				// if sphere is travelling parallel to the plane
 				if (Math.abs(normalDotVelocity) <= 0.00001f) {
+					float signedDistanceToTrianglePlane =
+							position.dotProduct(triangle.getNormal()) - triangle.getNormal()
+									.dotProduct(triangle.getVertex1());
 					if (Math.abs(signedDistanceToTrianglePlane) >= 1.0f) {
 						// Sphere is not embedded in plane
 						// No collision possible
@@ -37,14 +38,17 @@ public class CollisionPacket {
 						// t0 = 0.0f;
 					}
 				} else {
-					float t = -triangle.getNormal().dotProduct(position.copy().subtract(triangle.getVertex1()).subtract(triangle.getNormal())) / normalDotVelocity;
-					if (t >= 0f && t <= 1f) {
-						try (var scaledVelocity = VectorPool.of(velocity, v -> v.multiply(t));
-							 var planeIntersectionPoint = VectorPool.of(position,
-									 v -> v.subtract(triangle.getNormal()).add(scaledVelocity))) {
-							if (triangle.isInside(planeIntersectionPoint)) {
-								collision.test(t, planeIntersectionPoint);
-								return;
+					try (var temp = VectorPool.of(position, x -> x.subtract(triangle.getVertex1()).subtract(triangle.getNormal()))) {
+						float x = triangle.getNormal().dotProduct(temp);
+						if (x >= -0.001f && x <= -normalDotVelocity) {
+							float t = Math.max(0f, Math.min(1f, -x / normalDotVelocity));
+							try (var scaledVelocity = VectorPool.of(velocity, v -> v.multiply(t));
+								 var planeIntersectionPoint = VectorPool.of(position,
+										 v -> v.subtract(triangle.getNormal()).add(scaledVelocity))) {
+								if (triangle.isInside(planeIntersectionPoint)) {
+									collision.test(t, planeIntersectionPoint);
+									return;
+								}
 							}
 						}
 					}
@@ -175,7 +179,10 @@ public class CollisionPacket {
 		}
 		Collision collision = checkCollision(position, remainingVelocity);
 		if (collision.getT() >= 1f) {
-			position.add(remainingVelocity);
+			float length = remainingVelocity.getLength() - BUFFER_DISTANCE;
+			if (length > 0) {
+				position.add(remainingVelocity.scaleToLength(length));
+			}
 			return;
 		}
 		try (var usedVelocity = VectorPool.of(remainingVelocity, x -> x.multiply(collision.getT()));

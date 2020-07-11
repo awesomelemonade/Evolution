@@ -1,6 +1,5 @@
 package lemon.evolution.physicsbeta;
 
-import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 
 public class Collision {

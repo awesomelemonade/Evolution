@@ -113,5 +113,4 @@ public class TerrainChunk {
 	public List<Triangle> getTriangles() {
 		return triangles;
 	}
-	public boolean filled = false;
 }
