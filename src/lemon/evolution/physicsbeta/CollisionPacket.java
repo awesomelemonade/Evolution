@@ -41,7 +41,7 @@ public class CollisionPacket {
 					try (var temp = VectorPool.of(position, x -> x.subtract(triangle.getVertex1()).subtract(triangle.getNormal()))) {
 						float x = triangle.getNormal().dotProduct(temp);
 						if (x >= -0.001f && x <= -normalDotVelocity) {
-							float t = Math.max(0f, Math.min(1f, -x / normalDotVelocity));
+							float t = MathUtil.clamp(-x / normalDotVelocity, 0f, 1f);
 							try (var scaledVelocity = VectorPool.of(velocity, v -> v.multiply(t));
 								 var planeIntersectionPoint = VectorPool.of(position,
 										 v -> v.subtract(triangle.getNormal()).add(scaledVelocity))) {
@@ -83,9 +83,12 @@ public class CollisionPacket {
 				return;
 			}
 			float sqrtDet = (float) Math.sqrt(det);
-			float root1 = (-b - sqrtDet) / (2f * a);
-			float root2 = (-b + sqrtDet) / (2f * a);
-			if (root1 >= 0f && root1 <= 1f && root1 <= collision.getT()) {
+			float temp = b >= 0 ? -b - sqrtDet : -b + sqrtDet;
+			float root1Numerator = temp;
+			float root1Denominator = 2f * a;
+			float rightSideMultiplied1 = Math.min(1f, collision.getT()) * root1Denominator;
+			if (root1Numerator >= 0f && root1Numerator <= rightSideMultiplied1) {
+				float root1 = MathUtil.clamp(root1Numerator / root1Denominator, 0f, 1f);
 				try (var scaledVelocity = VectorPool.of(velocity, x -> x.multiply(root1));
 					 var q = VectorPool.of(position, x -> x.add(scaledVelocity));
 					 var q_vertexA = VectorPool.of(q, x -> x.subtract(vertexA));
@@ -101,7 +104,11 @@ public class CollisionPacket {
 					}
 				}
 			}
-			if (root2 >= 0f && root2 <= 1f && root2 <= collision.getT()) {
+			float root2Numerator = 2f * c;
+			float root2Denominator = temp;
+			float rightSideMultiplied2 = Math.min(1f, collision.getT()) * root2Denominator;
+			if (root2Numerator >= 0f && root2Numerator <= rightSideMultiplied2) {
+				float root2 = MathUtil.clamp(root2Numerator / root2Denominator, 0f, 1f);
 				try (var scaledVelocity = VectorPool.of(velocity, x -> x.multiply(root2));
 					 var q = VectorPool.of(position, x -> x.add(scaledVelocity));
 					 var q_vertexA = VectorPool.of(q, x -> x.subtract(vertexA));
@@ -119,39 +126,31 @@ public class CollisionPacket {
 			}
 		}
 	}
-	private static void checkVertex(float velocitySquaredLength, Vector3D velocity, Vector3D base, Vector3D vertex, Collision collision, Triangle triangle) {
-		try (var temp = VectorPool.of(base, v -> v.subtract(vertex))) {
-			float b = 2.0f * velocity.dotProduct(temp);
+	private static void checkVertex(float a, Vector3D velocity, Vector3D base, Vector3D vertex, Collision collision, Triangle triangle) {
+		try (var base_vertex = VectorPool.of(base, v -> v.subtract(vertex))) {
+			float b = 2.0f * velocity.dotProduct(base_vertex);
 			float c = vertex.getDistanceSquared(base) - 1.0f;
-			float t = getLowestRoot(velocitySquaredLength, b, c);
-			collision.test(t, vertex);
+			float det = b * b - 4.0f * a * c;
+			if (det < 0f) {
+				return;
+			}
+			float sqrtDet = (float) Math.sqrt(det);
+			float temp = b >= 0 ? -b - sqrtDet : -b + sqrtDet;
+			float root1Numerator = temp;
+			float root1Denominator = 2f * a;
+			float rightSideMultiplied1 = Math.min(1f, collision.getT()) * root1Denominator;
+			if (root1Numerator >= 0f && root1Numerator <= rightSideMultiplied1) {
+				float t = MathUtil.clamp(root1Numerator / root1Denominator, 0f, 1f);
+				collision.set(t, vertex);
+			}
+			float root2Numerator = 2f * c;
+			float root2Denominator = temp;
+			float rightSideMultiplied2 = Math.min(1f, collision.getT()) * root2Denominator;
+			if (root2Numerator >= 0f && root2Numerator <= rightSideMultiplied2) {
+				float t = MathUtil.clamp(root2Numerator / root2Denominator, 0f, 1f);
+				collision.set(t, vertex);
+			}
 		}
-	}
-	public static float getLowestRoot(float a, float b, float c) {
-		float determinant = b * b - 4.0f * a * c;
-
-		if (determinant < 0f) {
-			return Float.MAX_VALUE;
-		}
-
-		float sqrtD = (float) Math.sqrt(determinant);
-		float root1 = (-b - sqrtD) / (2 * a);
-		float root2 = (-b + sqrtD) / (2 * a);
-
-		// Swap so root1 <= root2
-		if (root1 > root2) {
-			float temp = root2;
-			root2 = root1;
-			root1 = temp;
-		}
-
-		if (root1 > 0f) {
-			return root1;
-		}
-		if (root2 > 0f) {
-			return root2;
-		}
-		return Float.MAX_VALUE;
 	}
 	// response steps
 	public static void collideAndSlide(Vector3D position, Vector3D velocity) {
@@ -199,7 +198,6 @@ public class CollisionPacket {
 			if (length > 0) {
 				position.add(usedVelocity.scaleToLength(length));
 			}
-			// TODO: Incorporate friction & elasticity
 			collideWithWorld(position, velocity, collisionRecursionDepth + 1, remainingVelocity);
 		}
 	}
