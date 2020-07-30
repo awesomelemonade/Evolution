@@ -1,13 +1,13 @@
 package lemon.engine.control;
 
 public class LemonWindowInitEvent implements WindowInitEvent {
-	private long window;
+	private GLFWWindow window;
 
-	public LemonWindowInitEvent(long window) {
+	public LemonWindowInitEvent(GLFWWindow window) {
 		this.window = window;
 	}
 	@Override
-	public long getWindow() {
+	public GLFWWindow getWindow() {
 		return window;
 	}
 }

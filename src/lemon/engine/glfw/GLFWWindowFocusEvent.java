@@ -1,17 +1,18 @@
 package lemon.engine.glfw;
 
+import lemon.engine.control.GLFWWindow;
 import lemon.engine.input.WindowFocusEvent;
 
 public class GLFWWindowFocusEvent implements WindowFocusEvent, GLFWEvent {
-	private long window;
+	private GLFWWindow window;
 	private boolean focused;
 
-	public GLFWWindowFocusEvent(long window, boolean focused) {
+	public GLFWWindowFocusEvent(GLFWWindow window, boolean focused) {
 		this.window = window;
 		this.focused = focused;
 	}
 	@Override
-	public long getWindow() {
+	public GLFWWindow getWindow() {
 		return window;
 	}
 	@Override

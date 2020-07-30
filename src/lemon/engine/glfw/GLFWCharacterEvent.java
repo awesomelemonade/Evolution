@@ -1,14 +1,15 @@
 package lemon.engine.glfw;
 
+import lemon.engine.control.GLFWWindow;
 import lemon.engine.input.CharacterEvent;
 import lemon.engine.math.MathUtil;
 
 public class GLFWCharacterEvent implements CharacterEvent, GLFWEvent, GLFWKeyMods {
-	private long window;
+	private GLFWWindow window;
 	private int codepoint;
 	private int mods;
 
-	public GLFWCharacterEvent(long window, int codepoint, int mods) {
+	public GLFWCharacterEvent(GLFWWindow window, int codepoint, int mods) {
 		this.window = window;
 		this.codepoint = codepoint;
 		this.mods = mods;
@@ -22,7 +23,7 @@ public class GLFWCharacterEvent implements CharacterEvent, GLFWEvent, GLFWKeyMod
 		return codepoint;
 	}
 	@Override
-	public long getWindow() {
+	public GLFWWindow getWindow() {
 		return window;
 	}
 }

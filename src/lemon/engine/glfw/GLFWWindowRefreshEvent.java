@@ -1,15 +1,16 @@
 package lemon.engine.glfw;
 
+import lemon.engine.control.GLFWWindow;
 import lemon.engine.input.WindowRefreshEvent;
 
 public class GLFWWindowRefreshEvent implements WindowRefreshEvent, GLFWEvent {
-	private long window;
+	private GLFWWindow window;
 
-	public GLFWWindowRefreshEvent(long window) {
+	public GLFWWindowRefreshEvent(GLFWWindow window) {
 		this.window = window;
 	}
 	@Override
-	public long getWindow() {
+	public GLFWWindow getWindow() {
 		return window;
 	}
 }

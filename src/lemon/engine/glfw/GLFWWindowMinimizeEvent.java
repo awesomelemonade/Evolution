@@ -1,17 +1,18 @@
 package lemon.engine.glfw;
 
+import lemon.engine.control.GLFWWindow;
 import lemon.engine.input.WindowMinimizeEvent;
 
 public class GLFWWindowMinimizeEvent implements WindowMinimizeEvent, GLFWEvent {
-	private long window;
+	private GLFWWindow window;
 	private boolean minimized;
 
-	public GLFWWindowMinimizeEvent(long window, boolean minimized) {
+	public GLFWWindowMinimizeEvent(GLFWWindow window, boolean minimized) {
 		this.window = window;
 		this.minimized = minimized;
 	}
 	@Override
-	public long getWindow() {
+	public GLFWWindow getWindow() {
 		return window;
 	}
 	@Override

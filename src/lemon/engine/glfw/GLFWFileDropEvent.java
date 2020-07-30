@@ -1,15 +1,16 @@
 package lemon.engine.glfw;
 
+import lemon.engine.control.GLFWWindow;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryUtil;
 
 import lemon.engine.input.FileDropEvent;
 
 public class GLFWFileDropEvent implements FileDropEvent, GLFWEvent {
-	private long window;
+	private GLFWWindow window;
 	private String[] files;
 
-	public GLFWFileDropEvent(long window, int count, long files) {
+	public GLFWFileDropEvent(GLFWWindow window, int count, long files) {
 		this.window = window;
 		this.files = new String[count];
 		PointerBuffer nameBuffer = MemoryUtil.memPointerBuffer(files, count);
@@ -18,7 +19,7 @@ public class GLFWFileDropEvent implements FileDropEvent, GLFWEvent {
 		}
 	}
 	@Override
-	public long getWindow() {
+	public GLFWWindow getWindow() {
 		return window;
 	}
 	@Override

@@ -1,6 +1,5 @@
 package lemon.evolution;
 
-import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,33 +36,25 @@ public enum Menu implements Listener {
 	@Subscribe
 	public void onMouseClick(GLFWMouseButtonEvent event) {
 		if (event.getAction() == GLFW.GLFW_RELEASE) {
-			DoubleBuffer xBuffer = BufferUtils.createDoubleBuffer(1);
-			DoubleBuffer yBuffer = BufferUtils.createDoubleBuffer(1);
-			GLFW.glfwGetCursorPos(event.getWindow(), xBuffer, yBuffer);
-			float mouseX = (float) xBuffer.get();
-			float mouseY = (float) yBuffer.get();
-			IntBuffer width = BufferUtils.createIntBuffer(1);
-			IntBuffer height = BufferUtils.createIntBuffer(1);
-			GLFW.glfwGetWindowSize(event.getWindow(), width, height);
-			int window_width = width.get();
-			int window_height = height.get();
-			mouseX = (2f * mouseX / window_width) - 1f;
-			mouseY = -1f * ((2f * mouseY / window_height) - 1f);
-			for (int i = 0; i < buttons.size(); ++i) {
-				if (buttons.get(i).getBox2D().intersect(mouseX, mouseY)) {
-					switch (i) {
-						case 0:
-							start(Game.INSTANCE);
-							break;
-						case 1:
-							start(Game2D.INSTANCE);
-							break;
-						case 2:
-							start(FontTest.INSTANCE);
-							break;
+			event.getWindow().pollMouse((rawMouseX, rawMouseY) -> {
+				float mouseX = (2f * rawMouseX / event.getWindow().getWidth()) - 1f;
+				float mouseY = (2f * rawMouseY / event.getWindow().getHeight()) - 1f;
+				for (int i = 0; i < buttons.size(); ++i) {
+					if (buttons.get(i).getBox2D().intersect(mouseX, mouseY)) {
+						switch (i) {
+							case 0:
+								start(Game.INSTANCE);
+								break;
+							case 1:
+								start(Game2D.INSTANCE);
+								break;
+							case 2:
+								start(FontTest.INSTANCE);
+								break;
+						}
 					}
 				}
-			}
+			});
 		}
 	}
 	@Subscribe
