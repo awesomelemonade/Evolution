@@ -2,8 +2,10 @@
 
 in vec3 position;
 in vec4 color;
+in vec3 normal;
 
 out vec4 passColor;
+out vec3 passNormal;
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
@@ -13,7 +15,7 @@ void main(void) {
 	vec4 worldPosition = modelMatrix * vec4(position, 1.0);
 	
 	gl_Position = projectionMatrix * viewMatrix * worldPosition;
-	//gl_Position = vec4(position, 1.0);
 	
-	passColor = color;
+	passColor = mix(color, vec4(1f, 0f, 0f, 1f), position.y / 10f);
+	passNormal = normal;
 }

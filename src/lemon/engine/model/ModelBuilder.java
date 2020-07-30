@@ -6,27 +6,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public class ModelBuilder<T extends Model> {
-	private BiFunction<Vector3D[], int[], T> constructor;
+public class ModelBuilder {
 	private List<Vector3D> vertices;
 	private List<Integer> indices;
 
-	public ModelBuilder(BiFunction<Vector3D[], int[], T> constructor) {
-		this.constructor = constructor;
+	public ModelBuilder() {
 		vertices = new ArrayList<>();
 		indices = new ArrayList<>();
 	}
-	public ModelBuilder<T> addVertex(Vector3D vertex) {
+	public ModelBuilder addVertex(Vector3D vertex) {
 		this.vertices.add(vertex);
 		return this;
 	}
-	public ModelBuilder<T> addVertices(Vector3D... vertices) {
+	public ModelBuilder addVertices(Vector3D... vertices) {
 		for (Vector3D vertex : vertices) {
 			this.vertices.add(vertex);
 		}
 		return this;
 	}
-	public ModelBuilder<T> addIndices(int... indices) {
+	public ModelBuilder addIndices(int... indices) {
 		for (int index : indices) {
 			this.indices.add(index);
 		}
@@ -38,8 +36,8 @@ public class ModelBuilder<T extends Model> {
 	public List<Integer> getIndices() {
 		return indices;
 	}
-	public T build() {
-		return constructor.apply(vertices.toArray(Vector3D.EMPTY_ARRAY),
-				indices.stream().mapToInt(i -> i).toArray());
+	public <T> T build(BiFunction<int[], Vector3D[], T> constructor) {
+		return constructor.apply(indices.stream().mapToInt(i -> i).toArray(),
+				vertices.toArray(Vector3D.EMPTY_ARRAY));
 	}
 }

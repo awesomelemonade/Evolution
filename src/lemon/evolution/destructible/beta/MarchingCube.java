@@ -1,10 +1,7 @@
 package lemon.evolution.destructible.beta;
 
-import lemon.engine.model.AbstractColoredModel;
-import lemon.engine.model.ColoredModel;
 import lemon.engine.model.ModelBuilder;
 import lemon.engine.math.Vector3D;
-import lemon.engine.toolbox.Color;
 import lemon.evolution.pool.VectorPool;
 
 import java.util.Arrays;
@@ -30,16 +27,7 @@ public class MarchingCube {
 	public float getThreshold() {
 		return threshold;
 	}
-	public ColoredModel getColoredModel() {
-		return getColoredModel(Color.randomOpaque());
-	}
-	public ColoredModel getColoredModel(Color color) {
-		ModelBuilder<ColoredModel> builder =
-				new ModelBuilder<>((vertices, indices) -> {
-					Color[] colors = new Color[indices.length];
-					Arrays.fill(colors, color);
-					return new AbstractColoredModel(vertices, colors, indices);
-				});
+	public void addVertices(ModelBuilder builder) {
 		int[][][][] edgeIndices = new int[grid.getSizeX()][grid.getSizeY()][grid.getSizeZ()][3];
 		for (int[][][] a : edgeIndices) {
 			for (int[][] b : a) {
@@ -48,7 +36,6 @@ public class MarchingCube {
 				}
 			}
 		}
-		// TODO: we gotta determine normals somehow at the edges?
 		int[] vectorIndices = new int[12];
 		for (int i = 0; i < grid.getSizeX() - 1; i++) {
 			for (int j = 0; j < grid.getSizeY() - 1; j++) {
@@ -84,7 +71,6 @@ public class MarchingCube {
 				}
 			}
 		}
-		return builder.build();
 	}
 	private Vector3D interpolate(Vector3D a, Vector3D b, float percentage) {
 		return b.subtract(a).multiply(percentage).add(a);

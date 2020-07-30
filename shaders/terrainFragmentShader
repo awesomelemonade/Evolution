@@ -1,0 +1,34 @@
+#version 400 core
+
+in vec4 passColor;
+in vec3 passNormal;
+
+out vec4 outColor;
+
+void main(void) {
+	float slope = 1f - passNormal.y;
+	vec4 grassColor = vec4(0f, 1f, 0f, 1f);
+	vec4 slopeColor = vec4(0f, 0f, 1f, 1f);
+	vec4 rockColor = vec4(1f, 0f, 0f, 1f);
+	vec4 baseColor = vec4(0.6f, 0.3f, 0f, 1f);
+
+	if (slope < 0.2f) {
+		outColor = mix(grassColor, slopeColor, slope / 0.2f);
+	} else if (slope < 0.7f) {
+		outColor = mix(slopeColor, rockColor, (slope - 0.2f) / 0.5f);
+	} else if (slope < 1.5f) {
+		outColor = mix(rockColor, baseColor, (slope - 0.7f) / 0.8f);
+	} else {
+		outColor = baseColor;
+	}
+	/*
+	if (slope < 0.2f) {
+		outColor = mix(grassColor, slopeColor, slope / 0.2f);
+	} else if (slope < 0.7f) {
+		outColor = mix(slopeColor, rockColor, (slope - 0.2f) / 0.5f);
+	} else {
+		outColor = rockColor;
+	}
+	*/
+	//outColor = passColor;
+}

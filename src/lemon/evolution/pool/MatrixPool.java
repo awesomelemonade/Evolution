@@ -46,6 +46,18 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 		}
 	}
 
+	public static PooledMatrix ofRotationX(float x) {
+		return MatrixPool.of(matrix -> MathUtil.getRotationX(matrix, x));
+	}
+
+	public static PooledMatrix ofRotationY(float y) {
+		return MatrixPool.of(matrix -> MathUtil.getRotationY(matrix, y));
+	}
+
+	public static PooledMatrix ofRotationZ(float z) {
+		return MatrixPool.of(matrix -> MathUtil.getRotationZ(matrix, z));
+	}
+
 	public static class PooledMatrix extends Matrix implements AutoCloseable {
 		private PooledMatrix() {
 			super(4);

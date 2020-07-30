@@ -4,12 +4,14 @@ import lemon.engine.draw.DynamicIndexedDrawable;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
-import lemon.engine.model.ColoredModel;
+import lemon.engine.model.Model;
+import lemon.engine.model.ModelBuilder;
 import lemon.engine.toolbox.Color;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.pool.VectorPool;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class TerrainChunk {
@@ -21,12 +23,13 @@ public class TerrainChunk {
 	private float[][][] data;
 	private volatile boolean generated;
 	private MarchingCube marchingCube;
-	private ColoredModel model;
+	private Model model;
 	private DynamicIndexedDrawable drawable;
 	private Matrix transformationMatrix;
 	private Color color;
 	private boolean queuedForUpdate;
 	private boolean queuedForConstruction;
+	private boolean hasBeenConstructed;
 	private List<Triangle> triangles;
 	public TerrainChunk(int chunkX, int chunkY, int chunkZ, BoundedScalarGrid3D scalarGrid, Vector3D scalar) {
 		this.chunkX = chunkX;
@@ -45,6 +48,9 @@ public class TerrainChunk {
 		}
 		this.color = Color.randomOpaque();
 		this.triangles = new ArrayList<>();
+		this.queuedForUpdate = false;
+		this.queuedForConstruction = false;
+		this.hasBeenConstructed = false;
 	}
 	public int getChunkX() {
 		return chunkX;
@@ -67,26 +73,50 @@ public class TerrainChunk {
 	public boolean isGenerated() {
 		return generated;
 	}
-	public void generateColoredModel() {
-		model = marchingCube.getColoredModel(color);
-		List<Triangle> triangles = new ArrayList<>();
-		Vector3D[] vertices = model.getVertices();
-		Vector3D[] transformed = new Vector3D[vertices.length];
+	public void generateModel() {
+		ModelBuilder builder = new ModelBuilder();
+		marchingCube.addVertices(builder);
+		model = builder.build((indices, vertices) -> {
+			List<Triangle> triangles = new ArrayList<>();
+			Vector3D[] transformed = new Vector3D[vertices.length];
 
-		for (int i = 0; i < vertices.length; i++) {
 			try (var x = VectorPool.of(5f * chunkX * TerrainChunk.SIZE,
 					5f * chunkY * TerrainChunk.SIZE, 5f * chunkZ * TerrainChunk.SIZE)) {
-				transformed[i] = vertices[i].copy().multiply(5f).add(x);
+				for (int i = 0; i < vertices.length; i++) {
+					transformed[i] = vertices[i].copy().multiply(5f).add(x);
+				}
 			}
-		}
 
-		int[] indices = model.getIndices();
-		for (int i = 0; i < indices.length; i += 3) {
-			triangles.add(new Triangle(transformed[indices[i]], transformed[indices[i + 2]], transformed[indices[i + 1]]));
-		}
-		this.triangles = triangles;
+			Vector3D[] normals = new Vector3D[vertices.length];
+			for (int i = 0; i < normals.length; i++) {
+				normals[i] = Vector3D.ZERO.copy();
+			}
+			for (int i = 0; i < indices.length; i += 3) {
+				Vector3D a = transformed[indices[i]];
+				Vector3D b = transformed[indices[i + 2]];
+				Vector3D c = transformed[indices[i + 1]];
+				Triangle triangle = new Triangle(a, b, c);
+				float area = triangle.getArea();
+				if (area > 0f) {
+					float weight = 1f / area;
+					try (var scaledNormal = VectorPool.of(triangle.getNormal(), x -> x.multiply(weight))) {
+						normals[indices[i]].add(scaledNormal);
+						normals[indices[i + 1]].add(scaledNormal);
+						normals[indices[i + 2]].add(scaledNormal);
+					}
+					triangles.add(triangle);
+				}
+			}
+			for (int i = 0; i < normals.length; i++) {
+				normals[i].normalize();
+			}
+			this.triangles = triangles;
+			Color[] colors = new Color[vertices.length];
+			Arrays.fill(colors, color);
+			return new Model(indices, vertices, colors, normals);
+		});
 	}
-	public ColoredModel getColoredModel() {
+	public Model getModel() {
 		return model;
 	}
 	public void setDrawable(DynamicIndexedDrawable drawable) {
@@ -103,9 +133,13 @@ public class TerrainChunk {
 	}
 	public void setQueuedForConstruction(boolean queuedForConstruction) {
 		this.queuedForConstruction = queuedForConstruction;
+		this.hasBeenConstructed = this.hasBeenConstructed || queuedForConstruction;
 	}
 	public boolean isQueuedForConstruction() {
 		return queuedForConstruction;
+	}
+	public boolean hasBeenConstructed() {
+		return hasBeenConstructed;
 	}
 	public Matrix getTransformationMatrix() {
 		return transformationMatrix;

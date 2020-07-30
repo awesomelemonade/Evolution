@@ -2,12 +2,13 @@ package lemon.evolution.puzzle;
 
 import lemon.engine.draw.Drawable;
 import lemon.engine.draw.IndexedDrawable;
-import lemon.engine.model.AbstractColoredModel;
+import lemon.engine.model.Model;
+import lemon.engine.model.ModelBuilder;
 import lemon.engine.model.SphereModelBuilder;
-import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.Renderable;
+import lemon.engine.toolbox.Color;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms3D;
 import org.lwjgl.opengl.GL11;
@@ -22,8 +23,14 @@ public class PuzzleBall implements Renderable {
 		this.position = position;
 		this.velocity = velocity;
 		if (sphere == null) {
-			sphere = new SphereModelBuilder<>(AbstractColoredModel::new, RADIUS, ITERATIONS)
-					.build().map(IndexedDrawable::new);
+			sphere = SphereModelBuilder.build(new ModelBuilder(), RADIUS, ITERATIONS)
+					.build((indices, vertices) -> {
+						Color[] colors = new Color[vertices.length];
+						for (int i = 0; i < colors.length; i++) {
+							colors[i] = Color.randomOpaque();
+						}
+						return new Model(indices, vertices, colors);
+					}).map(IndexedDrawable::new);
 		}
 	}
 

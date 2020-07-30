@@ -48,6 +48,12 @@ public class CommonProgramsSetup {
 			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 		});
+
+		CommonPrograms3D.TERRAIN.getShaderProgram().use(program -> {
+			program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+		});
 	}
 	public static void setup2D(Matrix projectionMatrix) {
 		CommonPrograms2D.initAll();

@@ -4,13 +4,19 @@ import lemon.evolution.pool.VectorPool;
 
 public class Triangle extends VectorArray {
 	private Vector3D normal;
+	private float area;
 	public Triangle() {
 		super(3);
 	}
 	public Triangle(Vector3D a, Vector3D b, Vector3D c) {
 		super(a, b, c);
 		try (var temp = VectorPool.of(c, v -> v.subtract(a))) {
-			this.normal = b.copy().subtract(a).crossProduct(temp).normalize();
+			this.normal = b.copy().subtract(a).crossProduct(temp);
+			float magnitude = normal.getAbsoluteValue();
+			this.area = 0.5f * magnitude;
+			if (magnitude > 0f) {
+				this.normal.divide(magnitude);
+			}
 		}
 	}
 	public Vector3D getVertex1() {
@@ -24,6 +30,9 @@ public class Triangle extends VectorArray {
 	}
 	public Vector3D getNormal() {
 		return normal;
+	}
+	public float getArea() {
+		return area;
 	}
 
 	public boolean isInside(Vector3D point) {

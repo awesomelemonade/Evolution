@@ -91,11 +91,13 @@ public class ObjLoader implements Loader {
 	}
 	// Let's just skip the model phase
 	public IndexedDrawable toIndexedDrawable() {
-		return new IndexedDrawable(new Vector[][] {
-				vertices.toArray(Vector3D.EMPTY_ARRAY),
-				Color.randomOpaque(vertices.size()),
-				normals.toArray(Vector3D.EMPTY_ARRAY)
-		}, indices.stream().mapToInt(i -> i).toArray(), GL11.GL_TRIANGLES);
+		return new IndexedDrawable(
+				indices.stream().mapToInt(i -> i).toArray(),
+				new Vector[][] {
+						vertices.toArray(Vector3D.EMPTY_ARRAY),
+						Color.randomOpaque(vertices.size()),
+						normals.toArray(Vector3D.EMPTY_ARRAY)
+				}, GL11.GL_TRIANGLES);
 	}
 	@Override
 	public void load() {

@@ -22,10 +22,10 @@ public class DynamicIndexedDrawable implements Drawable {
 	private int vertexBufferSize;
 	private int hint;
 
-	public DynamicIndexedDrawable(Vector[][] vertices, int[] indices) {
-		this(vertices, indices, GL11.GL_TRIANGLES, GL15.GL_DYNAMIC_DRAW);
+	public DynamicIndexedDrawable(int[] indices, Vector[][] vertices) {
+		this(indices, vertices, GL11.GL_TRIANGLES, GL15.GL_DYNAMIC_DRAW);
 	}
-	public DynamicIndexedDrawable(Vector[][] vertices, int[] indices, int drawMode, int hint) {
+	public DynamicIndexedDrawable(int[] indices, Vector[][] vertices, int drawMode, int hint) {
 		this.vertices = vertices;
 		this.indices = indices;
 		this.drawMode = drawMode;
@@ -80,7 +80,7 @@ public class DynamicIndexedDrawable implements Drawable {
 		buffer.flip();
 		return buffer;
 	}
-	public void setData(Vector[][] vertices, int[] indices) {
+	public void setData(int[] indices, Vector[][] vertices) {
 		this.vertices = vertices;
 		this.indices = indices;
 		indexBuffer.bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {

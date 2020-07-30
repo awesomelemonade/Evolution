@@ -24,7 +24,10 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/particleFragmentShader").orElseThrow())),
 	LIGHT(new int[] { 0, 1, 2 }, new String[] { "position", "color", "normal" },
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/lightVertexShader").orElseThrow()),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/lightFragmentShader").orElseThrow()));
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/lightFragmentShader").orElseThrow())),
+	TERRAIN(new int[] { 0, 1, 2 }, new String[] { "position", "color", "normal" },
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/terrainVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/terrainFragmentShader").orElseThrow()));
 	private ShaderProgram shaderProgram;
 	private int[] indices;
 	private String[] names;

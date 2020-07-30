@@ -23,14 +23,7 @@ import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
 import lemon.engine.function.RaySphereIntersection;
 import lemon.engine.function.SzudzikIntPair;
-import lemon.engine.math.Line;
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Matrix;
-import lemon.engine.math.Percentage;
-import lemon.engine.math.Projection;
-import lemon.engine.math.Triangle;
-import lemon.engine.math.Vector2D;
-import lemon.engine.math.Vector3D;
+import lemon.engine.math.*;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.evolution.destructible.beta.ScalarField;
@@ -39,6 +32,9 @@ import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.physicsbeta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
+import lemon.evolution.ui.beta.UIButton;
+import lemon.evolution.ui.beta.UIScreen;
+import lemon.evolution.ui.beta.UIWheel;
 import lemon.evolution.util.BasicControlActivator;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
@@ -104,6 +100,8 @@ public enum Game implements Listener {
 
 	public List<Vector3D> debug;
 
+	private UIScreen uiScreen;
+
 	private static final Color[] DEBUG_GRAPH_COLORS = {
 			Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN
 	};
@@ -120,9 +118,9 @@ public enum Game implements Listener {
 			ThreadLocal<Vector2D> threadLocal = ThreadLocal.withInitial(Vector2D::new);
 			scalarField = vector -> {
 				Vector2D temp = threadLocal.get();
-				temp.setX(vector.getX() / 500f);
-				temp.setY(vector.getY() / 500f);
-				return -vector.getY() + noise2d.apply(temp) * 20f + noise.apply(vector.divide(800f)) * 10f;
+				temp.setX(vector.getX() / 300f);
+				temp.setY(vector.getZ() / 300f);
+				return -vector.getY() + (float) Math.pow(2f, noise2d.apply(temp)) * 5f + (float) Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5f;
 			};
 			ExecutorService pool = Executors.newFixedThreadPool(3);
 			EventManager.INSTANCE.registerListener(new Listener() {
@@ -220,17 +218,16 @@ public enum Game implements Listener {
 		GameControls.setup();
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_Y, EXPLODE);
 
-		rayTriangleIntersection = new MollerTrumbore(true);
-		raySphereIntersection = new RaySphereIntersection();
-
 		puzzleBalls = new ArrayList<>();
-		for (int i = -20; i <= 20; i += 5) {
-			for (int j = -20; j <= 20; j += 5) {
+		projectiles = new ArrayList<>();
+		int size = 20;
+		for (int i = -size; i <= size; i += 5) {
+			for (int j = -size; j <= size; j += 5) {
 				puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO.copy()));
 			}
 		}
 		for (int i = 100; i <= 600; i += 10) {
-			puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
+			//puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
 		}
 
 		debug = new ArrayList<>();
@@ -238,10 +235,10 @@ public enum Game implements Listener {
 			try (var after = VectorPool.of(position, x -> x.add(velocity))) {
 				int minChunkX = terrain.getChunkX(Math.min(position.getX(), after.getX()) - 1f);
 				int maxChunkX = terrain.getChunkX(Math.max(position.getX(), after.getX()) + 1f);
-				int minChunkY = terrain.getChunkX(Math.min(position.getY(), after.getY()) - 1f);
-				int maxChunkY = terrain.getChunkX(Math.max(position.getY(), after.getY()) + 1f);
-				int minChunkZ = terrain.getChunkX(Math.min(position.getZ(), after.getZ()) - 1f);
-				int maxChunkZ = terrain.getChunkX(Math.max(position.getZ(), after.getZ()) + 1f);
+				int minChunkY = terrain.getChunkY(Math.min(position.getY(), after.getY()) - 1f);
+				int maxChunkY = terrain.getChunkY(Math.max(position.getY(), after.getY()) + 1f);
+				int minChunkZ = terrain.getChunkZ(Math.min(position.getZ(), after.getZ()) - 1f);
+				int maxChunkZ = terrain.getChunkZ(Math.max(position.getZ(), after.getZ()) + 1f);
 				for (int i = minChunkX; i <= maxChunkX; i++) {
 					for (int j = minChunkY; j <= maxChunkY; j++) {
 						for (int k = minChunkZ; k <= maxChunkZ; k++) {
@@ -285,27 +282,40 @@ public enum Game implements Listener {
 						debug.clear();
 					}
 					if (event.getKey() == GLFW.GLFW_KEY_K) {
-						for (int i = -20; i <= 20; i += 5) {
+						puzzleBalls.forEach(x -> {
+							float spray = 0.2f;
+							float randX = (float) (Math.random() * spray - spray / 2f);
+							float randZ = (float) (Math.random() * spray - spray / 2f);
+							projectiles.add(new PuzzleBall(x.getPosition().copy(), new Vector3D(randX, 0.5f, randZ)));
+						});
+						/*for (int i = -20; i <= 20; i += 5) {
 							for (int j = -20; j <= 20; j += 5) {
 								puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO.copy()));
 							}
-						}
+						}*/
 					}
 				}
 			}
 		});
+
+		uiScreen = new UIScreen();
+		uiScreen.addComponent(new UIButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
+
+		}));
+		uiScreen.addComponent(new UIWheel(new Vector2D(200f, 200f), 50f, 0f, Color.RED));
 	}
 	private PlayerControl EXPLODE = new PlayerControl();
 	public void generateExplosionAtCrosshair() {
 		if (depthDistance != 1f) {
 			float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
 			Vector3D position = player.getPosition().copy().add(player.getVectorDirection().multiply(realDistance));
-			terrain.generateExplosion(position, 10f);
+			terrain.generateExplosion(position, 5f);
 		}
 	}
 	float depthDistance = 0;
 
 	private List<PuzzleBall> puzzleBalls;
+	private List<PuzzleBall> projectiles;
 
 	private static float friction = 0.98f;
 	private static float maxSpeed = 0.03f;
@@ -357,6 +367,19 @@ public enum Game implements Listener {
 			totalLength += puzzleBall.getVelocity().getLength();
 		}
 		puzzleBalls.removeIf(x -> x.getPosition().getY() <= -300f);
+
+		for (PuzzleBall projectile : projectiles) {
+			projectile.getVelocity().add(GRAVITY_VECTOR);
+		}
+		projectiles.removeIf(x -> {
+			x.getVelocity().add(GRAVITY_VECTOR);
+			if (CollisionPacket.collideAndSlideIntersect(x.getPosition(), x.getVelocity())) {
+				terrain.generateExplosion(x.getPosition(), 10f);
+				return true;
+			}
+			return false;
+		});
+
 		benchmarker.getLineGraph("debugData").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();
 		float available = Runtime.getRuntime().totalMemory();
@@ -422,6 +445,7 @@ public enum Game implements Listener {
 		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
 		updateViewMatrix(CommonPrograms3D.PARTICLE);
 		updateViewMatrix(CommonPrograms3D.LIGHT);
+		updateViewMatrix(CommonPrograms3D.TERRAIN);
 	}
 	public void updateProjectionMatrices() {
 		updateProjectionMatrix(CommonPrograms3D.COLOR);
@@ -429,6 +453,7 @@ public enum Game implements Listener {
 		updateProjectionMatrix(CommonPrograms3D.CUBEMAP);
 		updateProjectionMatrix(CommonPrograms3D.PARTICLE);
 		updateProjectionMatrix(CommonPrograms3D.LIGHT);
+		updateProjectionMatrix(CommonPrograms3D.TERRAIN);
 	}
 	public void updateViewMatrix(ShaderProgramHolder holder) {
 		holder.getShaderProgram().use(program -> {
@@ -456,15 +481,18 @@ public enum Game implements Listener {
 			for (PuzzleBall puzzleBall : puzzleBalls) {
 				puzzleBall.render();
 			}
+			for (PuzzleBall puzzleBall : projectiles) {
+				puzzleBall.render();
+			}
 			for (Vector3D x : debug) {
 				try (var translation = VectorPool.of(x);
 					 var scalar = VectorPool.of(0.2f, 0.2f, 0.2f)) {
 					PuzzleBall.render(translation, scalar);
 				}
 			}
-			debug.clear();
+			//debug.clear();
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
-			CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+			CommonPrograms3D.TERRAIN.getShaderProgram().use(program -> {
 				//GL11.glEnable(GL11.GL_CULL_FACE);
 				//GL11.glCullFace(GL11.GL_FRONT);
 				int playerChunkX = terrain.getChunkX(player.getPosition().getX());
@@ -477,8 +505,8 @@ public enum Game implements Listener {
 							terrain.drawOrQueue(
 									playerChunkX + i, playerChunkY + j, playerChunkZ + k,
 									(matrix, drawable) -> {
-								program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
-								drawable.draw();
+										program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
+										drawable.draw();
 							});
 						}
 					}
@@ -517,6 +545,7 @@ public enum Game implements Listener {
 				CommonDrawables.COLORED_QUAD.draw();
 			}
 		});
+		uiScreen.render();
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			// render graphs
 			byte counter = 0;
@@ -572,21 +601,10 @@ public enum Game implements Listener {
 	public void onBenchmark(BenchmarkEvent event) {
 		benchmarker.benchmark(event.getBenchmark());
 	}
-	private MollerTrumbore rayTriangleIntersection;
-	private RaySphereIntersection raySphereIntersection;
 	private Line line = new Line();
 	@Subscribe
 	public void onClick(MouseButtonEvent event) {
 		if (event.getAction() == GLFW.GLFW_RELEASE) {
-			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1) {
-				/*
-				Line line = new Line(player.getCamera().getPosition(), player.getVectorDirection());
-				System.out.println(rayTriangleIntersection.apply(new Triangle(new Vector3D(-1f, 0f, -1f), new Vector3D(-1f, 0f, 1f), new Vector3D(1f, 0f, 0f)),
-						line));
-				System.out.println(raySphereIntersection.apply(line, new Sphere(Vector3D.ZERO, 1f)));
-				System.out.println(LineLineIntersection.INSTANCE.apply(line, this.line));
-				*/
-			}
 			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2) {
 				generateExplosionAtCrosshair();
 			}

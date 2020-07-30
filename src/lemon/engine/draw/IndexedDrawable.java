@@ -17,10 +17,10 @@ public class IndexedDrawable implements Drawable {
 	private int stride;
 	private int drawMode;
 
-	public IndexedDrawable(Vector[][] vertices, int[] indices) {
-		this(vertices, indices, GL11.GL_TRIANGLES);
+	public IndexedDrawable(int[] indices, Vector[][] vertices) {
+		this(indices, vertices, GL11.GL_TRIANGLES);
 	}
-	public IndexedDrawable(Vector[][] vertices, int[] indices, int drawMode) {
+	public IndexedDrawable(int[] indices, Vector[][] vertices, int drawMode) {
 		this.vertices = vertices;
 		this.indices = indices;
 		this.drawMode = drawMode;

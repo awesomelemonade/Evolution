@@ -33,4 +33,9 @@ public class Vector2D extends Vector<Vector2D> {
 	public float getY() {
 		return this.get(1);
 	}
+	public float getDistanceSquared(float x, float y) {
+		float dx = this.getX() - x;
+		float dy = this.getY() - y;
+		return dx * dx + dy * dy;
+	}
 }

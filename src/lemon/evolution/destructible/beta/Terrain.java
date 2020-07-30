@@ -6,10 +6,12 @@ import lemon.engine.function.AbsoluteIntValue;
 import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
+import lemon.evolution.Game;
 import lemon.evolution.pool.VectorPool;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -23,21 +25,25 @@ public class Terrain {
 	public Terrain(Consumer<TerrainChunk> generator, Vector3D scalar) {
 		this(generator, (chunk) -> {
 			chunk.setQueuedForConstruction(false);
-			chunk.generateColoredModel();
+			chunk.generateModel();
 			chunk.setQueuedForUpdate(true);
 		}, scalar);
 	}
 	public Terrain(Consumer<TerrainChunk> generator, ExecutorService pool, Vector3D scalar) {
 		this(generator, (chunk) -> {
 			pool.submit(() -> {
-				chunk.setQueuedForConstruction(false);
-				chunk.generateColoredModel();
-				chunk.setQueuedForUpdate(true);
+				try {
+					chunk.setQueuedForConstruction(false);
+					chunk.generateModel();
+					chunk.setQueuedForUpdate(true);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
 			});
 		}, scalar);
 	}
 	public Terrain(Consumer<TerrainChunk> generator, Consumer<TerrainChunk> constructor, Vector3D scalar) {
-		this.chunks = new HashMap<>();
+		this.chunks = new ConcurrentHashMap<>();
 		this.generator = generator;
 		this.constructor = constructor;
 		this.scalar = scalar;
@@ -49,18 +55,26 @@ public class Terrain {
 		return getChunk(chunkX, chunkY, chunkZ, hashChunkCoordinates(chunkX, chunkY, chunkZ));
 	}
 	public TerrainChunk getChunk(int chunkX, int chunkY, int chunkZ, long hashed) {
-		return chunks.computeIfAbsent(hashed, x -> {
+		// Cannot use computeIfAbsent due to recursive issues
+		if (chunks.containsKey(hashed)) {
+			return chunks.get(hashed);
+		} else {
 			int offsetX = chunkX * TerrainChunk.SIZE;
 			int offsetY = chunkY * TerrainChunk.SIZE;
 			int offsetZ = chunkZ * TerrainChunk.SIZE;
 			int subTerrainSize = TerrainChunk.SIZE + 1;
-			TerrainChunk newChunk = new TerrainChunk(chunkX, chunkY, chunkZ,
+			TerrainChunk chunk = new TerrainChunk(chunkX, chunkY, chunkZ,
 					getSubTerrain(offsetX, offsetY, offsetZ,
 							subTerrainSize, subTerrainSize, subTerrainSize),
 					scalar);
-			generator.accept(newChunk);
-			return newChunk;
-		});
+			if (chunks.putIfAbsent(hashed, chunk) == null) {
+				generator.accept(chunk);
+				return chunk;
+			} else {
+				// Some other thread was faster - we wasted some memory
+				return chunks.get(hashed);
+			}
+		}
 	}
 	public void drawOrQueue(int chunkX, int chunkY, int chunkZ, BiConsumer<Matrix, Drawable> drawer) {
 		TerrainChunk chunk = getChunk(chunkX, chunkY, chunkZ);
@@ -68,28 +82,18 @@ public class Terrain {
 		if (chunk.isQueuedForUpdate()) {
 			chunk.setQueuedForUpdate(false);
 			if (drawable == null) {
-				drawable = chunk.getColoredModel().map(DynamicIndexedDrawable::new);
+				drawable = chunk.getModel().map(DynamicIndexedDrawable::new);
 				chunk.setDrawable(drawable);
 			} else {
-				chunk.getColoredModel().use(drawable::setData);
+				chunk.getModel().use(drawable::setData);
 			}
 		}
 		if (drawable == null) {
-			boolean allGenerated = chunk.isGenerated();
-			for (int i = 1; i < 8; i++) {
-				if (!getChunk(chunkX + (i & 0b1),
-						chunkY + ((i >> 1) & 0b1),
-						chunkZ + ((i >> 2) & 0b1)).isGenerated()) {
-					allGenerated = false;
-				}
-			}
-			if (allGenerated) {
-				updateChunk(chunk);
-				if (chunk.getColoredModel() != null) {
-					chunk.setQueuedForUpdate(false);
-					drawable = chunk.getColoredModel().map(DynamicIndexedDrawable::new);
-					chunk.setDrawable(drawable);
-				}
+			updateChunk(chunk);
+			if (chunk.getModel() != null) {
+				chunk.setQueuedForUpdate(false);
+				drawable = chunk.getModel().map(DynamicIndexedDrawable::new);
+				chunk.setDrawable(drawable);
 			}
 		}
 		if (drawable != null) {
@@ -118,10 +122,21 @@ public class Terrain {
 		return count / total;
 	}
 	public void updateChunk(TerrainChunk chunk) {
-		if (!chunk.isQueuedForConstruction()) {
+		if ((!chunk.isQueuedForConstruction()) && (chunk.hasBeenConstructed() || allGenerated(chunk))) {
 			chunk.setQueuedForConstruction(true);
 			constructor.accept(chunk);
 		}
+	}
+	public boolean allGenerated(TerrainChunk chunk) {
+		boolean allGenerated = chunk.isGenerated();
+		for (int i = 1; i < 8; i++) {
+			if (!getChunk(chunk.getChunkX() + (i & 0b1),
+					chunk.getChunkY() + ((i >> 1) & 0b1),
+					chunk.getChunkZ() + ((i >> 2) & 0b1)).isGenerated()) {
+				allGenerated = false;
+			}
+		}
+		return allGenerated;
 	}
 	public void generateExplosion(Vector3D point, float radius) {
 		int floorX = (int) Math.floor((point.getX() - radius) / scalar.getX());
@@ -139,14 +154,13 @@ public class Terrain {
 		for (int i = floorChunkX; i <= ceilChunkX; i++) {
 			for (int j = floorChunkY; j <= ceilChunkY; j++) {
 				for (int k = floorChunkZ; k <= ceilChunkZ; k++) {
-					long hashed = hashChunkCoordinates(i, j, k);
-					generateExplosionInChunk(hashed, point, radius);
+					generateExplosionInChunk(i, j, k, point, radius);
 				}
 			}
 		}
 	}
-	public void generateExplosionInChunk(long hashed, Vector3D point, float radius) {
-		TerrainChunk chunk = chunks.get(hashed);
+	public void generateExplosionInChunk(int chunkX, int chunkY, int chunkZ, Vector3D point, float radius) {
+		TerrainChunk chunk = getChunk(chunkX, chunkY, chunkZ);
 		int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
 		int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
 		int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
@@ -159,22 +173,19 @@ public class Terrain {
 						lower.multiply(scalar);
 						upper.set(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f);
 						upper.multiply(scalar);
-						chunk.getData()[i][j][k] = Math.min(chunk.getData()[i][j][k],
-								1f - getPercentage(lower, upper, scalar.getX() / 4f, (v) -> {
-									return v.getDistanceSquared(point) <= radius * radius;
-								}) * 2f);
+						float percentage = getPercentage(lower, upper, scalar.getX() / 4f, (v) -> {
+							return v.getDistanceSquared(point) >= radius * radius;
+						}) * 2f - 1f;
+						if (percentage < 1f) {
+							chunk.getData()[i][j][k] = Math.min(chunk.getData()[i][j][k], percentage);
+						}
 					}
 				}
 			}
 		}
 		updateChunk(chunk);
 		for (int i = 1; i < 8; i++) {
-			TerrainChunk neighborChunk = chunks.get(
-					hashChunkCoordinates(chunk, -(i & 0b1), -((i >> 1) & 0b1), -((i >> 2) & 0b1)));
-			// Could potentially be null (not preloaded)
-			if (neighborChunk != null) {
-				updateChunk(neighborChunk);
-			}
+			updateChunk(getChunk(chunkX - (i & 0b1), chunkY - ((i >> 1) & 0b1), chunkZ - ((i >> 2) & 0b1)));
 		}
 	}
 	public float get(int x, int y, int z) {
@@ -185,12 +196,12 @@ public class Terrain {
 		int localY = Math.floorMod(y, TerrainChunk.SIZE);
 		int localZ = Math.floorMod(z, TerrainChunk.SIZE);
 		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
-		if (!chunks.containsKey(hashed)) {
+		TerrainChunk chunk = chunks.get(hashed);
+		if (chunk == null) {
 			throw new IllegalArgumentException(
 					String.format("Chunk [(%d, %d, %d)=%d] has not been queued for generation",
 							chunkX, chunkY, chunkZ, hashed));
 		}
-		TerrainChunk chunk = chunks.get(hashed);
 		if (!chunk.isGenerated()) {
 			throw new IllegalArgumentException(
 					String.format("Chunk [(%d, %d, %d)=%d] has not been generated",
@@ -204,9 +215,6 @@ public class Terrain {
 		chunkY = AbsoluteIntValue.HASHED.applyAsInt(chunkY);
 		chunkZ = AbsoluteIntValue.HASHED.applyAsInt(chunkZ);
 		return SzudzikIntPair.pair(chunkX, chunkY, chunkZ);
-	}
-	private static long hashChunkCoordinates(TerrainChunk chunk, int offsetX, int offsetY, int offsetZ) {
-		return hashChunkCoordinates(chunk.getChunkX() + offsetX, chunk.getChunkY() + offsetY, chunk.getChunkZ() + offsetZ);
 	}
 	public int getChunkX(float x) {
 		return Math.floorDiv((int) Math.floor(x / scalar.getX()), TerrainChunk.SIZE);

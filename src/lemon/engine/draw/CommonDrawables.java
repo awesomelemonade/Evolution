@@ -25,12 +25,12 @@ public class CommonDrawables {
 			r(4, c(1f, 1f, 1f, 1f))
 	}, GL11.GL_TRIANGLE_STRIP);
 
-	public static final Drawable SKYBOX = new IndexedDrawable(new Vector[][] {
-		split(-1f, -1f, -1f, -1f, -1f, 1f, -1f, 1f, -1f, -1f,
-				1f, 1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f, 1f)
-	}, new int[] {
+	public static final Drawable SKYBOX = new IndexedDrawable(new int[] {
 			2, 0, 4, 4, 6, 2, 1, 0, 2, 2, 3, 1, 4, 5, 7, 7, 6, 4,
 			1, 3, 7, 7, 5, 1, 2, 6, 7, 7, 3, 2, 0, 1, 4, 4, 1, 5
+	}, new Vector[][] {
+		split(-1f, -1f, -1f, -1f, -1f, 1f, -1f, 1f, -1f, -1f,
+				1f, 1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f, 1f)
 	}, GL11.GL_TRIANGLES);
 
 	// Shortcuts

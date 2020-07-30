@@ -1,6 +1,6 @@
 Evolution
 =========
-A project created by awesomelemonade. First versions created in 2012 (Not uploaded to github). First commit in this version dates back to 2015. This project is a playground for experimenting with various ideas I have learned throughout my experience with computer graphics.
+A project created by awesomelemonade. First versions created in 2012 (not uploaded to github). First commit in this version dates back to 2015. This project is a playground for experimenting with various ideas I have learned throughout my experience with computer graphics.
 
 Features
 --------
@@ -13,25 +13,26 @@ Features
 * Terrain generation using [perlin noise](https://web.archive.org/web/20160325134143/http://freespace.virgin.net/hugo.elias/models/m_perlin.htm)
 * Raytracing with Moller Trumbore Intersection algorithm
 * Linear Algebra library (Matrix, Vector)
-* 3D continuous collision detection and response with [Kasper Fauerby's paper](http://www.peroxide.dk/papers/collision/collision.pdf)
 * Window & Input Handling with GLFW + LWJGL 3
 * Animations & Interpolations using Bezier Curves
 * Cantor & [Szudzik Pairing](http://szudzik.com/ElegantPairing.pdf) function implementations ([3D variant](https://dmauro.com/post/77011214305/a-hashing-function-for-x-y-z-coordinates))
-* MurMur hash implementation
-* Java lambda expressions for convenient binding and unbinding of various OpenGL objects
+* MurMur hash implementation for noise generation
+* Java lambda expressions for convenient binding and unbinding of various OpenGL objects (ShaderProgram, FrameBuffer)
 * Particle System using OpenGL's instanced rendering with glDrawElementsInstanced and glVertexAttribDivisor
 * Marching Cube - [0fps](https://0fps.net/2012/07/12/smooth-voxel-terrain-part-2/), [paulbourke](http://paulbourke.net/geometry/polygonise/), [Stanford-mdfisher](https://graphics.stanford.edu/~mdfisher/MarchingCubes.html)
 * Phong (Ambient + Diffuse + Specular) lighting
 * Object model loading (ObjLoader) using .obj files for 3D rendering
 * Infinite Terrain generation with overhangs and caves - [stackoverflow](https://stackoverflow.com/questions/39695764/generating-voxel-overhangs-with-3d-noise), [sourceforge](http://accidentalnoise.sourceforge.net/minecraftworlds.html)
 * Multithread terrain generation on the fly with ThreadPoolExecutor and ThreadLocal
-* Explosions (Carvings) in destructible terrain
-* RAII-styled object pools for memory conservation (ObjectPool, VectorPool, MatrixPool)
+* Explosions (Carvings) in Marching Cube terrain w/ even sampling
+* RAII-styled object pools for memory conservation ([ObjectPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/ObjectPool.java), [VectorPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/VectorPool.java), [MatrixPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/MatrixPool.java))
+* Efficient continuous collision detection and response on marching cube mesh ([CollisionPacket](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/physicsbeta/CollisionPacket.java))
+  * Initially based on [Kasper Fauerby's paper](http://www.peroxide.dk/papers/collision/collision.pdf)
+* MarchingCube normal calculation for terrain coloring - [rastertek](https://www.rastertek.com/tertut14.html)
 
 Plans
 -----
-* Efficient collision detection & response on marching cube mesh
-* MarchingCube normal calculation for terrain coloring
+
 
 Ideas
 -----
