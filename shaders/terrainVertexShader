@@ -6,6 +6,7 @@ in vec3 normal;
 
 out vec4 passColor;
 out vec3 passNormal;
+out vec2 passTextureCoords;
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
@@ -18,4 +19,7 @@ void main(void) {
 	
 	passColor = mix(color, vec4(1f, 0f, 0f, 1f), position.y / 10f);
 	passNormal = normal;
+	float textureX = worldPosition.x / 80f;
+	float textureZ = worldPosition.z / 80f;
+	passTextureCoords = vec2(textureX, textureZ);
 }

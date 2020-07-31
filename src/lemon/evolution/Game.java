@@ -1,5 +1,6 @@
 package lemon.evolution;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -24,6 +25,7 @@ import lemon.engine.function.PerlinNoise;
 import lemon.engine.function.RaySphereIntersection;
 import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.math.*;
+import lemon.engine.texture.TextureData;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.evolution.destructible.beta.ScalarField;
@@ -71,6 +73,8 @@ import lemon.engine.time.BenchmarkEvent;
 import lemon.engine.time.Benchmarker;
 import lemon.evolution.setup.CommonProgramsSetup;
 
+import javax.imageio.ImageIO;
+
 public enum Game implements Listener {
 	INSTANCE;
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
@@ -82,7 +86,6 @@ public enum Game implements Listener {
 	private FrameBuffer frameBuffer;
 	private Texture colorTexture;
 	private Texture depthTexture;
-	private Texture skyboxTexture;
 
 	private Benchmarker benchmarker;
 
@@ -193,27 +196,65 @@ public enum Game implements Listener {
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
 			colorTexture = new Texture();
-			GL13.glActiveTexture(TextureBank.COLOR.getBind());
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
-			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, windowWidth, windowHeight, 0, GL11.GL_RGB,
-					GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
-			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-			GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
+			TextureBank.COLOR.bind(() -> {
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, windowWidth, windowHeight, 0, GL11.GL_RGB,
+						GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
+			});
 			depthTexture = new Texture();
-			GL13.glActiveTexture(TextureBank.DEPTH.getBind());
-			GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
-			GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, windowWidth, windowHeight, 0,
-					GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
-			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
-			GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-			GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
+			TextureBank.DEPTH.bind(() -> {
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, windowWidth, windowHeight, 0,
+						GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
+				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
+			});
 		});
-		skyboxTexture = new Texture();
-		GL13.glActiveTexture(TextureBank.SKYBOX.getBind());
-		skyboxTexture.load(new SkyboxLoader("/res/darkskies", "darkskies.cfg").load());
-		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
-		GL13.glActiveTexture(TextureBank.REUSE.getBind());
+		TextureBank.SKYBOX.bind(() -> {
+			Texture skyboxTexture = new Texture();
+			skyboxTexture.load(new SkyboxLoader("/res/darkskies", "darkskies.cfg").load());
+			GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
+		});
+		TextureBank.GRASS.bind(() -> {
+			try {
+				Texture grassTexture = new Texture();
+				grassTexture.load(new TextureData(ImageIO.read(Game.class.getResourceAsStream("/res/grass.png"))));
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, grassTexture.getId());
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		});
+		TextureBank.SLOPE.bind(() -> {
+			try {
+				Texture slopeTexture = new Texture();
+				slopeTexture.load(new TextureData(ImageIO.read(Game.class.getResourceAsStream("/res/slope.png"))));
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, slopeTexture.getId());
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		});
+		TextureBank.ROCK.bind(() -> {
+			try {
+				Texture rockTexture = new Texture();
+				rockTexture.load(new TextureData(ImageIO.read(Game.class.getResourceAsStream("/res/rock.png"))));
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, rockTexture.getId());
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		});
+		TextureBank.BASE.bind(() -> {
+			try {
+				Texture baseTexture = new Texture();
+				baseTexture.load(new TextureData(ImageIO.read(Game.class.getResourceAsStream("/res/base.png"))));
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, baseTexture.getId());
+			} catch (IOException ex) {
+				ex.printStackTrace();
+			}
+		});
 
 		GameControls.setup();
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_Y, EXPLODE);

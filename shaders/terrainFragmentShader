@@ -2,15 +2,21 @@
 
 in vec4 passColor;
 in vec3 passNormal;
+in vec2 passTextureCoords;
 
 out vec4 outColor;
 
+uniform sampler2D grassSampler;
+uniform sampler2D slopeSampler;
+uniform sampler2D rockSampler;
+uniform sampler2D baseSampler;
+
 void main(void) {
 	float slope = 1f - passNormal.y;
-	vec4 grassColor = vec4(0f, 1f, 0f, 1f);
-	vec4 slopeColor = vec4(0f, 0f, 1f, 1f);
-	vec4 rockColor = vec4(1f, 0f, 0f, 1f);
-	vec4 baseColor = vec4(0.6f, 0.3f, 0f, 1f);
+	vec4 grassColor = texture(grassSampler, passTextureCoords);
+	vec4 slopeColor = texture(slopeSampler, passTextureCoords);
+	vec4 rockColor = texture(rockSampler, passTextureCoords);
+	vec4 baseColor = texture(baseSampler, passTextureCoords);
 
 	if (slope < 0.2f) {
 		outColor = mix(grassColor, slopeColor, slope / 0.2f);
@@ -21,14 +27,4 @@ void main(void) {
 	} else {
 		outColor = baseColor;
 	}
-	/*
-	if (slope < 0.2f) {
-		outColor = mix(grassColor, slopeColor, slope / 0.2f);
-	} else if (slope < 0.7f) {
-		outColor = mix(slopeColor, rockColor, (slope - 0.2f) / 0.5f);
-	} else {
-		outColor = rockColor;
-	}
-	*/
-	//outColor = passColor;
 }

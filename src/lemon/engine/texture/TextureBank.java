@@ -3,7 +3,8 @@ package lemon.engine.texture;
 import org.lwjgl.opengl.GL13;
 
 public enum TextureBank {
-	REUSE(0), COLOR(1), DEPTH(2), SKYBOX(3);
+	REUSE(0), COLOR(1), DEPTH(2), SKYBOX(3),
+	GRASS(4), SLOPE(5), ROCK(6), BASE(7);
 	private final int id;
 
 	private TextureBank(int id) {
@@ -13,6 +14,14 @@ public enum TextureBank {
 		return id;
 	}
 	public int getBind() {
+		return GL13.GL_TEXTURE0 + id;
+	}
+	public void bind(Runnable runnable) {
+		GL13.glActiveTexture(this.getBind());
+		runnable.run();
+		GL13.glActiveTexture(TextureBank.REUSE.getBind());
+	}
+	public static int getBind(int id) {
 		return GL13.GL_TEXTURE0 + id;
 	}
 }

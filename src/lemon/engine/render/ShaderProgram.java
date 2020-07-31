@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import lemon.engine.texture.Texture;
 import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;

@@ -53,6 +53,10 @@ public class CommonProgramsSetup {
 			program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 			program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 			program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+			program.loadInt("grassSampler", TextureBank.GRASS.getId());
+			program.loadInt("slopeSampler", TextureBank.SLOPE.getId());
+			program.loadInt("rockSampler", TextureBank.ROCK.getId());
+			program.loadInt("baseSampler", TextureBank.BASE.getId());
 		});
 	}
 	public static void setup2D(Matrix projectionMatrix) {
