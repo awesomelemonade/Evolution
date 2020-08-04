@@ -6,6 +6,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Formatter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -427,7 +428,8 @@ public enum Game implements Listener {
 		benchmarker.getLineGraph("freeMemory").add(current);
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
-			String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d]",
+		    debugMessage.setLength(0);
+			debugFormatter.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d]",
 					EventManager.INSTANCE.getListenersRegistered(),
 					EventManager.INSTANCE.getListenerMethodsRegistered(),
 					EventManager.INSTANCE.getPreloadedMethodsRegistered(),
@@ -438,11 +440,11 @@ public enum Game implements Listener {
 					terrain.getChunkX(player.getPosition().getX()),
 					terrain.getChunkY(player.getPosition().getY()),
 					terrain.getChunkZ(player.getPosition().getZ()));
-			if (!debugTextModel.getText().equals(message)) {
-				debugTextModel.setText(message);
-			}
+		    debugTextModel.setText(debugMessage);
 		}
 	}
+	private StringBuilder debugMessage = new StringBuilder();
+	private Formatter debugFormatter = new Formatter(debugMessage);
 	@Subscribe
 	public void onMouseScroll(MouseScrollEvent event) {
 		playerSpeed += (float) (event.getYOffset() / 100f);

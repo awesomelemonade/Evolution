@@ -64,7 +64,7 @@ public enum FontTest implements Listener {
 				EventManager.INSTANCE.getListenerMethodsRegistered(),
 				EventManager.INSTANCE.getPreloadedMethodsRegistered());
 		text.keySet().forEach(textModel -> {
-			if (textModel.getText().contains("Listeners")) {
+			if (textModel.getText().toString().contains("Listeners")) {
 				if (!textModel.getText().equals(message)) {
 					textModel.setText(message);
 				}

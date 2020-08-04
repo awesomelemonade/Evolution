@@ -16,15 +16,15 @@ public class TextModel implements Drawable {
 	private VertexArray vertexArray;
 	private VertexBuffer vertexBuffer;
 	private Font font;
-	private String text;
+	private CharSequence text;
 	private int bufferSize;
 	private int hint;
 
-	public TextModel(Font font, String text) {
+	public TextModel(Font font, CharSequence text) {
 		this(font, text, GL15.GL_STATIC_DRAW);
 	}
-	public TextModel(Font font, String text, int hint) {
-		if (text.isEmpty()) {
+	public TextModel(Font font, CharSequence text, int hint) {
+		if (text.length() == 0) {
 			throw new IllegalStateException("Text cannot be empty");
 		}
 		this.font = font;
@@ -45,7 +45,7 @@ public class TextModel implements Drawable {
 		});
 	}
 	private FloatBuffer buffer;
-	private FloatBuffer getFloatBuffer(String text) {
+	private FloatBuffer getFloatBuffer(CharSequence text) {
 		int newCapacity = text.length() * 4 * 6;
 		if (buffer == null || buffer.capacity() < newCapacity) {
 			buffer = BufferUtils.createFloatBuffer(newCapacity);
@@ -98,7 +98,7 @@ public class TextModel implements Drawable {
 		});
 		GL11.glDisable(GL11.GL_BLEND);
 	}
-	public void setText(String text) {
+	public void setText(CharSequence text) {
 		this.text = text;
 		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 			FloatBuffer newBuffer = this.getFloatBuffer(text);
@@ -111,7 +111,7 @@ public class TextModel implements Drawable {
 			}
 		});
 	}
-	public String getText() {
+	public CharSequence getText() {
 		return text;
 	}
 }
