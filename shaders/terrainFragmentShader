@@ -14,9 +14,9 @@ uniform sampler2D baseSampler;
 void main(void) {
 	float slope = 1f - passNormal.y;
 	vec4 grassColor = texture(grassSampler, passTextureCoords);
-	vec4 slopeColor = texture(slopeSampler, passTextureCoords);
-	vec4 rockColor = texture(rockSampler, passTextureCoords);
-	vec4 baseColor = texture(baseSampler, passTextureCoords);
+	vec4 slopeColor = texture(slopeSampler, passTextureCoords * 2f);
+	vec4 rockColor = texture(rockSampler, passTextureCoords * 3f);
+	vec4 baseColor = texture(baseSampler, passTextureCoords * 1.5f);
 
 	if (slope < 0.2f) {
 		outColor = mix(grassColor, slopeColor, slope / 0.2f);

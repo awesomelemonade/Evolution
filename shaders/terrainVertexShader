@@ -19,7 +19,5 @@ void main(void) {
 	
 	passColor = mix(color, vec4(1f, 0f, 0f, 1f), position.y / 10f);
 	passNormal = normal;
-	float textureX = worldPosition.x / 80f;
-	float textureZ = worldPosition.z / 80f;
-	passTextureCoords = vec2(textureX, textureZ);
+	passTextureCoords = worldPosition.xz / 80f;
 }

@@ -13,7 +13,7 @@ Features
 * Terrain generation using [perlin noise](https://web.archive.org/web/20160325134143/http://freespace.virgin.net/hugo.elias/models/m_perlin.htm)
 * Raytracing with Moller Trumbore Intersection algorithm
 * Linear Algebra library (Matrix, Vector)
-* Window & Input Handling with GLFW + LWJGL 3
+* Window & Input Handling with [GLFW](https://www.glfw.org) + [LWJGL 3](https://www.lwjgl.org)
 * Animations & Interpolations using Bezier Curves
 * Cantor & [Szudzik Pairing](http://szudzik.com/ElegantPairing.pdf) function implementations ([3D variant](https://dmauro.com/post/77011214305/a-hashing-function-for-x-y-z-coordinates))
 * MurMur hash implementation for noise generation
@@ -28,7 +28,8 @@ Features
 * RAII-styled object pools for memory conservation ([ObjectPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/ObjectPool.java), [VectorPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/VectorPool.java), [MatrixPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/MatrixPool.java))
 * Efficient continuous collision detection and response on marching cube mesh ([CollisionPacket](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/physicsbeta/CollisionPacket.java))
   * Initially based on [Kasper Fauerby's paper](http://www.peroxide.dk/papers/collision/collision.pdf)
-* MarchingCube normal calculation for terrain coloring - [rastertek](https://www.rastertek.com/tertut14.html)
+* MarchingCube normal calculation for terrain coloring/texturing - [rastertek](https://www.rastertek.com/tertut14.html)
+* Multitexturing for terrain
 
 Plans
 -----
@@ -36,7 +37,6 @@ Plans
 
 Ideas
 -----
-* Multitexturing for terrain
 * Normal mapping for textures
 * Remove magic values from creation of vertexArray and vertexBuffer in favor of linking them with ShaderProgram
 * Icosphere generation

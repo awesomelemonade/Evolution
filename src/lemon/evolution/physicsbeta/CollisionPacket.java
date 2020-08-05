@@ -152,6 +152,9 @@ public class CollisionPacket {
 	}
 	// response steps
 	public static void collideAndSlide(Vector3D position, Vector3D velocity) {
+		collideAndSlide(position, velocity, MAX_RECURSION_DEPTH);
+	}
+	public static void collideAndSlide(Vector3D position, Vector3D velocity, int maxRecursionDepth) {
 		// Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
 
 		// calculate position and velocity in eSpace
@@ -160,15 +163,15 @@ public class CollisionPacket {
 
 		// Iterate until we have our final position
 		try (var remainingVelocity = VectorPool.of(velocity)) {
-			collideWithWorld(position, velocity, 0, remainingVelocity);
+			collideWithWorld(position, velocity, 0, remainingVelocity, maxRecursionDepth);
 		}
 
 		// Convert final result back to r3
 		// position.multiply(eRadius);
 		// velocity.multiply(eRadius);
 	}
-	public static void collideWithWorld(Vector3D position, Vector3D velocity, int collisionRecursionDepth, Vector3D remainingVelocity) {
-		if (collisionRecursionDepth > MAX_RECURSION_DEPTH) {
+	public static void collideWithWorld(Vector3D position, Vector3D velocity, int collisionRecursionDepth, Vector3D remainingVelocity, int maxRecursionDepth) {
+		if (collisionRecursionDepth > maxRecursionDepth) {
 			return;
 		}
 		if (remainingVelocity.getLengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {
@@ -200,7 +203,7 @@ public class CollisionPacket {
 			if (length > 0) {
 				position.add(usedVelocity.scaleToLength(length));
 			}
-			collideWithWorld(position, velocity, collisionRecursionDepth + 1, remainingVelocity);
+			collideWithWorld(position, velocity, collisionRecursionDepth + 1, remainingVelocity, maxRecursionDepth);
 		}
 	}
 	// Super temporary stuff below

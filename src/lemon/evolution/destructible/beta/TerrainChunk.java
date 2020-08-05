@@ -108,7 +108,9 @@ public class TerrainChunk {
 				}
 			}
 			for (int i = 0; i < normals.length; i++) {
-				normals[i].normalize();
+				if (!normals[i].equals(Vector3D.ZERO)) {
+					normals[i].normalize();
+				}
 			}
 			this.triangles = triangles;
 			Color[] colors = new Color[vertices.length];

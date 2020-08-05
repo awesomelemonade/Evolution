@@ -17,7 +17,7 @@ public class TerrainGenerator {
 	}
 	public void queueChunk(TerrainChunk chunk) {
 		queueSize.incrementAndGet();
-		pool.submit(() -> {
+		pool.execute(() -> {
 			generate(chunk);
 			queueSize.decrementAndGet();
 		});

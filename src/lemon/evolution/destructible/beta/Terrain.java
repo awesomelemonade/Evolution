@@ -31,14 +31,10 @@ public class Terrain {
 	}
 	public Terrain(Consumer<TerrainChunk> generator, ExecutorService pool, Vector3D scalar) {
 		this(generator, (chunk) -> {
-			pool.submit(() -> {
-				try {
-					chunk.setQueuedForConstruction(false);
-					chunk.generateModel();
-					chunk.setQueuedForUpdate(true);
-				} catch (Exception ex) {
-					ex.printStackTrace();
-				}
+			pool.execute(() -> {
+				chunk.setQueuedForConstruction(false);
+				chunk.generateModel();
+				chunk.setQueuedForUpdate(true);
 			});
 		}, scalar);
 	}

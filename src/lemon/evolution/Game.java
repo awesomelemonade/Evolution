@@ -8,8 +8,8 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Formatter;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,10 +20,8 @@ import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
 import lemon.engine.draw.TextModel;
 import lemon.engine.font.Font;
-import lemon.engine.function.MollerTrumbore;
 import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
-import lemon.engine.function.RaySphereIntersection;
 import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.math.*;
 import lemon.engine.texture.TextureData;
@@ -106,6 +104,8 @@ public enum Game implements Listener {
 
 	private UIScreen uiScreen;
 
+	private ThreadPoolExecutor pool;
+
 	private static final Color[] DEBUG_GRAPH_COLORS = {
 			Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN
 	};
@@ -124,9 +124,11 @@ public enum Game implements Listener {
 				Vector2D temp = threadLocal.get();
 				temp.setX(vector.getX() / 300f);
 				temp.setY(vector.getZ() / 300f);
-				return -vector.getY() + (float) Math.pow(2f, noise2d.apply(temp)) * 5f + (float) Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5f;
+				float distanceSquared = vector.getX() * vector.getX() + vector.getZ() * vector.getZ();
+				float terrain =  -vector.getY() + (float) Math.pow(2f, noise2d.apply(temp)) * 5f + (float) Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5f;
+				return vector.getY() < 0 ? 0f : Math.min((float) (50.0 - Math.sqrt(distanceSquared)), terrain);
 			};
-			ExecutorService pool = Executors.newFixedThreadPool(3);
+			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			EventManager.INSTANCE.registerListener(new Listener() {
 				@Subscribe
 				public void cleanUp(CleanUpEvent event) {
@@ -186,6 +188,7 @@ public enum Game implements Listener {
 
 		player = new Player(new Projection(MathUtil.toRadians(60f),
 				((float) windowWidth) / ((float) windowHeight), 0.01f, 1000f));
+		player.getPosition().set(0f, 300f, 0f);
 
 		Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
@@ -359,7 +362,7 @@ public enum Game implements Listener {
 	private List<PuzzleBall> puzzleBalls;
 	private List<PuzzleBall> projectiles;
 
-	private static float friction = 0.98f;
+	private static float friction = 0.995f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed - maxSpeed * friction;
 	private static final Vector3D GRAVITY_VECTOR = Vector3D.unmodifiableVector(new Vector3D(0, -0.005f, 0));
@@ -399,8 +402,9 @@ public enum Game implements Listener {
 			player.getVelocity().setY(player.getVelocity().getY() - ((float) (playerSpeed)));
 		}
 		player.getVelocity().multiply(friction);
+		player.getVelocity().add(GRAVITY_VECTOR);
 
-		player.update(event);
+		CollisionPacket.collideAndSlide(player.getPosition(), player.getVelocity(), 20);
 
 		float totalLength = 0;
 		for (PuzzleBall puzzleBall : puzzleBalls) {
@@ -413,6 +417,7 @@ public enum Game implements Listener {
 		for (PuzzleBall projectile : projectiles) {
 			projectile.getVelocity().add(GRAVITY_VECTOR);
 		}
+		projectiles.removeIf(x -> x.getPosition().getY() <= 0f);
 		projectiles.removeIf(x -> {
 			x.getVelocity().add(GRAVITY_VECTOR);
 			if (CollisionPacket.collideAndSlideIntersect(x.getPosition(), x.getVelocity())) {
@@ -429,7 +434,7 @@ public enum Game implements Listener {
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 		    debugMessage.setLength(0);
-			debugFormatter.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d]",
+			debugFormatter.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d",
 					EventManager.INSTANCE.getListenersRegistered(),
 					EventManager.INSTANCE.getListenerMethodsRegistered(),
 					EventManager.INSTANCE.getPreloadedMethodsRegistered(),
@@ -439,8 +444,9 @@ public enum Game implements Listener {
 					player.getPosition().getZ(),
 					terrain.getChunkX(player.getPosition().getX()),
 					terrain.getChunkY(player.getPosition().getY()),
-					terrain.getChunkZ(player.getPosition().getZ()));
-		    debugTextModel.setText(debugMessage);
+					terrain.getChunkZ(player.getPosition().getZ()),
+					pool.getTaskCount() - pool.getCompletedTaskCount());
+			debugTextModel.setText(debugMessage);
 		}
 	}
 	private StringBuilder debugMessage = new StringBuilder();
