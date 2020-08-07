@@ -4,26 +4,26 @@ import lemon.engine.math.Vector3D;
 import lemon.evolution.pool.VectorPool;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.LongAdder;
 
 public class TerrainGenerator {
 	private ExecutorService pool;
 	private ScalarField<Vector3D> scalarField;
-	private AtomicInteger queueSize;
+	private LongAdder queueSize;
 	public TerrainGenerator(ExecutorService pool, ScalarField<Vector3D> scalarField) {
 		this.pool = pool;
 		this.scalarField = scalarField;
-		this.queueSize = new AtomicInteger();
+		this.queueSize = new LongAdder();
 	}
 	public void queueChunk(TerrainChunk chunk) {
-		queueSize.incrementAndGet();
+		queueSize.increment();
 		pool.execute(() -> {
 			generate(chunk);
-			queueSize.decrementAndGet();
+			queueSize.decrement();
 		});
 	}
 	public int getQueueSize() {
-		return queueSize.get();
+		return queueSize.intValue();
 	}
 	private void generate(TerrainChunk chunk) {
 		try (var temp = VectorPool.ofEmpty()) {
