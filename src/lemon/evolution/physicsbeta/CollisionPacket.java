@@ -21,24 +21,25 @@ public class CollisionPacket {
 		}
 		// isFrontFacingTo
 		float normalDotVelocity = triangle.getNormal().dotProduct(velocity);
-		if (normalDotVelocity <= 0.00001f) {
+		if (normalDotVelocity <= 0.001f) {
 			// if sphere is travelling parallel to the plane
-			if (Math.abs(normalDotVelocity) <= 0.00001f) {
-				float signedDistanceToTrianglePlane =
-						position.dotProduct(triangle.getNormal()) - triangle.getNormal()
-								.dotProduct(triangle.getVertex1());
-				if (Math.abs(signedDistanceToTrianglePlane) >= 1.0f) {
-					// Sphere is not embedded in plane
-					// No collision possible
-					return;
-				} else {
-					// Sphere is embedded in plane
-					// It intersects the whole range [0 .. 1]
-					// t0 = 0.0f;
+			if (Math.abs(normalDotVelocity) <= 0.001f) {
+				try (var temp = VectorPool.of(position, x -> x.subtract(triangle.getVertex1()))) {
+					float signedDistanceToTrianglePlane =
+							triangle.getNormal().dotProduct(temp);
+					if (Math.abs(signedDistanceToTrianglePlane) >= 1.0f) {
+						// Sphere is not embedded in plane
+						// No collision possible
+						return;
+					} else {
+						// Sphere is embedded in plane
+						// It intersects the whole range [0 .. 1]
+						// t0 = 0.0f;
+					}
 				}
 			} else {
-				try (var temp = VectorPool.of(position, x -> x.subtract(triangle.getVertex1()).subtract(triangle.getNormal()))) {
-					float x = triangle.getNormal().dotProduct(temp);
+				try (var temp = VectorPool.of(position, x -> x.subtract(triangle.getVertex1()))) {
+					float x = triangle.getNormal().dotProduct(temp) - 1f;
 					if (x >= -0.001f && x <= -normalDotVelocity) {
 						float t = MathUtil.clamp(-x / normalDotVelocity, 0f, 1f);
 						try (var scaledVelocity = VectorPool.of(velocity, v -> v.multiply(t));
@@ -55,17 +56,17 @@ public class CollisionPacket {
 			float velocitySquaredLength = velocity.getAbsoluteValueSquared();
 
 			// Check vertices
-			checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex1(), collision, triangle);
-			checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex2(), collision, triangle);
-			checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex3(), collision, triangle);
+			checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex1(), collision);
+			checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex2(), collision);
+			checkVertex(velocitySquaredLength, velocity, position, triangle.getVertex3(), collision);
 
 			// Check against edges
-			checkEdge(position, velocity, triangle.getVertex1(), triangle.getVertex2(), collision, triangle);
-			checkEdge(position, velocity, triangle.getVertex2(), triangle.getVertex3(), collision, triangle);
-			checkEdge(position, velocity, triangle.getVertex3(), triangle.getVertex1(), collision, triangle);
+			checkEdge(position, velocity, triangle.getVertex1(), triangle.getVertex2(), collision);
+			checkEdge(position, velocity, triangle.getVertex2(), triangle.getVertex3(), collision);
+			checkEdge(position, velocity, triangle.getVertex3(), triangle.getVertex1(), collision);
 		}
 	}
-	private static void checkEdge(Vector3D position, Vector3D velocity, Vector3D vertexA, Vector3D vertexB, Collision collision, Triangle triangle) {
+	private static void checkEdge(Vector3D position, Vector3D velocity, Vector3D vertexA, Vector3D vertexB, Collision collision) {
 		// https://mrl.nyu.edu/~dzorin/rend05/lecture2.pdf
 		try (var deltaP = VectorPool.of(position, x -> x.subtract(vertexA));
 			 var edge = VectorPool.of(vertexB, x -> x.subtract(vertexA).normalize());
@@ -124,7 +125,7 @@ public class CollisionPacket {
 			}
 		}
 	}
-	private static void checkVertex(float a, Vector3D velocity, Vector3D base, Vector3D vertex, Collision collision, Triangle triangle) {
+	private static void checkVertex(float a, Vector3D velocity, Vector3D base, Vector3D vertex, Collision collision) {
 		try (var base_vertex = VectorPool.of(base, v -> v.subtract(vertex))) {
 			float b = 2.0f * velocity.dotProduct(base_vertex);
 			float c = vertex.getDistanceSquared(base) - 1.0f;
