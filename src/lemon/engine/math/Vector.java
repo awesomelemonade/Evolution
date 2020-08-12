@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public class Vector<T extends Vector<T>> {
 	private Class<T> clazz;
@@ -38,24 +39,12 @@ public class Vector<T extends Vector<T>> {
 	public int getDimensions() {
 		return data.length;
 	}
-	private void checkDimensions(Vector vector) {
-		if (this.getDimensions() != vector.getDimensions()) {
-			throw new IllegalArgumentException("Dimensions are not equal");
-		}
-	}
-	private void checkDimensions(float[] data) {
-		if (this.getDimensions() != data.length) {
-			throw new IllegalArgumentException("Dimensions are not equal");
-		}
-	}
 	public void set(Vector vector) {
-		checkDimensions(vector);
 		for (int i = 0; i < data.length; ++i) {
 			data[i] = vector.get(i);
 		}
 	}
 	public void set(float... data) {
-		checkDimensions(data);
 		this.data = data;
 	}
 	public void set(int index, float data) {
@@ -104,7 +93,6 @@ public class Vector<T extends Vector<T>> {
 		return (float) Math.sqrt(getDistanceSquared(vector));
 	}
 	public float getDistanceSquared(Vector vector) {
-		checkDimensions(vector);
 		float sum = 0;
 		for (int i = 0; i < data.length; i++) {
 			float delta = vector.get(i) - data[i];
@@ -113,28 +101,24 @@ public class Vector<T extends Vector<T>> {
 		return sum;
 	}
 	public T add(Vector<T> vector) {
-		checkDimensions(vector);
 		for (int i = 0; i < data.length; i++) {
 			data[i] += vector.get(i);
 		}
 		return self;
 	}
 	public T subtract(Vector<T> vector) {
-		checkDimensions(vector);
 		for (int i = 0; i < data.length; i++) {
 			data[i] -= vector.get(i);
 		}
 		return self;
 	}
 	public T multiply(Vector<T> vector) {
-		checkDimensions(vector);
 		for (int i = 0; i < data.length; i++) {
 			data[i] *= vector.get(i);
 		}
 		return self;
 	}
 	public T divide(Vector<T> vector) {
-		checkDimensions(vector);
 		for (int i = 0; i < data.length; i++) {
 			data[i] /= vector.get(i);
 		}
@@ -158,11 +142,22 @@ public class Vector<T extends Vector<T>> {
 		}
 		return self;
 	}
+	public T operate(UnaryOperator<Float> operator) {
+		for (int i = 0; i < data.length; i++) {
+			data[i] = operator.apply(data[i]);
+		}
+		return self;
+	}
+	public T operate(Vector<T> vector, BinaryOperator<Float> operator) {
+		for (int i = 0; i < data.length; i++) {
+			data[i] = operator.apply(data[i], vector.get(i));
+		}
+		return self;
+	}
 	public T scaleToLength(float length) {
 		return multiply(length / this.getLength());
 	}
 	public float dotProduct(Vector vector) {
-		checkDimensions(vector);
 		float sum = 0;
 		for (int i = 0; i < data.length; ++i) {
 			sum += data[i] * vector.get(i);

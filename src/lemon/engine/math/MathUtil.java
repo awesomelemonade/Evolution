@@ -9,6 +9,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class MathUtil {
 	public static final float PI = (float) Math.PI;
+	public static final float TAU = (float) (2.0 * Math.PI);
 
 	private MathUtil() {}
 	

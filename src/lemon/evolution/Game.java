@@ -126,7 +126,7 @@ public enum Game implements Listener {
 				temp.setY(vector.getZ() / 300f);
 				float distanceSquared = vector.getX() * vector.getX() + vector.getZ() * vector.getZ();
 				float terrain =  -vector.getY() + (float) Math.pow(2f, noise2d.apply(temp)) * 5f + (float) Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5f;
-				return vector.getY() < 0 ? 0f : Math.min((float) (50.0 - Math.sqrt(distanceSquared)), terrain);
+				return vector.getY() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
 			};
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			EventManager.INSTANCE.registerListener(new Listener() {
@@ -362,7 +362,7 @@ public enum Game implements Listener {
 	private List<PuzzleBall> puzzleBalls;
 	private List<PuzzleBall> projectiles;
 
-	private static float friction = 0.995f;
+	private static float friction = 1f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed - maxSpeed * friction;
 	private static final Vector3D GRAVITY_VECTOR = Vector3D.unmodifiableVector(new Vector3D(0, -0.005f, 0));
@@ -405,6 +405,23 @@ public enum Game implements Listener {
 		player.getVelocity().add(GRAVITY_VECTOR);
 
 		CollisionPacket.collideAndSlide(player.getPosition(), player.getVelocity(), 20);
+
+		try (var targetRotation = VectorPool.of((float) Math.atan(player.getVelocity().getY() / Math.hypot(player.getVelocity().getX(), player.getVelocity().getZ())),
+				(float) (Math.PI + Math.atan2(player.getVelocity().getX(), player.getVelocity().getZ())), 0f);
+				var diff = VectorPool.of(targetRotation, x -> x.subtract(player.getCamera().getRotation()))) {
+			diff.operate(x -> {
+				x %= MathUtil.TAU;
+				x += x < -MathUtil.PI ? MathUtil.TAU : 0f;
+				x -= x > MathUtil.PI ? MathUtil.TAU : 0f;
+				return x;
+			});
+			float diffLength = diff.getLength();
+			if (diffLength > 0.0075f) {
+				diff.scaleToLength(Math.max(diffLength * 0.125f, 0.0075f));
+			}
+			player.getCamera().getRotation().add(diff);
+		}
+
 
 		float totalLength = 0;
 		for (PuzzleBall puzzleBall : puzzleBalls) {
@@ -594,7 +611,7 @@ public enum Game implements Listener {
 				CommonDrawables.COLORED_QUAD.draw();
 			}
 		});
-		uiScreen.render();
+		//uiScreen.render();
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			// render graphs
 			byte counter = 0;

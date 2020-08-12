@@ -21,9 +21,9 @@ public class CollisionPacket {
 		}
 		// isFrontFacingTo
 		float normalDotVelocity = triangle.getNormal().dotProduct(velocity);
-		if (normalDotVelocity <= 0.001f) {
+		if (normalDotVelocity <= 0.00001f) {
 			// if sphere is travelling parallel to the plane
-			if (Math.abs(normalDotVelocity) <= 0.001f) {
+			if (Math.abs(normalDotVelocity) <= 0.0001f) {
 				try (var temp = VectorPool.of(position, x -> x.subtract(triangle.getVertex1()))) {
 					float signedDistanceToTrianglePlane =
 							triangle.getNormal().dotProduct(temp);
