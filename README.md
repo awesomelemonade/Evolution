@@ -30,14 +30,14 @@ Features
   * Initially based on [Kasper Fauerby's paper](http://www.peroxide.dk/papers/collision/collision.pdf)
 * MarchingCube normal calculation for terrain coloring/texturing - [rastertek](https://www.rastertek.com/tertut14.html)
 * Multitexturing for terrain
+* Triplanar texturing for terrain
 
 Plans
 -----
-
+* Normal mapping for textures
 
 Ideas
 -----
-* Normal mapping for textures
 * Remove magic values from creation of vertexArray and vertexBuffer in favor of linking them with ShaderProgram
 * Icosphere generation
 * Compute shaders for marching cube
