@@ -1,6 +1,5 @@
 package lemon.engine.game;
 
-import lemon.engine.control.UpdateEvent;
 import lemon.engine.math.Camera;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
@@ -12,23 +11,21 @@ public class Player {
 
 	public Player(Projection projection) {
 		camera = new Camera(projection);
-		velocity = new Vector3D();
+		velocity = new Vector3D(0, 0, 0);
 	}
-	public void update(UpdateEvent event) {
-		camera.getPosition().setX(camera.getPosition().getX() + velocity.getX() * event.getDelta() * DELTA_MODIFIER);
-		camera.getPosition().setY(camera.getPosition().getY() + velocity.getY() * event.getDelta() * DELTA_MODIFIER);
-		camera.getPosition().setZ(camera.getPosition().getZ() + velocity.getZ() * event.getDelta() * DELTA_MODIFIER);
+	public void update(float delta) {
+		camera.setPosition(camera.getPosition().add(velocity.multiply(delta * DELTA_MODIFIER)));
 	}
 	public Camera getCamera() {
 		return camera;
 	}
 	public Vector3D getVectorDirection() {
 		return new Vector3D(
-				(float) (-(Math.sin(camera.getRotation().getY())
-						* Math.cos(camera.getRotation().getX()))),
-				(float) (Math.sin(camera.getRotation().getX())),
-				(float) (-(Math.cos(camera.getRotation().getX())
-						* Math.cos(camera.getRotation().getY()))));
+				(float) (-(Math.sin(camera.getRotation().y())
+						* Math.cos(camera.getRotation().x()))),
+				(float) (Math.sin(camera.getRotation().x())),
+				(float) (-(Math.cos(camera.getRotation().x())
+						* Math.cos(camera.getRotation().y()))));
 	}
 	public Vector3D getPosition() {
 		return camera.getPosition();

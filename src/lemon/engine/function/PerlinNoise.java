@@ -1,13 +1,13 @@
 package lemon.engine.function;
 
-import lemon.engine.math.Vector;
+import lemon.engine.math.VectorData;
 
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.ToIntFunction;
 
-public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
+public class PerlinNoise<T extends VectorData> implements Function<T, Float> {
 	private IntUnaryOperator abs = AbsoluteIntValue.HASHED;
 	private IntUnaryOperator[] hashFunctions;
 	private ToIntFunction<int[]> pairFunction;
@@ -36,6 +36,7 @@ public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 	}
 	@Override
 	public Float apply(T x) {
+		float[] xData = x.data();
 		float output = 0;
 		int[] intX = this.intX.get();
 		float[] fractionalX = this.fractionalX.get();
@@ -43,15 +44,17 @@ public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 		int[] a = this.a.get();
 		for (int i = 0; i < iterations; ++i) {
 			float amplitude = (float) Math.pow(persistence.apply(x), i);
-			output += interpolatedNoise(x, hashFunctions[i], intX, fractionalX, values, a) * amplitude;
-			x.multiply(2); // frequency
+			output += interpolatedNoise(xData, hashFunctions[i], intX, fractionalX, values, a) * amplitude;
+			for (int j = 0; j < xData.length; j++) {
+				xData[j] *= 2; // frequency
+			}
 		}
 		return output;
 	}
-	public float interpolatedNoise(Vector<T> x, IntUnaryOperator hashFunction, int[] intX, float[] fractionalX, float[] values, int[] a) {
+	public float interpolatedNoise(float[] x, IntUnaryOperator hashFunction, int[] intX, float[] fractionalX, float[] values, int[] a) {
 		for (int i = 0; i < intX.length; i++) {
-			intX[i] = (int) Math.floor(x.get(i));
-			fractionalX[i] = x.get(i) - intX[i];
+			intX[i] = (int) Math.floor(x[i]);
+			fractionalX[i] = x[i] - intX[i];
 		}
 		for (int i = 0; i < values.length; i++) {
 			for (int j = 0; j < a.length; j++) {

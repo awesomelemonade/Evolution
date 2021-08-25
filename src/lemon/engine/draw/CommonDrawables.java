@@ -1,24 +1,22 @@
 package lemon.engine.draw;
 
-import lemon.engine.math.Vector;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
+import lemon.engine.math.VectorData;
 import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL11;
 
-import java.util.Arrays;
-
 public class CommonDrawables {
-	private static final Vector[] QUAD_VERTICES =
+	private static final VectorData[] QUAD_VERTICES =
 			{v(-1f, 1f, 0f), v(-1f, -1f, 0f), v(1f, 1f, 0f), v(1f, -1f, 0f)};
-	public static final Drawable TEXTURED_QUAD = new UnindexedDrawable(new Vector[][] {
+	public static final Drawable TEXTURED_QUAD = new UnindexedDrawable(new VectorData[][] {
 			// Positions
 			QUAD_VERTICES,
 			// Texture Coordinates
 			{v(0f, 1f), v(0f, 0f), v(1f, 1f), v(1f, 0f)}
 	}, GL11.GL_TRIANGLE_STRIP);
 
-	public static final Drawable COLORED_QUAD = new UnindexedDrawable(new Vector[][] {
+	public static final Drawable COLORED_QUAD = new UnindexedDrawable(new VectorData[][] {
 			// Positions
 			QUAD_VERTICES,
 			// Colors
@@ -28,7 +26,7 @@ public class CommonDrawables {
 	public static final Drawable SKYBOX = new IndexedDrawable(new int[] {
 			2, 0, 4, 4, 6, 2, 1, 0, 2, 2, 3, 1, 4, 5, 7, 7, 6, 4,
 			1, 3, 7, 7, 5, 1, 2, 6, 7, 7, 3, 2, 0, 1, 4, 4, 1, 5
-	}, new Vector[][] {
+	}, new VectorData[][] {
 		split(-1f, -1f, -1f, -1f, -1f, 1f, -1f, 1f, -1f, -1f,
 				1f, 1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f, 1f)
 	}, GL11.GL_TRIANGLES);
@@ -44,8 +42,8 @@ public class CommonDrawables {
 		return new Color(r, g, b, a);
 	}
 	// repeat w/ shallow copy
-	private static Vector<?>[] r(int count, Vector<?> vector) {
-		Vector<?>[] vectors = new Vector<?>[count];
+	private static VectorData[] r(int count, VectorData vector) {
+		VectorData[] vectors = new VectorData[count];
 		for (int i = 0; i < count; i++) {
 			vectors[i] = vector;
 		}

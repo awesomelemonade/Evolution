@@ -7,13 +7,13 @@ import java.util.Set;
 import lemon.engine.model.LineGraph;
 
 public class Benchmarker {
-	private Map<String, LineGraph> graphs;
+	private final Map<String, LineGraph> graphs;
 
 	public Benchmarker() {
-		graphs = new LinkedHashMap<String, LineGraph>();
+		graphs = new LinkedHashMap<>();
 	}
 	public void benchmark(Benchmark benchmark) {
-		float[] data = benchmark.getData();
+		float[] data = benchmark.data();
 		int n = 0;
 		for (LineGraph graph : graphs.values()) {
 			if (n >= data.length) {

@@ -8,8 +8,6 @@ import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
 
 import lemon.engine.control.Loader;
-import lemon.engine.control.RenderEvent;
-import lemon.engine.control.UpdateEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;

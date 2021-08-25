@@ -28,10 +28,10 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Optional<Float
 		float determinant;
 		float inverseDeterminant, u, v, t;
 
-		edge = triangle.getVertex2().copy().subtract(triangle.getVertex1());
-		edge2 = triangle.getVertex3().copy().subtract(triangle.getVertex1());
+		edge = triangle.getVertex2().subtract(triangle.getVertex1());
+		edge2 = triangle.getVertex3().subtract(triangle.getVertex1());
 
-		p = ray.getDirection().copy().crossProduct(edge2);
+		p = ray.direction().crossProduct(edge2);
 
 		determinant = edge.dotProduct(p);
 
@@ -46,7 +46,7 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Optional<Float
 		}
 		inverseDeterminant = 1f / determinant;
 
-		distance = ray.getOrigin().copy().subtract(triangle.getVertex1());
+		distance = ray.origin().subtract(triangle.getVertex1());
 
 		u = distance.dotProduct(p) * inverseDeterminant;
 
@@ -54,9 +54,9 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Optional<Float
 			return Optional.empty();
 		}
 
-		q = distance.copy().crossProduct(edge);
+		q = distance.crossProduct(edge);
 
-		v = ray.getDirection().dotProduct(q) * inverseDeterminant;
+		v = ray.direction().dotProduct(q) * inverseDeterminant;
 
 		if (v < 0f || u + v > 1f) {
 			return Optional.empty();

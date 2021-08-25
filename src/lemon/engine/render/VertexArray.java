@@ -1,26 +1,16 @@
 package lemon.engine.render;
 
-import lemon.engine.control.CleanUpEvent;
-import lemon.engine.event.EventManager;
-import lemon.engine.event.Listener;
-import lemon.engine.event.Subscribe;
-
 import java.util.function.Consumer;
 
+import lemon.engine.toolbox.Disposable;
 import org.lwjgl.opengl.GL30;
 
-public class VertexArray implements Listener {
-	private int id;
-
+public record VertexArray(int id) implements Disposable {
 	public VertexArray() {
-		id = GL30.glGenVertexArrays();
-		EventManager.INSTANCE.registerListener(this);
+		this(GL30.glGenVertexArrays());
 	}
-	public int getId() {
-		return id;
-	}
-	@Subscribe
-	public void cleanUp(CleanUpEvent event) {
+	@Override
+	public void dispose() {
 		GL30.glDeleteVertexArrays(id);
 	}
 	public void bind(Consumer<VertexArray> consumer) {

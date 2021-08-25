@@ -10,15 +10,10 @@ import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GLCapabilities;
 import org.lwjgl.system.MemoryUtil;
 
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.GLFWWindowSettings;
-import lemon.engine.event.EventManager;
-import lemon.engine.event.Listener;
-import lemon.engine.event.Subscribe;
-import lemon.engine.input.KeyEvent;
 import lemon.engine.thread.ThreadManager;
 
 public class Evolution {
@@ -34,30 +29,27 @@ public class Evolution {
 			@Override
 			public long createWindow() {
 				GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GL11.GL_FALSE);
-				/*GLFWVidMode vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+				GLFWVidMode vidmode = GLFW.glfwGetVideoMode(GLFW.glfwGetPrimaryMonitor());
+				if (vidmode == null) {
+					throw new IllegalStateException();
+				}
 				return GLFW.glfwCreateWindow(vidmode.width(), vidmode.height(),
-						"LWJGL version: " + Version.getVersion(), GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);*/
-				return GLFW.glfwCreateWindow(1600, 900, "Evolution", MemoryUtil.NULL, MemoryUtil.NULL);
+						"Evolution", GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
+				//return GLFW.glfwCreateWindow(1600, 900, "Evolution", MemoryUtil.NULL, MemoryUtil.NULL);
 			}
 			@Override
 			public int getTargetFrameRate() {
 				return 60;
 			}
 		};
-		final GLFWWindow window = new GLFWWindow(settings);
-		try {
-			EventManager.INSTANCE.registerListener(new Listener() {
-				@Subscribe
-				public void onKeyPress(KeyEvent event) {
-					if (event.getKey() == GLFW.GLFW_KEY_ESCAPE) {
-						GLFW.glfwSetWindowShouldClose(window.getId(), true);
-					}
+		try (GLFWWindow window = new GLFWWindow(settings, Menu.INSTANCE)) {
+			window.input().keyEvent().add(event -> {
+				if (event.getKey() == GLFW.GLFW_KEY_ESCAPE) {
+					GLFW.glfwSetWindowShouldClose(window.getId(), true);
 				}
 			});
-			window.init();
 			logger.log(Level.INFO, String.format("LWJGL Version %s", Version.getVersion()));
 			logger.log(Level.INFO, String.format("OpenGL Version %s", GL11.glGetString(GL11.GL_VERSION)));
-			EventManager.INSTANCE.registerListener(Menu.INSTANCE);
 			window.run();
 		} catch (Exception ex) {
 			ex.printStackTrace();

@@ -1,7 +1,6 @@
-package lemon.evolution.physicsbeta;
+package lemon.evolution.physics.beta;
 
 import lemon.engine.math.*;
-import lemon.evolution.pool.VectorPool;
 
 import java.util.ArrayList;
 import java.util.List;

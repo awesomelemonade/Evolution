@@ -4,17 +4,18 @@ import lemon.engine.control.Loader;
 import lemon.engine.math.Percentage;
 import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
+import lemon.engine.math.VectorData;
 import lemon.engine.thread.ThreadManager;
 
-public interface ScalarField<T extends Vector> {
+public interface ScalarField<T extends VectorData> {
 	public float get(T vector);
 	public static Loader getLoader(ScalarField<Vector3D> scalarField, Vector3D offset, Vector3D resolution, float[][][] data) {
 		float[] offsets = new float[] {
-				-(data.length - 1f) / 2f * resolution.getX() + offset.getX(),
-				-(data[0].length - 1f) / 2f * resolution.getY() + offset.getY(),
-				-(data[1].length - 1f) / 2f * resolution.getZ() + offset.getZ()
+				-(data.length - 1f) / 2f * resolution.x() + offset.x(),
+				-(data[0].length - 1f) / 2f * resolution.y() + offset.y(),
+				-(data[1].length - 1f) / 2f * resolution.z() + offset.z()
 		};
-		float[] strides = new float[] {resolution.getX(), resolution.getY(), resolution.getZ()};
+		float[] strides = new float[] {resolution.x(), resolution.y(), resolution.z()};
 		Percentage percentage = new Percentage(data.length * data[0].length * data[0][0].length);
 		return new Loader() {
 			@Override

@@ -1,12 +1,11 @@
 package lemon.evolution.ui.beta;
 
 import lemon.engine.draw.CommonDrawables;
-import lemon.engine.event.Subscribe;
-import lemon.engine.glfw.GLFWCursorPositionEvent;
-import lemon.engine.glfw.GLFWMouseButtonEvent;
+import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Vector2D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
+import lemon.engine.toolbox.Disposable;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms2D;
 import org.lwjgl.glfw.GLFW;
@@ -16,7 +15,7 @@ public class UIWheel implements UIInputComponent {
 	private float radius;
 	private float value; // 0 to 2 * pi
 	private Color color;
-	boolean heldDown;
+	private boolean heldDown;
 	public UIWheel(Vector2D position, float radius, float value, Color color) {
 		this.position = position;
 		this.radius = radius;
@@ -24,28 +23,27 @@ public class UIWheel implements UIInputComponent {
 		this.color = color;
 	}
 
-	@Subscribe
-	public void onMouseButton(GLFWMouseButtonEvent event) {
-		if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1) {
-			if (event.getAction() == GLFW.GLFW_PRESS) {
-				event.getWindow().pollMouse((mouseX, mouseY) -> {
-					if (position.getDistanceSquared(mouseX, mouseY) <= radius * radius) {
-						setValue(mouseX, mouseY);
-						heldDown = true;
-					}
-				});
+	@Override
+	public Disposable registerInputEvents(GLFWInput input) {
+		return Disposable.of(input.mouseButtonEvent().add(event -> {
+			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1) {
+				if (event.getAction() == GLFW.GLFW_PRESS) {
+					event.getWindow().pollMouse((mouseX, mouseY) -> {
+						if (position.distanceSquared(mouseX, mouseY) <= radius * radius) {
+							setValue(mouseX, mouseY);
+							heldDown = true;
+						}
+					});
+				}
+				if (event.getAction() == GLFW.GLFW_RELEASE) {
+					heldDown = false;
+				}
 			}
-			if (event.getAction() == GLFW.GLFW_RELEASE) {
-				heldDown = false;
+		}), input.cursorPositionEvent().add(event -> {
+			if (heldDown) {
+				this.setValue(event.getX(), event.getWindow().getHeight() - event.getY());
 			}
-		}
-	}
-
-	@Subscribe
-	public void onMouseCursorEvent(GLFWCursorPositionEvent event) {
-		if (heldDown) {
-			this.setValue(event.getX(), event.getWindow().getHeight() - event.getY());
-		}
+		}));
 	}
 
 	@Override
@@ -53,7 +51,7 @@ public class UIWheel implements UIInputComponent {
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 			try (var translation = MatrixPool.ofTranslation(1f, 0f, 0f);
 				 var scalar = MatrixPool.ofScalar(radius / 2f, radius / 20f, 0f);
-				 var translation2 = MatrixPool.ofTranslation(position.getX(), position.getY(), 0f);
+				 var translation2 = MatrixPool.ofTranslation(position.x(), position.y(), 0f);
 				 var rotation = MatrixPool.ofRotationZ(-value);
 				 var multiplied = MatrixPool.ofMultiplied(scalar, translation);
 				 var multiplied2 = MatrixPool.ofMultiplied(rotation, multiplied);
@@ -66,7 +64,7 @@ public class UIWheel implements UIInputComponent {
 		});
 	}
 	private void setValue(double mouseX, double mouseY) {
-		this.value = (float) Math.atan2(mouseY - position.getY(), mouseX - position.getX());
+		this.value = (float) Math.atan2(mouseY - position.y(), mouseX - position.x());
 	}
 	// Returns a value between [0, 1]
 	public float getValue() {

@@ -2,7 +2,6 @@ package lemon.engine.model;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
 
 import lemon.engine.math.Vector3D;
 
@@ -17,7 +16,7 @@ public class SphereModelBuilder {
 		// add vertices and indices
 		builder.addVertices(OCTAHEDRON_VERTICES).addIndices(splitTriangles(builder, OCTAHEDRON_INDICES, iterations));
 		// normalize
-		for (Vector3D vertex : builder.getVertices()) {
+		for (Vector3D vertex : builder.vertices()) {
 			vertex.scaleToLength(radius);
 		}
 		return builder;
@@ -29,9 +28,9 @@ public class SphereModelBuilder {
 		int[] newIndices = new int[indices.length * 4];
 		Map<Vector3D, Map<Vector3D, Integer>> newVertices = new HashMap<Vector3D, Map<Vector3D, Integer>>();
 		for (int i = 0; i < indices.length; i += 3) {
-			Vector3D a = builder.getVertices().get(indices[i]);
-			Vector3D b = builder.getVertices().get(indices[i + 1]);
-			Vector3D c = builder.getVertices().get(indices[i + 2]);
+			Vector3D a = builder.vertices().get(indices[i]);
+			Vector3D b = builder.vertices().get(indices[i + 1]);
+			Vector3D c = builder.vertices().get(indices[i + 2]);
 
 			int index1 = addToMap(builder, newVertices, a, b);
 			int index2 = addToMap(builder, newVertices, b, c);
@@ -69,8 +68,8 @@ public class SphereModelBuilder {
 		if (!vertices.containsKey(a)) {
 			vertices.put(a, new HashMap<>());
 		}
-		vertices.get(a).put(b, builder.getVertices().size());
+		vertices.get(a).put(b, builder.vertices().size());
 		builder.addVertex(a.copy().average(b));
-		return builder.getVertices().size() - 1;
+		return builder.vertices().size() - 1;
 	}
 }

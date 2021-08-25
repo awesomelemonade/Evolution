@@ -5,7 +5,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-import lemon.engine.control.UpdateEvent;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.TextModel;
 import lemon.engine.event.EventManager;
@@ -17,7 +16,6 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
-import lemon.engine.control.RenderEvent;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
 import lemon.engine.font.Font;

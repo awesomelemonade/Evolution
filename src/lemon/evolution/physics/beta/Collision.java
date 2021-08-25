@@ -1,4 +1,4 @@
-package lemon.evolution.physicsbeta;
+package lemon.evolution.physics.beta;
 
 import lemon.engine.math.Vector3D;
 

@@ -1,48 +1,70 @@
 package lemon.engine.math;
 
-public class Vector3D extends Vector<Vector3D> {
-	public static final Vector3D[] EMPTY_ARRAY = new Vector3D[] {};
-	public static final Vector3D ZERO = Vector.unmodifiableVector(new Vector3D());
+import lemon.engine.toolbox.Lazy;
 
-	public Vector3D() {
-		this(0f, 0f, 0f);
-	}
+public record Vector3D(float x, float y, float z, Lazy<float[]> dataArray) implements VectorData {
+	public static final Vector3D ZERO = new Vector3D(0, 0, 0);
+	public static final Vector3D[] EMPTY_ARRAY = new Vector3D[] {};
+
 	public Vector3D(float x, float y, float z) {
-		super(Vector3D.class, Vector3D::new, x, y, z);
+		this(x, y, z, Lazy.of(() -> new float[] {x, y, z}));
 	}
 	public Vector3D(Vector3D vector) {
-		this(vector.getX(), vector.getY(), vector.getZ());
+		this(vector.x, vector.y, vector.z, vector.dataArray);
 	}
-	public void set(float x, float y, float z) {
-		setX(x);
-		setY(y);
-		setZ(z);
-	}
-	public void setX(float x) {
-		this.set(0, x);
-	}
-	public float getX() {
-		return this.get(0);
-	}
-	public void setY(float y) {
-		this.set(1, y);
-	}
-	public float getY() {
-		return this.get(1);
-	}
-	public void setZ(float z) {
-		this.set(2, z);
-	}
-	public float getZ() {
-		return this.get(2);
-	}
+
 	public Vector3D crossProduct(Vector3D vector) { // Implemented in only Vector3D
-		float newX = this.getY() * vector.getZ() - vector.getY() * this.getZ();
-		float newY = this.getZ() * vector.getX() - vector.getZ() * this.getX();
-		float newZ = this.getX() * vector.getY() - vector.getX() * this.getY();
-		this.setX(newX);
-		this.setY(newY);
-		this.setZ(newZ);
-		return this;
+		float newX = this.y() * vector.z() - vector.y() * this.z();
+		float newY = this.z() * vector.x() - vector.z() * this.x();
+		float newZ = this.x() * vector.y() - vector.x() * this.y();
+		return new Vector3D(newX, newY, newZ);
+	}
+	public Vector3D add(Vector3D vector) {
+		return new Vector3D(x + vector.x, y + vector.y, z + vector.z);
+	}
+	public Vector3D subtract(Vector3D vector) {
+		return new Vector3D(x - vector.x, y - vector.y, z - vector.z);
+	}
+	public Vector3D multiply(Vector3D vector) {
+		return new Vector3D(x * vector.x, y * vector.y, z * vector.z);
+	}
+	public Vector3D multiply(float scale) {
+		return new Vector3D(x * scale, y * scale, z * scale);
+	}
+	public Vector3D divide(Vector3D vector) {
+		return new Vector3D(x / vector.x, y / vector.y, z / vector.z);
+	}
+	public Vector3D divide(float scale) {
+		return new Vector3D(x / scale, y / scale, z / scale);
+	}
+	public float lengthSquared() {
+		return x * x + y * y + z * z;
+	}
+	public float length() {
+		return (float) Math.sqrt(lengthSquared());
+	}
+	public float distanceSquared(Vector3D vector) {
+		return this.subtract(vector).lengthSquared();
+	}
+	public float distance(Vector3D vector) {
+		return (float) Math.sqrt(distanceSquared(vector));
+	}
+	public Vector3D invert() {
+		return new Vector3D(-x, -y, -z);
+	}
+	public Vector3D normalize() {
+		return this.divide(this.length());
+	}
+	public Vector3D scaleToLength(float length) {
+		return this.multiply(length / this.length());
+	}
+	public float dotProduct(Vector3D vector) {
+		return x * vector.x + y * vector.y + z * vector.z;
+	}
+	public Vector2D toXYVector() {
+		return new Vector2D(x, y);
+	}
+	public Vector2D toXZVector() {
+		return new Vector2D(x, z);
 	}
 }

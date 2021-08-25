@@ -10,7 +10,7 @@ public class MurmurHash implements IntUnaryOperator {
 	private static final int c2 = 0x1b873593;
 	private static Map<Integer, MurmurHash> murmurHashes;
 	static {
-		murmurHashes = new HashMap<Integer, MurmurHash>();
+		murmurHashes = new HashMap<>();
 	}
 
 	public static MurmurHash createWithSeed(int seed) {

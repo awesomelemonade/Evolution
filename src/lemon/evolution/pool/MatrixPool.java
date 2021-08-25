@@ -31,9 +31,7 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 	}
 
 	public static PooledMatrix ofTranslation(float x, float y, float z) {
-		try (var vector = VectorPool.of(x, y, z)) {
-			return MatrixPool.ofTranslation(vector);
-		}
+		return MatrixPool.ofTranslation(new Vector3D(x, y, z));
 	}
 
 	public static PooledMatrix ofScalar(Vector3D vector) {
@@ -41,9 +39,7 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 	}
 
 	public static PooledMatrix ofScalar(float x, float y, float z) {
-		try (var vector = VectorPool.of(x, y, z)) {
-			return MatrixPool.ofScalar(vector);
-		}
+		return MatrixPool.ofScalar(new Vector3D(x, y, z));
 	}
 
 	public static PooledMatrix ofRotationX(float x) {

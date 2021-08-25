@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class ObjectPool<T> {
-	private ThreadLocal<List<T>> lists;
-	private Supplier<T> constructor;
+	private final ThreadLocal<List<T>> lists;
+	private final Supplier<T> constructor;
 	public ObjectPool(Supplier<T> constructor) {
 		this.lists = ThreadLocal.withInitial(ArrayList::new);
 		this.constructor = constructor;

@@ -1,42 +1,39 @@
 package lemon.engine.control;
 
-import org.lwjgl.BufferUtils;
+import lemon.engine.event.EventWith;
+import lemon.engine.toolbox.Disposable;
+import lemon.evolution.screen.beta.Screen;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import lemon.engine.event.EventManager;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.time.Benchmark;
-import lemon.engine.time.LemonBenchmarkEvent;
 import lemon.engine.time.TimeSync;
 
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.function.BiConsumer;
 
-public class GLFWWindow {
-	private GLFWInput glfwInput;
-	private GLFWErrorCallback errorCallback;
-	private TimeSync timeSync;
-	private long window;
-	private GLFWWindowSettings settings;
-	private DoubleBuffer mouseXBuffer;
-	private DoubleBuffer mouseYBuffer;
-	private int width;
-	private int height;
+public class GLFWWindow implements Disposable {
+	private final GLFWInput glfwInput;
+	private final GLFWErrorCallback errorCallback;
+	private final TimeSync timeSync;
+	private final long window;
+	private final GLFWWindowSettings settings;
+	private final int width;
+	private final int height;
+	private final EventWith<Benchmark> onBenchmark;
+	private Screen currentScreen;
 
-	public GLFWWindow(GLFWWindowSettings settings) {
+	public GLFWWindow(GLFWWindowSettings settings, Screen initialScreen) {
 		this.timeSync = new TimeSync();
 		this.settings = settings;
-		this.mouseXBuffer = BufferUtils.createDoubleBuffer(1);
-		this.mouseYBuffer = BufferUtils.createDoubleBuffer(1);
-	}
-
-	public void init() {
+		onBenchmark = new EventWith<>();
 		GLFW.glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
 		if (!GLFW.glfwInit()) {
 			throw new IllegalStateException("GLFW not initialized");
@@ -47,22 +44,23 @@ public class GLFWWindow {
 		if (window == MemoryUtil.NULL) {
 			throw new IllegalStateException("GLFW window not created");
 		}
-		IntBuffer width = BufferUtils.createIntBuffer(1);
-		IntBuffer height = BufferUtils.createIntBuffer(1);
-		GLFW.glfwGetWindowSize(window, width, height);
-		this.width = width.get();
-		this.height = height.get();
+		try (MemoryStack stack = MemoryStack.stackPush()) {
+			IntBuffer width = stack.mallocInt(1);
+			IntBuffer height = stack.mallocInt(1);
+			GLFW.glfwGetWindowSize(window, width, height);
+			this.width = width.get();
+			this.height = height.get();
+		}
 		glfwInput = new GLFWInput(this);
-		glfwInput.init();
 		GLFW.glfwMakeContextCurrent(window);
 		GLFW.glfwSwapInterval(0); // Disables v-sync
 		GLFW.glfwShowWindow(window);
 		GL.createCapabilities(); // GLContext.createFromCurrent();
-		EventManager.INSTANCE.callListeners(new LemonWindowInitEvent(this));
+		currentScreen = initialScreen;
+		currentScreen.onLoad(this);
 	}
+
 	public void run() {
-		EventManager.INSTANCE.preload(LemonUpdateEvent.class);
-		EventManager.INSTANCE.preload(LemonRenderEvent.class);
 		long deltaTime = System.nanoTime();
 		while (!GLFW.glfwWindowShouldClose(window)) {
 			int error = GL11.glGetError();
@@ -74,23 +72,21 @@ public class GLFWWindow {
 			// Event Driven
 			long updateTime = System.nanoTime();
 			long delta = updateTime - deltaTime;
-			EventManager.INSTANCE.callListeners(new LemonUpdateEvent(delta));
+			currentScreen.update();
 			deltaTime = updateTime;
 			updateTime = System.nanoTime() - updateTime;
 			long renderTime = System.nanoTime();
-			EventManager.INSTANCE.callListeners(new LemonRenderEvent());
+			currentScreen.render();
 			renderTime = System.nanoTime() - renderTime;
-			EventManager.INSTANCE.callListeners(new LemonBenchmarkEvent(
-					new Benchmark(this, (float) (updateTime), (float) (renderTime), ((float) delta) / 1000000f)));
+			onBenchmark.callListeners(Benchmark.of(this, (float) (updateTime), (float) (renderTime), ((float) delta) / 1000000f));
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());
-			// GLFW.glfwSetWindowTitle(window, settings.getTitle()+" -
-			// "+Integer.toString(timeSync.getFps()));
 		}
 	}
-	public void dump() {
-		EventManager.INSTANCE.callListeners(new LemonCleanUpEvent());
+
+	@Override
+	public void dispose() {
 		GLFW.glfwDestroyWindow(window);
 		Callbacks.glfwFreeCallbacks(window);
 		GLFW.glfwTerminate();
@@ -99,25 +95,26 @@ public class GLFWWindow {
 	public long getId() {
 		return window;
 	}
-	public void pollMouse() {
-		mouseXBuffer.clear();
-		mouseYBuffer.clear();
-		GLFW.glfwGetCursorPos(window, mouseXBuffer, mouseYBuffer);
-	}
 	public void pollMouse(BiConsumer<Float, Float> consumer) {
-		pollMouse();
-		consumer.accept((float) this.getMouseX(), (float) (this.getHeight() - this.getMouseY()));
-	}
-	public double getMouseX() {
-		return mouseXBuffer.get(0);
-	}
-	public double getMouseY() {
-		return mouseYBuffer.get(0);
+		float mouseX;
+		float mouseY;
+		try (MemoryStack stack = MemoryStack.stackPush()) {
+			DoubleBuffer xBuffer = stack.mallocDouble(1);
+			DoubleBuffer yBuffer = stack.mallocDouble(1);
+			GLFW.glfwGetCursorPos(window, xBuffer, yBuffer);
+			mouseX = (float) xBuffer.get();
+			mouseY = (float) (this.getHeight() - yBuffer.get());
+		}
+		consumer.accept(mouseX, mouseY);
 	}
 	public int getWidth() {
 		return width;
 	}
 	public int getHeight() {
 		return height;
+	}
+
+	public GLFWInput input() {
+		return glfwInput;
 	}
 }

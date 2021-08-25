@@ -56,15 +56,17 @@ public class MathUtil {
 		matrix.set(3, 3, 1);
 		return matrix;
 	}
-	public static Supplier<Matrix> getTransformationSupplier(Vector3D translation, Vector3D rotation) {
+	public static Supplier<Matrix> getTransformationSupplier(Supplier<Vector3D> translationSupplier, Supplier<Vector3D> rotationSupplier) {
 		Matrix a = new Matrix(4);
 		Matrix b = new Matrix(4);
 		Matrix c = new Matrix(4);
 		return () -> {
-			MathUtil.getRotationX(a, rotation.getX());
-			MathUtil.getRotationY(b, rotation.getY());
+			var translation = translationSupplier.get();
+			var rotation = rotationSupplier.get();
+			MathUtil.getRotationX(a, rotation.x());
+			MathUtil.getRotationY(b, rotation.y());
 			Matrix.multiply(c, a, b);
-			MathUtil.getRotationZ(a, rotation.getZ());
+			MathUtil.getRotationZ(a, rotation.z());
 			Matrix.multiply(b, c, a);
 			MathUtil.getTranslation(a, translation);
 			Matrix.multiply(c, b, a);
@@ -82,23 +84,24 @@ public class MathUtil {
 		matrix.set(1, 1, 1f);
 		matrix.set(2, 2, 1f);
 		matrix.set(3, 3, 1f);
-		matrix.set(0, 3, vector.getX());
-		matrix.set(1, 3, vector.getY());
-		matrix.set(2, 3, vector.getZ());
+		matrix.set(0, 3, vector.x());
+		matrix.set(1, 3, vector.y());
+		matrix.set(2, 3, vector.z());
 	}
 	public static Matrix getRotation(Vector3D rotation) {
-		return MathUtil.getRotationX(rotation.getX())
-				.multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
+		return MathUtil.getRotationX(rotation.x())
+				.multiply(MathUtil.getRotationY(rotation.y()).multiply(MathUtil.getRotationZ(rotation.z())));
 	}
-	public static Supplier<Matrix> getRotationSupplier(Vector3D rotation) {
+	public static Supplier<Matrix> getRotationSupplier(Supplier<Vector3D> rotationSupplier) {
 		Matrix a = new Matrix(4);
 		Matrix b = new Matrix(4);
 		Matrix c = new Matrix(4);
 		return () -> {
-			MathUtil.getRotationX(a, rotation.getX());
-			MathUtil.getRotationY(b, rotation.getY());
+			var rotation = rotationSupplier.get();
+			MathUtil.getRotationX(a, rotation.x());
+			MathUtil.getRotationY(b, rotation.y());
 			Matrix.multiply(c, a, b);
-			MathUtil.getRotationZ(a, rotation.getZ());
+			MathUtil.getRotationZ(a, rotation.z());
 			Matrix.multiply(b, c, a);
 			return b;
 		};
@@ -158,9 +161,9 @@ public class MathUtil {
 	}
 	public static void getScalar(Matrix matrix, Vector3D vector) {
 		matrix.clear();
-		matrix.set(0, 0, vector.getX());
-		matrix.set(1, 1, vector.getY());
-		matrix.set(2, 2, vector.getZ());
+		matrix.set(0, 0, vector.x());
+		matrix.set(1, 1, vector.y());
+		matrix.set(2, 2, vector.z());
 		matrix.set(3, 3, 1);
 	}
 

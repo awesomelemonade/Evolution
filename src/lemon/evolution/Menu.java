@@ -1,15 +1,11 @@
 package lemon.evolution;
 
-import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import lemon.engine.control.UpdateEvent;
 import lemon.engine.math.Matrix;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 
-import lemon.engine.control.RenderEvent;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
 import lemon.engine.event.Subscribe;
@@ -28,7 +24,7 @@ public enum Menu implements Listener {
 	@Override
 	public void onRegister() {
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
-		buttons = new ArrayList<Quad2D>();
+		buttons = new ArrayList<>();
 		for (int i = 0; i < 3; ++i) {
 			buttons.add(new Quad2D(new Box2D(-0.3f, -0.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
 		}

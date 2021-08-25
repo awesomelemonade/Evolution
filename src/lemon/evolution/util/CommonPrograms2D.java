@@ -40,4 +40,9 @@ public enum CommonPrograms2D implements ShaderProgramHolder {
 			program.init();
 		}
 	}
+	public static void disposeAll() {
+		for (CommonPrograms2D program : CommonPrograms2D.values()) {
+			program.dispose();
+		}
+	}
 }

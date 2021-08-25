@@ -1,41 +1,62 @@
 package lemon.engine.math;
 
-public class Vector2D extends Vector<Vector2D> {
-	public static final Vector2D[] EMPTY_ARRAY = new Vector2D[] {};
-	public static final Vector2D ZERO = Vector.unmodifiableVector(new Vector2D());
-	public static final Vector2D TOP_LEFT = Vector.unmodifiableVector(new Vector2D(-1f, 1f).normalize());
-	public static final Vector2D TOP = Vector.unmodifiableVector(new Vector2D(0f, 1f).normalize());
-	public static final Vector2D TOP_RIGHT = Vector.unmodifiableVector(new Vector2D(1f, 1f).normalize());
-	public static final Vector2D LEFT = Vector.unmodifiableVector(new Vector2D(-1f, 0f).normalize());
-	public static final Vector2D RIGHT = Vector.unmodifiableVector(new Vector2D(1f, 0f).normalize());
-	public static final Vector2D BOTTOM_LEFT = Vector.unmodifiableVector(new Vector2D(-1f, -1f).normalize());
-	public static final Vector2D BOTTOM = Vector.unmodifiableVector(new Vector2D(0f, -1f).normalize());
-	public static final Vector2D BOTTOM_RIGHT = Vector.unmodifiableVector(new Vector2D(1f, -1f).normalize());
+import lemon.engine.toolbox.Lazy;
 
-	public Vector2D() {
-		this(0, 0);
-	}
+public record Vector2D(float x, float y, Lazy<float[]> dataArray) implements VectorData {
+	public static final Vector2D ZERO = new Vector2D(0, 0);
+
 	public Vector2D(float x, float y) {
-		super(Vector2D.class, Vector2D::new, x, y);
+		this(x, y, Lazy.of(() -> new float[] {x, y}));
 	}
 	public Vector2D(Vector2D vector) {
-		this(vector.getX(), vector.getY());
+		this(vector.x, vector.y, vector.dataArray);
 	}
-	public void setX(float x) {
-		this.set(0, x);
+
+	public Vector2D add(Vector2D vector) {
+		return new Vector2D(x + vector.x, y + vector.y);
 	}
-	public float getX() {
-		return this.get(0);
+	public Vector2D subtract(Vector2D vector) {
+		return new Vector2D(x - vector.x, y - vector.y);
 	}
-	public void setY(float y) {
-		this.set(1, y);
+	public Vector2D multiply(Vector2D vector) {
+		return new Vector2D(x * vector.x, y * vector.y);
 	}
-	public float getY() {
-		return this.get(1);
+	public Vector2D multiply(float scale) {
+		return new Vector2D(x * scale, y * scale);
 	}
-	public float getDistanceSquared(float x, float y) {
-		float dx = this.getX() - x;
-		float dy = this.getY() - y;
+	public Vector2D divide(Vector2D vector) {
+		return new Vector2D(x / vector.x, y / vector.y);
+	}
+	public Vector2D divide(float scale) {
+		return new Vector2D(x / scale, y / scale);
+	}
+	public float lengthSquared() {
+		return x * x + y * y;
+	}
+	public float length() {
+		return (float) Math.sqrt(lengthSquared());
+	}
+	public float distanceSquared(float x, float y) {
+		float dx = this.x - x;
+		float dy = this.y - y;
 		return dx * dx + dy * dy;
+	}
+	public float distanceSquared(Vector2D vector) {
+		return distanceSquared(vector.x, vector.y);
+	}
+	public float distance(Vector2D vector) {
+		return (float) Math.sqrt(distanceSquared(vector));
+	}
+	public Vector2D invert() {
+		return new Vector2D(-x, -y);
+	}
+	public Vector2D normalize() {
+		return this.divide(this.length());
+	}
+	public Vector2D scaleToLength(float length) {
+		return this.multiply(length / this.length());
+	}
+	public float dotProduct(Vector2D vector) {
+		return x * vector.x + y * vector.y;
 	}
 }

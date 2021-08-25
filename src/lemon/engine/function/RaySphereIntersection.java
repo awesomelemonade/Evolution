@@ -11,8 +11,8 @@ public class RaySphereIntersection implements BiFunction<Line, Sphere, Optional<
 	@Override
 	public Optional<Float> apply(Line ray, Sphere sphere) {
 		float t0, t1;
-		Vector3D l = sphere.getCenter().copy().subtract(ray.getOrigin());
-		float tca = l.dotProduct(ray.getDirection());
+		Vector3D l = sphere.getCenter().subtract(ray.origin());
+		float tca = l.dotProduct(ray.direction());
 		if (tca < 0) {
 			return Optional.empty();
 		}
@@ -35,6 +35,6 @@ public class RaySphereIntersection implements BiFunction<Line, Sphere, Optional<
 				return Optional.empty();
 			}
 		}
-		return Optional.of(ray.getDirection().getAbsoluteValue() * t0);
+		return Optional.of(ray.direction().length() * t0);
 	}
 }

@@ -7,8 +7,8 @@ import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL20;
 
 public class UniformVariable {
-	private int id;
-	private String name;
+	private final int id;
+	private final String name;
 
 	public UniformVariable(int id, String name) {
 		this.id = id;

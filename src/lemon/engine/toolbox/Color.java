@@ -1,9 +1,9 @@
 package lemon.engine.toolbox;
 
-import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
+import lemon.engine.math.VectorData;
 
-public class Color extends Vector<Color> {
+public record Color(float red, float green, float blue, float alpha, Lazy<float[]> dataArray) implements VectorData {
 	public static final Color WHITE = new Color(1f, 1f, 1f);
 	public static final Color RED = new Color(1f, 0f, 0f);
 	public static final Color GREEN = new Color(0f, 1f, 0f);
@@ -12,11 +12,6 @@ public class Color extends Vector<Color> {
 	public static final Color CYAN = new Color(0f, 1f, 1f);
 	public static final Color MAGENTA = new Color(1f, 0f, 1f);
 
-	private static final int RED_INDEX = 0;
-	private static final int GREEN_INDEX = 1;
-	private static final int BLUE_INDEX = 2;
-	private static final int ALPHA_INDEX = 3;
-	
 	public Color() {
 		this(1f);
 	}
@@ -27,50 +22,13 @@ public class Color extends Vector<Color> {
 		this(red, green, blue, 1f);
 	}
 	public Color(float red, float green, float blue, float alpha) {
-		super(Color.class, Color::new, red, green, blue, alpha);
+		this(red, green, blue, alpha, Lazy.of(() -> new float[] {red, green, blue, alpha}));
 	}
 	public Color(Color color) {
-		this(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+		this(color.red, color.green, color.blue, color.alpha, color.dataArray);
 	}
-	public void set(float red, float green, float blue) {
-		set(red, green, blue, 1f);
-	}
-	public void set(float red, float green, float blue, float alpha) {
-		setRed(red);
-		setGreen(green);
-		setBlue(blue);
-		setAlpha(alpha);
-	}
-	public void setRed(float red) {
-		super.set(RED_INDEX, red);
-	}
-	public float getRed() {
-		return super.get(RED_INDEX);
-	}
-	public void setGreen(float green) {
-		super.set(GREEN_INDEX, green);
-	}
-	public float getGreen() {
-		return super.get(GREEN_INDEX);
-	}
-	public void setBlue(float blue) {
-		super.set(BLUE_INDEX, blue);
-	}
-	public float getBlue() {
-		return super.get(BLUE_INDEX);
-	}
-	public void setAlpha(float alpha) {
-		super.set(ALPHA_INDEX, alpha);
-	}
-	public float getAlpha() {
-		return super.get(ALPHA_INDEX);
-	}
-	public Vector3D toVector3D() {
-		return new Vector3D(this.getRed(), this.getGreen(), this.getBlue());
-	}
-	@Override
-	public String toString() {
-		return String.format("Color[%f, %f, %f, %f]", this.getRed(), this.getGreen(), this.getBlue(), this.getAlpha());
+	public Vector3D asRGBVector() {
+		return new Vector3D(this.red(), this.green(), this.blue());
 	}
 	public static Color randomOpaque() {
 		return new Color((float) Math.random(), (float) Math.random(), (float) Math.random());

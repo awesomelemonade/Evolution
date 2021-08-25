@@ -10,28 +10,23 @@ public class Camera {
 	private Supplier<Matrix> invertedRotationMatrixSupplier;
 
 	public Camera(Projection projection) {
-		this(new Vector3D(), new Vector3D(), projection);
+		this(Vector3D.ZERO, Vector3D.ZERO, projection);
 	}
 	public Camera(Vector3D position, Vector3D rotation, Projection projection) {
 		this.position = position;
 		this.rotation = rotation;
 		this.projection = projection;
-		Vector3D invertedPosition = new Vector3D();
-		Vector3D invertedRotation = new Vector3D();
-		Supplier<Matrix> rotationSupplier = MathUtil.getRotationSupplier(invertedRotation);
-		Supplier<Matrix> transformationSupplier = MathUtil.getTransformationSupplier(invertedPosition, invertedRotation);
-		this.invertedRotationMatrixSupplier = () -> {
-			Vector.invert(invertedRotation, rotation);
-			return rotationSupplier.get();
-		};
-		this.transformationMatrixSupplier = () -> {
-			Vector.invert(invertedPosition, position);
-			Vector.invert(invertedRotation, rotation);
-			return transformationSupplier.get();
-		};
+		this.invertedRotationMatrixSupplier = MathUtil.getRotationSupplier(() -> this.getRotation().invert());
+		this.transformationMatrixSupplier = MathUtil.getTransformationSupplier(() -> this.getPosition().invert(), () -> this.getRotation().invert());
+	}
+	public void setPosition(Vector3D position) {
+		this.position = position;
 	}
 	public Vector3D getPosition() {
 		return position;
+	}
+	public void setRotation(Vector3D rotation) {
+		this.rotation = rotation;
 	}
 	public Vector3D getRotation() {
 		return rotation;

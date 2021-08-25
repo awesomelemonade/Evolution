@@ -1,10 +1,10 @@
 package lemon.evolution.destructible.beta;
 
-import lemon.engine.model.ModelBuilder;
 import lemon.engine.math.Vector3D;
-import lemon.evolution.pool.VectorPool;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MarchingCube {
 	private float[] offsets; // [offsetX, offsetY, offsetZ]
@@ -27,7 +27,10 @@ public class MarchingCube {
 	public float getThreshold() {
 		return threshold;
 	}
-	public void addVertices(ModelBuilder builder) {
+	public MarchingCubeMesh generateMesh() {
+	    List<Integer> indices = new ArrayList<>();
+	    List<Vector3D> vertices = new ArrayList<>();
+	    List<Integer> hashes = new ArrayList<>();
 		int[][][][] edgeIndices = new int[grid.getSizeX()][grid.getSizeY()][grid.getSizeZ()][3];
 		for (int[][][] a : edgeIndices) {
 			for (int[][] b : a) {
@@ -57,8 +60,9 @@ public class MarchingCube {
 											offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
 									float dataA = grid.get(i + o[0], j + o[1], k + o[2]);
 									float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
-									edgeIndices[x][y][z][w] = builder.getVertices().size();
-									builder.addVertices(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
+									edgeIndices[x][y][z][w] = vertices.size();
+									vertices.add(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
+									hashes.add(hash(x, y, z, w));
 								}
 							}
 							vectorIndices[l] = edgeIndices[x][y][z][w];
@@ -66,11 +70,13 @@ public class MarchingCube {
 					}
 					int[] triangles = MarchingCubeConstants.TRIANGLE_TABLE[index];
 					for (int l = 0; l < triangles.length; l++) {
-						builder.addIndices(vectorIndices[triangles[l]]);
+						indices.add(vectorIndices[triangles[l]]);
 					}
 				}
 			}
 		}
+		return new MarchingCubeMesh(indices.stream().mapToInt(Integer::intValue).toArray(),
+                vertices.toArray(Vector3D[]::new), hashes.stream().mapToInt(Integer::intValue).toArray());
 	}
 	private Vector3D interpolate(Vector3D a, Vector3D b, float percentage) {
 		return b.subtract(a).multiply(percentage).add(a);
@@ -103,4 +109,7 @@ public class MarchingCube {
 		}
 		return index;
 	}
+    public static int hash(int x, int y, int z, int w) {
+        return (x << 24) | (y << 16) | (z << 8) | w;
+    }
 }

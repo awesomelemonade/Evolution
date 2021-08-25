@@ -4,19 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import lemon.engine.texture.Texture;
 import lemon.engine.toolbox.Color;
+import lemon.engine.toolbox.Disposable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
-import lemon.engine.control.CleanUpEvent;
-import lemon.engine.event.EventManager;
-import lemon.engine.event.Listener;
-import lemon.engine.event.Subscribe;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 
-public class ShaderProgram implements Listener {
+public class ShaderProgram implements Disposable {
 	private int id;
 	private Map<String, UniformVariable> uniformVariables;
 
@@ -26,10 +22,8 @@ public class ShaderProgram implements Listener {
 					"Indices and Name Arrays have different size: " + indices.length + " - " + names.length);
 		}
 		id = GL20.glCreateProgram();
-		if (shaders != null) {
-			for (Shader shader : shaders) {
-				GL20.glAttachShader(id, shader.getId());
-			}
+		for (Shader shader : shaders) {
+			GL20.glAttachShader(id, shader.id());
 		}
 		for (int i = 0; i < indices.length; ++i) {
 			GL20.glBindAttribLocation(id, indices[i], names[i]);
@@ -38,18 +32,15 @@ public class ShaderProgram implements Listener {
 		if (GL20.glGetProgrami(id, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
 			throw new IllegalStateException("Shader Program Link Fail: " + GL20.glGetProgramInfoLog(id));
 		}
-		if (shaders != null) {
-			for (Shader shader : shaders) {
-				GL20.glDetachShader(id, shader.getId());
-				GL20.glDeleteShader(shader.getId());
-			}
+		for (Shader shader : shaders) {
+			GL20.glDetachShader(id, shader.id());
+			shader.dispose();
 		}
 		GL20.glValidateProgram(id);
 		if (GL20.glGetProgrami(id, GL20.GL_VALIDATE_STATUS) == GL11.GL_FALSE) {
 			throw new IllegalStateException("Shader Program Validation Fail: " + GL20.glGetProgramInfoLog(id));
 		}
-		uniformVariables = new HashMap<String, UniformVariable>();
-		EventManager.INSTANCE.registerListener(this);
+		uniformVariables = new HashMap<>();
 	}
 	public UniformVariable getUniformVariable(String name) {
 		if (!uniformVariables.containsKey(name)) {
@@ -87,8 +78,8 @@ public class ShaderProgram implements Listener {
 	public void loadMatrix(MatrixType type, Matrix matrix) {
 		this.loadMatrix(type.getUniformVariableName(), matrix);
 	}
-	@Subscribe
-	public void cleanUp(CleanUpEvent event) {
+	@Override
+	public void dispose() {
 		GL20.glDeleteProgram(id);
 	}
 	public int getId() {

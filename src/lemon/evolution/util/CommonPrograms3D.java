@@ -52,4 +52,10 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 			program.init();
 		}
 	}
+	public static void disposeAll() {
+		for (CommonPrograms3D program : CommonPrograms3D.values()) {
+		    // TODO: May not be initialized
+			program.dispose();
+		}
+	}
 }

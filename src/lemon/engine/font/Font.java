@@ -22,10 +22,10 @@ public class Font {
 
 	public Font(Path path) {
 		texture = new Texture();
-		data = new HashMap<Integer, CharData>();
-		kernings = new HashMap<Integer, Map<Integer, Integer>>();
+		data = new HashMap<>();
+		kernings = new HashMap<>();
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(Font.class.getResourceAsStream(path.toString())));
+			BufferedReader reader = new BufferedReader(new InputStreamReader(Font.class.getResourceAsStream(path.toString().replaceAll("\\\\", "/"))));
 			reader.readLine(); // String info = reader.readLine();
 			String common = reader.readLine();
 			String page = reader.readLine();
@@ -33,7 +33,7 @@ public class Font {
 			String filename = page.substring("page id=0 file=\"".length(), page.length() - "\"".length());
 			processCommon(common);
 			int charCount = Integer.parseInt(chars.substring("chars count=".length()));
-			texture.load(new TextureData(ImageIO.read(Font.class.getResourceAsStream(path.getParent().toString() + "/" + filename))));
+			texture.load(new TextureData(ImageIO.read(Font.class.getResourceAsStream((path.getParent().toString() + "/" + filename).replaceAll("\\\\", "/")))));
 			for (int i = 0; i < charCount; ++i) {
 				processCharData(reader.readLine());
 			}

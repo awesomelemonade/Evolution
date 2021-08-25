@@ -32,7 +32,7 @@ public class ParticleSystem implements Renderable {
 	private Deque<Particle> particles;
 	public ParticleSystem(int maxParticles) {
 		this.maxParticles = maxParticles;
-		this.particles = new ArrayDeque<Particle>();
+		this.particles = new ArrayDeque<>();
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
 			new VertexBuffer().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {

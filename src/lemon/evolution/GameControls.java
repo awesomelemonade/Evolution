@@ -1,5 +1,6 @@
 package lemon.evolution;
 
+import lemon.engine.glfw.GLFWInput;
 import org.lwjgl.glfw.GLFW;
 
 import lemon.evolution.util.BasicControlActivator;
@@ -15,8 +16,8 @@ public class GameControls {
 	public static final PlayerControl MOVE_DOWN = new PlayerControl();
 	public static final PlayerControl DEBUG_TOGGLE = new PlayerControl();
 
-	public static void setup() {
-		BasicControlActivator.setup();
+	public static void setup(GLFWInput input) {
+		BasicControlActivator.setup(input);
 		BasicControlActivator.bindMouseHolds(GLFW.GLFW_MOUSE_BUTTON_1, CAMERA_ROTATE);
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_W, MOVE_FORWARDS);
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_S, MOVE_BACKWARDS);

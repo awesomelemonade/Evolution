@@ -14,7 +14,6 @@ import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import lemon.engine.control.CleanUpEvent;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
@@ -31,7 +30,7 @@ import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
-import lemon.evolution.physicsbeta.CollisionPacket;
+import lemon.evolution.physics.beta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
 import lemon.evolution.ui.beta.UIButton;
 import lemon.evolution.ui.beta.UIScreen;
@@ -42,7 +41,6 @@ import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.PlayerControl;
 import lemon.evolution.util.ShaderProgramHolder;
-import lemon.evolution.pool.VectorPool;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -52,8 +50,6 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
-import lemon.engine.control.RenderEvent;
-import lemon.engine.control.UpdateEvent;
 import lemon.engine.model.LineGraph;
 import lemon.engine.event.EventManager;
 import lemon.engine.event.Listener;
@@ -68,7 +64,6 @@ import lemon.engine.toolbox.SkyboxLoader;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
-import lemon.engine.time.BenchmarkEvent;
 import lemon.engine.time.Benchmarker;
 import lemon.evolution.setup.CommonProgramsSetup;
 
@@ -125,7 +120,13 @@ public enum Game implements Listener {
 				temp.setX(vector.getX() / 300f);
 				temp.setY(vector.getZ() / 300f);
 				float distanceSquared = vector.getX() * vector.getX() + vector.getZ() * vector.getZ();
-				float terrain =  -vector.getY() + (float) Math.pow(2f, noise2d.apply(temp)) * 5f + (float) Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5f;
+				float terrain = (float) (-Math.tanh(vector.getY() / 100.0) * 100.0 +
+                        Math.pow(2f, noise2d.apply(temp)) * 5.0 + Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
+				/*float x = vector.getY() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
+				test[0] = Math.min(test[0], x);
+				test[1] = Math.max(test[1], x);
+				System.out.println(Arrays.toString(test));
+				return x;*/
 				return vector.getY() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
 			};
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
