@@ -50,5 +50,5 @@ Ideas
 Other
 -----
 * LWJGL Version: 3.2.3 release (Downloaded 27 Nov 19)
-* Requires Java 17
+* Requires Java 16
 * Semantic Versioning 2.0.0: https://semver.org

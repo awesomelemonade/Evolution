@@ -1,6 +1,6 @@
 package lemon.engine.draw;
 
-import lemon.engine.math.VectorData;
+import lemon.engine.math.Vector;
 import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
 import org.lwjgl.opengl.GL11;
@@ -9,12 +9,12 @@ import org.lwjgl.opengl.GL20;
 
 public class UnindexedDrawable implements Drawable {
 	private VertexArray vertexArray;
-	private VectorData[][] vertices;
+	private Vector[][] vertices;
 	private int drawMode;
 	private int stride;
 	private int count;
 
-	public UnindexedDrawable(VectorData[][] vertices, int drawMode) {
+	public UnindexedDrawable(Vector[][] vertices, int drawMode) {
 		this.vertices = vertices;
 		this.drawMode = drawMode;
 		this.stride = Drawable.getStride(vertices);

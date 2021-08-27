@@ -26,15 +26,6 @@ public class EventWith<T> {
             listeners.remove(key);
         };
     }
-    public void addOnce(Consumer<? super T> listener) {
-        Object key = new Object();
-        cachedListeners = null;
-        listeners.put(key, x -> {
-            listener.accept(x);
-            cachedListeners = null;
-            listeners.remove(key);
-        });
-    }
     @SuppressWarnings("unchecked")
     public void callListeners(T arg) {
         if (cachedListeners == null) {

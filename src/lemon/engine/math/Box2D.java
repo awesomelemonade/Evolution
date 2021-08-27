@@ -2,9 +2,9 @@ package lemon.engine.math;
 
 import lemon.engine.toolbox.Lazy;
 
-public record Box2D(float x, float y, float width, float height, Lazy<float[]> dataArray) {
+public record Box2D(float x, float y, float width, float height, Lazy<float[]> dataArray) implements HasDataArray {
 	public Box2D(float x, float y, float width, float height) {
-		this(x, y, width, height, Lazy.of(() -> new float[] {x, y, width, height}));
+		this(x, y, width, height, new Lazy<>(() -> new float[] {x, y, width, height}));
 	}
 	public Box2D(Box2D box) {
 		this(box.x, box.y, box.width, box.height, box.dataArray);

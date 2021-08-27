@@ -1,13 +1,13 @@
 package lemon.engine.function;
 
-import lemon.engine.math.VectorData;
+import lemon.engine.math.Vector;
 
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.ToIntFunction;
 
-public class PerlinNoise<T extends VectorData> implements Function<T, Float> {
+public class PerlinNoise<T extends Vector> implements Function<T, Float> {
 	private IntUnaryOperator abs = AbsoluteIntValue.HASHED;
 	private IntUnaryOperator[] hashFunctions;
 	private ToIntFunction<int[]> pairFunction;

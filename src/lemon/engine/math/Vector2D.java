@@ -4,11 +4,11 @@ import lemon.engine.toolbox.Lazy;
 
 import java.util.function.UnaryOperator;
 
-public record Vector2D(float x, float y, Lazy<float[]> dataArray) implements VectorData<Vector2D> {
+public record Vector2D(float x, float y, Lazy<float[]> dataArray) implements Vector<Vector2D> {
 	public static final Vector2D ZERO = new Vector2D(0, 0);
 
 	public Vector2D(float x, float y) {
-		this(x, y, Lazy.of(() -> new float[] {x, y}));
+		this(x, y, new Lazy<>(() -> new float[] {x, y}));
 	}
 	public Vector2D(Vector2D vector) {
 		this(vector.x, vector.y, vector.dataArray);

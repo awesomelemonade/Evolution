@@ -1,6 +1,6 @@
 package lemon.engine.draw;
 
-import lemon.engine.math.VectorData;
+import lemon.engine.math.Vector;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
@@ -8,16 +8,16 @@ import java.nio.FloatBuffer;
 public interface Drawable {
 	public static final int BYTES_PER_FLOAT = 4;
 	public void draw();
-	public static int getStride(VectorData[][] vertices) {
+	public static int getStride(Vector[][] vertices) {
 		int stride = 0;
-		for (VectorData[] data : vertices) {
+		for (Vector[] data : vertices) {
 			if (data.length > 0) {
 				stride += data[0].numDimensions();
 			}
 		}
 		return stride;
 	}
-	public static FloatBuffer getFloatBuffer(VectorData[][] vertices, int stride) {
+	public static FloatBuffer getFloatBuffer(Vector[][] vertices, int stride) {
 		int numVertices = vertices[0].length;
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(numVertices * stride);
 		for (int i = 0; i < numVertices; i++) {

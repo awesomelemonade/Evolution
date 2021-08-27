@@ -90,7 +90,7 @@ public class TerrainChunk {
                 Vector3D[] vertices = model.getVertices();
                 Color[] colors = new Color[vertices.length];
                 Arrays.fill(colors, color);
-                var vertexData = new VectorData[][] {vertices, colors, normals};
+                var vertexData = new Vector[][] {vertices, colors, normals};
                 mainThreadExecutor.execute(() -> {
                     computable.compute(drawable -> {
                         drawable.setData(indices, vertexData);

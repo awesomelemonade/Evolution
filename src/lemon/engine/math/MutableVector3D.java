@@ -1,5 +1,7 @@
 package lemon.engine.math;
 
+import lemon.engine.toolbox.Cache;
+
 public interface MutableVector3D {
 	// construction
 	public static MutableVector3D ofZero() {
@@ -13,19 +15,23 @@ public interface MutableVector3D {
 			private float x = initialX;
 			private float y = initialY;
 			private float z = initialZ;
+			private final Cache<Vector3D> cache = new Cache<>(() -> new Vector3D(x, y, z));
 			@Override
 			public MutableVector3D setX(float x) {
 				this.x = x;
+				cache.invalidate();
 				return this;
 			}
 			@Override
 			public MutableVector3D setY(float y) {
 				this.y = y;
+				cache.invalidate();
 				return this;
 			}
 			@Override
 			public MutableVector3D setZ(float z) {
 				this.z = z;
+				cache.invalidate();
 				return this;
 			}
 			@Override
@@ -40,6 +46,10 @@ public interface MutableVector3D {
 			public float z() {
 				return z;
 			}
+			@Override
+			public Vector3D toImmutable() {
+				return cache.get();
+			}
 		};
 	}
 	// standard
@@ -50,7 +60,7 @@ public interface MutableVector3D {
 	public float y();
 	public float z();
 	// default operations
-	public default Vector3D toImmutable() { // TODO: Cacheable?
+	public default Vector3D toImmutable() {
 		return new Vector3D(x(), y(), z());
 	}
 	public default MutableVector3D addX(float x) {

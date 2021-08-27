@@ -18,7 +18,7 @@ import org.lwjgl.opengl.GL11;
 public class PuzzleBall implements Renderable {
 	private static final int RADIUS = 1;
 	private static final int ITERATIONS = 5;
-	private static final Lazy<Drawable> sphere = Lazy.of(() -> {
+	private static final Lazy<Drawable> sphere = new Lazy<>(() -> {
 		return SphereModelBuilder.build(new ModelBuilder(), RADIUS, ITERATIONS)
 				.build((indices, vertices) -> {
 					Color[] colors = new Color[vertices.length];

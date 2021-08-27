@@ -4,12 +4,12 @@ import lemon.engine.toolbox.Lazy;
 
 import java.util.function.UnaryOperator;
 
-public record Vector3D(float x, float y, float z, Lazy<float[]> dataArray) implements VectorData<Vector3D> {
+public record Vector3D(float x, float y, float z, Lazy<float[]> dataArray) implements Vector<Vector3D> {
 	public static final Vector3D ZERO = new Vector3D(0, 0, 0);
 	public static final Vector3D[] EMPTY_ARRAY = new Vector3D[] {};
 
 	public Vector3D(float x, float y, float z) {
-		this(x, y, z, Lazy.of(() -> new float[] {x, y, z}));
+		this(x, y, z, new Lazy<>(() -> new float[] {x, y, z}));
 	}
 	public Vector3D(Vector3D vector) {
 		this(vector.x, vector.y, vector.z, vector.dataArray);

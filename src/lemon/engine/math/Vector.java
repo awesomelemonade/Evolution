@@ -1,22 +1,8 @@
 package lemon.engine.math;
 
-import lemon.engine.toolbox.Lazy;
-
-import java.util.Arrays;
 import java.util.function.UnaryOperator;
 
-public interface VectorData<T extends VectorData<T>> {
-	public Lazy<float[]> dataArray();
-	public default float[] data() {
-		var dataArray = constantData();
-		return Arrays.copyOf(dataArray, dataArray.length);
-	}
-	public default float[] constantData() {
-		return dataArray().get();
-	}
-	public default int numDimensions() {
-		return constantData().length;
-	}
+public interface Vector<T extends Vector<T>> extends HasDataArray {
 	public T operate(UnaryOperator<Float> operator);
 	public T add(T vector);
 	public T subtract(T vector);

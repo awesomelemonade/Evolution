@@ -1,6 +1,6 @@
 package lemon.engine.draw;
 
-import lemon.engine.math.VectorData;
+import lemon.engine.math.Vector;
 import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
 import org.lwjgl.opengl.GL11;
@@ -9,15 +9,15 @@ import org.lwjgl.opengl.GL20;
 
 public class IndexedDrawable implements Drawable {
 	private VertexArray vertexArray;
-	private VectorData[][] vertices;
+	private Vector[][] vertices;
 	private int[] indices;
 	private int stride;
 	private int drawMode;
 
-	public IndexedDrawable(int[] indices, VectorData[][] vertices) {
+	public IndexedDrawable(int[] indices, Vector[][] vertices) {
 		this(indices, vertices, GL11.GL_TRIANGLES);
 	}
-	public IndexedDrawable(int[] indices, VectorData[][] vertices, int drawMode) {
+	public IndexedDrawable(int[] indices, Vector[][] vertices, int drawMode) {
 		this.vertices = vertices;
 		this.indices = indices;
 		this.drawMode = drawMode;

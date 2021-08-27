@@ -4,7 +4,7 @@ import lemon.engine.control.Loader;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.math.Percentage;
 import lemon.engine.math.Vector3D;
-import lemon.engine.math.VectorData;
+import lemon.engine.math.Vector;
 import lemon.engine.thread.ThreadManager;
 import org.lwjgl.opengl.GL11;
 
@@ -92,7 +92,7 @@ public class ObjLoader implements Loader {
 	public IndexedDrawable toIndexedDrawable() {
 		return new IndexedDrawable(
 				indices.stream().mapToInt(i -> i).toArray(),
-				new VectorData[][] {
+				new Vector[][] {
 						vertices.toArray(Vector3D.EMPTY_ARRAY),
 						Color.randomOpaque(vertices.size()),
 						normals.toArray(Vector3D.EMPTY_ARRAY)
