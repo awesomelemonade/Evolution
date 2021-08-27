@@ -2,7 +2,6 @@ package lemon.evolution.destructible.beta;
 
 import lemon.engine.control.Loader;
 import lemon.engine.math.Percentage;
-import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
 import lemon.engine.math.VectorData;
 import lemon.engine.thread.ThreadManager;

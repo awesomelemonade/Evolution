@@ -2,6 +2,7 @@ package lemon.evolution.ui.beta;
 
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
+import lemon.engine.math.Vector2D;
 import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposable;
@@ -23,6 +24,12 @@ public class UIScreen implements Renderable, Disposable {
 		disposables.add(button.registerInputEvents(input));
 		components.add(button);
 		return button;
+	}
+	public UIWheel addWheel(Vector2D position, float radius, float value, Color color) {
+		UIWheel wheel = new UIWheel(position, radius, value, color);
+		disposables.add(wheel.registerInputEvents(input));
+		components.add(wheel);
+		return wheel;
 	}
 	@Override
 	public void render() {

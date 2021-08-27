@@ -11,12 +11,12 @@ public class Collision {
 	}
 	public void set(float t, Vector3D intersection) {
 		this.t = t;
-		this.intersection.set(intersection);
+		this.intersection = intersection;
 	}
 	public void test(float t, Vector3D intersection) {
 		if (t < this.t) {
 			this.t = t;
-			this.intersection.set(intersection);
+			this.intersection = intersection;
 		}
 	}
 	public float getT() {

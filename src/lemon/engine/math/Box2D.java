@@ -2,7 +2,7 @@ package lemon.engine.math;
 
 import lemon.engine.toolbox.Lazy;
 
-public record Box2D(float x, float y, float width, float height, Lazy<float[]> dataArray) implements VectorData {
+public record Box2D(float x, float y, float width, float height, Lazy<float[]> dataArray) {
 	public Box2D(float x, float y, float width, float height) {
 		this(x, y, width, height, Lazy.of(() -> new float[] {x, y, width, height}));
 	}

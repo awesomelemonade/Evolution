@@ -9,6 +9,7 @@ import lemon.evolution.pool.MatrixPool;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 
@@ -35,9 +36,9 @@ public class TerrainChunk {
         this.marchingCube = new MarchingCube(scalarGrid, MARCHING_CUBE_SIZE, 0f);
         this.transformationMatrix = new Matrix(4);
         try (var translationMatrix = MatrixPool.ofTranslation(
-                scalar.getX() * chunkX * TerrainChunk.SIZE,
-                scalar.getY() * chunkY * TerrainChunk.SIZE,
-                scalar.getZ() * chunkZ * TerrainChunk.SIZE);
+                scalar.x() * chunkX * TerrainChunk.SIZE,
+                scalar.y() * chunkY * TerrainChunk.SIZE,
+                scalar.z() * chunkZ * TerrainChunk.SIZE);
              var scalarMatrix = MatrixPool.ofScalar(scalar)) {
             Matrix.multiply(transformationMatrix, translationMatrix, scalarMatrix);
         }
@@ -55,12 +56,10 @@ public class TerrainChunk {
 		        PreNormals preNormals = new PreNormals();
                 List<Triangle> triangles = new ArrayList<>();
                 Vector3D[] transformed = new Vector3D[vertices.length];
-                try (var x = VectorPool.of(5f * chunkX * TerrainChunk.SIZE,
-                        5f * chunkY * TerrainChunk.SIZE, 5f * chunkZ * TerrainChunk.SIZE)) {
-                    for (int i = 0; i < vertices.length; i++) {
-                        transformed[i] = vertices[i].multiply(5f).add(x);
-                    }
-                }
+				var x = new Vector3D(5f * chunkX * TerrainChunk.SIZE, 5f * chunkY * TerrainChunk.SIZE, 5f * chunkZ * TerrainChunk.SIZE);
+				for (int i = 0; i < vertices.length; i++) {
+					transformed[i] = vertices[i].multiply(5f).add(x);
+				}
                 for (int i = 0; i < indices.length; i += 3) {
                     Vector3D a = transformed[indices[i]];
                     Vector3D b = transformed[indices[i + 2]];
@@ -69,11 +68,10 @@ public class TerrainChunk {
                     float area = triangle.area();
                     if (area > 0f) {
                         float weight = 1f / area;
-                        try (var scaledNormal = VectorPool.of(triangle.getNormal(), x -> x.multiply(weight))) {
-                            preNormals.addNormal(hashes[indices[i]], scaledNormal);
-                            preNormals.addNormal(hashes[indices[i + 1]], scaledNormal);
-                            preNormals.addNormal(hashes[indices[i + 2]], scaledNormal);
-                        }
+						var scaledNormal = triangle.normal().multiply(weight);
+						preNormals.addNormal(hashes[indices[i]], scaledNormal);
+						preNormals.addNormal(hashes[indices[i + 1]], scaledNormal);
+						preNormals.addNormal(hashes[indices[i + 2]], scaledNormal);
                         triangles.add(triangle);
                     }
                 }
@@ -125,5 +123,8 @@ public class TerrainChunk {
     }
 	public Matrix getTransformationMatrix() {
 		return transformationMatrix;
+	}
+	public Optional<List<Triangle>> getTriangles() {
+		return model.getValue().map(MarchingCubeModel::getTriangles);
 	}
 }

@@ -3,19 +3,18 @@ package lemon.evolution;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.engine.control.GLFWWindow;
 import lemon.engine.math.Matrix;
+import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
 
 import lemon.engine.control.Loader;
-import lemon.engine.event.EventManager;
-import lemon.engine.event.Listener;
-import lemon.engine.event.Subscribe;
 import lemon.engine.math.Box2D;
 import lemon.engine.splash.LoadingBar;
 import lemon.engine.toolbox.Color;
 
-public class Loading implements Listener {
+public class Loading implements Screen {
 	private static final Logger logger = Logger.getLogger(Loading.class.getName());
 	private LoadingBar loadingBar;
 	private Loader[] loaders;
@@ -32,7 +31,7 @@ public class Loading implements Listener {
 	}
 
 	@Override
-	public void onRegister() {
+	public void onLoad(GLFWWindow window) {
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
 		this.loadingBar = new LoadingBar(loaders[loaderIndex].getPercentage(),
 				new Box2D(-1f, -1.1f, 2f, 0.3f),
@@ -40,10 +39,10 @@ public class Loading implements Listener {
 				new Color(0f, 0f, 0f), new Color(0f, 0f, 0f));
 		loaders[loaderIndex].load();
 	}
-	@Subscribe
-	public void update(UpdateEvent event) {
+
+	@Override
+	public void update() {
 		if (loaderIndex >= loaders.length) { // Ensures that we wait 1 frame - renders the loading bar full
-			EventManager.INSTANCE.unregisterListener(this);
 			callback.run();
 		} else {
 			Loader currentLoader = loaders[loaderIndex];
@@ -57,10 +56,16 @@ public class Loading implements Listener {
 			}
 		}
 	}
-	@Subscribe
-	public void render(RenderEvent event) {
+
+	@Override
+	public void render() {
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 			loadingBar.render();
 		});
+	}
+
+	@Override
+	public void dispose() {
+
 	}
 }

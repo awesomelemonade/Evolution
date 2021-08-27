@@ -1,36 +1,40 @@
 package lemon.engine.game;
 
 import lemon.engine.math.Camera;
+import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
 
-public class Player {
+public record Player(Camera camera, MutableVector3D mutableVelocity) {
 	private static final float DELTA_MODIFIER = 0.000001f;
-	private Camera camera;
-	private Vector3D velocity;
-
 	public Player(Projection projection) {
-		camera = new Camera(projection);
-		velocity = new Vector3D(0, 0, 0);
+		this(new Camera(projection), MutableVector3D.ofZero());
 	}
 	public void update(float delta) {
-		camera.setPosition(camera.getPosition().add(velocity.multiply(delta * DELTA_MODIFIER)));
-	}
-	public Camera getCamera() {
-		return camera;
+		camera.mutablePosition().add(velocity().multiply(delta * DELTA_MODIFIER));
 	}
 	public Vector3D getVectorDirection() {
+		var rotation = camera.rotation();
 		return new Vector3D(
-				(float) (-(Math.sin(camera.getRotation().y())
-						* Math.cos(camera.getRotation().x()))),
-				(float) (Math.sin(camera.getRotation().x())),
-				(float) (-(Math.cos(camera.getRotation().x())
-						* Math.cos(camera.getRotation().y()))));
+				(float) (-(Math.sin(rotation.y())
+						* Math.cos(rotation.x()))),
+				(float) (Math.sin(rotation.x())),
+				(float) (-(Math.cos(rotation.x())
+						* Math.cos(rotation.y()))));
 	}
-	public Vector3D getPosition() {
-		return camera.getPosition();
+	public MutableVector3D mutablePosition() {
+		return camera.mutablePosition();
 	}
-	public Vector3D getVelocity() {
-		return velocity;
+	public Vector3D position() {
+		return camera.position();
+	}
+	public MutableVector3D mutableRotation() {
+		return camera.mutableRotation();
+	}
+	public Vector3D rotation() {
+		return camera.rotation();
+	}
+	public Vector3D velocity() {
+		return mutableVelocity.toImmutable();
 	}
 }

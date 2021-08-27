@@ -1,7 +1,6 @@
 package lemon.engine.math;
 
 import java.nio.IntBuffer;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.lwjgl.BufferUtils;
@@ -175,5 +174,8 @@ public class MathUtil {
 	 */
 	public static float clamp(float value, float lower, float upper) {
 		return Math.max(lower, Math.min(upper, value));
+	}
+	public static float mod(float value, float mod) {
+		return ((value % mod) + mod) % mod;
 	}
 }

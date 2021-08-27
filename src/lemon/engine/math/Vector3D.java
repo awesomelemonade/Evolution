@@ -2,7 +2,9 @@ package lemon.engine.math;
 
 import lemon.engine.toolbox.Lazy;
 
-public record Vector3D(float x, float y, float z, Lazy<float[]> dataArray) implements VectorData {
+import java.util.function.UnaryOperator;
+
+public record Vector3D(float x, float y, float z, Lazy<float[]> dataArray) implements VectorData<Vector3D> {
 	public static final Vector3D ZERO = new Vector3D(0, 0, 0);
 	public static final Vector3D[] EMPTY_ARRAY = new Vector3D[] {};
 
@@ -19,45 +21,39 @@ public record Vector3D(float x, float y, float z, Lazy<float[]> dataArray) imple
 		float newZ = this.x() * vector.y() - vector.x() * this.y();
 		return new Vector3D(newX, newY, newZ);
 	}
+	@Override
+	public Vector3D operate(UnaryOperator<Float> operator) {
+		return new Vector3D(operator.apply(x), operator.apply(y), operator.apply(z));
+	}
+	@Override
 	public Vector3D add(Vector3D vector) {
 		return new Vector3D(x + vector.x, y + vector.y, z + vector.z);
 	}
+	@Override
 	public Vector3D subtract(Vector3D vector) {
 		return new Vector3D(x - vector.x, y - vector.y, z - vector.z);
 	}
+	@Override
 	public Vector3D multiply(Vector3D vector) {
 		return new Vector3D(x * vector.x, y * vector.y, z * vector.z);
 	}
+	@Override
 	public Vector3D multiply(float scale) {
 		return new Vector3D(x * scale, y * scale, z * scale);
 	}
+	@Override
 	public Vector3D divide(Vector3D vector) {
 		return new Vector3D(x / vector.x, y / vector.y, z / vector.z);
 	}
+	@Override
 	public Vector3D divide(float scale) {
 		return new Vector3D(x / scale, y / scale, z / scale);
 	}
+	@Override
 	public float lengthSquared() {
 		return x * x + y * y + z * z;
 	}
-	public float length() {
-		return (float) Math.sqrt(lengthSquared());
-	}
-	public float distanceSquared(Vector3D vector) {
-		return this.subtract(vector).lengthSquared();
-	}
-	public float distance(Vector3D vector) {
-		return (float) Math.sqrt(distanceSquared(vector));
-	}
-	public Vector3D invert() {
-		return new Vector3D(-x, -y, -z);
-	}
-	public Vector3D normalize() {
-		return this.divide(this.length());
-	}
-	public Vector3D scaleToLength(float length) {
-		return this.multiply(length / this.length());
-	}
+	@Override
 	public float dotProduct(Vector3D vector) {
 		return x * vector.x + y * vector.y + z * vector.z;
 	}

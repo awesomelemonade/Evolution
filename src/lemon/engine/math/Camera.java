@@ -3,32 +3,35 @@ package lemon.engine.math;
 import java.util.function.Supplier;
 
 public class Camera {
-	private Vector3D position;
-	private Vector3D rotation;
-	private Projection projection;
-	private Supplier<Matrix> transformationMatrixSupplier;
-	private Supplier<Matrix> invertedRotationMatrixSupplier;
+	private final MutableVector3D position;
+	private final MutableVector3D rotation;
+	private final Projection projection;
+	private final Supplier<Matrix> transformationMatrixSupplier;
+	private final Supplier<Matrix> invertedRotationMatrixSupplier;
 
 	public Camera(Projection projection) {
-		this(Vector3D.ZERO, Vector3D.ZERO, projection);
+		this(MutableVector3D.ofZero(), MutableVector3D.ofZero(), projection);
 	}
 	public Camera(Vector3D position, Vector3D rotation, Projection projection) {
+		this(MutableVector3D.of(position), MutableVector3D.of(rotation), projection);
+	}
+	public Camera(MutableVector3D position, MutableVector3D rotation, Projection projection) {
 		this.position = position;
 		this.rotation = rotation;
 		this.projection = projection;
-		this.invertedRotationMatrixSupplier = MathUtil.getRotationSupplier(() -> this.getRotation().invert());
-		this.transformationMatrixSupplier = MathUtil.getTransformationSupplier(() -> this.getPosition().invert(), () -> this.getRotation().invert());
+		this.invertedRotationMatrixSupplier = MathUtil.getRotationSupplier(() -> this.rotation().invert());
+		this.transformationMatrixSupplier = MathUtil.getTransformationSupplier(() -> this.position().invert(), () -> this.rotation().invert());
 	}
-	public void setPosition(Vector3D position) {
-		this.position = position;
+	public Vector3D position() {
+		return position.toImmutable();
 	}
-	public Vector3D getPosition() {
+	public MutableVector3D mutablePosition() {
 		return position;
 	}
-	public void setRotation(Vector3D rotation) {
-		this.rotation = rotation;
+	public Vector3D rotation() {
+		return rotation.toImmutable();
 	}
-	public Vector3D getRotation() {
+	public MutableVector3D mutableRotation() {
 		return rotation;
 	}
 	public Projection getProjection() {

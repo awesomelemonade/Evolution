@@ -5,10 +5,11 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
+import lemon.engine.control.GLFWWindow;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.TextModel;
-import lemon.engine.event.EventManager;
 import lemon.engine.render.MatrixType;
+import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
 import org.lwjgl.BufferUtils;
@@ -16,8 +17,6 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 
-import lemon.engine.event.Listener;
-import lemon.engine.event.Subscribe;
 import lemon.engine.font.Font;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
@@ -25,13 +24,13 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.texture.TextureBank;
 import org.lwjgl.opengl.GL15;
 
-public enum FontTest implements Listener {
+public enum FontTest implements Screen {
 	INSTANCE;
 	private Font font;
 	private Map<TextModel, Matrix> text;
 
 	@Override
-	public void onRegister() {
+	public void onLoad(GLFWWindow window) {
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(GLFW.glfwGetCurrentContext(), width, height);
@@ -55,12 +54,13 @@ public enum FontTest implements Listener {
 				MathUtil.getTranslation(new Vector3D(0f, 50f, 0f))
 						.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 0.2f))));
 	}
-	@Subscribe
-	public void update(UpdateEvent event) {
-		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d",
-				EventManager.INSTANCE.getListenersRegistered(),
-				EventManager.INSTANCE.getListenerMethodsRegistered(),
-				EventManager.INSTANCE.getPreloadedMethodsRegistered());
+	@Override
+	public void update() {
+//		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d",
+//				EventManager.INSTANCE.getListenersRegistered(),
+//				EventManager.INSTANCE.getListenerMethodsRegistered(),
+//				EventManager.INSTANCE.getPreloadedMethodsRegistered());
+		String message = "A test message";
 		text.keySet().forEach(textModel -> {
 			if (textModel.getText().toString().contains("Listeners")) {
 				if (!textModel.getText().equals(message)) {
@@ -69,8 +69,8 @@ public enum FontTest implements Listener {
 			}
 		});
 	}
-	@Subscribe
-	public void render(RenderEvent event) {
+	@Override
+	public void render() {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
@@ -87,5 +87,10 @@ public enum FontTest implements Listener {
 			}
 		});
 		GL11.glDisable(GL11.GL_BLEND);
+	}
+
+	@Override
+	public void dispose() {
+
 	}
 }

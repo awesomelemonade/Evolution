@@ -66,7 +66,7 @@ public class BetterComputable<T> {
 
             computer.accept(this);
         }
-        return Optional.ofNullable(this.value.getValue());
+        return Optional.ofNullable(this.value);
     }
 
     /**

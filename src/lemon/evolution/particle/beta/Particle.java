@@ -8,11 +8,11 @@ import java.time.Duration;
 import java.time.Instant;
 
 public class Particle {
-	private Vector3D translation;
-	private Vector3D translationalVelocity;
-	private Vector3D rotation;
-	private Vector3D rotationalVelocity;
-	private Instant creationTime;
+	private final Vector3D translation;
+	private final Vector3D translationalVelocity;
+	private final Vector3D rotation;
+	private final Vector3D rotationalVelocity;
+	private final Instant creationTime;
 	public Particle(Vector3D translation, Vector3D translationalVelocity, Vector3D rotation, Vector3D rotationalVelocity) {
 		this.translation = translation;
 		this.translationalVelocity = translationalVelocity;

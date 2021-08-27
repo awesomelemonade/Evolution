@@ -3,7 +3,6 @@ package lemon.engine.toolbox;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.math.Percentage;
-import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
 import lemon.engine.math.VectorData;
 import lemon.engine.thread.ThreadManager;
@@ -12,7 +11,6 @@ import org.lwjgl.opengl.GL11;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.util.*;
 import java.util.function.BiConsumer;
 

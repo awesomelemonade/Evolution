@@ -85,6 +85,10 @@ public class GLFWWindow implements Disposable {
 		}
 	}
 
+	public void switchScreen(Screen screen) {
+		// TODO
+	}
+
 	@Override
 	public void dispose() {
 		GLFW.glfwDestroyWindow(window);
@@ -116,5 +120,8 @@ public class GLFWWindow implements Disposable {
 
 	public GLFWInput input() {
 		return glfwInput;
+	}
+	public EventWith<Benchmark> onBenchmark() {
+		return onBenchmark;
 	}
 }

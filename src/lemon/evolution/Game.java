@@ -14,6 +14,7 @@ import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
@@ -25,6 +26,7 @@ import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.math.*;
 import lemon.engine.texture.TextureData;
 import lemon.engine.toolbox.Color;
+import lemon.engine.toolbox.Disposables;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
@@ -32,9 +34,8 @@ import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.physics.beta.CollisionPacket;
 import lemon.evolution.puzzle.PuzzleBall;
-import lemon.evolution.ui.beta.UIButton;
+import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.ui.beta.UIScreen;
-import lemon.evolution.ui.beta.UIWheel;
 import lemon.evolution.util.BasicControlActivator;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
@@ -51,14 +52,9 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import lemon.engine.model.LineGraph;
-import lemon.engine.event.EventManager;
-import lemon.engine.event.Listener;
-import lemon.engine.event.Subscribe;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.Player;
 import lemon.engine.input.CursorPositionEvent;
-import lemon.engine.input.KeyEvent;
-import lemon.engine.input.MouseButtonEvent;
 import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.toolbox.SkyboxLoader;
 import lemon.engine.render.MatrixType;
@@ -69,7 +65,7 @@ import lemon.evolution.setup.CommonProgramsSetup;
 
 import javax.imageio.ImageIO;
 
-public enum Game implements Listener {
+public enum Game implements Screen {
 	INSTANCE;
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 
@@ -101,43 +97,36 @@ public enum Game implements Listener {
 
 	private ThreadPoolExecutor pool;
 
+	private final Disposables disposables = new Disposables();
+
 	private static final Color[] DEBUG_GRAPH_COLORS = {
 			Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN
 	};
 
 	@Override
-	public void onRegister() {
+	public void onLoad(GLFWWindow window) {
 		if (!loaded) {
-			EventManager.INSTANCE.unregisterListener(this);
 			// Prepare loaders
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			ScalarField<Vector3D> scalarField = vector -> vector.getY() < -30f ? 0f : -(vector.getY() + noise.apply(vector.divide(100f)) * 5f);
-			ThreadLocal<Vector2D> threadLocal = ThreadLocal.withInitial(Vector2D::new);
+			ScalarField<Vector3D> scalarField = vector -> vector.y() < -30f ? 0f : -(vector.y() + noise.apply(vector.divide(100f)) * 5f);
 			scalarField = vector -> {
-				Vector2D temp = threadLocal.get();
-				temp.setX(vector.getX() / 300f);
-				temp.setY(vector.getZ() / 300f);
-				float distanceSquared = vector.getX() * vector.getX() + vector.getZ() * vector.getZ();
-				float terrain = (float) (-Math.tanh(vector.getY() / 100.0) * 100.0 +
-                        Math.pow(2f, noise2d.apply(temp)) * 5.0 + Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
+				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
+				float terrain = (float) (-Math.tanh(vector.y() / 100.0) * 100.0 +
+                        Math.pow(2f, noise2d.apply(vector.toXZVector().divide(300f))) * 5.0 +
+						Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
 				/*float x = vector.getY() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
 				test[0] = Math.min(test[0], x);
 				test[1] = Math.max(test[1], x);
 				System.out.println(Arrays.toString(test));
 				return x;*/
-				return vector.getY() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
+				return vector.y() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
 			};
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
-			EventManager.INSTANCE.registerListener(new Listener() {
-				@Subscribe
-				public void cleanUp(CleanUpEvent event) {
-					pool.shutdownNow();
-				}
-			});
+			disposables.add(() -> pool.shutdownNow());
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
-			terrain = new Terrain(generator::queueChunk, pool, new Vector3D(5f, 5f, 5f));
+			terrain = new Terrain(generator, new Vector3D(5f, 5f, 5f));
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			int n = 5;
@@ -145,7 +134,7 @@ public enum Game implements Listener {
 			Percentage terrainLoaderPercentage = new Percentage(numChunksToPreload);
 			// Add loaders
 			Loading loading = new Loading(() -> {
-				EventManager.INSTANCE.registerListener(Game.INSTANCE);
+				window.switchScreen(Game.INSTANCE);
 			}, dragonLoader, new Loader() {
 				@Override
 				public void load() {
@@ -163,7 +152,7 @@ public enum Game implements Listener {
 					return terrainLoaderPercentage;
 				}
 			});
-			EventManager.INSTANCE.registerListener(loading);
+			window.switchScreen(loading);
 			loaded = true;
 			return;
 		}
@@ -189,11 +178,11 @@ public enum Game implements Listener {
 
 		player = new Player(new Projection(MathUtil.toRadians(60f),
 				((float) windowWidth) / ((float) windowHeight), 0.01f, 1000f));
-		player.getPosition().set(0f, 300f, 0f);
+		player.mutablePosition().set(0f, 300f, 0f);
 
 		Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
-		CommonProgramsSetup.setup3D(player.getCamera().getProjectionMatrix());
+		CommonProgramsSetup.setup3D(player.camera().getProjectionMatrix());
 
 		updateViewMatrices();
 
@@ -261,7 +250,7 @@ public enum Game implements Listener {
 			}
 		});
 
-		GameControls.setup();
+		GameControls.setup(window.input());
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_Y, EXPLODE);
 
 		puzzleBalls = new ArrayList<>();
@@ -269,7 +258,7 @@ public enum Game implements Listener {
 		int size = 20;
 		for (int i = -size; i <= size; i += 5) {
 			for (int j = -size; j <= size; j += 5) {
-				puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO.copy()));
+				puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO));
 			}
 		}
 		for (int i = 100; i <= 600; i += 10) {
@@ -278,22 +267,23 @@ public enum Game implements Listener {
 
 		debug = new ArrayList<>();
 		CollisionPacket.consumers.add((position, velocity) -> collision -> {
-			try (var after = VectorPool.of(position, x -> x.add(velocity))) {
-				int minChunkX = terrain.getChunkX(Math.min(position.getX(), after.getX()) - 1f);
-				int maxChunkX = terrain.getChunkX(Math.max(position.getX(), after.getX()) + 1f);
-				int minChunkY = terrain.getChunkY(Math.min(position.getY(), after.getY()) - 1f);
-				int maxChunkY = terrain.getChunkY(Math.max(position.getY(), after.getY()) + 1f);
-				int minChunkZ = terrain.getChunkZ(Math.min(position.getZ(), after.getZ()) - 1f);
-				int maxChunkZ = terrain.getChunkZ(Math.max(position.getZ(), after.getZ()) + 1f);
-				for (int i = minChunkX; i <= maxChunkX; i++) {
-					for (int j = minChunkY; j <= maxChunkY; j++) {
-						for (int k = minChunkZ; k <= maxChunkZ; k++) {
-							// TODO: something similar to i * i + j * j + k * k <= indexRadius * indexRadius
-							TerrainChunk chunk = terrain.getChunk(i, j, k);
-							for (Triangle triangle : chunk.getTriangles()) {
+			var after = position.add(velocity);
+			int minChunkX = terrain.getChunkX(Math.min(position.x(), after.x()) - 1f);
+			int maxChunkX = terrain.getChunkX(Math.max(position.x(), after.x()) + 1f);
+			int minChunkY = terrain.getChunkY(Math.min(position.y(), after.y()) - 1f);
+			int maxChunkY = terrain.getChunkY(Math.max(position.y(), after.y()) + 1f);
+			int minChunkZ = terrain.getChunkZ(Math.min(position.z(), after.z()) - 1f);
+			int maxChunkZ = terrain.getChunkZ(Math.max(position.z(), after.z()) + 1f);
+			for (int i = minChunkX; i <= maxChunkX; i++) {
+				for (int j = minChunkY; j <= maxChunkY; j++) {
+					for (int k = minChunkZ; k <= maxChunkZ; k++) {
+						// TODO: something similar to i * i + j * j + k * k <= indexRadius * indexRadius
+						TerrainChunk chunk = terrain.getChunk(i, j, k);
+						chunk.getTriangles().ifPresent(triangles -> {
+							triangles.forEach(triangle -> {
 								CollisionPacket.checkTriangle(position, velocity, triangle, collision);
-							}
-						}
+							});
+						});
 					}
 				}
 			}
@@ -301,60 +291,68 @@ public enum Game implements Listener {
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
 
 		dragonModel = dragonLoader.toIndexedDrawable();
-		lightPosition = new Vector3D(player.getPosition());
+		lightPosition = player.position();
 
 		Font font = new Font(Paths.get("/res/fonts/FreeSans.fnt"));
 		debugTextModel = new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW);
 		keyTextModel = new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW);
 
-		EventManager.INSTANCE.registerListener(new Listener() {
-			@Subscribe
-			public void onKeyRelease(KeyEvent event) {
-				if(event.getAction() == GLFW.GLFW_RELEASE) {
-					if (event.getKey() == GLFW.GLFW_KEY_R) {
-						System.out.println("Set Origin: " + player.getPosition());
-						line.getOrigin().set(player.getPosition());
-						lightPosition.set(player.getPosition());
-					}
-					if (event.getKey() == GLFW.GLFW_KEY_T) {
-						line.set(1, player.getPosition().copy().subtract(line.getOrigin()));
-						System.out.println("Set Direction: " + line.getDirection());
-					}
-					if (event.getKey() == GLFW.GLFW_KEY_G) {
-						puzzleBalls.add(new PuzzleBall(new Vector3D(player.getPosition()), new Vector3D(player.getVelocity())));
-					}
-					if (event.getKey() == GLFW.GLFW_KEY_C) {
-						puzzleBalls.clear();
-						debug.clear();
-					}
-					if (event.getKey() == GLFW.GLFW_KEY_K) {
-						puzzleBalls.forEach(x -> {
-							float spray = 0.2f;
-							float randX = (float) (Math.random() * spray - spray / 2f);
-							float randZ = (float) (Math.random() * spray - spray / 2f);
-							projectiles.add(new PuzzleBall(x.getPosition().copy(), new Vector3D(randX, 0.5f, randZ)));
-						});
-						/*for (int i = -20; i <= 20; i += 5) {
-							for (int j = -20; j <= 20; j += 5) {
-								puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO.copy()));
-							}
-						}*/
-					}
+		disposables.add(window.input().keyEvent().add(event -> {
+			if (event.getAction() == GLFW.GLFW_RELEASE) {
+				if (event.getKey() == GLFW.GLFW_KEY_R) {
+					System.out.println("Set Origin: " + player.position());
+					line.mutableOrigin().set(player.position());
+					lightPosition = player.position();
+				}
+				if (event.getKey() == GLFW.GLFW_KEY_T) {
+					line.mutableDirection().set(player.position().subtract(line.origin()));
+					System.out.println("Set Direction: " + line.direction());
+				}
+				if (event.getKey() == GLFW.GLFW_KEY_G) {
+					puzzleBalls.add(new PuzzleBall(player.position(), player.velocity()));
+				}
+				if (event.getKey() == GLFW.GLFW_KEY_C) {
+					puzzleBalls.clear();
+					debug.clear();
+				}
+				if (event.getKey() == GLFW.GLFW_KEY_K) {
+					puzzleBalls.forEach(x -> {
+						float spray = 0.2f;
+						float randX = (float) (Math.random() * spray - spray / 2f);
+						float randZ = (float) (Math.random() * spray - spray / 2f);
+						projectiles.add(new PuzzleBall(x.position(), new Vector3D(randX, 0.5f, randZ)));
+					});
+					/*for (int i = -20; i <= 20; i += 5) {
+						for (int j = -20; j <= 20; j += 5) {
+							puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO.copy()));
+						}
+					}*/
 				}
 			}
-		});
-
-		uiScreen = new UIScreen();
-		uiScreen.addComponent(new UIButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
-
 		}));
-		uiScreen.addComponent(new UIWheel(new Vector2D(200f, 200f), 50f, 0f, Color.RED));
+
+		uiScreen = new UIScreen(window.input());
+		uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
+			System.out.println("Clicked");
+		});
+		uiScreen.addWheel(new Vector2D(200f, 200f), 50f, 0f, Color.RED);
+
+		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
+		disposables.add(window.input().mouseButtonEvent().add(event -> {
+			if (event.getAction() == GLFW.GLFW_RELEASE) {
+				if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2) {
+					generateExplosionAtCrosshair();
+				}
+			}
+		}));
+		disposables.add(window.input().mouseScrollEvent().add(this::onMouseScroll));
+		disposables.add(window.input().cursorPositionEvent().add(this::onMousePosition));
 	}
 	private PlayerControl EXPLODE = new PlayerControl();
 	public void generateExplosionAtCrosshair() {
 		if (depthDistance != 1f) {
 			float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
-			Vector3D position = player.getPosition().copy().add(player.getVectorDirection().multiply(realDistance));
+			Vector3D position = player.position().add(player.getVectorDirection().multiply(realDistance));
 			terrain.generateExplosion(position, 5f);
 		}
 	}
@@ -366,80 +364,78 @@ public enum Game implements Listener {
 	private static float friction = 1f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed - maxSpeed * friction;
-	private static final Vector3D GRAVITY_VECTOR = Vector3D.unmodifiableVector(new Vector3D(0, -0.005f, 0));
+	private static final Vector3D GRAVITY_VECTOR = new Vector3D(0, -0.005f, 0);
 
-	@Subscribe
-	public void update(UpdateEvent event) {
+	@Override
+	public void update() {
 		if (EXPLODE.isActivated()) {
 			generateExplosionAtCrosshair();
 		}
 
-		float angle = (player.getCamera().getRotation().getY() + MathUtil.PI / 2f);
+		float angle = (player.rotation().y() + MathUtil.PI / 2f);
 		float sin = (float) Math.sin(angle);
 		float cos = (float) Math.cos(angle);
+		var playerHorizontalVector = new Vector2D(playerSpeed * sin, playerSpeed * cos);
 		if (GameControls.STRAFE_LEFT.isActivated()) {
-			player.getVelocity().setX(player.getVelocity().getX() - ((float) (playerSpeed)) * sin);
-			player.getVelocity().setZ(player.getVelocity().getZ() - ((float) (playerSpeed)) * cos);
+			player.mutableVelocity().asXZVector().subtract(playerHorizontalVector);
 		}
 		if (GameControls.STRAFE_RIGHT.isActivated()) {
-			player.getVelocity().setX(player.getVelocity().getX() + ((float) (playerSpeed)) * sin);
-			player.getVelocity().setZ(player.getVelocity().getZ() + ((float) (playerSpeed)) * cos);
+			player.mutableVelocity().asXZVector().add(playerHorizontalVector);
 		}
-		angle = player.getCamera().getRotation().getY();
-		sin = (float) Math.sin(angle);
-		cos = (float) Math.cos(angle);
+		angle = player.rotation().y();
+		sin = (float) Math.sin(angle); // Can probably be computed from the previous sin, cos
+		cos = (float) Math.cos(angle); // Can probably be computed from the previous sin, cos
+		var playerForwardVector = new Vector2D(-playerSpeed * sin, -playerSpeed * cos);
 		if (GameControls.MOVE_FORWARDS.isActivated()) {
-			player.getVelocity().setX(player.getVelocity().getX() - ((float) (playerSpeed)) * sin);
-			player.getVelocity().setZ(player.getVelocity().getZ() - ((float) (playerSpeed)) * cos);
+			player.mutableVelocity().asXZVector().add(playerForwardVector);
 		}
 		if (GameControls.MOVE_BACKWARDS.isActivated()) {
-			player.getVelocity().setX(player.getVelocity().getX() + ((float) (playerSpeed)) * sin);
-			player.getVelocity().setZ(player.getVelocity().getZ() + ((float) (playerSpeed)) * cos);
+			player.mutableVelocity().asXZVector().subtract(playerForwardVector);
 		}
 		if (GameControls.MOVE_UP.isActivated()) {
-			player.getVelocity().setY(player.getVelocity().getY() + ((float) (playerSpeed)));
+			player.mutableVelocity().addY(playerSpeed);
 		}
 		if (GameControls.MOVE_DOWN.isActivated()) {
-			player.getVelocity().setY(player.getVelocity().getY() - ((float) (playerSpeed)));
+			player.mutableVelocity().subtractY(playerSpeed);
 		}
-		player.getVelocity().multiply(friction);
-		player.getVelocity().add(GRAVITY_VECTOR);
+		player.mutableVelocity().multiply(friction);
+		player.mutableVelocity().add(GRAVITY_VECTOR);
 
-		CollisionPacket.collideAndSlide(player.getPosition(), player.getVelocity(), 20);
+		CollisionPacket.collideAndSlide(player.mutablePosition(), player.mutableVelocity(), 20);
 
-		try (var targetRotation = VectorPool.of((float) Math.atan(player.getVelocity().getY() / Math.hypot(player.getVelocity().getX(), player.getVelocity().getZ())),
-				(float) (Math.PI + Math.atan2(player.getVelocity().getX(), player.getVelocity().getZ())), 0f);
-				var diff = VectorPool.of(targetRotation, x -> x.subtract(player.getCamera().getRotation()))) {
-			diff.operate(x -> {
-				x %= MathUtil.TAU;
-				x += x < -MathUtil.PI ? MathUtil.TAU : 0f;
-				x -= x > MathUtil.PI ? MathUtil.TAU : 0f;
-				return x;
-			});
-			float diffLength = diff.getLength();
-			if (diffLength > 0.0075f) {
-				diff.scaleToLength(Math.max(diffLength * 0.125f, 0.0075f));
-			}
-			player.getCamera().getRotation().add(diff);
+		var targetRotation = new Vector3D(
+				(float) Math.atan(player.velocity().y() / Math.hypot(player.velocity().x(), player.velocity().z())),
+				(float) (Math.PI + Math.atan2(player.velocity().x(), player.velocity().z())), 0f);
+		var diff = targetRotation.subtract(player.rotation())
+				.operate(x -> {
+					x %= MathUtil.TAU;
+					x += x < -MathUtil.PI ? MathUtil.TAU : 0f;
+					x -= x > MathUtil.PI ? MathUtil.TAU : 0f;
+					return x;
+				});
+		float diffLength = diff.length();
+		if (diffLength > 0.0075f) {
+			diff = diff.scaleToLength(Math.max(diffLength * 0.125f, 0.0075f));
 		}
+		player.mutableRotation().add(diff);
 
 
 		float totalLength = 0;
 		for (PuzzleBall puzzleBall : puzzleBalls) {
-			puzzleBall.getVelocity().add(GRAVITY_VECTOR);
-			CollisionPacket.collideAndSlide(puzzleBall.getPosition(), puzzleBall.getVelocity());
-			totalLength += puzzleBall.getVelocity().getLength();
+			puzzleBall.mutableVelocity().add(GRAVITY_VECTOR);
+			CollisionPacket.collideAndSlide(puzzleBall.mutablePosition(), puzzleBall.mutableVelocity());
+			totalLength += puzzleBall.velocity().length();
 		}
-		puzzleBalls.removeIf(x -> x.getPosition().getY() <= -300f);
+		puzzleBalls.removeIf(x -> x.position().y() <= -300f);
 
 		for (PuzzleBall projectile : projectiles) {
-			projectile.getVelocity().add(GRAVITY_VECTOR);
+			projectile.mutableVelocity().add(GRAVITY_VECTOR);
 		}
-		projectiles.removeIf(x -> x.getPosition().getY() <= 0f);
+		projectiles.removeIf(x -> x.position().y() <= 0f);
 		projectiles.removeIf(x -> {
-			x.getVelocity().add(GRAVITY_VECTOR);
-			if (CollisionPacket.collideAndSlideIntersect(x.getPosition(), x.getVelocity())) {
-				terrain.generateExplosion(x.getPosition(), 10f);
+			x.mutableVelocity().add(GRAVITY_VECTOR);
+			if (CollisionPacket.collideAndSlideIntersect(x.mutablePosition(), x.mutableVelocity())) {
+				terrain.generateExplosion(x.position(), 10f);
 				return true;
 			}
 			return false;
@@ -452,31 +448,27 @@ public enum Game implements Listener {
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 		    debugMessage.setLength(0);
-			debugFormatter.format("Listeners Registered=%d, Methods=%d, Preloaded=%d, VectorPool=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d",
-					EventManager.INSTANCE.getListenersRegistered(),
-					EventManager.INSTANCE.getListenerMethodsRegistered(),
-					EventManager.INSTANCE.getPreloadedMethodsRegistered(),
-					VectorPool.getCount(),
-					player.getPosition().getX(),
-					player.getPosition().getY(),
-					player.getPosition().getZ(),
-					terrain.getChunkX(player.getPosition().getX()),
-					terrain.getChunkY(player.getPosition().getY()),
-					terrain.getChunkZ(player.getPosition().getZ()),
+			debugFormatter.format("Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d",
+					player.position().x(),
+					player.position().y(),
+					player.position().z(),
+					terrain.getChunkX(player.position().x()),
+					terrain.getChunkY(player.position().y()),
+					terrain.getChunkZ(player.position().z()),
 					pool.getTaskCount() - pool.getCompletedTaskCount());
 			debugTextModel.setText(debugMessage);
 		}
 	}
 	private StringBuilder debugMessage = new StringBuilder();
 	private Formatter debugFormatter = new Formatter(debugMessage);
-	@Subscribe
+
 	public void onMouseScroll(MouseScrollEvent event) {
 		playerSpeed += (float) (event.getYOffset() / 100f);
 		if (playerSpeed < 0) {
 			playerSpeed = 0;
 		}
-		player.getCamera().getProjection()
-				.setFov(player.getCamera().getProjection().getFov() + ((float) (event.getYOffset() / 10000f)));
+		player.camera().getProjection()
+				.setFov(player.camera().getProjection().getFov() + ((float) (event.getYOffset() / 10000f)));
 		updateProjectionMatrices();
 	}
 
@@ -486,24 +478,16 @@ public enum Game implements Listener {
 	private double mouseY;
 	private static final float MOUSE_SENSITIVITY = 0.001f;
 
-	@Subscribe
 	public void onMousePosition(CursorPositionEvent event) {
 		lastMouseX = mouseX;
 		lastMouseY = mouseY;
 		mouseX = event.getX();
 		mouseY = event.getY();
 		if (GameControls.CAMERA_ROTATE.isActivated()) {
-			player.getCamera().getRotation().setY(
-					(float) ((((player.getCamera().getRotation().getY() - (mouseX - lastMouseX) * MOUSE_SENSITIVITY)
-							% (2f * MathUtil.PI)) + (2 * MathUtil.PI)) % (2 * MathUtil.PI)));
-			player.getCamera().getRotation().setX(
-					(float) (player.getCamera().getRotation().getX() - (mouseY - lastMouseY) * MOUSE_SENSITIVITY));
-			if (player.getCamera().getRotation().getX() < -MathUtil.PI / 2f) {
-				player.getCamera().getRotation().setX(-MathUtil.PI / 2f);
-			}
-			if (player.getCamera().getRotation().getX() > MathUtil.PI / 2f) {
-				player.getCamera().getRotation().setX(MathUtil.PI / 2f);
-			}
+			float deltaY = (float) (-(mouseX - lastMouseX) * MOUSE_SENSITIVITY);
+			float deltaX = (float) (-(mouseY - lastMouseY) * MOUSE_SENSITIVITY);
+			player.mutableRotation().asXYVector().add(deltaX, deltaY)
+					.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
 		}
 	}
 	public void updateViewMatrices() {
@@ -524,21 +508,21 @@ public enum Game implements Listener {
 	}
 	public void updateViewMatrix(ShaderProgramHolder holder) {
 		holder.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getTransformationMatrix());
+			program.loadMatrix(MatrixType.VIEW_MATRIX, player.camera().getTransformationMatrix());
 		});
 	}
 	public void updateCubeMapMatrix(ShaderProgramHolder holder) {
 		holder.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.VIEW_MATRIX, player.getCamera().getInvertedRotationMatrix());
+			program.loadMatrix(MatrixType.VIEW_MATRIX, player.camera().getInvertedRotationMatrix());
 		});
 	}
 	public void updateProjectionMatrix(ShaderProgramHolder holder) {
 		holder.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.PROJECTION_MATRIX, player.getCamera().getProjectionMatrix());
+			program.loadMatrix(MatrixType.PROJECTION_MATRIX, player.camera().getProjectionMatrix());
 		});
 	}
-	@Subscribe
-	public void render(RenderEvent event) {
+	@Override
+	public void render() {
 		updateViewMatrices();
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
@@ -552,19 +536,16 @@ public enum Game implements Listener {
 				puzzleBall.render();
 			}
 			for (Vector3D x : debug) {
-				try (var translation = VectorPool.of(x);
-					 var scalar = VectorPool.of(0.2f, 0.2f, 0.2f)) {
-					PuzzleBall.render(translation, scalar);
-				}
+				PuzzleBall.render(x, new Vector3D(0.2f, 0.2f, 0.2f));
 			}
 			//debug.clear();
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.TERRAIN.getShaderProgram().use(program -> {
 				//GL11.glEnable(GL11.GL_CULL_FACE);
 				//GL11.glCullFace(GL11.GL_FRONT);
-				int playerChunkX = terrain.getChunkX(player.getPosition().getX());
-				int playerChunkY = terrain.getChunkX(player.getPosition().getY());
-				int playerChunkZ = terrain.getChunkX(player.getPosition().getZ());
+				int playerChunkX = terrain.getChunkX(player.position().x());
+				int playerChunkY = terrain.getChunkX(player.position().y());
+				int playerChunkZ = terrain.getChunkX(player.position().z());
 				int n = 5;
 				for (int i = -n; i <= n; i++) {
 					for (int j = -n; j <= n; j++) {
@@ -581,13 +562,13 @@ public enum Game implements Listener {
 				//GL11.glDisable(GL11.GL_CULL_FACE);
 			});
 			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
-				try (var position = VectorPool.of(96f, 40f, 0f);
-					 var translationMatrix = MatrixPool.ofTranslation(position);
-					 var scalarMatrix = MatrixPool.ofScalar(8f, 8f, 8f);
-					 var sunlightDirection = VectorPool.of(lightPosition, v -> v.subtract(position).normalize())) {
+				var position = new Vector3D(96f, 40f, 0f);
+				try (var translationMatrix = MatrixPool.ofTranslation(position);
+					 var scalarMatrix = MatrixPool.ofScalar(8f, 8f, 8f)) {
+					var sunlightDirection = lightPosition.subtract(position).normalize();
 					program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(scalarMatrix));
 					program.loadVector("sunlightDirection", sunlightDirection);
-					program.loadVector("viewPos", player.getPosition());
+					program.loadVector("viewPos", player.position());
 				}
 				dragonModel.draw();
 			});
@@ -664,17 +645,9 @@ public enum Game implements Listener {
 			CommonDrawables.SKYBOX.draw();
 		});
 	}
-	@Subscribe
-	public void onBenchmark(BenchmarkEvent event) {
-		benchmarker.benchmark(event.getBenchmark());
-	}
-	private Line line = new Line();
-	@Subscribe
-	public void onClick(MouseButtonEvent event) {
-		if (event.getAction() == GLFW.GLFW_RELEASE) {
-			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2) {
-				generateExplosionAtCrosshair();
-			}
-		}
+	private MutableLine line = new MutableLine();
+	@Override
+	public void dispose() {
+		disposables.dispose();
 	}
 }

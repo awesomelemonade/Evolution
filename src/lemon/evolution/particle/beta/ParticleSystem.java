@@ -26,10 +26,10 @@ public class ParticleSystem implements Renderable {
 			1f, 1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f, 1f};
 	private static final int[] INDICES = {2, 0, 4, 4, 6, 2, 1, 0, 2, 2, 3, 1, 4, 5, 7, 7, 6, 4,
 			1, 3, 7, 7, 5, 1, 2, 6, 7, 7, 3, 2, 0, 1, 4, 4, 1, 5};
-	private VertexArray vertexArray;
+	private final VertexArray vertexArray;
 	private VertexBuffer vertexBuffer;
-	private int maxParticles;
-	private Deque<Particle> particles;
+	private final int maxParticles;
+	private final Deque<Particle> particles;
 	public ParticleSystem(int maxParticles) {
 		this.maxParticles = maxParticles;
 		this.particles = new ArrayDeque<>();

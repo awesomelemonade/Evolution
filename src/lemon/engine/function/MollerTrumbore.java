@@ -3,11 +3,11 @@ package lemon.engine.function;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-import lemon.engine.math.Line;
+import lemon.engine.math.MutableLine;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 
-public class MollerTrumbore implements BiFunction<Triangle, Line, Optional<Float>> {
+public class MollerTrumbore implements BiFunction<Triangle, MutableLine, Optional<Float>> {
 	private final float EPSILON;
 	private final boolean culling;
 
@@ -22,14 +22,14 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Optional<Float
 		this.culling = culling;
 	}
 	@Override
-	public Optional<Float> apply(Triangle triangle, Line ray) {
+	public Optional<Float> apply(Triangle triangle, MutableLine ray) {
 		Vector3D edge, edge2;
 		Vector3D p, q, distance;
 		float determinant;
 		float inverseDeterminant, u, v, t;
 
-		edge = triangle.getVertex2().subtract(triangle.getVertex1());
-		edge2 = triangle.getVertex3().subtract(triangle.getVertex1());
+		edge = triangle.b().subtract(triangle.a());
+		edge2 = triangle.c().subtract(triangle.a());
 
 		p = ray.direction().crossProduct(edge2);
 
@@ -46,7 +46,7 @@ public class MollerTrumbore implements BiFunction<Triangle, Line, Optional<Float
 		}
 		inverseDeterminant = 1f / determinant;
 
-		distance = ray.origin().subtract(triangle.getVertex1());
+		distance = ray.origin().subtract(triangle.a());
 
 		u = distance.dotProduct(p) * inverseDeterminant;
 
