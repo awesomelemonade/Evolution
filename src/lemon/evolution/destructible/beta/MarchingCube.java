@@ -11,6 +11,7 @@ public class MarchingCube {
 	private float[] strides; // [strideX, strideY, strideZ]
 	private float threshold;
 	private BoundedScalarGrid3D grid;
+
 	public MarchingCube(BoundedScalarGrid3D grid, Vector3D size, float threshold) {
 		this.grid = grid;
 		this.threshold = threshold;
@@ -21,16 +22,19 @@ public class MarchingCube {
 				size.getZ() / grid.getSizeZ()
 		};
 	}
+
 	public void setThreshold(float threshold) {
 		this.threshold = threshold;
 	}
+
 	public float getThreshold() {
 		return threshold;
 	}
+
 	public MarchingCubeMesh generateMesh() {
-	    List<Integer> indices = new ArrayList<>();
-	    List<Vector3D> vertices = new ArrayList<>();
-	    List<Integer> hashes = new ArrayList<>();
+		List<Integer> indices = new ArrayList<>();
+		List<Vector3D> vertices = new ArrayList<>();
+		List<Integer> hashes = new ArrayList<>();
 		int[][][][] edgeIndices = new int[grid.getSizeX()][grid.getSizeY()][grid.getSizeZ()][3];
 		for (int[][][] a : edgeIndices) {
 			for (int[][] b : a) {
@@ -76,11 +80,13 @@ public class MarchingCube {
 			}
 		}
 		return new MarchingCubeMesh(indices.stream().mapToInt(Integer::intValue).toArray(),
-                vertices.toArray(Vector3D[]::new), hashes.stream().mapToInt(Integer::intValue).toArray());
+				vertices.toArray(Vector3D[]::new), hashes.stream().mapToInt(Integer::intValue).toArray());
 	}
+
 	private Vector3D interpolate(Vector3D a, Vector3D b, float percentage) {
 		return b.subtract(a).multiply(percentage).add(a);
 	}
+
 	private int getIndex(int i, int j, int k) {
 		int index = 0;
 		if (grid.get(i, j, k) <= threshold) {
@@ -109,7 +115,8 @@ public class MarchingCube {
 		}
 		return index;
 	}
-    public static int hash(int x, int y, int z, int w) {
-        return (x << 24) | (y << 16) | (z << 8) | w;
-    }
+
+	public static int hash(int x, int y, int z, int w) {
+		return (x << 24) | (y << 16) | (z << 8) | w;
+	}
 }

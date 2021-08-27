@@ -16,11 +16,13 @@ public class UIButton implements UIInputComponent {
 	private Box2D box;
 	private Color color;
 	private Consumer<UIButton> eventHandler;
+
 	public UIButton(Box2D box, Color color, Consumer<UIButton> eventHandler) {
 		this.box = box;
 		this.color = color;
 		this.eventHandler = eventHandler;
 	}
+
 	@Override
 	public Disposable registerInputEvents(GLFWInput input) {
 		return input.mouseButtonEvent().add(event -> {
@@ -33,6 +35,7 @@ public class UIButton implements UIInputComponent {
 			}
 		});
 	}
+
 	@Override
 	public void render() {
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {

@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 	private static final MatrixPool instance = new MatrixPool();
+
 	private MatrixPool() {
 		super(PooledMatrix::new);
 	}
@@ -58,6 +59,7 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 		private PooledMatrix() {
 			super(4);
 		}
+
 		@Override
 		public void close() {
 			instance.returnObject(this);

@@ -1,5 +1,61 @@
 package lemon.evolution;
 
+import lemon.engine.control.GLFWWindow;
+import lemon.engine.control.Loader;
+import lemon.engine.draw.CommonDrawables;
+import lemon.engine.draw.Drawable;
+import lemon.engine.draw.TextModel;
+import lemon.engine.font.Font;
+import lemon.engine.frameBuffer.FrameBuffer;
+import lemon.engine.function.MurmurHash;
+import lemon.engine.function.PerlinNoise;
+import lemon.engine.function.SzudzikIntPair;
+import lemon.engine.game.Player;
+import lemon.engine.input.CursorPositionEvent;
+import lemon.engine.input.MouseScrollEvent;
+import lemon.engine.math.Box2D;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Matrix;
+import lemon.engine.math.MutableLine;
+import lemon.engine.math.Percentage;
+import lemon.engine.math.Projection;
+import lemon.engine.math.Vector2D;
+import lemon.engine.math.Vector3D;
+import lemon.engine.model.LineGraph;
+import lemon.engine.render.MatrixType;
+import lemon.engine.texture.Texture;
+import lemon.engine.texture.TextureBank;
+import lemon.engine.texture.TextureData;
+import lemon.engine.time.Benchmarker;
+import lemon.engine.toolbox.Color;
+import lemon.engine.toolbox.Disposables;
+import lemon.engine.toolbox.ObjLoader;
+import lemon.engine.toolbox.SkyboxLoader;
+import lemon.evolution.destructible.beta.ScalarField;
+import lemon.evolution.destructible.beta.Terrain;
+import lemon.evolution.destructible.beta.TerrainChunk;
+import lemon.evolution.destructible.beta.TerrainGenerator;
+import lemon.evolution.physics.beta.CollisionPacket;
+import lemon.evolution.pool.MatrixPool;
+import lemon.evolution.puzzle.PuzzleBall;
+import lemon.evolution.screen.beta.Screen;
+import lemon.evolution.setup.CommonProgramsSetup;
+import lemon.evolution.ui.beta.UIScreen;
+import lemon.evolution.util.BasicControlActivator;
+import lemon.evolution.util.CommonPrograms2D;
+import lemon.evolution.util.CommonPrograms3D;
+import lemon.evolution.util.PlayerControl;
+import lemon.evolution.util.ShaderProgramHolder;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL14;
+import org.lwjgl.opengl.GL15;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.opengl.GL32;
+
+import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
@@ -13,57 +69,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import lemon.engine.control.GLFWWindow;
-import lemon.engine.control.Loader;
-import lemon.engine.draw.CommonDrawables;
-import lemon.engine.draw.Drawable;
-import lemon.engine.draw.TextModel;
-import lemon.engine.font.Font;
-import lemon.engine.function.MurmurHash;
-import lemon.engine.function.PerlinNoise;
-import lemon.engine.function.SzudzikIntPair;
-import lemon.engine.math.*;
-import lemon.engine.texture.TextureData;
-import lemon.engine.toolbox.Color;
-import lemon.engine.toolbox.Disposables;
-import lemon.engine.toolbox.ObjLoader;
-import lemon.evolution.destructible.beta.ScalarField;
-import lemon.evolution.destructible.beta.Terrain;
-import lemon.evolution.destructible.beta.TerrainChunk;
-import lemon.evolution.destructible.beta.TerrainGenerator;
-import lemon.evolution.physics.beta.CollisionPacket;
-import lemon.evolution.puzzle.PuzzleBall;
-import lemon.evolution.screen.beta.Screen;
-import lemon.evolution.ui.beta.UIScreen;
-import lemon.evolution.util.BasicControlActivator;
-import lemon.evolution.util.CommonPrograms2D;
-import lemon.evolution.util.CommonPrograms3D;
-import lemon.evolution.pool.MatrixPool;
-import lemon.evolution.util.PlayerControl;
-import lemon.evolution.util.ShaderProgramHolder;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL13;
-import org.lwjgl.opengl.GL14;
-import org.lwjgl.opengl.GL15;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL32;
-
-import lemon.engine.model.LineGraph;
-import lemon.engine.frameBuffer.FrameBuffer;
-import lemon.engine.game.Player;
-import lemon.engine.input.CursorPositionEvent;
-import lemon.engine.input.MouseScrollEvent;
-import lemon.engine.toolbox.SkyboxLoader;
-import lemon.engine.render.MatrixType;
-import lemon.engine.texture.Texture;
-import lemon.engine.texture.TextureBank;
-import lemon.engine.time.Benchmarker;
-import lemon.evolution.setup.CommonProgramsSetup;
-
-import javax.imageio.ImageIO;
 
 public enum Game implements Screen {
 	INSTANCE;
@@ -114,7 +119,7 @@ public enum Game implements Screen {
 			scalarField = vector -> {
 				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
 				float terrain = (float) (-Math.tanh(vector.y() / 100.0) * 100.0 +
-                        Math.pow(2f, noise2d.apply(vector.toXZVector().divide(300f))) * 5.0 +
+						Math.pow(2f, noise2d.apply(vector.toXZVector().divide(300f))) * 5.0 +
 						Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
 				/*float x = vector.getY() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
 				test[0] = Math.min(test[0], x);
@@ -146,6 +151,7 @@ public enum Game implements Screen {
 						}
 					}
 				}
+
 				@Override
 				public Percentage getPercentage() {
 					terrainLoaderPercentage.setPart(numChunksToPreload - generator.getQueueSize());
@@ -348,7 +354,9 @@ public enum Game implements Screen {
 		disposables.add(window.input().mouseScrollEvent().add(this::onMouseScroll));
 		disposables.add(window.input().cursorPositionEvent().add(this::onMousePosition));
 	}
+
 	private PlayerControl EXPLODE = new PlayerControl();
+
 	public void generateExplosionAtCrosshair() {
 		if (depthDistance != 1f) {
 			float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
@@ -356,6 +364,7 @@ public enum Game implements Screen {
 			terrain.generateExplosion(position, 5f);
 		}
 	}
+
 	float depthDistance = 0;
 
 	private List<PuzzleBall> puzzleBalls;
@@ -447,7 +456,7 @@ public enum Game implements Screen {
 		benchmarker.getLineGraph("freeMemory").add(current);
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
-		    debugMessage.setLength(0);
+			debugMessage.setLength(0);
 			debugFormatter.format("Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d",
 					player.position().x(),
 					player.position().y(),
@@ -459,6 +468,7 @@ public enum Game implements Screen {
 			debugTextModel.setText(debugMessage);
 		}
 	}
+
 	private StringBuilder debugMessage = new StringBuilder();
 	private Formatter debugFormatter = new Formatter(debugMessage);
 
@@ -490,6 +500,7 @@ public enum Game implements Screen {
 					.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
 		}
 	}
+
 	public void updateViewMatrices() {
 		updateViewMatrix(CommonPrograms3D.COLOR);
 		updateViewMatrix(CommonPrograms3D.TEXTURE);
@@ -498,6 +509,7 @@ public enum Game implements Screen {
 		updateViewMatrix(CommonPrograms3D.LIGHT);
 		updateViewMatrix(CommonPrograms3D.TERRAIN);
 	}
+
 	public void updateProjectionMatrices() {
 		updateProjectionMatrix(CommonPrograms3D.COLOR);
 		updateProjectionMatrix(CommonPrograms3D.TEXTURE);
@@ -506,21 +518,25 @@ public enum Game implements Screen {
 		updateProjectionMatrix(CommonPrograms3D.LIGHT);
 		updateProjectionMatrix(CommonPrograms3D.TERRAIN);
 	}
+
 	public void updateViewMatrix(ShaderProgramHolder holder) {
 		holder.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.VIEW_MATRIX, player.camera().getTransformationMatrix());
 		});
 	}
+
 	public void updateCubeMapMatrix(ShaderProgramHolder holder) {
 		holder.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.VIEW_MATRIX, player.camera().getInvertedRotationMatrix());
 		});
 	}
+
 	public void updateProjectionMatrix(ShaderProgramHolder holder) {
 		holder.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.PROJECTION_MATRIX, player.camera().getProjectionMatrix());
 		});
 	}
+
 	@Override
 	public void render() {
 		updateViewMatrices();
@@ -555,7 +571,7 @@ public enum Game implements Screen {
 									(matrix, drawable) -> {
 										program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
 										drawable.draw();
-							});
+									});
 						}
 					}
 				}
@@ -640,12 +656,15 @@ public enum Game implements Screen {
 			});
 		}
 	}
+
 	public void renderSkybox() {
 		CommonPrograms3D.CUBEMAP.getShaderProgram().use(program -> {
 			CommonDrawables.SKYBOX.draw();
 		});
 	}
+
 	private MutableLine line = new MutableLine();
+
 	@Override
 	public void dispose() {
 		disposables.dispose();

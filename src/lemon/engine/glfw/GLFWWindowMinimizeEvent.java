@@ -11,10 +11,12 @@ public class GLFWWindowMinimizeEvent implements WindowMinimizeEvent, GLFWEvent {
 		this.window = window;
 		this.minimized = minimized;
 	}
+
 	@Override
 	public GLFWWindow getWindow() {
 		return window;
 	}
+
 	@Override
 	public boolean isMinimized() {
 		return minimized;

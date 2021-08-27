@@ -1,10 +1,9 @@
 package lemon.evolution;
 
 import lemon.engine.glfw.GLFWInput;
-import org.lwjgl.glfw.GLFW;
-
 import lemon.evolution.util.BasicControlActivator;
 import lemon.evolution.util.PlayerControl;
+import org.lwjgl.glfw.GLFW;
 
 public class GameControls {
 	public static final PlayerControl CAMERA_ROTATE = new PlayerControl();

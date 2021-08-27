@@ -1,17 +1,16 @@
 package lemon.engine.model;
 
-import java.nio.FloatBuffer;
-
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.Renderable;
+import lemon.engine.render.VertexArray;
+import lemon.engine.render.VertexBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 
-import lemon.engine.render.VertexArray;
-import lemon.engine.render.VertexBuffer;
+import java.nio.FloatBuffer;
 
 public class HeightMap implements Renderable {
 	private VertexArray vertexArray;
@@ -53,6 +52,7 @@ public class HeightMap implements Renderable {
 			GL20.glEnableVertexAttribArray(1);
 		});
 	}
+
 	public void update() {
 		vertexArray.bind(vao -> {
 			dataBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
@@ -74,18 +74,23 @@ public class HeightMap implements Renderable {
 			});
 		});
 	}
+
 	public float get(int x, int y) {
 		return map[x][y];
 	}
+
 	public void set(int x, int y, float value) {
 		map[x][y] = value;
 	}
+
 	public int getWidth() {
 		return map.length;
 	}
+
 	public int getHeight() {
 		return map[0].length;
 	}
+
 	private void plotVertex(FloatBuffer dataBuffer, int i, int j, int offsetX, int offsetZ, float avgHeight) {
 		dataBuffer.put((i + offsetX) * tileSize - (map.length * tileSize / 2) + tileSize / 2);
 		dataBuffer.put(map[i + offsetX][j + offsetZ]);
@@ -100,6 +105,7 @@ public class HeightMap implements Renderable {
 		// dataBuffer.put(avgHeight);
 		dataBuffer.put(1f);
 	}
+
 	public Triangle[][][] getTriangles() {
 		Vector3D[][] vectors = new Vector3D[map.length][map[0].length];
 		for (int i = 0; i < map.length; ++i) {
@@ -123,6 +129,7 @@ public class HeightMap implements Renderable {
 		}
 		return triangles;
 	}
+
 	@Override
 	public void render() {
 		vertexArray.bind(vao -> {

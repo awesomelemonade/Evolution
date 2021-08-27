@@ -8,9 +8,11 @@ public class Lazy<T> implements Supplier<T> {
 	private final EventWith<T> onComputed = new EventWith<>();
 	private final Supplier<T> initializer;
 	private T value;
+
 	public Lazy(Supplier<T> initializer) {
 		this.initializer = initializer;
 	}
+
 	@Override
 	public T get() {
 		if (value == null) {
@@ -19,6 +21,7 @@ public class Lazy<T> implements Supplier<T> {
 		}
 		return value;
 	}
+
 	public EventWith<T> onComputed() {
 		return onComputed;
 	}

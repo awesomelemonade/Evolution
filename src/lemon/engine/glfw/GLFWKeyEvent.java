@@ -2,7 +2,6 @@ package lemon.engine.glfw;
 
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.input.KeyEvent;
-import lemon.engine.math.MathUtil;
 
 public class GLFWKeyEvent implements KeyEvent, GLFWEvent, GLFWKeyMods {
 	private GLFWWindow window;
@@ -18,22 +17,27 @@ public class GLFWKeyEvent implements KeyEvent, GLFWEvent, GLFWKeyMods {
 		this.action = action;
 		this.mods = mods;
 	}
+
 	@Override
 	public int getMods() {
 		return mods;
 	}
+
 	@Override
 	public int getAction() {
 		return action;
 	}
+
 	@Override
 	public GLFWWindow getWindow() {
 		return window;
 	}
+
 	@Override
 	public int getKey() {
 		return key;
 	}
+
 	@Override
 	public int getScancode() {
 		return scancode;

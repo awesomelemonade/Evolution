@@ -17,6 +17,7 @@ public class IndexedDrawable implements Drawable {
 	public IndexedDrawable(int[] indices, Vector[][] vertices) {
 		this(indices, vertices, GL11.GL_TRIANGLES);
 	}
+
 	public IndexedDrawable(int[] indices, Vector[][] vertices, int drawMode) {
 		this.vertices = vertices;
 		this.indices = indices;
@@ -44,6 +45,7 @@ public class IndexedDrawable implements Drawable {
 			}
 		});
 	}
+
 	@Override
 	public void draw() {
 		vertexArray.bind(vao -> {

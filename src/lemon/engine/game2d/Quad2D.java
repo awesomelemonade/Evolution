@@ -1,18 +1,16 @@
 package lemon.engine.game2d;
 
-import java.nio.FloatBuffer;
-
+import lemon.engine.math.Box2D;
 import lemon.engine.render.Renderable;
+import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
+import lemon.engine.toolbox.Color;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 
-import lemon.engine.math.Box2D;
-import lemon.engine.render.VertexArray;
-import lemon.engine.toolbox.Color;
+import java.nio.FloatBuffer;
 
 public class Quad2D implements Renderable {
 	private final VertexArray vertexArray;
@@ -36,12 +34,14 @@ public class Quad2D implements Renderable {
 			GL20.glEnableVertexAttribArray(1);
 		});
 	}
+
 	@Override
 	public void render() {
 		vertexArray.bind(vao -> {
 			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
 		});
 	}
+
 	private FloatBuffer getFloatBuffer() {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(24);
 		for (int i = 0; i <= 1; ++i) {
@@ -54,6 +54,7 @@ public class Quad2D implements Renderable {
 		buffer.flip();
 		return buffer;
 	}
+
 	public Box2D getBox2D() {
 		return box;
 	}

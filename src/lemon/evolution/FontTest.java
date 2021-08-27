@@ -1,14 +1,14 @@
 package lemon.evolution;
 
-import java.nio.IntBuffer;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.TextModel;
+import lemon.engine.font.Font;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Matrix;
+import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
+import lemon.engine.texture.TextureBank;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
@@ -16,13 +16,12 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
-
-import lemon.engine.font.Font;
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Matrix;
-import lemon.engine.math.Vector3D;
-import lemon.engine.texture.TextureBank;
 import org.lwjgl.opengl.GL15;
+
+import java.nio.IntBuffer;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 public enum FontTest implements Screen {
 	INSTANCE;
@@ -54,6 +53,7 @@ public enum FontTest implements Screen {
 				MathUtil.getTranslation(new Vector3D(0f, 50f, 0f))
 						.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 0.2f))));
 	}
+
 	@Override
 	public void update() {
 //		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d",
@@ -69,6 +69,7 @@ public enum FontTest implements Screen {
 			}
 		});
 	}
+
 	@Override
 	public void render() {
 		GL11.glEnable(GL11.GL_BLEND);
@@ -77,7 +78,7 @@ public enum FontTest implements Screen {
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
 					MathUtil.getTranslation(new Vector3D(150f, 150f, 0f))
-					.multiply(MathUtil.getScalar(new Vector3D(100f, 100f, 100f))));
+							.multiply(MathUtil.getScalar(new Vector3D(100f, 100f, 100f))));
 			CommonDrawables.COLORED_QUAD.draw();
 		});
 		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {

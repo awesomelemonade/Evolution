@@ -192,48 +192,63 @@ public class GLFWInput {
 			}
 		});
 	}
+
 	public GLFWWindow getWindow() {
 		return window;
 	}
+
 	public GLFWCharModsCallback getCharModsCallback() {
 		return charModsCallback;
 	}
+
 	public GLFWCursorEnterCallback getCursorEnterCallback() {
 		return cursorEnterCallback;
 	}
+
 	public GLFWCursorPosCallback getCursorPosCallback() {
 		return cursorPosCallback;
 	}
+
 	public GLFWDropCallback getDropCallback() {
 		return dropCallback;
 	}
+
 	public GLFWFramebufferSizeCallback getFramebufferSizeCallback() {
 		return framebufferSizeCallback;
 	}
+
 	public GLFWKeyCallback getKeyCallback() {
 		return keyCallback;
 	}
+
 	public GLFWMouseButtonCallback getMouseButtonCallback() {
 		return mouseButtonCallback;
 	}
+
 	public GLFWScrollCallback getScrollCallback() {
 		return scrollCallback;
 	}
+
 	public GLFWWindowCloseCallback getWindowCloseCallback() {
 		return windowCloseCallback;
 	}
+
 	public GLFWWindowFocusCallback getWindowFocusCallback() {
 		return windowFocusCallback;
 	}
+
 	public GLFWWindowIconifyCallback getWindowIconifyCallback() {
 		return windowIconifyCallback;
 	}
+
 	public GLFWWindowPosCallback getWindowPosCallback() {
 		return windowPosCallback;
 	}
+
 	public GLFWWindowRefreshCallback getWindowRefreshCallback() {
 		return windowRefreshCallback;
 	}
+
 	public GLFWWindowSizeCallback getWindowSizeCallback() {
 		return windowSizeCallback;
 	}

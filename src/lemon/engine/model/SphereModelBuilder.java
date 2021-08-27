@@ -1,16 +1,16 @@
 package lemon.engine.model;
 
+import lemon.engine.math.Vector3D;
+
 import java.util.HashMap;
 import java.util.Map;
 
-import lemon.engine.math.Vector3D;
-
 public class SphereModelBuilder {
-	private static final Vector3D[] OCTAHEDRON_VERTICES = new Vector3D[] { new Vector3D(0, -1, 0),
+	private static final Vector3D[] OCTAHEDRON_VERTICES = new Vector3D[] {new Vector3D(0, -1, 0),
 			new Vector3D(0, 1, 0), new Vector3D(-1, 0, -1), new Vector3D(-1, 0, 1), new Vector3D(1, 0, -1),
-			new Vector3D(1, 0, 1) };
-	private static final int[] OCTAHEDRON_INDICES = new int[] { 0, 2, 3, 0, 3, 5, 0, 5, 4, 0, 4, 2, 1, 2, 3, 1, 3, 5, 1,
-			5, 4, 1, 4, 2 };
+			new Vector3D(1, 0, 1)};
+	private static final int[] OCTAHEDRON_INDICES = new int[] {0, 2, 3, 0, 3, 5, 0, 5, 4, 0, 4, 2, 1, 2, 3, 1, 3, 5, 1,
+			5, 4, 1, 4, 2};
 
 	public static ModelBuilder build(ModelBuilder builder, float radius, int iterations) {
 		// add vertices and indices
@@ -21,6 +21,7 @@ public class SphereModelBuilder {
 		}
 		return builder;
 	}
+
 	public static int[] splitTriangles(ModelBuilder builder, int[] indices, int count) {
 		if (count <= 0) {
 			return indices;
@@ -54,6 +55,7 @@ public class SphereModelBuilder {
 		}
 		return splitTriangles(builder, newIndices, count - 1);
 	}
+
 	private static int addToMap(ModelBuilder builder, Map<Vector3D, Map<Vector3D, Integer>> vertices, Vector3D a, Vector3D b) {
 		if (vertices.containsKey(a)) {
 			if (vertices.get(a).containsKey(b)) {

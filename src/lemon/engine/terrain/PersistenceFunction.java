@@ -12,6 +12,7 @@ public class PersistenceFunction implements BinaryOperator<Float> {
 		this.amplifier = amplifier;
 		this.sizeFactor = sizeFactor;
 	}
+
 	@Override
 	public Float apply(Float key, Float key2) {
 		return Math.abs(baseFunction.apply(key / sizeFactor, key2 / sizeFactor) + 0.5f) * amplifier;

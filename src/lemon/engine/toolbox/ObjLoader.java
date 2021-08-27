@@ -3,15 +3,19 @@ package lemon.engine.toolbox;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.math.Percentage;
-import lemon.engine.math.Vector3D;
 import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 import lemon.engine.thread.ThreadManager;
 import org.lwjgl.opengl.GL11;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.function.BiConsumer;
 
 public class ObjLoader implements Loader {
@@ -19,6 +23,7 @@ public class ObjLoader implements Loader {
 	private static final BiConsumer<ObjLoader, StringTokenizer> UNKNOWN_PROCESSOR = (loader, tokenizer) -> {
 		System.out.println("Unknown Key: " + tokenizer.nextToken(""));
 	};
+
 	static {
 		processors = new HashMap<>();
 		processors.put("v", (objLoader, tokenizer) -> {
@@ -61,6 +66,7 @@ public class ObjLoader implements Loader {
 			}
 		});
 	}
+
 	private Percentage percentage;
 	private BufferedReader reader;
 	private List<Vector3D> vertices;
@@ -88,6 +94,7 @@ public class ObjLoader implements Loader {
 			throw new IllegalStateException(ex);
 		}
 	}
+
 	// Let's just skip the model phase
 	public IndexedDrawable toIndexedDrawable() {
 		return new IndexedDrawable(
@@ -98,6 +105,7 @@ public class ObjLoader implements Loader {
 						normals.toArray(Vector3D.EMPTY_ARRAY)
 				}, GL11.GL_TRIANGLES);
 	}
+
 	@Override
 	public void load() {
 		ThreadManager.INSTANCE.addThread(new Thread(() -> {
@@ -115,6 +123,7 @@ public class ObjLoader implements Loader {
 			}
 		})).start();
 	}
+
 	@Override
 	public Percentage getPercentage() {
 		return percentage;

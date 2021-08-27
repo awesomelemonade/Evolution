@@ -3,10 +3,10 @@ package lemon.evolution.puzzle;
 import lemon.engine.draw.Drawable;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.math.MutableVector3D;
+import lemon.engine.math.Vector3D;
 import lemon.engine.model.Model;
 import lemon.engine.model.ModelBuilder;
 import lemon.engine.model.SphereModelBuilder;
-import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Color;
@@ -30,6 +30,7 @@ public class PuzzleBall implements Renderable {
 	});
 	private final MutableVector3D position;
 	private final MutableVector3D velocity;
+
 	public PuzzleBall(Vector3D position, Vector3D velocity) {
 		this.position = MutableVector3D.of(position);
 		this.velocity = MutableVector3D.of(velocity);
@@ -53,12 +54,15 @@ public class PuzzleBall implements Renderable {
 	public MutableVector3D mutablePosition() {
 		return position;
 	}
+
 	public MutableVector3D mutableVelocity() {
 		return velocity;
 	}
+
 	public Vector3D position() {
 		return position.toImmutable();
 	}
+
 	public Vector3D velocity() {
 		return velocity.toImmutable();
 	}
@@ -76,6 +80,7 @@ public class PuzzleBall implements Renderable {
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
 	}
+
 	public static void render(Vector3D position, Vector3D scalar) {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);

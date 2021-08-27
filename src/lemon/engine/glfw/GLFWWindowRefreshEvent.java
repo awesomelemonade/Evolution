@@ -9,6 +9,7 @@ public class GLFWWindowRefreshEvent implements WindowRefreshEvent, GLFWEvent {
 	public GLFWWindowRefreshEvent(GLFWWindow window) {
 		this.window = window;
 	}
+
 	@Override
 	public GLFWWindow getWindow() {
 		return window;

@@ -1,15 +1,16 @@
 package lemon.engine.font;
 
-import java.io.*;
+import lemon.engine.texture.Texture;
+import lemon.engine.texture.TextureData;
+
+import javax.imageio.ImageIO;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-import javax.imageio.ImageIO;
-
-import lemon.engine.texture.Texture;
-import lemon.engine.texture.TextureData;
 
 public class Font {
 	private int lineHeight;
@@ -47,9 +48,11 @@ public class Font {
 			e.printStackTrace();
 		}
 	}
+
 	public CharData getCharData(char c) {
 		return data.get((int) c);
 	}
+
 	public int getKerning(char a, char b) {
 		int intA = (int) a;
 		int intB = (int) b;
@@ -61,6 +64,7 @@ public class Font {
 		}
 		return kernings.get(intA).get(intB);
 	}
+
 	public void processCommon(String line) {
 		StringTokenizer tokenizer = new StringTokenizer(line);
 		tokenizer.nextToken(); // common
@@ -69,11 +73,13 @@ public class Font {
 		scaleWidth = getValue(tokenizer.nextToken());
 		scaleHeight = getValue(tokenizer.nextToken());
 	}
+
 	public void processCharData(String line) {
 		String[] data = line.split("\\s+"); // Splits Any Whitespace
 		this.data.put(getValue(data[1]), new CharData(getValue(data[2]), getValue(data[3]), getValue(data[4]),
 				getValue(data[5]), getValue(data[6]), getValue(data[7]), getValue(data[8])));
 	}
+
 	public void processKerning(String line) {
 		String[] data = line.split("\\s+");
 		int a = getValue(data[1]);
@@ -83,21 +89,27 @@ public class Font {
 		}
 		kernings.get(a).put(b, getValue(data[3]));
 	}
+
 	public static int getValue(String line) {
 		return Integer.parseInt(line.substring(line.indexOf('=') + 1, line.length()));
 	}
+
 	public Texture getTexture() {
 		return texture;
 	}
+
 	public int getLineHeight() {
 		return lineHeight;
 	}
+
 	public int getBase() {
 		return base;
 	}
+
 	public int getScaleWidth() {
 		return scaleWidth;
 	}
+
 	public int getScaleHeight() {
 		return scaleHeight;
 	}

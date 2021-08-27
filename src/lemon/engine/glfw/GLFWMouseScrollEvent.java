@@ -13,14 +13,17 @@ public class GLFWMouseScrollEvent implements MouseScrollEvent, GLFWEvent {
 		this.xOffset = xOffset;
 		this.yOffset = yOffset;
 	}
+
 	@Override
 	public GLFWWindow getWindow() {
 		return window;
 	}
+
 	@Override
 	public double getXOffset() {
 		return xOffset;
 	}
+
 	@Override
 	public double getYOffset() {
 		return yOffset;

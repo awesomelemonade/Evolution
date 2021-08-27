@@ -1,8 +1,8 @@
 package lemon.engine.draw;
 
+import lemon.engine.math.Vector;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
-import lemon.engine.math.Vector;
 import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL11;
 
@@ -27,20 +27,23 @@ public class CommonDrawables {
 			2, 0, 4, 4, 6, 2, 1, 0, 2, 2, 3, 1, 4, 5, 7, 7, 6, 4,
 			1, 3, 7, 7, 5, 1, 2, 6, 7, 7, 3, 2, 0, 1, 4, 4, 1, 5
 	}, new Vector[][] {
-		split(-1f, -1f, -1f, -1f, -1f, 1f, -1f, 1f, -1f, -1f,
-				1f, 1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f, 1f)
+			split(-1f, -1f, -1f, -1f, -1f, 1f, -1f, 1f, -1f, -1f,
+					1f, 1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f, 1f)
 	}, GL11.GL_TRIANGLES);
 
 	// Shortcuts
 	private static Vector2D v(float x, float y) {
 		return new Vector2D(x, y);
 	}
+
 	private static Vector3D v(float x, float y, float z) {
 		return new Vector3D(x, y, z);
 	}
+
 	private static Color c(float r, float g, float b, float a) {
 		return new Color(r, g, b, a);
 	}
+
 	// repeat w/ shallow copy
 	private static Vector[] r(int count, Vector vector) {
 		Vector[] vectors = new Vector[count];
@@ -49,6 +52,7 @@ public class CommonDrawables {
 		}
 		return vectors;
 	}
+
 	private static Vector3D[] split(float... values) {
 		if (values.length % 3 != 0) {
 			throw new IllegalArgumentException("length of values must be divisible by 3");

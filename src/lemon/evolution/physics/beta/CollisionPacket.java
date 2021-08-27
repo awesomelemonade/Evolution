@@ -1,6 +1,9 @@
 package lemon.evolution.physics.beta;
 
-import lemon.engine.math.*;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.MutableVector3D;
+import lemon.engine.math.Triangle;
+import lemon.engine.math.Vector3D;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +60,7 @@ public class CollisionPacket {
 			checkEdge(position, velocity, triangle.c(), triangle.a(), collision);
 		}
 	}
+
 	private static void checkEdge(Vector3D position, Vector3D velocity, Vector3D vertexA, Vector3D vertexB, Collision collision) {
 		// https://mrl.nyu.edu/~dzorin/rend05/lecture2.pdf
 		var deltaP = position.subtract(vertexA);
@@ -103,6 +107,7 @@ public class CollisionPacket {
 			}
 		}
 	}
+
 	private static void checkVertex(float a, Vector3D velocity, Vector3D base, Vector3D vertex, Collision collision) {
 		var base_vertex = base.subtract(vertex);
 		float b = 2.0f * velocity.dotProduct(base_vertex);
@@ -128,10 +133,12 @@ public class CollisionPacket {
 			collision.test(t, vertex);
 		}
 	}
+
 	// response steps
 	public static void collideAndSlide(MutableVector3D position, MutableVector3D velocity) {
 		collideAndSlide(position, velocity, MAX_RECURSION_DEPTH);
 	}
+
 	public static void collideAndSlide(MutableVector3D position, MutableVector3D velocity, int maxRecursionDepth) {
 		// Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
 
@@ -146,6 +153,7 @@ public class CollisionPacket {
 		// position.multiply(eRadius);
 		// velocity.multiply(eRadius);
 	}
+
 	public static void collideWithWorld(MutableVector3D mutablePosition, MutableVector3D mutableVelocity, int collisionRecursionDepth, Vector3D remainingVelocity, int maxRecursionDepth) {
 		if (collisionRecursionDepth > maxRecursionDepth) {
 			return;
@@ -179,9 +187,11 @@ public class CollisionPacket {
 		}
 		collideWithWorld(mutablePosition, mutableVelocity, collisionRecursionDepth + 1, remainingVelocity, maxRecursionDepth);
 	}
+
 	// Super temporary stuff below
 	public static final List<Triangle> triangles = new ArrayList<>();
 	public static final List<BiFunction<Vector3D, Vector3D, Consumer<Collision>>> consumers = new ArrayList<>();
+
 	public static Collision checkCollision(Vector3D position, Vector3D velocity) {
 		Collision collision = new Collision(Float.MAX_VALUE, Vector3D.ZERO);
 		// transform packet.basePoint and packet.velocity from eSpace to r3 space?
@@ -195,16 +205,11 @@ public class CollisionPacket {
 	}
 
 
-
-
-
-
-
-
 	// response steps
 	public static boolean collideAndSlideIntersect(MutableVector3D position, MutableVector3D velocity) {
 		return collideWithWorldIntersect(position, velocity.toImmutable());
 	}
+
 	public static boolean collideWithWorldIntersect(MutableVector3D mutablePosition, Vector3D remainingVelocity) {
 		Collision collision = checkCollision(mutablePosition.toImmutable(), remainingVelocity);
 		if (collision.getT() >= 1f) {

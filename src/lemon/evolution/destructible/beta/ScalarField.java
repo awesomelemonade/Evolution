@@ -2,12 +2,13 @@ package lemon.evolution.destructible.beta;
 
 import lemon.engine.control.Loader;
 import lemon.engine.math.Percentage;
-import lemon.engine.math.Vector3D;
 import lemon.engine.math.Vector;
+import lemon.engine.math.Vector3D;
 import lemon.engine.thread.ThreadManager;
 
 public interface ScalarField<T extends Vector> {
 	public float get(T vector);
+
 	public static Loader getLoader(ScalarField<Vector3D> scalarField, Vector3D offset, Vector3D resolution, float[][][] data) {
 		float[] offsets = new float[] {
 				-(data.length - 1f) / 2f * resolution.x() + offset.x(),
@@ -32,6 +33,7 @@ public interface ScalarField<T extends Vector> {
 					}
 				})).start();
 			}
+
 			@Override
 			public Percentage getPercentage() {
 				return percentage;

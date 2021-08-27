@@ -1,24 +1,22 @@
 package lemon.evolution;
 
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-
+import lemon.engine.control.GLFWWindow;
+import lemon.engine.thread.ThreadManager;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryUtil;
 
-import lemon.engine.control.GLFWWindow;
-import lemon.engine.control.GLFWWindowSettings;
-import lemon.engine.thread.ThreadManager;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class Evolution {
 	private static final Logger logger = Logger.getLogger(Evolution.class.getName());
-	
+
 	public static void main(String[] args) {
 		LogManager.getLogManager().reset();
 		logger.setLevel(Level.ALL);

@@ -8,6 +8,7 @@ public enum MatrixType {
 	private MatrixType(String uniformVariableName) {
 		this.uniformVariableName = uniformVariableName;
 	}
+
 	public String getUniformVariableName() {
 		return uniformVariableName;
 	}

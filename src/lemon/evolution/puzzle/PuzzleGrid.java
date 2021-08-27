@@ -2,10 +2,10 @@ package lemon.evolution.puzzle;
 
 import lemon.engine.draw.Drawable;
 import lemon.engine.draw.IndexedDrawable;
-import lemon.engine.model.Model;
-import lemon.engine.model.ModelBuilder;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
+import lemon.engine.model.Model;
+import lemon.engine.model.ModelBuilder;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Color;
@@ -32,11 +32,13 @@ public class PuzzleGrid implements Renderable {
 			1, 3, 5, 3, 5, 7  // +z face
 	};
 	private Drawable drawable;
+
 	public PuzzleGrid() {
 		drawable = new ModelBuilder().addVertices(VERTICES).addIndices(INDICES)
 				.build((indices, vertices) -> Model.ofColored(indices, vertices, Color.randomOpaque()))
 				.map(IndexedDrawable::new);
 	}
+
 	@Override
 	public void render() {
 		GL11.glEnable(GL11.GL_BLEND);

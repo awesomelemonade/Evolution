@@ -17,6 +17,7 @@ public class Terrain {
 	private final TerrainGenerator generator;
 	private final Vector3D scalar;
 	private final ConcurrentLinkedQueue<Runnable> updaters;
+
 	public Terrain(TerrainGenerator generator, Vector3D scalar) {
 		this.chunks = new ConcurrentHashMap<>();
 		this.generator = generator;
@@ -25,37 +26,42 @@ public class Terrain {
 	}
 
 	public void update() {
-	    Runnable current;
-	    while ((current = updaters.poll()) != null) {
-	        current.run();
-        }
-    }
+		Runnable current;
+		while ((current = updaters.poll()) != null) {
+			current.run();
+		}
+	}
 
 	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {
 		getChunk(chunkX, chunkY, chunkZ).getDrawable().request();
 	}
+
 	public TerrainChunk getChunk(int chunkX, int chunkY, int chunkZ) {
 		return getChunk(chunkX, chunkY, chunkZ, hashChunkCoordinates(chunkX, chunkY, chunkZ));
 	}
+
 	public TerrainChunk getChunk(int chunkX, int chunkY, int chunkZ, long hashed) {
-	    return chunks.computeIfAbsent(hashed, currentHashed -> {
-            int offsetX = chunkX * TerrainChunk.SIZE;
-            int offsetY = chunkY * TerrainChunk.SIZE;
-            int offsetZ = chunkZ * TerrainChunk.SIZE;
-            int subTerrainSize = TerrainChunk.SIZE + 1;
-            return new TerrainChunk(chunkX, chunkY, chunkZ,
-                    getSubTerrain(offsetX, offsetY, offsetZ,
-                            subTerrainSize, subTerrainSize, subTerrainSize),
-                    scalar, generator, updaters::add);
-        });
+		return chunks.computeIfAbsent(hashed, currentHashed -> {
+			int offsetX = chunkX * TerrainChunk.SIZE;
+			int offsetY = chunkY * TerrainChunk.SIZE;
+			int offsetZ = chunkZ * TerrainChunk.SIZE;
+			int subTerrainSize = TerrainChunk.SIZE + 1;
+			return new TerrainChunk(chunkX, chunkY, chunkZ,
+					getSubTerrain(offsetX, offsetY, offsetZ,
+							subTerrainSize, subTerrainSize, subTerrainSize),
+					scalar, generator, updaters::add);
+		});
 	}
+
 	public void drawOrQueue(int chunkX, int chunkY, int chunkZ, BiConsumer<Matrix, Drawable> drawer) {
 		TerrainChunk chunk = getChunk(chunkX, chunkY, chunkZ);
 		chunk.getDrawable().useOrRequest(drawable -> drawer.accept(chunk.getTransformationMatrix(), drawable));
 	}
+
 	private BoundedScalarGrid3D getSubTerrain(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
 		return BoundedScalarGrid3D.of((a, b, c) -> this.get(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
 	}
+
 	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, Predicate<Vector3D> predicate) {
 		float count = 0;
 		float total = 0;
@@ -74,6 +80,7 @@ public class Terrain {
 		}
 		return count / total;
 	}
+
 	public void generateExplosion(Vector3D point, float radius) {
 		int floorX = (int) Math.floor((point.x() - radius) / scalar.x());
 		int ceilX = (int) Math.ceil((point.x() + radius) / scalar.x());
@@ -95,33 +102,35 @@ public class Terrain {
 			}
 		}
 	}
+
 	public void generateExplosionInChunk(int chunkX, int chunkY, int chunkZ, Vector3D point, float radius) {
 		TerrainChunk chunk = getChunk(chunkX, chunkY, chunkZ);
 		chunk.updateData(data -> {
-            int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
-            int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
-            int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
-            try (var lower = VectorPool.ofEmpty();
-                 var upper = VectorPool.ofEmpty()) {
-                for (int i = 0; i < TerrainChunk.SIZE; i++) {
-                    for (int j = 0; j < TerrainChunk.SIZE; j++) {
-                        for (int k = 0; k < TerrainChunk.SIZE; k++) {
-                            lower.set(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f);
-                            lower.multiply(scalar);
-                            upper.set(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f);
-                            upper.multiply(scalar);
-                            float percentage = getPercentage(lower, upper, scalar.getX() / 4f, (v) -> {
-                                return v.getDistanceSquared(point) >= radius * radius;
-                            }) * 2f - 1f;
-                            if (percentage < 1f) {
-                                data[i][j][k] = Math.min(data[i][j][k], percentage);
-                            }
-                        }
-                    }
-                }
-            }
-        });
+			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
+			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
+			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
+			try (var lower = VectorPool.ofEmpty();
+				 var upper = VectorPool.ofEmpty()) {
+				for (int i = 0; i < TerrainChunk.SIZE; i++) {
+					for (int j = 0; j < TerrainChunk.SIZE; j++) {
+						for (int k = 0; k < TerrainChunk.SIZE; k++) {
+							lower.set(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f);
+							lower.multiply(scalar);
+							upper.set(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f);
+							upper.multiply(scalar);
+							float percentage = getPercentage(lower, upper, scalar.getX() / 4f, (v) -> {
+								return v.getDistanceSquared(point) >= radius * radius;
+							}) * 2f - 1f;
+							if (percentage < 1f) {
+								data[i][j][k] = Math.min(data[i][j][k], percentage);
+							}
+						}
+					}
+				}
+			}
+		});
 	}
+
 	public float get(int x, int y, int z) {
 		int chunkX = Math.floorDiv(x, TerrainChunk.SIZE);
 		int chunkY = Math.floorDiv(y, TerrainChunk.SIZE);
@@ -138,18 +147,22 @@ public class Terrain {
 		}
 		return chunk.get(localX, localY, localZ);
 	}
+
 	private static long hashChunkCoordinates(int chunkX, int chunkY, int chunkZ) {
 		chunkX = AbsoluteIntValue.HASHED.applyAsInt(chunkX);
 		chunkY = AbsoluteIntValue.HASHED.applyAsInt(chunkY);
 		chunkZ = AbsoluteIntValue.HASHED.applyAsInt(chunkZ);
 		return SzudzikIntPair.pair(chunkX, chunkY, chunkZ);
 	}
+
 	public int getChunkX(float x) {
 		return Math.floorDiv((int) Math.floor(x / scalar.x()), TerrainChunk.SIZE);
 	}
+
 	public int getChunkY(float y) {
 		return Math.floorDiv((int) Math.floor(y / scalar.y()), TerrainChunk.SIZE);
 	}
+
 	public int getChunkZ(float z) {
 		return Math.floorDiv((int) Math.floor(z / scalar.z()), TerrainChunk.SIZE);
 	}

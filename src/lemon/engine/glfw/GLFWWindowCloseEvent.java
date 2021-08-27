@@ -9,6 +9,7 @@ public class GLFWWindowCloseEvent implements WindowCloseEvent, GLFWEvent {
 	public GLFWWindowCloseEvent(GLFWWindow window) {
 		this.window = window;
 	}
+
 	@Override
 	public GLFWWindow getWindow() {
 		return window;

@@ -34,6 +34,7 @@ public class PerlinNoise<T extends Vector> implements Function<T, Float> {
 		values = ThreadLocal.withInitial(() -> new float[0b1 << numDimensions]); // 2 ^ n
 		a = ThreadLocal.withInitial(() -> new int[numDimensions]);
 	}
+
 	@Override
 	public Float apply(T x) {
 		float[] xData = x.data();
@@ -51,6 +52,7 @@ public class PerlinNoise<T extends Vector> implements Function<T, Float> {
 		}
 		return output;
 	}
+
 	public float interpolatedNoise(float[] x, IntUnaryOperator hashFunction, int[] intX, float[] fractionalX, float[] values, int[] a) {
 		for (int i = 0; i < intX.length; i++) {
 			intX[i] = (int) Math.floor(x[i]);
@@ -72,6 +74,7 @@ public class PerlinNoise<T extends Vector> implements Function<T, Float> {
 		}
 		return values[0];
 	}
+
 	public float interpolate(float a, float b, float x) {
 		float ft = (float) (x * Math.PI);
 		float f = (float) ((1.0 - Math.cos(ft)) * 0.5f);

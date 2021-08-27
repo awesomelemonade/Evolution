@@ -2,8 +2,6 @@ package lemon.engine.model;
 
 import lemon.engine.math.Vector3D;
 
-import java.util.function.BiFunction;
-
 public class CylinderModelBuilder {
 	public static ModelBuilder build(ModelBuilder builder, int n, float radius, float height) {
 		builder.addVertices(new Vector3D(0, -height / 2, 0), new Vector3D(0, height / 2, 0));

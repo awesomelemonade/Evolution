@@ -2,7 +2,6 @@ package lemon.engine.glfw;
 
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.input.MouseButtonEvent;
-import lemon.engine.math.MathUtil;
 
 public class GLFWMouseButtonEvent implements MouseButtonEvent, GLFWEvent, GLFWKeyMods {
 	private GLFWWindow window;
@@ -16,18 +15,22 @@ public class GLFWMouseButtonEvent implements MouseButtonEvent, GLFWEvent, GLFWKe
 		this.action = action;
 		this.mods = mods;
 	}
+
 	@Override
 	public int getMods() {
 		return mods;
 	}
+
 	@Override
 	public int getAction() {
 		return action;
 	}
+
 	@Override
 	public GLFWWindow getWindow() {
 		return window;
 	}
+
 	@Override
 	public int getButton() {
 		return button;

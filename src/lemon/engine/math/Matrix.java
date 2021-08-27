@@ -1,9 +1,9 @@
 package lemon.engine.math;
 
+import org.lwjgl.BufferUtils;
+
 import java.nio.FloatBuffer;
 import java.util.Arrays;
-
-import org.lwjgl.BufferUtils;
 
 public class Matrix {
 	public static final Matrix ZERO_4 = Matrix.unmodifiableMatrix(new Matrix(4));
@@ -15,9 +15,11 @@ public class Matrix {
 	public Matrix(int size) {
 		this(size, size);
 	}
+
 	public Matrix(int m, int n) {
 		this.data = new float[m][n];
 	}
+
 	public Matrix(float[][] data) {
 		this.data = new float[data.length][data[0].length];
 		for (int i = 0; i < data.length; ++i) {
@@ -26,9 +28,11 @@ public class Matrix {
 			}
 		}
 	}
+
 	public Matrix(Matrix matrix) {
 		this(matrix.data);
 	}
+
 	public void clear() {
 		for (int i = 0; i < data.length; i++) {
 			for (int j = 0; j < data[0].length; j++) {
@@ -36,20 +40,25 @@ public class Matrix {
 			}
 		}
 	}
+
 	public void set(int m, int n, float data) {
 		this.data[m][n] = data;
 	}
+
 	public float get(int m, int n) {
 		return data[m][n];
 	}
+
 	public int getRows() {
 		return data.length;
 	}
+
 	public int getColumns() {
 		return data[0].length;
 	}
 
 	private FloatBuffer buffer;
+
 	public FloatBuffer toFloatBuffer() {
 		if (buffer == null) {
 			buffer = BufferUtils.createFloatBuffer(data.length * data[0].length);
@@ -60,6 +69,7 @@ public class Matrix {
 		buffer.flip();
 		return buffer;
 	}
+
 	public void addToFloatBuffer(FloatBuffer buffer) {
 		for (int j = 0; j < this.getColumns(); j++) {
 			for (int i = 0; i < this.getRows(); i++) {
@@ -67,6 +77,7 @@ public class Matrix {
 			}
 		}
 	}
+
 	public Matrix multiply(Matrix matrix) {
 		if (this.getColumns() != matrix.getRows()) {
 			throw new IllegalArgumentException(String.format(ERROR_CANNOT_MULTIPLY,
@@ -76,6 +87,7 @@ public class Matrix {
 		multiply(product, this, matrix);
 		return product;
 	}
+
 	public static void multiply(Matrix result, Matrix left, Matrix right) {
 		for (int i = 0; i < left.getRows(); ++i) {
 			for (int j = 0; j < right.getColumns(); ++j) {
@@ -87,22 +99,26 @@ public class Matrix {
 			}
 		}
 	}
+
 	@Override
 	public String toString() {
 		return Arrays.deepToString(data);
 	}
+
 	public static Matrix unmodifiableMatrix(Matrix matrix) {
 		return new Matrix(matrix) {
 			@Override
 			public void set(int x, int y, float data) {
 				throw new IllegalStateException(unmodifiableMessage);
 			}
+
 			@Override
 			public void clear() {
 				throw new IllegalStateException(unmodifiableMessage);
 			}
 		};
 	}
+
 	public static Matrix getIdentity(int size) {
 		Matrix matrix = new Matrix(size);
 		for (int i = 0; i < size; ++i) {

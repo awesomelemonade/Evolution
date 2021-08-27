@@ -4,6 +4,7 @@ public record Triangle(Vector3D a, Vector3D b, Vector3D c, Vector3D normal, floa
 	private Triangle(Vector3D a, Vector3D b, Vector3D c, DerivedTriangleData data) {
 		this(a, b, c, data.normal, data.area);
 	}
+
 	public Triangle(Vector3D a, Vector3D b, Vector3D c) {
 		this(a, b, c, calculateDerivedData(a, b, c));
 	}
@@ -36,5 +37,6 @@ public record Triangle(Vector3D a, Vector3D b, Vector3D c, Vector3D normal, floa
 		return ((Float.floatToRawIntBits(z) & ~(Float.floatToRawIntBits(x) | Float.floatToRawIntBits(y))) & 0x80000000) != 0;
 	}
 
-	private record DerivedTriangleData(Vector3D normal, float area) {}
+	private record DerivedTriangleData(Vector3D normal, float area) {
+	}
 }

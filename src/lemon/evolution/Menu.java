@@ -1,20 +1,18 @@
 package lemon.evolution;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 import lemon.engine.control.GLFWWindow;
-import lemon.engine.math.Matrix;
-import lemon.engine.toolbox.Disposables;
-import lemon.evolution.screen.beta.Screen;
-import org.lwjgl.glfw.GLFW;
-
 import lemon.engine.game2d.Quad2D;
 import lemon.engine.math.Box2D;
+import lemon.engine.math.Matrix;
 import lemon.engine.toolbox.Color;
+import lemon.engine.toolbox.Disposables;
+import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
+import org.lwjgl.glfw.GLFW;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public enum Menu implements Screen {
 	INSTANCE;

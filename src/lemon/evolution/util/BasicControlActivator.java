@@ -1,15 +1,16 @@
 package lemon.evolution.util;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import lemon.engine.glfw.GLFWInput;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class BasicControlActivator {
 	private static final Map<Integer, PlayerControl> keyboardHolds;
 	private static final Map<Integer, PlayerControl> keyboardToggles;
 	private static final Map<Integer, PlayerControl> mouseHolds;
+
 	static {
 		keyboardHolds = new HashMap<>();
 		keyboardToggles = new HashMap<>();
@@ -17,7 +18,7 @@ public class BasicControlActivator {
 	}
 
 	public static void setup(GLFWInput input) {
-	    input.keyEvent().add(event -> {
+		input.keyEvent().add(event -> {
 			PlayerControl control = keyboardHolds.get(event.getKey());
 			if (control == null) {
 				return;
@@ -29,7 +30,7 @@ public class BasicControlActivator {
 				control.setActivated(false);
 			}
 		});
-	    input.keyEvent().add(event -> {
+		input.keyEvent().add(event -> {
 			PlayerControl control = keyboardToggles.get(event.getKey());
 			if (control == null) {
 				return;
@@ -38,7 +39,7 @@ public class BasicControlActivator {
 				control.setActivated(!control.isActivated());
 			}
 		});
-	    input.mouseButtonEvent().add(event -> {
+		input.mouseButtonEvent().add(event -> {
 			PlayerControl control = mouseHolds.get(event.getButton());
 			if (control == null) {
 				return;
@@ -51,12 +52,15 @@ public class BasicControlActivator {
 			}
 		});
 	}
+
 	public static void bindKeyboardHold(int key, PlayerControl control) {
 		keyboardHolds.put(key, control);
 	}
+
 	public static void bindKeyboardToggle(int key, PlayerControl control) {
 		keyboardToggles.put(key, control);
 	}
+
 	public static void bindMouseHolds(int key, PlayerControl control) {
 		mouseHolds.put(key, control);
 	}

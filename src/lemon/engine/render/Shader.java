@@ -7,7 +7,8 @@ import org.lwjgl.opengl.GL20;
 public record Shader(int id, int type) implements Disposable {
 	/**
 	 * Creates a shader
-	 * @param type of shader; most commonly GL20.GL_VERTEX_SHADER or GL20.GL_FRAGMENT_SHADER
+	 *
+	 * @param type     of shader; most commonly GL20.GL_VERTEX_SHADER or GL20.GL_FRAGMENT_SHADER
 	 * @param sequence to parse the shader
 	 */
 	public Shader(int type, CharSequence sequence) {

@@ -16,6 +16,7 @@ public class UIWheel implements UIInputComponent {
 	private float value; // 0 to 2 * pi
 	private Color color;
 	private boolean heldDown;
+
 	public UIWheel(Vector2D position, float radius, float value, Color color) {
 		this.position = position;
 		this.radius = radius;
@@ -63,9 +64,11 @@ public class UIWheel implements UIInputComponent {
 			}
 		});
 	}
+
 	private void setValue(double mouseX, double mouseY) {
 		this.value = (float) Math.atan2(mouseY - position.y(), mouseX - position.x());
 	}
+
 	// Returns a value between [0, 1]
 	public float getValue() {
 		return value;

@@ -1,12 +1,13 @@
 package lemon.engine.function;
 
-import java.util.function.BinaryOperator;
-
 import lemon.engine.math.MutableLine;
 import lemon.engine.math.Vector3D;
 
+import java.util.function.BinaryOperator;
+
 public enum LineLineIntersection implements BinaryOperator<MutableLine> {
 	INSTANCE;
+
 	@Override
 	public MutableLine apply(MutableLine line, MutableLine line2) {
 		System.out.println(line + " - " + line2);

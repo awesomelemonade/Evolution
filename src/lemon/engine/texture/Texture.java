@@ -11,6 +11,7 @@ public class Texture implements Disposable {
 	public Texture() {
 		id = GL11.glGenTextures();
 	}
+
 	public void load(TextureData data) {
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, id);
 		// Wrap
@@ -24,6 +25,7 @@ public class Texture implements Disposable {
 				GL11.GL_UNSIGNED_BYTE, data.data());
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 	}
+
 	public void load(CubeMapData data) {
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, id);
 		// Wrap
@@ -38,13 +40,16 @@ public class Texture implements Disposable {
 		}
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, 0);
 	}
+
 	public int getId() {
 		return id;
 	}
+
 	@Override
 	public void dispose() {
 		GL11.glDeleteTextures(id);
 	}
+
 	public void bind(int target, Runnable runnable) {
 		GL11.glBindTexture(target, id);
 		runnable.run();

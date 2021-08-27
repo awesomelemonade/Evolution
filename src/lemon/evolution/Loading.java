@@ -1,18 +1,17 @@
 package lemon.evolution;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import lemon.engine.control.GLFWWindow;
+import lemon.engine.control.Loader;
+import lemon.engine.math.Box2D;
 import lemon.engine.math.Matrix;
+import lemon.engine.splash.LoadingBar;
+import lemon.engine.toolbox.Color;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
 
-import lemon.engine.control.Loader;
-import lemon.engine.math.Box2D;
-import lemon.engine.splash.LoadingBar;
-import lemon.engine.toolbox.Color;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Loading implements Screen {
 	private static final Logger logger = Logger.getLogger(Loading.class.getName());

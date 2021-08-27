@@ -13,14 +13,17 @@ public class GLFWCursorPositionEvent implements CursorPositionEvent, GLFWEvent {
 		this.x = x;
 		this.y = y;
 	}
+
 	@Override
 	public GLFWWindow getWindow() {
 		return window;
 	}
+
 	@Override
 	public double getX() {
 		return x;
 	}
+
 	@Override
 	public double getY() {
 		return y;

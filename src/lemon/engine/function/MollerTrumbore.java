@@ -1,11 +1,11 @@
 package lemon.engine.function;
 
-import java.util.Optional;
-import java.util.function.BiFunction;
-
 import lemon.engine.math.MutableLine;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
+
+import java.util.Optional;
+import java.util.function.BiFunction;
 
 public class MollerTrumbore implements BiFunction<Triangle, MutableLine, Optional<Float>> {
 	private final float EPSILON;
@@ -14,13 +14,16 @@ public class MollerTrumbore implements BiFunction<Triangle, MutableLine, Optiona
 	public MollerTrumbore() {
 		this(0.000001f, false);
 	}
+
 	public MollerTrumbore(boolean culling) {
 		this(0.000001f, culling);
 	}
+
 	public MollerTrumbore(float EPSILON, boolean culling) {
 		this.EPSILON = EPSILON;
 		this.culling = culling;
 	}
+
 	@Override
 	public Optional<Float> apply(Triangle triangle, MutableLine ray) {
 		Vector3D edge, edge2;

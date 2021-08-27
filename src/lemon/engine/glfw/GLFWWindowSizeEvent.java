@@ -13,14 +13,17 @@ public class GLFWWindowSizeEvent implements WindowSizeEvent, GLFWEvent {
 		this.width = width;
 		this.height = height;
 	}
+
 	@Override
 	public GLFWWindow getWindow() {
 		return window;
 	}
+
 	@Override
 	public int getWidth() {
 		return width;
 	}
+
 	@Override
 	public int getHeight() {
 		return height;

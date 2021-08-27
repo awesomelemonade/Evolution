@@ -13,6 +13,7 @@ public record VertexBuffer(int id) implements Disposable {
 	public void bind(int target, BiConsumer<Integer, VertexBuffer> consumer) {
 		bind(target, consumer, true);
 	}
+
 	public void bind(int target, BiConsumer<Integer, VertexBuffer> consumer, boolean unbind) {
 		GL15.glBindBuffer(target, id);
 		consumer.accept(target, this);
@@ -20,6 +21,7 @@ public record VertexBuffer(int id) implements Disposable {
 			GL15.glBindBuffer(target, 0);
 		}
 	}
+
 	@Override
 	public void dispose() {
 		GL15.glDeleteBuffers(id);

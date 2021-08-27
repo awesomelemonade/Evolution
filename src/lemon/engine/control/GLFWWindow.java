@@ -1,6 +1,9 @@
 package lemon.engine.control;
 
 import lemon.engine.event.EventWith;
+import lemon.engine.glfw.GLFWInput;
+import lemon.engine.time.Benchmark;
+import lemon.engine.time.TimeSync;
 import lemon.engine.toolbox.Disposable;
 import lemon.evolution.screen.beta.Screen;
 import org.lwjgl.glfw.Callbacks;
@@ -10,10 +13,6 @@ import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-
-import lemon.engine.glfw.GLFWInput;
-import lemon.engine.time.Benchmark;
-import lemon.engine.time.TimeSync;
 
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
@@ -96,9 +95,11 @@ public class GLFWWindow implements Disposable {
 		GLFW.glfwTerminate();
 		errorCallback.free();
 	}
+
 	public long getId() {
 		return window;
 	}
+
 	public void pollMouse(BiConsumer<Float, Float> consumer) {
 		float mouseX;
 		float mouseY;
@@ -111,9 +112,11 @@ public class GLFWWindow implements Disposable {
 		}
 		consumer.accept(mouseX, mouseY);
 	}
+
 	public int getWidth() {
 		return width;
 	}
+
 	public int getHeight() {
 		return height;
 	}
@@ -121,6 +124,7 @@ public class GLFWWindow implements Disposable {
 	public GLFWInput input() {
 		return glfwInput;
 	}
+
 	public EventWith<Benchmark> onBenchmark() {
 		return onBenchmark;
 	}

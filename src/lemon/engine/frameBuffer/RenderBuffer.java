@@ -9,9 +9,11 @@ public class RenderBuffer implements Disposable {
 	public RenderBuffer() {
 		id = GL30.glGenRenderbuffers();
 	}
+
 	public int getId() {
 		return id;
 	}
+
 	@Override
 	public void dispose() {
 		GL30.glDeleteRenderbuffers(id);

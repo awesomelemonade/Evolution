@@ -1,5 +1,7 @@
 package lemon.engine.toolbox;
 
+import org.lwjgl.BufferUtils;
+
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -10,8 +12,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.List;
 import java.util.Optional;
-
-import org.lwjgl.BufferUtils;
 
 public class Toolbox {
 	private Toolbox() {
@@ -34,6 +34,7 @@ public class Toolbox {
 		}
 		return Optional.empty();
 	}
+
 	public static ByteBuffer toByteBuffer(BufferedImage image) {
 		int[] pixels = new int[image.getWidth() * image.getHeight()];
 		image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
@@ -50,6 +51,7 @@ public class Toolbox {
 		buffer.flip();
 		return buffer;
 	}
+
 	public static FloatBuffer toFloatBuffer(float... floats) {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(floats.length);
 		for (float f : floats) {
@@ -58,6 +60,7 @@ public class Toolbox {
 		buffer.flip();
 		return buffer;
 	}
+
 	public static FloatBuffer toFloatBuffer(List<Float> floats) {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(floats.size());
 		for (float f : floats) {
@@ -66,6 +69,7 @@ public class Toolbox {
 		buffer.flip();
 		return buffer;
 	}
+
 	public static IntBuffer toIntBuffer(int... ints) {
 		IntBuffer buffer = BufferUtils.createIntBuffer(ints.length);
 		for (int i : ints) {
@@ -74,6 +78,7 @@ public class Toolbox {
 		buffer.flip();
 		return buffer;
 	}
+
 	public static IntBuffer toIntBuffer(List<Integer> ints) {
 		IntBuffer buffer = BufferUtils.createIntBuffer(ints.size());
 		for (int i : ints) {

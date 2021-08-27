@@ -1,18 +1,17 @@
 package lemon.engine.splash;
 
-import java.nio.FloatBuffer;
-
+import lemon.engine.math.Box2D;
+import lemon.engine.math.Percentage;
 import lemon.engine.render.Renderable;
+import lemon.engine.render.VertexArray;
+import lemon.engine.render.VertexBuffer;
+import lemon.engine.toolbox.Color;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 
-import lemon.engine.math.Box2D;
-import lemon.engine.math.Percentage;
-import lemon.engine.render.VertexArray;
-import lemon.engine.render.VertexBuffer;
-import lemon.engine.toolbox.Color;
+import java.nio.FloatBuffer;
 
 public class LoadingBar implements Renderable {
 	private VertexArray vertexArray;
@@ -40,6 +39,7 @@ public class LoadingBar implements Renderable {
 			GL20.glEnableVertexAttribArray(1);
 		});
 	}
+
 	@Override
 	public void render() {
 		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
@@ -49,6 +49,7 @@ public class LoadingBar implements Renderable {
 			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
 		});
 	}
+
 	private FloatBuffer getFloatBuffer() {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(24);
 		for (int i = 0; i <= 1; ++i) {
@@ -61,10 +62,12 @@ public class LoadingBar implements Renderable {
 		buffer.flip();
 		return buffer;
 	}
+
 	private void addPositionBuffer(FloatBuffer buffer, float x, float y) {
 		buffer.put(x);
 		buffer.put(y);
 	}
+
 	public void setPercentage(Percentage percentage) {
 		this.percentage = percentage;
 	}

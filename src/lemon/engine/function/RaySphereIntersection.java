@@ -1,11 +1,11 @@
 package lemon.engine.function;
 
-import java.util.Optional;
-import java.util.function.BiFunction;
-
 import lemon.engine.math.MutableLine;
 import lemon.engine.math.Sphere;
 import lemon.engine.math.Vector3D;
+
+import java.util.Optional;
+import java.util.function.BiFunction;
 
 public class RaySphereIntersection implements BiFunction<MutableLine, Sphere, Optional<Float>> {
 	@Override

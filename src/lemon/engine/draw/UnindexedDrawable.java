@@ -36,6 +36,7 @@ public class UnindexedDrawable implements Drawable {
 			}
 		});
 	}
+
 	@Override
 	public void draw() {
 		vertexArray.bind(vao -> {

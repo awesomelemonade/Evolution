@@ -15,6 +15,7 @@ public class HeightMapLoader implements Loader {
 		this.terrain = new float[width][height];
 		this.percentage = new Percentage(width * height);
 	}
+
 	@Override
 	public void load() {
 		final int THREADS = 4;
@@ -53,10 +54,12 @@ public class HeightMapLoader implements Loader {
 			}
 		})).start();
 	}
+
 	@Override
 	public Percentage getPercentage() {
 		return percentage;
 	}
+
 	public float[][] getTerrain() {
 		return terrain;
 	}

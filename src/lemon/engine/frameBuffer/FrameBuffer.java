@@ -11,9 +11,11 @@ public class FrameBuffer implements Disposable {
 	public FrameBuffer() {
 		id = GL30.glGenFramebuffers();
 	}
+
 	public int getId() {
 		return id;
 	}
+
 	@Override
 	public void dispose() {
 		GL30.glDeleteFramebuffers(id);

@@ -12,9 +12,11 @@ public class Camera {
 	public Camera(Projection projection) {
 		this(MutableVector3D.ofZero(), MutableVector3D.ofZero(), projection);
 	}
+
 	public Camera(Vector3D position, Vector3D rotation, Projection projection) {
 		this(MutableVector3D.of(position), MutableVector3D.of(rotation), projection);
 	}
+
 	public Camera(MutableVector3D position, MutableVector3D rotation, Projection projection) {
 		this.position = position;
 		this.rotation = rotation;
@@ -22,27 +24,35 @@ public class Camera {
 		this.invertedRotationMatrixSupplier = MathUtil.getRotationSupplier(() -> this.rotation().invert());
 		this.transformationMatrixSupplier = MathUtil.getTransformationSupplier(() -> this.position().invert(), () -> this.rotation().invert());
 	}
+
 	public Vector3D position() {
 		return position.toImmutable();
 	}
+
 	public MutableVector3D mutablePosition() {
 		return position;
 	}
+
 	public Vector3D rotation() {
 		return rotation.toImmutable();
 	}
+
 	public MutableVector3D mutableRotation() {
 		return rotation;
 	}
+
 	public Projection getProjection() {
 		return projection;
 	}
+
 	public Matrix getTransformationMatrix() {
 		return transformationMatrixSupplier.get();
 	}
+
 	public Matrix getInvertedRotationMatrix() {
 		return invertedRotationMatrixSupplier.get();
 	}
+
 	public Matrix getProjectionMatrix() {
 		return MathUtil.getPerspective(projection);
 	}

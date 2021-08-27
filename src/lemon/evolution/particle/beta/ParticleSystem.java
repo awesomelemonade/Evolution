@@ -30,6 +30,7 @@ public class ParticleSystem implements Renderable {
 	private VertexBuffer vertexBuffer;
 	private final int maxParticles;
 	private final Deque<Particle> particles;
+
 	public ParticleSystem(int maxParticles) {
 		this.maxParticles = maxParticles;
 		this.particles = new ArrayDeque<>();
@@ -61,11 +62,13 @@ public class ParticleSystem implements Renderable {
 			GL20.glEnableVertexAttribArray(4);
 		});
 	}
+
 	public void updateVbo() {
 		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 			GL15.glBufferSubData(target, 0, getFloatBuffer());
 		});
 	}
+
 	public FloatBuffer getInitialFloatBuffer() {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(16 * maxParticles);
 		for (int i = 0; i < maxParticles; i++) {
@@ -74,6 +77,7 @@ public class ParticleSystem implements Renderable {
 		buffer.flip();
 		return buffer;
 	}
+
 	public FloatBuffer getFloatBuffer() {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(16 * particles.size());
 		for (Particle particle : particles) {
@@ -83,13 +87,17 @@ public class ParticleSystem implements Renderable {
 		buffer.flip();
 		return buffer;
 	}
+
 	public Vector3D randomVector() {
 		return new Vector3D((float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1));
 	}
+
 	public Vector3D randomVelocityVector() {
 		return new Vector3D((float) (Math.random() * 2 - 1), (float) (Math.random() * 5 + 2.0), (float) (Math.random() * 2 - 1));
 	}
+
 	private static final Vector3D GRAVITY = new Vector3D(0f, -0.01f, 0f);
+
 	public void render() {
 		while ((!particles.isEmpty()) && particles.peekFirst().getAge().compareTo(Duration.ofSeconds(5)) >= 0) {
 			particles.poll();

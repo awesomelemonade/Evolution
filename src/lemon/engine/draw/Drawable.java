@@ -7,7 +7,9 @@ import java.nio.FloatBuffer;
 
 public interface Drawable {
 	public static final int BYTES_PER_FLOAT = 4;
+
 	public void draw();
+
 	public static int getStride(Vector[][] vertices) {
 		int stride = 0;
 		for (Vector[] data : vertices) {
@@ -17,6 +19,7 @@ public interface Drawable {
 		}
 		return stride;
 	}
+
 	public static FloatBuffer getFloatBuffer(Vector[][] vertices, int stride) {
 		int numVertices = vertices[0].length;
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(numVertices * stride);

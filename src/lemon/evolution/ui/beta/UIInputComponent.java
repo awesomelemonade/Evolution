@@ -4,5 +4,5 @@ import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
 
 public interface UIInputComponent extends UIComponent {
-    public Disposable registerInputEvents(GLFWInput input);
+	public Disposable registerInputEvents(GLFWInput input);
 }

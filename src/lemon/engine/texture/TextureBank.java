@@ -10,17 +10,21 @@ public enum TextureBank {
 	private TextureBank(int id) {
 		this.id = id;
 	}
+
 	public int getId() {
 		return id;
 	}
+
 	public int getBind() {
 		return GL13.GL_TEXTURE0 + id;
 	}
+
 	public void bind(Runnable runnable) {
 		GL13.glActiveTexture(this.getBind());
 		runnable.run();
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 	}
+
 	public static int getBind(int id) {
 		return GL13.GL_TEXTURE0 + id;
 	}

@@ -17,6 +17,7 @@ public class UIToggleButton implements UIInputComponent {
 	public void render() {
 
 	}
+
 	public boolean isToggled() {
 		return toggled;
 	}

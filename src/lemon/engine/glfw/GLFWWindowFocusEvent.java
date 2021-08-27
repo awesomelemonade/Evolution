@@ -11,10 +11,12 @@ public class GLFWWindowFocusEvent implements WindowFocusEvent, GLFWEvent {
 		this.window = window;
 		this.focused = focused;
 	}
+
 	@Override
 	public GLFWWindow getWindow() {
 		return window;
 	}
+
 	@Override
 	public boolean getFocused() {
 		return focused;
