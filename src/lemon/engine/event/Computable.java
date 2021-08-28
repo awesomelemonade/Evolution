@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 public class Computable<T> {
+
 	private final AtomicBoolean currentlyComputing = new AtomicBoolean(false);
 	private final AtomicBoolean needsUpdate = new AtomicBoolean(true);
 	private final Consumer<Computable<T>> computer;

@@ -264,7 +264,7 @@ public enum Game implements Screen {
 		int size = 20;
 		for (int i = -size; i <= size; i += 5) {
 			for (int j = -size; j <= size; j += 5) {
-				puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO));
+				//puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO));
 			}
 		}
 		for (int i = 100; i <= 600; i += 10) {
@@ -457,14 +457,16 @@ public enum Game implements Screen {
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			debugMessage.setLength(0);
-			debugFormatter.format("Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d",
+			debugFormatter.format("Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, PuzzleBalls=%d, Projectiles=%d",
 					player.position().x(),
 					player.position().y(),
 					player.position().z(),
 					terrain.getChunkX(player.position().x()),
 					terrain.getChunkY(player.position().y()),
 					terrain.getChunkZ(player.position().z()),
-					pool.getTaskCount() - pool.getCompletedTaskCount());
+					pool.getTaskCount() - pool.getCompletedTaskCount(),
+					puzzleBalls.size(),
+					projectiles.size());
 			debugTextModel.setText(debugMessage);
 		}
 	}

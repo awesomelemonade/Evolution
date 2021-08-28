@@ -19,7 +19,7 @@ public class PuzzleBall implements Renderable {
 	private static final int RADIUS = 1;
 	private static final int ITERATIONS = 5;
 	private static final Lazy<Drawable> sphere = new Lazy<>(() -> {
-		return SphereModelBuilder.build(new ModelBuilder(), RADIUS, ITERATIONS)
+		return SphereModelBuilder.of(RADIUS, ITERATIONS)
 				.build((indices, vertices) -> {
 					Color[] colors = new Color[vertices.length];
 					for (int i = 0; i < colors.length; i++) {

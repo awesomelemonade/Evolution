@@ -92,6 +92,7 @@ public class GLFWWindow implements Disposable {
 
 	@Override
 	public void dispose() {
+		currentScreen.dispose();
 		GLFW.glfwDestroyWindow(window);
 		Callbacks.glfwFreeCallbacks(window);
 		GLFW.glfwTerminate();
