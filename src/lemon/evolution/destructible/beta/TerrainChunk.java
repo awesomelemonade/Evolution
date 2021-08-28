@@ -21,24 +21,25 @@ import java.util.stream.Stream;
 public class TerrainChunk {
 	public static final int SIZE = 16;
 	public static final Vector3D MARCHING_CUBE_SIZE = new Vector3D(SIZE + 1, SIZE + 1, SIZE + 1);
-	private Terrain terrain;
-	private int chunkX;
-	private int chunkY;
-	private int chunkZ;
-	private MarchingCube marchingCube;
-	private Matrix transformationMatrix;
-	private Color color;
-	private Computable<float[][][]> data;
-	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_X = {};
-	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_Y = {};
-	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_Z = {};
-	private Computable<MarchingCubeMesh> mesh;
-	private Computable<MarchingCubeModel> model;
-	private Computable<Vector3D[]> normals;
-	private Computable<DynamicIndexedDrawable> drawable;
+	private final Terrain terrain;
+	private final int chunkX;
+	private final int chunkY;
+	private final int chunkZ;
+	private final MarchingCube marchingCube;
+	private final Matrix transformationMatrix;
+	private final Color color;
+	private final Computable<float[][][]> data;
+	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_X = {1, 0, 0, 1, 0, 1, 1};
+	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_Y = {0, 1, 0, 1, 1, 0, 1};
+	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_Z = {0, 0, 1, 0, 1, 1, 1};
+	private final Computable<MarchingCubeMesh> mesh;
+	private final Computable<MarchingCubeModel> model;
+	private final Computable<Vector3D[]> normals;
+	private final Computable<DynamicIndexedDrawable> drawable;
 
 	public TerrainChunk(int chunkX, int chunkY, int chunkZ, BoundedScalarGrid3D scalarGrid, Vector3D scalar,
 						TerrainGenerator generator, Executor mainThreadExecutor, Terrain terrain) {
+		this.terrain = terrain;
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
 		this.chunkZ = chunkZ;
@@ -62,7 +63,9 @@ public class TerrainChunk {
 					.mapToObj(i -> getNeighboringChunk(MESH_PREREQUISITE_CHUNK_OFFSET_X[i],
 							MESH_PREREQUISITE_CHUNK_OFFSET_Y[i], MESH_PREREQUISITE_CHUNK_OFFSET_Z[i])))
 					.map(x -> x.data).toList();
-		}, computable -> computable.compute(marchingCube.generateMesh()));
+		}, computable -> {
+			computable.compute(marchingCube.generateMesh());
+		});
 		this.model = this.mesh.then((computable, mesh) -> {
 			Vector3D[] vertices = mesh.getVertices();
 			int[] indices = mesh.getIndices();
@@ -125,7 +128,7 @@ public class TerrainChunk {
 	}
 
 	public float get(int x, int y, int z) {
-		return data.getValueOrThrow()[x][y][z];
+		return data.getValueOrThrow(() -> new IllegalStateException("Data has not been computed for " + this))[x][y][z];
 	}
 
 	public void updateData(Consumer<float[][][]> updater) {
@@ -146,5 +149,10 @@ public class TerrainChunk {
 
 	public TerrainChunk getNeighboringChunk(int offsetX, int offsetY, int offsetZ) {
 		return terrain.getChunk(chunkX + offsetX, chunkY + offsetY, chunkZ + offsetZ);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("TerrainChunk[%d, %d, %d]", chunkX, chunkY, chunkZ);
 	}
 }

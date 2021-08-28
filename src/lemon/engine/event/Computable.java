@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 public class Computable<T> {
-	private final AtomicBoolean requested = new AtomicBoolean(false);
+	private final AtomicBoolean currentlyComputing = new AtomicBoolean(false);
 	private final AtomicBoolean needsUpdate = new AtomicBoolean(true);
 	private final Consumer<Computable<T>> computer;
 	private final List<Computable<?>> dependers = new ArrayList<>();
@@ -30,7 +30,7 @@ public class Computable<T> {
 		}
 		// fire all the events for whenCalculated()
 		whenCalculated.callListeners(value);
-		requested.set(false); // allow computable to be compute()ed again
+		currentlyComputing.set(false); // allow computable to be compute()ed again
 	}
 
 	public void compute(T value) {
@@ -82,15 +82,15 @@ public class Computable<T> {
 		return value;
 	}
 
-	public void request() {
-		if (needsUpdate.getAndSet(false)) {
-			if (!requested.getAndSet(true)) {
-				computer.accept(this);
-			} else {
-				// we need another update after computer is finished
-				needsUpdate.set(true);
-			}
+	public T getValueOrThrow(Supplier<? extends RuntimeException> exceptionSupplier) {
+		if (value == null) {
+			throw exceptionSupplier.get();
 		}
+		return value;
+	}
+
+	public void request() {
+		request(ignored -> {});
 	}
 
 	public Optional<T> requestAndGetValue() {
@@ -101,17 +101,24 @@ public class Computable<T> {
 	/**
 	 * Requests an update (if needed) and calls the callback when it is calculated
 	 */
-	public void requestForUpdate(Consumer<T> whenCalculated) {
-		if (needsUpdate.getAndSet(false)) {
+	public void request(Consumer<T> whenCalculated) {
+		if (needsUpdate.get()) {
 			this.whenCalculated.add(whenCalculated);
-			if (!requested.getAndSet(true)) {
+			if (!currentlyComputing.getAndSet(true)) {
+				needsUpdate.set(false);
 				computer.accept(this);
-			} else {
-				needsUpdate.set(true);
 			}
 		} else {
-			// value does not need to be updated
-			whenCalculated.accept(value);
+			// we don't need an update
+			if (currentlyComputing.get()) {
+				this.whenCalculated.add(whenCalculated);
+				/*needsUpdate.set(true);
+				this.whenCalculated.add(calculated -> {
+					request(whenCalculated);
+				});*/
+			} else {
+				whenCalculated.accept(value);
+			}
 		}
 	}
 
@@ -120,7 +127,7 @@ public class Computable<T> {
 	public <U> Computable<U> then(BiConsumer<Computable<U>, ? super T> consumer) {
 		Computable<T> self = this;
 		Computable<U> ret = new Computable<>(computer -> {
-			self.requestForUpdate(value -> {
+			self.request(value -> {
 				consumer.accept(computer, value);
 			});
 		});
@@ -138,7 +145,7 @@ public class Computable<T> {
 			var computables = lazyComputables.get();
 			for (Computable<T> computable : computables) {
 				AtomicBoolean incremented = new AtomicBoolean(false);
-				computable.requestForUpdate(value -> {
+				computable.request(value -> {
 					int current = incremented.getAndSet(true) ? counter.get() : counter.incrementAndGet();
 					if (current == computables.size()) {
 						computer.accept(resultComputable);

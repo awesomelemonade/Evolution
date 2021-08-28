@@ -129,7 +129,6 @@ public enum Game implements Screen {
 				return vector.y() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
 			};
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
-			disposables.add(() -> pool.shutdownNow());
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
 			terrain = new Terrain(generator, new Vector3D(5f, 5f, 5f));
 			dragonLoader = new ObjLoader("/res/dragon.obj");
@@ -165,6 +164,7 @@ public enum Game implements Screen {
 
 
 		logger.log(Level.FINE, "Initializing");
+		disposables.add(() -> pool.shutdownNow());
 		//GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);

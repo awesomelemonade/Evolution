@@ -85,7 +85,9 @@ public class GLFWWindow implements Disposable {
 	}
 
 	public void switchScreen(Screen screen) {
-		// TODO
+		currentScreen.dispose();
+		currentScreen = screen;
+		currentScreen.onLoad(this);
 	}
 
 	@Override
