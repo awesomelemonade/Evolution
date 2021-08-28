@@ -2,6 +2,7 @@ package lemon.engine.toolbox;
 
 import lemon.engine.control.Loader;
 import lemon.engine.draw.IndexedDrawable;
+import lemon.engine.math.HasDataArray;
 import lemon.engine.math.Percentage;
 import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
@@ -99,7 +100,7 @@ public class ObjLoader implements Loader {
 	public IndexedDrawable toIndexedDrawable() {
 		return new IndexedDrawable(
 				indices.stream().mapToInt(i -> i).toArray(),
-				new Vector[][] {
+				new HasDataArray[][] {
 						vertices.toArray(Vector3D.EMPTY_ARRAY),
 						Color.randomOpaque(vertices.size()),
 						normals.toArray(Vector3D.EMPTY_ARRAY)

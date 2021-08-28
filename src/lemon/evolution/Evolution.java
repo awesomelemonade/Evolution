@@ -35,7 +35,7 @@ public class Evolution {
 			//return GLFW.glfwCreateWindow(1600, 900, "Evolution", MemoryUtil.NULL, MemoryUtil.NULL);
 		}, Menu.INSTANCE)) {
 			window.input().keyEvent().add(event -> {
-				if (event.getKey() == GLFW.GLFW_KEY_ESCAPE) {
+				if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
 					GLFW.glfwSetWindowShouldClose(window.getId(), true);
 					ThreadManager.INSTANCE.interrupt();
 				}

@@ -71,7 +71,7 @@ public class SphereModelBuilder {
 			vertices.put(a, new HashMap<>());
 		}
 		vertices.get(a).put(b, builder.vertices().size());
-		builder.addVertex(a.copy().average(b));
+		builder.addVertex(a.average(b));
 		return builder.vertices().size() - 1;
 	}
 }

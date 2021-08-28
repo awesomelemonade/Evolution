@@ -1,5 +1,6 @@
 package lemon.engine.draw;
 
+import lemon.engine.math.HasDataArray;
 import lemon.engine.math.Vector;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
@@ -7,16 +8,16 @@ import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL11;
 
 public class CommonDrawables {
-	private static final Vector[] QUAD_VERTICES =
+	private static final HasDataArray[] QUAD_VERTICES =
 			{v(-1f, 1f, 0f), v(-1f, -1f, 0f), v(1f, 1f, 0f), v(1f, -1f, 0f)};
-	public static final Drawable TEXTURED_QUAD = new UnindexedDrawable(new Vector[][] {
+	public static final Drawable TEXTURED_QUAD = new UnindexedDrawable(new HasDataArray[][] {
 			// Positions
 			QUAD_VERTICES,
 			// Texture Coordinates
 			{v(0f, 1f), v(0f, 0f), v(1f, 1f), v(1f, 0f)}
 	}, GL11.GL_TRIANGLE_STRIP);
 
-	public static final Drawable COLORED_QUAD = new UnindexedDrawable(new Vector[][] {
+	public static final Drawable COLORED_QUAD = new UnindexedDrawable(new HasDataArray[][] {
 			// Positions
 			QUAD_VERTICES,
 			// Colors
@@ -45,8 +46,8 @@ public class CommonDrawables {
 	}
 
 	// repeat w/ shallow copy
-	private static Vector[] r(int count, Vector vector) {
-		Vector[] vectors = new Vector[count];
+	private static HasDataArray[] r(int count, HasDataArray vector) {
+		HasDataArray[] vectors = new HasDataArray[count];
 		for (int i = 0; i < count; i++) {
 			vectors[i] = vector;
 		}

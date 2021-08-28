@@ -19,35 +19,35 @@ public class BasicControlActivator {
 
 	public static void setup(GLFWInput input) {
 		input.keyEvent().add(event -> {
-			PlayerControl control = keyboardHolds.get(event.getKey());
+			PlayerControl control = keyboardHolds.get(event.key());
 			if (control == null) {
 				return;
 			}
-			if (event.getAction() == GLFW.GLFW_PRESS) {
+			if (event.action() == GLFW.GLFW_PRESS) {
 				control.setActivated(true);
 			}
-			if (event.getAction() == GLFW.GLFW_RELEASE) {
+			if (event.action() == GLFW.GLFW_RELEASE) {
 				control.setActivated(false);
 			}
 		});
 		input.keyEvent().add(event -> {
-			PlayerControl control = keyboardToggles.get(event.getKey());
+			PlayerControl control = keyboardToggles.get(event.key());
 			if (control == null) {
 				return;
 			}
-			if (event.getAction() == GLFW.GLFW_RELEASE) {
+			if (event.action() == GLFW.GLFW_RELEASE) {
 				control.setActivated(!control.isActivated());
 			}
 		});
 		input.mouseButtonEvent().add(event -> {
-			PlayerControl control = mouseHolds.get(event.getButton());
+			PlayerControl control = mouseHolds.get(event.button());
 			if (control == null) {
 				return;
 			}
-			if (event.getAction() == GLFW.GLFW_PRESS) {
+			if (event.action() == GLFW.GLFW_PRESS) {
 				control.setActivated(true);
 			}
-			if (event.getAction() == GLFW.GLFW_RELEASE) {
+			if (event.action() == GLFW.GLFW_RELEASE) {
 				control.setActivated(false);
 			}
 		});

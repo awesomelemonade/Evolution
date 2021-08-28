@@ -1,7 +1,7 @@
 package lemon.engine.input;
 
 public interface CursorPositionEvent extends MouseEvent {
-	public double getX();
+	public double x();
 
-	public double getY();
+	public double y();
 }

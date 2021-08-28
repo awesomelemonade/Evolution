@@ -20,21 +20,18 @@ public class TerrainGenerator {
 	public void queueChunk(TerrainChunk chunk, Consumer<float[][][]> consumer) {
 		queueSize.increment();
 		pool.execute(() -> {
-			try (var temp = VectorPool.ofEmpty()) {
-				int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
-				int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
-				int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
-				float[][][] data = new float[TerrainChunk.SIZE][TerrainChunk.SIZE][TerrainChunk.SIZE];
-				for (int i = 0; i < TerrainChunk.SIZE; i++) {
-					for (int j = 0; j < TerrainChunk.SIZE; j++) {
-						for (int k = 0; k < TerrainChunk.SIZE; k++) {
-							temp.set(offsetX + i, offsetY + j, offsetZ + k);
-							data[i][j][k] = scalarField.get(temp);
-						}
+			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
+			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
+			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
+			float[][][] data = new float[TerrainChunk.SIZE][TerrainChunk.SIZE][TerrainChunk.SIZE];
+			for (int i = 0; i < TerrainChunk.SIZE; i++) {
+				for (int j = 0; j < TerrainChunk.SIZE; j++) {
+					for (int k = 0; k < TerrainChunk.SIZE; k++) {
+						data[i][j][k] = scalarField.get(new Vector3D(offsetX + i, offsetY + j, offsetZ + k));
 					}
 				}
-				consumer.accept(data);
 			}
+			consumer.accept(data);
 			queueSize.decrement();
 		});
 	}

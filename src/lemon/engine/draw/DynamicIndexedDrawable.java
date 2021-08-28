@@ -1,5 +1,6 @@
 package lemon.engine.draw;
 
+import lemon.engine.math.HasDataArray;
 import lemon.engine.math.Vector;
 import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
@@ -11,7 +12,7 @@ import java.nio.FloatBuffer;
 
 public class DynamicIndexedDrawable implements Drawable {
 	private VertexArray vertexArray;
-	private Vector[][] vertices;
+	private HasDataArray[][] vertices;
 	private int[] indices;
 	private int stride;
 	private int drawMode;
@@ -21,11 +22,11 @@ public class DynamicIndexedDrawable implements Drawable {
 	private int vertexBufferSize;
 	private int hint;
 
-	public DynamicIndexedDrawable(int[] indices, Vector[][] vertices) {
+	public DynamicIndexedDrawable(int[] indices, HasDataArray[][] vertices) {
 		this(indices, vertices, GL11.GL_TRIANGLES, GL15.GL_DYNAMIC_DRAW);
 	}
 
-	public DynamicIndexedDrawable(int[] indices, Vector[][] vertices, int drawMode, int hint) {
+	public DynamicIndexedDrawable(int[] indices, HasDataArray[][] vertices, int drawMode, int hint) {
 		this.vertices = vertices;
 		this.indices = indices;
 		this.drawMode = drawMode;
@@ -59,7 +60,7 @@ public class DynamicIndexedDrawable implements Drawable {
 		});
 	}
 
-	public void setData(int[] indices, Vector[][] vertices) {
+	public void setData(int[] indices, HasDataArray[][] vertices) {
 		this.vertices = vertices;
 		this.indices = indices;
 		indexBuffer.bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {

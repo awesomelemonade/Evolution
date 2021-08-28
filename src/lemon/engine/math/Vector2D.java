@@ -59,4 +59,10 @@ public record Vector2D(float x, float y, Lazy<float[]> dataArray) implements Vec
 	public float dotProduct(Vector2D vector) {
 		return x * vector.x + y * vector.y;
 	}
+
+	public float distanceSquared(float x, float y) {
+		float dx = this.x - x;
+		float dy = this.y - y;
+		return dx * dx + dy * dy;
+	}
 }

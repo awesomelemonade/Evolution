@@ -304,24 +304,24 @@ public enum Game implements Screen {
 		keyTextModel = new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW);
 
 		disposables.add(window.input().keyEvent().add(event -> {
-			if (event.getAction() == GLFW.GLFW_RELEASE) {
-				if (event.getKey() == GLFW.GLFW_KEY_R) {
+			if (event.action() == GLFW.GLFW_RELEASE) {
+				if (event.key() == GLFW.GLFW_KEY_R) {
 					System.out.println("Set Origin: " + player.position());
 					line.mutableOrigin().set(player.position());
 					lightPosition = player.position();
 				}
-				if (event.getKey() == GLFW.GLFW_KEY_T) {
+				if (event.key() == GLFW.GLFW_KEY_T) {
 					line.mutableDirection().set(player.position().subtract(line.origin()));
 					System.out.println("Set Direction: " + line.direction());
 				}
-				if (event.getKey() == GLFW.GLFW_KEY_G) {
+				if (event.key() == GLFW.GLFW_KEY_G) {
 					puzzleBalls.add(new PuzzleBall(player.position(), player.velocity()));
 				}
-				if (event.getKey() == GLFW.GLFW_KEY_C) {
+				if (event.key() == GLFW.GLFW_KEY_C) {
 					puzzleBalls.clear();
 					debug.clear();
 				}
-				if (event.getKey() == GLFW.GLFW_KEY_K) {
+				if (event.key() == GLFW.GLFW_KEY_K) {
 					puzzleBalls.forEach(x -> {
 						float spray = 0.2f;
 						float randX = (float) (Math.random() * spray - spray / 2f);
@@ -345,8 +345,8 @@ public enum Game implements Screen {
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(window.input().mouseButtonEvent().add(event -> {
-			if (event.getAction() == GLFW.GLFW_RELEASE) {
-				if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_2) {
+			if (event.action() == GLFW.GLFW_RELEASE) {
+				if (event.button() == GLFW.GLFW_MOUSE_BUTTON_2) {
 					generateExplosionAtCrosshair();
 				}
 			}
@@ -473,12 +473,12 @@ public enum Game implements Screen {
 	private Formatter debugFormatter = new Formatter(debugMessage);
 
 	public void onMouseScroll(MouseScrollEvent event) {
-		playerSpeed += (float) (event.getYOffset() / 100f);
+		playerSpeed += (float) (event.yOffset() / 100f);
 		if (playerSpeed < 0) {
 			playerSpeed = 0;
 		}
 		player.camera().getProjection()
-				.setFov(player.camera().getProjection().getFov() + ((float) (event.getYOffset() / 10000f)));
+				.setFov(player.camera().getProjection().getFov() + ((float) (event.yOffset() / 10000f)));
 		updateProjectionMatrices();
 	}
 
@@ -491,8 +491,8 @@ public enum Game implements Screen {
 	public void onMousePosition(CursorPositionEvent event) {
 		lastMouseX = mouseX;
 		lastMouseY = mouseY;
-		mouseX = event.getX();
-		mouseY = event.getY();
+		mouseX = event.x();
+		mouseY = event.y();
 		if (GameControls.CAMERA_ROTATE.isActivated()) {
 			float deltaY = (float) (-(mouseX - lastMouseX) * MOUSE_SENSITIVITY);
 			float deltaX = (float) (-(mouseY - lastMouseY) * MOUSE_SENSITIVITY);

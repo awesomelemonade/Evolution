@@ -1,5 +1,6 @@
 package lemon.engine.draw;
 
+import lemon.engine.math.HasDataArray;
 import lemon.engine.math.Vector;
 import org.lwjgl.BufferUtils;
 
@@ -10,9 +11,9 @@ public interface Drawable {
 
 	public void draw();
 
-	public static int getStride(Vector[][] vertices) {
+	public static int getStride(HasDataArray[][] vertices) {
 		int stride = 0;
-		for (Vector[] data : vertices) {
+		for (var data : vertices) {
 			if (data.length > 0) {
 				stride += data[0].numDimensions();
 			}
@@ -20,7 +21,7 @@ public interface Drawable {
 		return stride;
 	}
 
-	public static FloatBuffer getFloatBuffer(Vector[][] vertices, int stride) {
+	public static FloatBuffer getFloatBuffer(HasDataArray[][] vertices, int stride) {
 		int numVertices = vertices[0].length;
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(numVertices * stride);
 		for (int i = 0; i < numVertices; i++) {

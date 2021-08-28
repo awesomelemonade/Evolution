@@ -49,13 +49,14 @@ public class Terrain {
 			return new TerrainChunk(chunkX, chunkY, chunkZ,
 					getSubTerrain(offsetX, offsetY, offsetZ,
 							subTerrainSize, subTerrainSize, subTerrainSize),
-					scalar, generator, updaters::add);
+					scalar, generator, updaters::add, this);
 		});
 	}
 
 	public void drawOrQueue(int chunkX, int chunkY, int chunkZ, BiConsumer<Matrix, Drawable> drawer) {
 		TerrainChunk chunk = getChunk(chunkX, chunkY, chunkZ);
-		chunk.getDrawable().useOrRequest(drawable -> drawer.accept(chunk.getTransformationMatrix(), drawable));
+		chunk.getDrawable().requestAndGetValue().ifPresent(
+				drawable -> drawer.accept(chunk.getTransformationMatrix(), drawable));
 	}
 
 	private BoundedScalarGrid3D getSubTerrain(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
@@ -65,16 +66,13 @@ public class Terrain {
 	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, Predicate<Vector3D> predicate) {
 		float count = 0;
 		float total = 0;
-		try (var temp = VectorPool.ofEmpty()) {
-			for (float x = lower.getX(); x <= upper.getX(); x += resolution) {
-				for (float y = lower.getY(); y <= upper.getY(); y += resolution) {
-					for (float z = lower.getZ(); z <= upper.getZ(); z += resolution) {
-						temp.set(x, y, z);
-						if (predicate.test(temp)) {
-							count++;
-						}
-						total++;
+		for (float x = lower.x(); x <= upper.x(); x += resolution) {
+			for (float y = lower.y(); y <= upper.y(); y += resolution) {
+				for (float z = lower.z(); z <= upper.z(); z += resolution) {
+					if (predicate.test(new Vector3D(x, y, z))) {
+						count++;
 					}
+					total++;
 				}
 			}
 		}
@@ -109,21 +107,18 @@ public class Terrain {
 			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
 			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
 			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
-			try (var lower = VectorPool.ofEmpty();
-				 var upper = VectorPool.ofEmpty()) {
-				for (int i = 0; i < TerrainChunk.SIZE; i++) {
-					for (int j = 0; j < TerrainChunk.SIZE; j++) {
-						for (int k = 0; k < TerrainChunk.SIZE; k++) {
-							lower.set(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f);
-							lower.multiply(scalar);
-							upper.set(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f);
-							upper.multiply(scalar);
-							float percentage = getPercentage(lower, upper, scalar.getX() / 4f, (v) -> {
-								return v.getDistanceSquared(point) >= radius * radius;
-							}) * 2f - 1f;
-							if (percentage < 1f) {
-								data[i][j][k] = Math.min(data[i][j][k], percentage);
-							}
+			for (int i = 0; i < TerrainChunk.SIZE; i++) {
+				for (int j = 0; j < TerrainChunk.SIZE; j++) {
+					for (int k = 0; k < TerrainChunk.SIZE; k++) {
+						var lower = new Vector3D(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f)
+								.multiply(scalar);
+						var upper = new Vector3D(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f)
+								.multiply(scalar);
+						float percentage = getPercentage(lower, upper, scalar.x() / 4f, (v) -> {
+							return v.distanceSquared(point) >= radius * radius;
+						}) * 2f - 1f;
+						if (percentage < 1f) {
+							data[i][j][k] = Math.min(data[i][j][k], percentage);
 						}
 					}
 				}

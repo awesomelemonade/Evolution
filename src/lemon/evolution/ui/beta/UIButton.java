@@ -26,8 +26,8 @@ public class UIButton implements UIInputComponent {
 	@Override
 	public Disposable registerInputEvents(GLFWInput input) {
 		return input.mouseButtonEvent().add(event -> {
-			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1 && event.getAction() == GLFW.GLFW_RELEASE) {
-				event.getWindow().pollMouse((mouseX, mouseY) -> {
+			if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1 && event.action() == GLFW.GLFW_RELEASE) {
+				event.glfwWindow().pollMouse((mouseX, mouseY) -> {
 					if (box.intersect(mouseX, mouseY)) {
 						eventHandler.accept(this);
 					}

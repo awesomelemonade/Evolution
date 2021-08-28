@@ -79,10 +79,6 @@ public class ReflectionUtil {
 		}
 	}
 
-	public static <T> T getInstance(Class<T> clazz) throws InstantiationException, IllegalAccessException {
-		return clazz.newInstance();
-	}
-
 	public static Object getInstance(Class<?> clazz, Object... args)
 			throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		int numOfParams = 0;

@@ -61,7 +61,7 @@ public class TextModel implements Drawable {
 			CharData data = font.getCharData(currentChar);
 			int kerning = font.getKerning(prevChar, currentChar);
 			putChar(buffer, data, cursor + kerning);
-			cursor += (data.getXAdvance() + kerning);
+			cursor += (data.xAdvance() + kerning);
 			prevChar = currentChar;
 		}
 		buffer.flip();
@@ -71,14 +71,14 @@ public class TextModel implements Drawable {
 	private void putChar(FloatBuffer buffer, CharData data, int cursor) {
 		float scaleWidth = font.getScaleWidth();
 		float scaleHeight = font.getScaleHeight();
-		float textureX = data.getX() / scaleWidth;
-		float textureY = data.getY() / scaleHeight;
-		float textureWidth = data.getWidth() / scaleWidth;
-		float textureHeight = data.getHeight() / scaleHeight;
-		float x = cursor + data.getXOffset();
-		float y = font.getLineHeight() - data.getYOffset() - font.getBase() / 2f;
-		float width = data.getWidth();
-		float height = data.getHeight();
+		float textureX = data.x() / scaleWidth;
+		float textureY = data.y() / scaleHeight;
+		float textureWidth = data.width() / scaleWidth;
+		float textureHeight = data.height() / scaleHeight;
+		float x = cursor + data.xOffset();
+		float y = font.getLineHeight() - data.yOffset() - font.getBase() / 2f;
+		float width = data.width();
+		float height = data.height();
 
 		put(buffer, x, y, textureX, textureY);
 		put(buffer, x + width, y, textureX + textureWidth, textureY);

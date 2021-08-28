@@ -23,15 +23,15 @@ public class UniformVariable {
 	}
 
 	public void loadVector(Vector3D vector) {
-		GL20.glUniform3f(id, vector.getX(), vector.getY(), vector.getZ());
+		GL20.glUniform3f(id, vector.x(), vector.y(), vector.z());
 	}
 
 	public void loadColor4f(Color color) {
-		GL20.glUniform4f(id, color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+		GL20.glUniform4f(id, color.red(), color.green(), color.blue(), color.alpha());
 	}
 
 	public void loadColor3f(Color color) {
-		GL20.glUniform3f(id, color.getRed(), color.getGreen(), color.getBlue());
+		GL20.glUniform3f(id, color.red(), color.green(), color.blue());
 	}
 
 	public void loadBoolean(boolean value) {

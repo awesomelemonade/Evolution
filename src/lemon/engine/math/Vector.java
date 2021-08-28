@@ -44,4 +44,8 @@ public interface Vector<T extends Vector<T>> extends HasDataArray {
 	public default T scaleToLength(float length) {
 		return this.multiply(length / this.length());
 	}
+
+	public default T average(T vector) {
+		return this.add(vector).divide(2);
+	}
 }

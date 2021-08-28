@@ -17,9 +17,9 @@ public class MarchingCube {
 		this.threshold = threshold;
 		this.offsets = new float[] {0f, 0f, 0f};
 		this.strides = new float[] {
-				size.getX() / grid.getSizeX(),
-				size.getY() / grid.getSizeY(),
-				size.getZ() / grid.getSizeZ()
+				size.x() / grid.getSizeX(),
+				size.y() / grid.getSizeY(),
+				size.z() / grid.getSizeZ()
 		};
 	}
 
@@ -58,16 +58,15 @@ public class MarchingCube {
 							int w = cacheOffsets[3];
 							if (edgeIndices[x][y][z][w] == -1) {
 								int[] o = MarchingCubeConstants.INTERPOLATE_OFFSETS[l];
-								try (var a = VectorPool.of(offsets[0] + strides[0] * (i + o[0]),
-										offsets[1] + strides[1] * (j + o[1]), offsets[2] + strides[2] * (k + o[2]))) {
-									Vector3D b = new Vector3D(offsets[0] + strides[0] * (i + o[3]),
-											offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
-									float dataA = grid.get(i + o[0], j + o[1], k + o[2]);
-									float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
-									edgeIndices[x][y][z][w] = vertices.size();
-									vertices.add(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
-									hashes.add(hash(x, y, z, w));
-								}
+								var a = new Vector3D(offsets[0] + strides[0] * (i + o[0]),
+										offsets[1] + strides[1] * (j + o[1]), offsets[2] + strides[2] * (k + o[2]));
+								var b = new Vector3D(offsets[0] + strides[0] * (i + o[3]),
+										offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
+								float dataA = grid.get(i + o[0], j + o[1], k + o[2]);
+								float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
+								edgeIndices[x][y][z][w] = vertices.size();
+								vertices.add(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
+								hashes.add(hash(x, y, z, w));
 							}
 							vectorIndices[l] = edgeIndices[x][y][z][w];
 						}

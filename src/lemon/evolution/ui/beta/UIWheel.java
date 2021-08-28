@@ -27,22 +27,22 @@ public class UIWheel implements UIInputComponent {
 	@Override
 	public Disposable registerInputEvents(GLFWInput input) {
 		return Disposable.of(input.mouseButtonEvent().add(event -> {
-			if (event.getButton() == GLFW.GLFW_MOUSE_BUTTON_1) {
-				if (event.getAction() == GLFW.GLFW_PRESS) {
-					event.getWindow().pollMouse((mouseX, mouseY) -> {
+			if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
+				if (event.action() == GLFW.GLFW_PRESS) {
+					event.glfwWindow().pollMouse((mouseX, mouseY) -> {
 						if (position.distanceSquared(mouseX, mouseY) <= radius * radius) {
 							setValue(mouseX, mouseY);
 							heldDown = true;
 						}
 					});
 				}
-				if (event.getAction() == GLFW.GLFW_RELEASE) {
+				if (event.action() == GLFW.GLFW_RELEASE) {
 					heldDown = false;
 				}
 			}
 		}), input.cursorPositionEvent().add(event -> {
 			if (heldDown) {
-				this.setValue(event.getX(), event.getWindow().getHeight() - event.getY());
+				this.setValue(event.x(), event.glfwWindow().getHeight() - event.y());
 			}
 		}));
 	}

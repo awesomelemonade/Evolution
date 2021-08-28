@@ -68,6 +68,13 @@ public record Vector3D(float x, float y, float z, Lazy<float[]> dataArray) imple
 		return x * vector.x + y * vector.y + z * vector.z;
 	}
 
+	public float distanceSquared(float x, float y, float z) {
+		float dx = this.x - x;
+		float dy = this.y - y;
+		float dz = this.z - z;
+		return dx * dx + dy * dy + dz * dz;
+	}
+
 	public Vector2D toXYVector() {
 		return new Vector2D(x, y);
 	}
