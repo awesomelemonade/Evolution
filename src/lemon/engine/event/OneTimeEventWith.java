@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 public class OneTimeEventWith<T> {
 	private final List<Consumer<T>> listeners = new ArrayList<>();
 
-	// TODO: Potential race condition
 	public void add(Consumer<T> listener) {
 		listeners.add(listener);
 	}

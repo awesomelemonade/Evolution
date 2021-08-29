@@ -1,11 +1,11 @@
 package lemon.engine.toolbox;
 
-import lemon.engine.event.EventWith;
+import lemon.engine.event.OneTimeEventWith;
 
 import java.util.function.Supplier;
 
 public class Lazy<T> implements Supplier<T> {
-	private final EventWith<T> onComputed = new EventWith<>();
+	private final OneTimeEventWith<T> onComputed = new OneTimeEventWith<>();
 	private final Supplier<T> initializer;
 	private T value;
 
@@ -22,7 +22,7 @@ public class Lazy<T> implements Supplier<T> {
 		return value;
 	}
 
-	public EventWith<T> onComputed() {
+	public OneTimeEventWith<T> onComputed() {
 		return onComputed;
 	}
 }

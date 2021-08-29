@@ -24,15 +24,20 @@ public class Computable<T> {
 		this.computer = computer;
 	}
 
-	public void compute() {
+	private synchronized void propagateNeedsUpdate() {
 		for (var depender : dependers) {
 			depender.needsUpdate = true;
+			depender.propagateNeedsUpdate();
 		}
+	}
+
+	public synchronized void compute() {
+		propagateNeedsUpdate();
 		whenCalculated.callListeners(value);
 		currentlyComputing = false; // allow computable to be compute()ed again
 	}
 
-	public void compute(T value) {
+	public synchronized void compute(T value) {
 		this.value = value;
 		this.compute();
 	}
@@ -40,7 +45,7 @@ public class Computable<T> {
 	/**
 	 * Applies the operator if value exists, otherwise retrieves from supplier
 	 */
-	public void compute(UnaryOperator<T> operator, Supplier<T> supplier) {
+	public synchronized void compute(UnaryOperator<T> operator, Supplier<T> supplier) {
 		if (value == null) {
 			value = supplier.get();
 		} else {
@@ -52,7 +57,7 @@ public class Computable<T> {
 	/**
 	 * Calls the consumer if value exists, otherwise retrieves from supplier
 	 */
-	public void compute(Consumer<T> consumer, Supplier<T> supplier) {
+	public synchronized void compute(Consumer<T> consumer, Supplier<T> supplier) {
 		if (value == null) {
 			value = supplier.get();
 		} else {
@@ -64,7 +69,7 @@ public class Computable<T> {
 	/**
 	 * Calls the consumer if value exists
 	 */
-	public void compute(Consumer<T> consumer) {
+	public synchronized void compute(Consumer<T> consumer) {
 		if (value != null) {
 			consumer.accept(value);
 			this.compute();
@@ -88,7 +93,7 @@ public class Computable<T> {
 		return value;
 	}
 
-	public void request() {
+	public synchronized void request() {
 		request(ignored -> {});
 	}
 
@@ -100,7 +105,7 @@ public class Computable<T> {
 	/**
 	 * Requests an update (if needed) and calls the callback when it is calculated
 	 */
-	public void request(Consumer<T> whenCalculated) {
+	public synchronized void request(Consumer<T> whenCalculated) {
 		if (needsUpdate) {
 			this.whenCalculated.add(whenCalculated);
 			if (!currentlyComputing) {

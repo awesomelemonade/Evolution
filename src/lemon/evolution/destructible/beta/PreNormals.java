@@ -13,7 +13,8 @@ public class PreNormals {
 	}
 
 	public Vector3D getNormal(int hash) {
-		return map.get(hash).normalize();
+		var normal = map.get(hash);
+		return normal == null ? Vector3D.ZERO : normal.normalize();
 	}
 
 	public void addNormal(int x, int y, int z, int w, Vector3D vector) {

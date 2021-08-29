@@ -355,7 +355,7 @@ public enum Game implements Screen {
 		disposables.add(window.input().cursorPositionEvent().add(this::onMousePosition));
 	}
 
-	private PlayerControl EXPLODE = new PlayerControl();
+	private final PlayerControl EXPLODE = new PlayerControl();
 
 	public void generateExplosionAtCrosshair() {
 		if (depthDistance != 1f) {
