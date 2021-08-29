@@ -89,7 +89,7 @@ public class CollisionPacket {
 			float conditionB = edge.dotProduct(q.subtract(vertexB));
 			if (conditionA >= 0f && conditionB <= 0f) {
 				float edgeT = conditionA / edge.lengthSquared();
-				collision.test(root1, vertexA.add(edge.multiply(edgeT)));
+				collision.set(root1, vertexA.add(edge.multiply(edgeT)));
 			}
 		}
 		float root2Numerator = 2f * c;
@@ -103,7 +103,7 @@ public class CollisionPacket {
 			float conditionB = edge.dotProduct(q.subtract(vertexB));
 			if (conditionA >= 0f && conditionB <= 0f) {
 				float edgeT = conditionA / edge.lengthSquared();
-				collision.test(root2, vertexA.add(edge.multiply(edgeT)));
+				collision.set(root2, vertexA.add(edge.multiply(edgeT)));
 			}
 		}
 	}
@@ -123,14 +123,14 @@ public class CollisionPacket {
 		float rightSideMultiplied1 = Math.min(1f, collision.getT()) * root1Denominator;
 		if (root1Numerator >= 0f && root1Numerator <= rightSideMultiplied1) {
 			float t = MathUtil.clamp(root1Numerator / root1Denominator, 0f, 1f);
-			collision.test(t, vertex);
+			collision.set(t, vertex);
 		}
 		float root2Numerator = 2f * c;
 		float root2Denominator = temp;
 		float rightSideMultiplied2 = Math.min(1f, collision.getT()) * root2Denominator;
 		if (root2Numerator >= 0f && root2Numerator <= rightSideMultiplied2) {
 			float t = MathUtil.clamp(root2Numerator / root2Denominator, 0f, 1f);
-			collision.test(t, vertex);
+			collision.set(t, vertex);
 		}
 	}
 
@@ -176,14 +176,14 @@ public class CollisionPacket {
 		var negSlidePlaneNormal = collision.getIntersection().subtract(collisionPosition).normalize();
 		remainingVelocity = remainingVelocity.subtract(usedVelocity);
 		remainingVelocity = remainingVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(remainingVelocity)));
-		velocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity)));
+		mutableVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity)));
 		/*if (collisionRecursionDepth == 0) {
-			velocity.multiply(0.995f);
-			remainingVelocity.multiply(0.995f);
+			mutableVelocity.multiply(0.995f);
+			remainingVelocity = remainingVelocity.multiply(0.995f);
 		}*/
 		float length = usedVelocity.length() - BUFFER_DISTANCE;
 		if (length > 0) {
-			position.add(usedVelocity.scaleToLength(length));
+			mutablePosition.add(usedVelocity.scaleToLength(length));
 		}
 		collideWithWorld(mutablePosition, mutableVelocity, collisionRecursionDepth + 1, remainingVelocity, maxRecursionDepth);
 	}
