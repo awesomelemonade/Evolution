@@ -63,13 +63,15 @@ public class Terrain {
 		return BoundedScalarGrid3D.of((a, b, c) -> this.get(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
 	}
 
-	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, Predicate<Vector3D> predicate) {
+	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, float radius) {
+		float radiusSquared = radius * radius;
 		float count = 0;
 		float total = 0;
 		for (float x = lower.x(); x <= upper.x(); x += resolution) {
 			for (float y = lower.y(); y <= upper.y(); y += resolution) {
 				for (float z = lower.z(); z <= upper.z(); z += resolution) {
-					if (predicate.test(new Vector3D(x, y, z))) {
+					float lengthSquared = x * x + y * y + z * z;
+					if (lengthSquared >= radiusSquared) {
 						count++;
 					}
 					total++;
@@ -111,12 +113,10 @@ public class Terrain {
 				for (int j = 0; j < TerrainChunk.SIZE; j++) {
 					for (int k = 0; k < TerrainChunk.SIZE; k++) {
 						var lower = new Vector3D(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f)
-								.multiply(scalar);
+								.multiply(scalar).subtract(point);
 						var upper = new Vector3D(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f)
-								.multiply(scalar);
-						float percentage = getPercentage(lower, upper, scalar.x() / 4f, (v) -> {
-							return v.distanceSquared(point) >= radius * radius;
-						}) * 2f - 1f;
+								.multiply(scalar).subtract(point);
+						float percentage = getPercentage(lower, upper, scalar.x() / 4f, radius) * 2f - 1f;
 						if (percentage < 1f) {
 							data[i][j][k] = Math.min(data[i][j][k], percentage);
 						}
