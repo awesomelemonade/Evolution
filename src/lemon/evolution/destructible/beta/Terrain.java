@@ -25,7 +25,7 @@ public class Terrain {
 		this.updaters = new ConcurrentLinkedQueue<>();
 	}
 
-	public void update() {
+	public void flushForRendering() {
 		Runnable current;
 		while ((current = updaters.poll()) != null) {
 			current.run();

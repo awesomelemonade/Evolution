@@ -13,7 +13,7 @@ public class PreNormals {
 	}
 
 	public Vector3D getNormal(int hash) {
-		return map.getOrDefault(hash, Vector3D.ZERO);
+		return map.get(hash).normalize();
 	}
 
 	public void addNormal(int x, int y, int z, int w, Vector3D vector) {
@@ -24,7 +24,7 @@ public class PreNormals {
 		return getNormal(hash(x, y, z, w));
 	}
 
-	private int hash(int x, int y, int z, int w) {
+	public static int hash(int x, int y, int z, int w) {
 		return (x << 24) | (y << 16) | (z << 8) | w;
 	}
 }

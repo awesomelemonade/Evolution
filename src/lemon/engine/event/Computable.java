@@ -13,9 +13,8 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 public class Computable<T> {
-
-	private final AtomicBoolean currentlyComputing = new AtomicBoolean(false);
-	private final AtomicBoolean needsUpdate = new AtomicBoolean(true);
+	public boolean currentlyComputing = false;
+	public boolean needsUpdate = true;
 	private final Consumer<Computable<T>> computer;
 	private final List<Computable<?>> dependers = new ArrayList<>();
 	private final OneTimeEventWith<T> whenCalculated = new OneTimeEventWith<>();
@@ -27,11 +26,10 @@ public class Computable<T> {
 
 	public void compute() {
 		for (var depender : dependers) {
-			depender.needsUpdate.set(true);
+			depender.needsUpdate = true;
 		}
-		// fire all the events for whenCalculated()
 		whenCalculated.callListeners(value);
-		currentlyComputing.set(false); // allow computable to be compute()ed again
+		currentlyComputing = false; // allow computable to be compute()ed again
 	}
 
 	public void compute(T value) {
@@ -103,20 +101,17 @@ public class Computable<T> {
 	 * Requests an update (if needed) and calls the callback when it is calculated
 	 */
 	public void request(Consumer<T> whenCalculated) {
-		if (needsUpdate.get()) {
+		if (needsUpdate) {
 			this.whenCalculated.add(whenCalculated);
-			if (!currentlyComputing.getAndSet(true)) {
-				needsUpdate.set(false);
+			if (!currentlyComputing) {
+				currentlyComputing = true;
+				needsUpdate = false;
 				computer.accept(this);
 			}
 		} else {
 			// we don't need an update
-			if (currentlyComputing.get()) {
+			if (currentlyComputing) {
 				this.whenCalculated.add(whenCalculated);
-				/*needsUpdate.set(true);
-				this.whenCalculated.add(calculated -> {
-					request(whenCalculated);
-				});*/
 			} else {
 				whenCalculated.accept(value);
 			}

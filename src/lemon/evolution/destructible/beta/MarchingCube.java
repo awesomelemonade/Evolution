@@ -66,7 +66,7 @@ public class MarchingCube {
 								float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
 								edgeIndices[x][y][z][w] = vertices.size();
 								vertices.add(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
-								hashes.add(hash(x, y, z, w));
+								hashes.add(PreNormals.hash(x, y, z, w));
 							}
 							vectorIndices[l] = edgeIndices[x][y][z][w];
 						}
@@ -113,9 +113,5 @@ public class MarchingCube {
 			index |= 128;
 		}
 		return index;
-	}
-
-	public static int hash(int x, int y, int z, int w) {
-		return (x << 24) | (y << 16) | (z << 8) | w;
 	}
 }

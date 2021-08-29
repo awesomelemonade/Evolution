@@ -408,7 +408,7 @@ public enum Game implements Screen {
 			player.mutableVelocity().subtractY(playerSpeed);
 		}
 		player.mutableVelocity().multiply(friction);
-		player.mutableVelocity().add(GRAVITY_VECTOR);
+		//player.mutableVelocity().add(GRAVITY_VECTOR);
 
 		CollisionPacket.collideAndSlide(player.mutablePosition(), player.mutableVelocity(), 20);
 
@@ -426,7 +426,7 @@ public enum Game implements Screen {
 		if (diffLength > 0.0075f) {
 			diff = diff.scaleToLength(Math.max(diffLength * 0.125f, 0.0075f));
 		}
-		player.mutableRotation().add(diff);
+		//player.mutableRotation().add(diff);
 
 
 		float totalLength = 0;
@@ -557,6 +557,7 @@ public enum Game implements Screen {
 				PuzzleBall.render(x, new Vector3D(0.2f, 0.2f, 0.2f));
 			}
 			//debug.clear();
+			terrain.flushForRendering();
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.TERRAIN.getShaderProgram().use(program -> {
 				//GL11.glEnable(GL11.GL_CULL_FACE);
