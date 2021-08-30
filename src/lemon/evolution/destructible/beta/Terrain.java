@@ -9,18 +9,20 @@ import lemon.engine.math.Vector3D;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
-import java.util.function.Predicate;
 
 public class Terrain {
 	private final Map<Long, TerrainChunk> chunks;
 	private final TerrainGenerator generator;
+	private final Executor poolExecutor;
 	private final Vector3D scalar;
 	private final ConcurrentLinkedQueue<Runnable> updaters;
 
-	public Terrain(TerrainGenerator generator, Vector3D scalar) {
+	public Terrain(TerrainGenerator generator, Executor poolExecutor, Vector3D scalar) {
 		this.chunks = new ConcurrentHashMap<>();
 		this.generator = generator;
+		this.poolExecutor = poolExecutor;
 		this.scalar = scalar;
 		this.updaters = new ConcurrentLinkedQueue<>();
 	}
@@ -33,7 +35,7 @@ public class Terrain {
 	}
 
 	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {
-		getChunk(chunkX, chunkY, chunkZ).getDrawable().request();
+		getChunk(chunkX, chunkY, chunkZ).drawable().request();
 	}
 
 	public TerrainChunk getChunk(int chunkX, int chunkY, int chunkZ) {
@@ -46,16 +48,16 @@ public class Terrain {
 			int offsetY = chunkY * TerrainChunk.SIZE;
 			int offsetZ = chunkZ * TerrainChunk.SIZE;
 			int subTerrainSize = TerrainChunk.SIZE + 1;
-			return new TerrainChunk(chunkX, chunkY, chunkZ,
+			return new TerrainChunk(this, chunkX, chunkY, chunkZ,
 					getSubTerrain(offsetX, offsetY, offsetZ,
 							subTerrainSize, subTerrainSize, subTerrainSize),
-					scalar, generator, updaters::add, this);
+					generator, poolExecutor, updaters::add);
 		});
 	}
 
 	public void drawOrQueue(int chunkX, int chunkY, int chunkZ, BiConsumer<Matrix, Drawable> drawer) {
 		TerrainChunk chunk = getChunk(chunkX, chunkY, chunkZ);
-		chunk.getDrawable().requestAndGetValue().ifPresent(
+		chunk.drawable().requestAndGetValue().ifPresent(
 				drawable -> drawer.accept(chunk.getTransformationMatrix(), drawable));
 	}
 
@@ -160,5 +162,9 @@ public class Terrain {
 
 	public int getChunkZ(float z) {
 		return Math.floorDiv((int) Math.floor(z / scalar.z()), TerrainChunk.SIZE);
+	}
+
+	public Vector3D scalar() {
+		return scalar;
 	}
 }

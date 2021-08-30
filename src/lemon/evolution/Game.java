@@ -101,6 +101,7 @@ public enum Game implements Screen {
 	private UIScreen uiScreen;
 
 	private ThreadPoolExecutor pool;
+	private ThreadPoolExecutor pool2;
 
 	private final Disposables disposables = new Disposables();
 
@@ -129,8 +130,9 @@ public enum Game implements Screen {
 				return vector.y() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
 			};
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
+			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
-			terrain = new Terrain(generator, new Vector3D(5f, 5f, 5f));
+			terrain = new Terrain(generator, pool2, new Vector3D(5f, 5f, 5f));
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			int n = 5;
@@ -164,7 +166,8 @@ public enum Game implements Screen {
 
 
 		logger.log(Level.FINE, "Initializing");
-		disposables.add(() -> pool.shutdownNow());
+		disposables.add(() -> pool.shutdown());
+		disposables.add(() -> pool2.shutdown());
 		//GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
@@ -563,8 +566,8 @@ public enum Game implements Screen {
 				//GL11.glEnable(GL11.GL_CULL_FACE);
 				//GL11.glCullFace(GL11.GL_FRONT);
 				int playerChunkX = terrain.getChunkX(player.position().x());
-				int playerChunkY = terrain.getChunkX(player.position().y());
-				int playerChunkZ = terrain.getChunkX(player.position().z());
+				int playerChunkY = terrain.getChunkY(player.position().y());
+				int playerChunkZ = terrain.getChunkZ(player.position().z());
 				int n = 5;
 				for (int i = -n; i <= n; i++) {
 					for (int j = -n; j <= n; j++) {

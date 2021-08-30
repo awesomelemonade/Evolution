@@ -7,9 +7,9 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Consumer;
 
 public class TerrainGenerator {
-	private ExecutorService pool;
-	private ScalarField<Vector3D> scalarField;
-	private LongAdder queueSize;
+	private final ExecutorService pool;
+	private final ScalarField<Vector3D> scalarField;
+	private final LongAdder queueSize;
 
 	public TerrainGenerator(ExecutorService pool, ScalarField<Vector3D> scalarField) {
 		this.pool = pool;

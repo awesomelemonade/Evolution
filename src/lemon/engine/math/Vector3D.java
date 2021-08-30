@@ -2,6 +2,7 @@ package lemon.engine.math;
 
 import lemon.engine.toolbox.Lazy;
 
+import java.util.Arrays;
 import java.util.function.UnaryOperator;
 
 public record Vector3D(float x, float y, float z, Lazy<float[]> dataArray) implements Vector<Vector3D> {
@@ -81,5 +82,23 @@ public record Vector3D(float x, float y, float z, Lazy<float[]> dataArray) imple
 
 	public Vector2D toXZVector() {
 		return new Vector2D(x, z);
+	}
+
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(this.constantData());
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Vector3D vector = (Vector3D) o;
+		return x == vector.x && y == vector.y && z == vector.z;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Vector3D[x=%f, y=%f, z=%f]", x, y, z);
 	}
 }

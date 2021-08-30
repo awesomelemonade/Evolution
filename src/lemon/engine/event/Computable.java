@@ -3,8 +3,10 @@ package lemon.engine.event;
 import lemon.engine.toolbox.Lazy;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -16,7 +18,7 @@ public class Computable<T> {
 	public boolean currentlyComputing = false;
 	public boolean needsUpdate = true;
 	private final Consumer<Computable<T>> computer;
-	private final List<Computable<?>> dependers = new ArrayList<>();
+	private final List<Computable<?>> dependers = Collections.synchronizedList(new ArrayList<>());
 	private final OneTimeEventWith<T> whenCalculated = new OneTimeEventWith<>();
 	private T value = null;
 
@@ -24,7 +26,7 @@ public class Computable<T> {
 		this.computer = computer;
 	}
 
-	private synchronized void propagateNeedsUpdate() {
+	private void propagateNeedsUpdate() {
 		for (var depender : dependers) {
 			depender.needsUpdate = true;
 			depender.propagateNeedsUpdate();
@@ -76,17 +78,17 @@ public class Computable<T> {
 		}
 	}
 
-	public Optional<T> getValue() {
+	public synchronized Optional<T> getValue() {
 		return Optional.ofNullable(this.value);
 	}
-	public T getValueOrThrow() {
+	public synchronized T getValueOrThrow() {
 		if (value == null) {
 			throw new IllegalStateException();
 		}
 		return value;
 	}
 
-	public T getValueOrThrow(Supplier<? extends RuntimeException> exceptionSupplier) {
+	public synchronized T getValueOrThrow(Supplier<? extends RuntimeException> exceptionSupplier) {
 		if (value == null) {
 			throw exceptionSupplier.get();
 		}
@@ -97,7 +99,7 @@ public class Computable<T> {
 		request(ignored -> {});
 	}
 
-	public Optional<T> requestAndGetValue() {
+	public synchronized Optional<T> requestAndGetValue() {
 		request();
 		return getValue();
 	}
@@ -124,6 +126,10 @@ public class Computable<T> {
 	}
 
 	// two ways of generating a computable from another computable
+	// singular computable -> computable, multiple computable -> computable
+	public <U> Computable<U> then(Executor executor, BiConsumer<Computable<U>, ? super T> consumer) {
+		return then((computable, value) -> executor.execute(() -> consumer.accept(computable, value)));
+	}
 
 	public <U> Computable<U> then(BiConsumer<Computable<U>, ? super T> consumer) {
 		Computable<T> self = this;
@@ -134,6 +140,10 @@ public class Computable<T> {
 		});
 		this.dependers.add(ret);
 		return ret;
+	}
+
+	public static <T, U> Computable<U> all(Executor executor, Supplier<List<Computable<T>>> lazyComputables, Consumer<Computable<U>> consumer) {
+		return all(lazyComputables, computable -> executor.execute(() -> consumer.accept(computable)));
 	}
 
 	public static <T, U> Computable<U> all(Supplier<List<Computable<T>>> lazyComputables, Consumer<Computable<U>> computer) {
