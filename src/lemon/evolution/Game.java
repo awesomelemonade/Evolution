@@ -131,6 +131,8 @@ public enum Game implements Screen {
 			};
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+			pool.setRejectedExecutionHandler((runnable, executor) -> {});
+			pool2.setRejectedExecutionHandler((runnable, executor) -> {});
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
 			terrain = new Terrain(generator, pool2, Vector3D.of(5f, 5f, 5f));
 			dragonLoader = new ObjLoader("/res/dragon.obj");
