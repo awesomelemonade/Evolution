@@ -26,6 +26,6 @@ public class HeightMapGenerator {
 	}
 
 	public float generate(float x, float y) {
-		return (noise.apply(new Vector2D(x, y).divide(1200f)) - 0.85f) * 35f;
+		return (noise.apply(Vector2D.of(x, y).divide(1200f)) - 0.85f) * 35f;
 	}
 }

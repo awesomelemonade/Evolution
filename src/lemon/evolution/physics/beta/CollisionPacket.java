@@ -147,7 +147,7 @@ public class CollisionPacket {
 		// velocity.divide(eRadius);
 
 		// Iterate until we have our final position
-		collideWithWorld(position, velocity, 0, velocity.toImmutable(), maxRecursionDepth);
+		collideWithWorld(position, velocity, 0, velocity.asImmutable(), maxRecursionDepth);
 
 		// Convert final result back to r3
 		// position.multiply(eRadius);
@@ -161,8 +161,8 @@ public class CollisionPacket {
 		if (remainingVelocity.lengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {
 			return;
 		}
-		var position = mutablePosition.toImmutable();
-		var velocity = mutableVelocity.toImmutable();
+		var position = mutablePosition.asImmutable();
+		var velocity = mutableVelocity.asImmutable();
 		Collision collision = checkCollision(position, remainingVelocity);
 		if (collision.getT() >= 1f) {
 			float length = remainingVelocity.length() - BUFFER_DISTANCE;
@@ -207,11 +207,11 @@ public class CollisionPacket {
 
 	// response steps
 	public static boolean collideAndSlideIntersect(MutableVector3D position, MutableVector3D velocity) {
-		return collideWithWorldIntersect(position, velocity.toImmutable());
+		return collideWithWorldIntersect(position, velocity.asImmutable());
 	}
 
 	public static boolean collideWithWorldIntersect(MutableVector3D mutablePosition, Vector3D remainingVelocity) {
-		Collision collision = checkCollision(mutablePosition.toImmutable(), remainingVelocity);
+		Collision collision = checkCollision(mutablePosition.asImmutable(), remainingVelocity);
 		if (collision.getT() >= 1f) {
 			float length = remainingVelocity.length() - BUFFER_DISTANCE;
 			if (length > 0) {

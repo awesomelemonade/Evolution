@@ -6,8 +6,9 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.ToIntFunction;
+import java.util.stream.IntStream;
 
-public class PerlinNoise<T extends Vector> implements Function<T, Float> {
+public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 	private IntUnaryOperator abs = AbsoluteIntValue.HASHED;
 	private IntUnaryOperator[] hashFunctions;
 	private ToIntFunction<int[]> pairFunction;
@@ -37,7 +38,8 @@ public class PerlinNoise<T extends Vector> implements Function<T, Float> {
 
 	@Override
 	public Float apply(T x) {
-		float[] xData = x.data();
+		float[] xData = new float[numDimensions];
+		x.putInArray(xData);
 		float output = 0;
 		int[] intX = this.intX.get();
 		float[] fractionalX = this.fractionalX.get();

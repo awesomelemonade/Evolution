@@ -1,6 +1,6 @@
 package lemon.engine.draw;
 
-import lemon.engine.math.HasDataArray;
+import lemon.engine.math.FloatData;
 import lemon.engine.math.Vector;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
@@ -8,16 +8,16 @@ import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL11;
 
 public class CommonDrawables {
-	private static final HasDataArray[] QUAD_VERTICES =
+	private static final FloatData[] QUAD_VERTICES =
 			{v(-1f, 1f, 0f), v(-1f, -1f, 0f), v(1f, 1f, 0f), v(1f, -1f, 0f)};
-	public static final Drawable TEXTURED_QUAD = new UnindexedDrawable(new HasDataArray[][] {
+	public static final Drawable TEXTURED_QUAD = new UnindexedDrawable(new FloatData[][] {
 			// Positions
 			QUAD_VERTICES,
 			// Texture Coordinates
 			{v(0f, 1f), v(0f, 0f), v(1f, 1f), v(1f, 0f)}
 	}, GL11.GL_TRIANGLE_STRIP);
 
-	public static final Drawable COLORED_QUAD = new UnindexedDrawable(new HasDataArray[][] {
+	public static final Drawable COLORED_QUAD = new UnindexedDrawable(new FloatData[][] {
 			// Positions
 			QUAD_VERTICES,
 			// Colors
@@ -34,11 +34,11 @@ public class CommonDrawables {
 
 	// Shortcuts
 	private static Vector2D v(float x, float y) {
-		return new Vector2D(x, y);
+		return Vector2D.of(x, y);
 	}
 
 	private static Vector3D v(float x, float y, float z) {
-		return new Vector3D(x, y, z);
+		return Vector3D.of(x, y, z);
 	}
 
 	private static Color c(float r, float g, float b, float a) {
@@ -46,8 +46,8 @@ public class CommonDrawables {
 	}
 
 	// repeat w/ shallow copy
-	private static HasDataArray[] r(int count, HasDataArray vector) {
-		HasDataArray[] vectors = new HasDataArray[count];
+	private static FloatData[] r(int count, FloatData vector) {
+		var vectors = new FloatData[count];
 		for (int i = 0; i < count; i++) {
 			vectors[i] = vector;
 		}
@@ -60,7 +60,7 @@ public class CommonDrawables {
 		}
 		Vector3D[] vectors = new Vector3D[values.length / 3];
 		for (int i = 0; i < vectors.length; i++) {
-			vectors[i] = new Vector3D(values[i * 3], values[i * 3 + 1], values[i * 3 + 2]);
+			vectors[i] = Vector3D.of(values[i * 3], values[i * 3 + 1], values[i * 3 + 2]);
 		}
 		return vectors;
 	}

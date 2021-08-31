@@ -82,21 +82,21 @@ public class ParticleSystem implements Renderable {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(16 * particles.size());
 		for (Particle particle : particles) {
 			particle.getTransformationMatrix()
-					.multiply(MathUtil.getScalar(new Vector3D(0.8f, 0.8f, 0.8f))).addToFloatBuffer(buffer);
+					.multiply(MathUtil.getScalar(Vector3D.of(0.8f, 0.8f, 0.8f))).addToFloatBuffer(buffer);
 		}
 		buffer.flip();
 		return buffer;
 	}
 
 	public Vector3D randomVector() {
-		return new Vector3D((float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1));
+		return Vector3D.of((float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1));
 	}
 
 	public Vector3D randomVelocityVector() {
-		return new Vector3D((float) (Math.random() * 2 - 1), (float) (Math.random() * 5 + 2.0), (float) (Math.random() * 2 - 1));
+		return Vector3D.of((float) (Math.random() * 2 - 1), (float) (Math.random() * 5 + 2.0), (float) (Math.random() * 2 - 1));
 	}
 
-	private static final Vector3D GRAVITY = new Vector3D(0f, -0.01f, 0f);
+	private static final Vector3D GRAVITY = Vector3D.of(0f, -0.01f, 0f);
 
 	public void render() {
 		while ((!particles.isEmpty()) && particles.peekFirst().getAge().compareTo(Duration.ofSeconds(5)) >= 0) {
@@ -104,8 +104,8 @@ public class ParticleSystem implements Renderable {
 		}
 		if (particles.size() < maxParticles) {
 			if (particles.isEmpty() || particles.peekLast().getAge().compareTo(Duration.ofMillis(5)) >= 0) {
-				particles.add(new Particle(new Vector3D(Vector3D.ZERO),
-						new Vector3D((float) (-Math.random() * 3 - 2),
+				particles.add(new Particle(Vector3D.ZERO,
+						Vector3D.of((float) (-Math.random() * 3 - 2),
 								(float) ((Math.random() - 0.5) * 1.4),
 								(float) ((Math.random() - 0.5) * 1.4)),
 						randomVector(), randomVector().multiply(0.05f)));
@@ -119,7 +119,7 @@ public class ParticleSystem implements Renderable {
 		updateVbo();
 		CommonPrograms3D.PARTICLE.getShaderProgram().use(program -> {
 			program.loadColor4f(Color.RED);
-			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(65f, 98f, 0f)));
+			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(65f, 98f, 0f)));
 			vertexArray.bind(vao -> {
 				GL31.glDrawElementsInstanced(GL11.GL_TRIANGLES, INDICES.length, GL11.GL_UNSIGNED_INT, 0, particles.size());
 			});

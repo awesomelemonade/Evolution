@@ -2,7 +2,7 @@ package lemon.engine.math;
 
 import java.util.function.UnaryOperator;
 
-public interface Vector<T extends Vector<T>> extends HasDataArray {
+public interface Vector<T extends Vector<T>> extends FloatData {
 	public T operate(UnaryOperator<Float> operator);
 
 	public T add(T vector);

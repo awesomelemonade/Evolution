@@ -48,7 +48,7 @@ public class Quad2D implements Renderable {
 			for (int j = 0; j <= 1; ++j) {
 				buffer.put(box.x() + box.width() * i);
 				buffer.put(box.y() + box.height() * j);
-				buffer.put(colors[j * 2 + i].constantData());
+				colors[j * 2 + i].putInBuffer(buffer);
 			}
 		}
 		buffer.flip();

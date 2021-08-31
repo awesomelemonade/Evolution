@@ -14,14 +14,14 @@ import org.lwjgl.opengl.GL11;
 
 public class PuzzleGrid implements Renderable {
 	private static final Vector3D[] VERTICES = new Vector3D[] {
-			new Vector3D(-1, -1, -1),
-			new Vector3D(-1, -1, 1),
-			new Vector3D(-1, 1, -1),
-			new Vector3D(-1, 1, 1),
-			new Vector3D(1, -1, -1),
-			new Vector3D(1, -1, 1),
-			new Vector3D(1, 1, -1),
-			new Vector3D(1, 1, 1),
+			Vector3D.of(-1, -1, -1),
+			Vector3D.of(-1, -1, 1),
+			Vector3D.of(-1, 1, -1),
+			Vector3D.of(-1, 1, 1),
+			Vector3D.of(1, -1, -1),
+			Vector3D.of(1, -1, 1),
+			Vector3D.of(1, 1, -1),
+			Vector3D.of(1, 1, 1),
 	};
 	private static final int[] INDICES = new int[] {
 			0, 1, 2, 1, 2, 3, // -x face
@@ -45,7 +45,7 @@ public class PuzzleGrid implements Renderable {
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getScalar(new Vector3D(10f, 1f, 10f)));
+			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getScalar(Vector3D.of(10f, 1f, 10f)));
 			drawable.draw();
 		});
 		GL11.glDisable(GL11.GL_DEPTH_TEST);

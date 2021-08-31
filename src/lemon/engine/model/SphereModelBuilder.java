@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SphereModelBuilder {
-	private static final Vector3D[] OCTAHEDRON_VERTICES = new Vector3D[] {new Vector3D(0, -1, 0),
-			new Vector3D(0, 1, 0), new Vector3D(-1, 0, -1), new Vector3D(-1, 0, 1), new Vector3D(1, 0, -1),
-			new Vector3D(1, 0, 1)};
+	private static final Vector3D[] OCTAHEDRON_VERTICES = new Vector3D[] {Vector3D.of(0, -1, 0),
+			Vector3D.of(0, 1, 0), Vector3D.of(-1, 0, -1), Vector3D.of(-1, 0, 1), Vector3D.of(1, 0, -1),
+			Vector3D.of(1, 0, 1)};
 	private static final int[] OCTAHEDRON_INDICES = new int[] {0, 2, 3, 0, 3, 5, 0, 5, 4, 0, 4, 2, 1, 2, 3, 1, 3, 5, 1,
 			5, 4, 1, 4, 2};
 

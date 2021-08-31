@@ -1,7 +1,5 @@
 package lemon.engine.math;
 
-import lemon.engine.toolbox.Cache;
-
 public interface MutableVector2D {
 	// construction
 	public static MutableVector2D of(Vector2D vector) {
@@ -12,19 +10,27 @@ public interface MutableVector2D {
 		return new MutableVector2D() {
 			private float x = initialX;
 			private float y = initialY;
-			private final Cache<Vector2D> cache = new Cache<>(() -> new Vector2D(x, y));
+			private final Vector2D immutable = new Vector2D() {
+				@Override
+				public float x() {
+					return x;
+				}
+
+				@Override
+				public float y() {
+					return y;
+				}
+			};
 
 			@Override
 			public MutableVector2D setX(float x) {
 				this.x = x;
-				cache.invalidate();
 				return this;
 			}
 
 			@Override
 			public MutableVector2D setY(float y) {
 				this.y = y;
-				cache.invalidate();
 				return this;
 			}
 
@@ -39,8 +45,8 @@ public interface MutableVector2D {
 			}
 
 			@Override
-			public Vector2D toImmutable() {
-				return cache.get();
+			public Vector2D asImmutable() {
+				return immutable;
 			}
 		};
 	}
@@ -54,10 +60,9 @@ public interface MutableVector2D {
 
 	public float y();
 
+	public Vector2D asImmutable();
+
 	// default operations
-	public default Vector2D toImmutable() {
-		return new Vector2D(x(), y());
-	}
 
 	public default MutableVector2D addX(float x) {
 		setX(x() + x);

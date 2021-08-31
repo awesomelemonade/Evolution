@@ -26,7 +26,7 @@ public class Camera {
 	}
 
 	public Vector3D position() {
-		return position.toImmutable();
+		return position.asImmutable();
 	}
 
 	public MutableVector3D mutablePosition() {
@@ -34,7 +34,7 @@ public class Camera {
 	}
 
 	public Vector3D rotation() {
-		return rotation.toImmutable();
+		return rotation.asImmutable();
 	}
 
 	public MutableVector3D mutableRotation() {

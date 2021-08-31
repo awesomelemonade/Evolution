@@ -2,7 +2,7 @@ package lemon.evolution.destructible.beta;
 
 import lemon.engine.draw.DynamicIndexedDrawable;
 import lemon.engine.event.Computable;
-import lemon.engine.math.HasDataArray;
+import lemon.engine.math.FloatData;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Triangle;
@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 
 public class TerrainChunk {
 	public static final int SIZE = 16;
-	public static final Vector3D MARCHING_CUBE_SIZE = new Vector3D(SIZE + 1, SIZE + 1, SIZE + 1);
+	public static final Vector3D MARCHING_CUBE_SIZE = Vector3D.of(SIZE + 1, SIZE + 1, SIZE + 1);
 	private final Terrain terrain;
 	private final int chunkX;
 	private final int chunkY;
@@ -78,7 +78,7 @@ public class TerrainChunk {
 			PreNormals preNormals = new PreNormals();
 			List<Triangle> triangles = new ArrayList<>();
 			Vector3D[] transformed = new Vector3D[vertices.length];
-			var x = new Vector3D(5f * chunkX * TerrainChunk.SIZE, 5f * chunkY * TerrainChunk.SIZE, 5f * chunkZ * TerrainChunk.SIZE);
+			var x = Vector3D.of(5f * chunkX * TerrainChunk.SIZE, 5f * chunkY * TerrainChunk.SIZE, 5f * chunkZ * TerrainChunk.SIZE);
 			for (int i = 0; i < vertices.length; i++) {
 				transformed[i] = vertices[i].multiply(5f).add(x);
 			}
@@ -121,7 +121,7 @@ public class TerrainChunk {
 			Vector3D[] vertices = model.vertices();
 			Color[] colors = new Color[vertices.length];
 			Arrays.fill(colors, color);
-			var vertexData = new HasDataArray[][] {vertices, colors, normals};
+			var vertexData = new FloatData[][] {vertices, colors, normals};
 			mainThreadExecutor.execute(() -> {
 				computable.compute(drawable -> {
 					drawable.setData(indices, vertexData);
@@ -152,7 +152,7 @@ public class TerrainChunk {
 			if (borderY && borderZ) {
 				sum.add(getNeighboringChunk(0, chunkOffsetY, chunkOffsetZ).model().getValueOrThrow().preNormals().getNormal(x, SIZE - y, SIZE - z, w));
 			}
-			return Optional.of(sum.toImmutable());
+			return Optional.of(sum.asImmutable());
 		}
 		if (w == 1) {
 			MutableVector3D sum = MutableVector3D.ofZero();
@@ -169,7 +169,7 @@ public class TerrainChunk {
 			if (borderX && borderZ) {
 				sum.add(getNeighboringChunk(chunkOffsetX, 0, chunkOffsetZ).model().getValueOrThrow().preNormals().getNormal(SIZE - x, y, SIZE - z, w));
 			}
-			return Optional.of(sum.toImmutable());
+			return Optional.of(sum.asImmutable());
 		}
 		if (w == 2) {
 			MutableVector3D sum = MutableVector3D.ofZero();
@@ -186,7 +186,7 @@ public class TerrainChunk {
 			if (borderX && borderY) {
 				sum.add(getNeighboringChunk(chunkOffsetX, chunkOffsetY, 0).model().getValueOrThrow().preNormals().getNormal(SIZE - x, SIZE - y, z, w));
 			}
-			return Optional.of(sum.toImmutable());
+			return Optional.of(sum.asImmutable());
 		}
 		return Optional.empty();
 	}

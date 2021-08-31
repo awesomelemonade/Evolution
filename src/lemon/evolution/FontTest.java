@@ -39,19 +39,19 @@ public enum FontTest implements Screen {
 		Matrix projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1, 1);
 		CommonProgramsSetup.setup2D(projectionMatrix);
 		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
-			program.loadVector("color", new Vector3D(0f, 1f, 1f));
+			program.loadVector("color", Vector3D.of(0f, 1f, 1f));
 		});
 		font = new Font(Paths.get("/res/fonts/FreeSans.fnt"));
 		text = new HashMap<TextModel, Matrix>();
 		//text = new Text(font, "Evolution");
 
-		text.put(new TextModel(font, "ABCDEFG"), MathUtil.getScalar(new Vector3D(0.005f, 0.005f, 0.005f)));
-		text.put(new TextModel(font, "the quick brown fox jumped over the lazy dog"), MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 0.2f)));
-		text.put(new TextModel(font, "fox jumped over"), MathUtil.getTranslation(new Vector3D(0f, 100f, 0f)));
-		text.put(new TextModel(font, "the lazy dog"), MathUtil.getTranslation(new Vector3D(0f, 200f, 0f)));
+		text.put(new TextModel(font, "ABCDEFG"), MathUtil.getScalar(Vector3D.of(0.005f, 0.005f, 0.005f)));
+		text.put(new TextModel(font, "the quick brown fox jumped over the lazy dog"), MathUtil.getScalar(Vector3D.of(0.2f, 0.2f, 0.2f)));
+		text.put(new TextModel(font, "fox jumped over"), MathUtil.getTranslation(Vector3D.of(0f, 100f, 0f)));
+		text.put(new TextModel(font, "the lazy dog"), MathUtil.getTranslation(Vector3D.of(0f, 200f, 0f)));
 		text.put(new TextModel(font, "[UNKNOWN: Listeners]", GL15.GL_DYNAMIC_DRAW),
-				MathUtil.getTranslation(new Vector3D(0f, 50f, 0f))
-						.multiply(MathUtil.getScalar(new Vector3D(0.2f, 0.2f, 0.2f))));
+				MathUtil.getTranslation(Vector3D.of(0f, 50f, 0f))
+						.multiply(MathUtil.getScalar(Vector3D.of(0.2f, 0.2f, 0.2f))));
 	}
 
 	@Override
@@ -77,8 +77,8 @@ public enum FontTest implements Screen {
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
-					MathUtil.getTranslation(new Vector3D(150f, 150f, 0f))
-							.multiply(MathUtil.getScalar(new Vector3D(100f, 100f, 100f))));
+					MathUtil.getTranslation(Vector3D.of(150f, 150f, 0f))
+							.multiply(MathUtil.getScalar(Vector3D.of(100f, 100f, 100f))));
 			CommonDrawables.COLORED_QUAD.draw();
 		});
 		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {

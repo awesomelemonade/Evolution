@@ -60,11 +60,11 @@ public class PuzzleBall implements Renderable {
 	}
 
 	public Vector3D position() {
-		return position.toImmutable();
+		return position.asImmutable();
 	}
 
 	public Vector3D velocity() {
-		return velocity.toImmutable();
+		return velocity.asImmutable();
 	}
 
 	public static void render(Vector3D position) {

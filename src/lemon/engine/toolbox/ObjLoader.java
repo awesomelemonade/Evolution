@@ -2,9 +2,8 @@ package lemon.engine.toolbox;
 
 import lemon.engine.control.Loader;
 import lemon.engine.draw.IndexedDrawable;
-import lemon.engine.math.HasDataArray;
+import lemon.engine.math.FloatData;
 import lemon.engine.math.Percentage;
-import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
 import lemon.engine.thread.ThreadManager;
 import org.lwjgl.opengl.GL11;
@@ -28,12 +27,12 @@ public class ObjLoader implements Loader {
 	static {
 		processors = new HashMap<>();
 		processors.put("v", (objLoader, tokenizer) -> {
-			Vector3D vertex = new Vector3D(Float.parseFloat(tokenizer.nextToken()),
+			Vector3D vertex = Vector3D.of(Float.parseFloat(tokenizer.nextToken()),
 					Float.parseFloat(tokenizer.nextToken()), Float.parseFloat(tokenizer.nextToken()));
 			objLoader.vertices.add(vertex);
 		});
 		processors.put("vn", (objLoader, tokenizer) -> {
-			Vector3D normal = new Vector3D(Float.parseFloat(tokenizer.nextToken()),
+			Vector3D normal = Vector3D.of(Float.parseFloat(tokenizer.nextToken()),
 					Float.parseFloat(tokenizer.nextToken()), Float.parseFloat(tokenizer.nextToken()));
 			objLoader.normals.add(normal);
 		});
@@ -100,7 +99,7 @@ public class ObjLoader implements Loader {
 	public IndexedDrawable toIndexedDrawable() {
 		return new IndexedDrawable(
 				indices.stream().mapToInt(i -> i).toArray(),
-				new HasDataArray[][] {
+				new FloatData[][] {
 						vertices.toArray(Vector3D.EMPTY_ARRAY),
 						Color.randomOpaque(vertices.size()),
 						normals.toArray(Vector3D.EMPTY_ARRAY)

@@ -113,7 +113,7 @@ public class HeightMap implements Renderable {
 				float x = i * tileSize - (map.length * tileSize / 2) + tileSize / 2;
 				float y = map[i][j];
 				float z = j * tileSize - (map[0].length * tileSize / 2) + tileSize / 2;
-				vectors[i][j] = new Vector3D(x, y, z);
+				vectors[i][j] = Vector3D.of(x, y, z);
 			}
 		}
 		Triangle[][][] triangles = new Triangle[map.length - 1][map[0].length - 1][2];

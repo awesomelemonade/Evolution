@@ -10,10 +10,10 @@ public record MutableLine(MutableVector3D mutableOrigin, MutableVector3D mutable
 	}
 
 	public Vector3D origin() {
-		return mutableOrigin.toImmutable();
+		return mutableOrigin.asImmutable();
 	}
 
 	public Vector3D direction() {
-		return mutableDirection.toImmutable();
+		return mutableDirection.asImmutable();
 	}
 }

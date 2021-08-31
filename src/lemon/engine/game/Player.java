@@ -18,7 +18,7 @@ public record Player(Camera camera, MutableVector3D mutableVelocity) {
 
 	public Vector3D getVectorDirection() {
 		var rotation = camera.rotation();
-		return new Vector3D(
+		return Vector3D.of(
 				(float) (-(Math.sin(rotation.y())
 						* Math.cos(rotation.x()))),
 				(float) (Math.sin(rotation.x())),
@@ -43,6 +43,6 @@ public record Player(Camera camera, MutableVector3D mutableVelocity) {
 	}
 
 	public Vector3D velocity() {
-		return mutableVelocity.toImmutable();
+		return mutableVelocity.asImmutable();
 	}
 }

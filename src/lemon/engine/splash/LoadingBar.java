@@ -56,7 +56,7 @@ public class LoadingBar implements Renderable {
 			for (int j = 0; j <= 1; ++j) {
 				this.addPositionBuffer(buffer, box.x() + box.width() * i * percentage.getPercentage(),
 						box.y() + box.height() * j);
-				buffer.put(colors[j * 2 + i].constantData());
+				colors[j * 2 + i].putInBuffer(buffer);
 			}
 		}
 		buffer.flip();

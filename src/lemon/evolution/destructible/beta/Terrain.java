@@ -114,9 +114,9 @@ public class Terrain {
 			for (int i = 0; i < TerrainChunk.SIZE; i++) {
 				for (int j = 0; j < TerrainChunk.SIZE; j++) {
 					for (int k = 0; k < TerrainChunk.SIZE; k++) {
-						var lower = new Vector3D(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f)
+						var lower = Vector3D.of(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f)
 								.multiply(scalar).subtract(point);
-						var upper = new Vector3D(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f)
+						var upper = Vector3D.of(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f)
 								.multiply(scalar).subtract(point);
 						float percentage = getPercentage(lower, upper, scalar.x() / 4f, radius) * 2f - 1f;
 						if (percentage < 1f) {

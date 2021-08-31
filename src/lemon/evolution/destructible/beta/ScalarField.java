@@ -25,7 +25,7 @@ public interface ScalarField<T extends Vector> {
 						for (int j = 0; j < data[0].length; j++) {
 							for (int k = 0; k < data[0][0].length; k++) {
 								data[i][j][k] = scalarField.get(
-										new Vector3D(offsets[0] + strides[0] * i,
+										Vector3D.of(offsets[0] + strides[0] * i,
 												offsets[1] + strides[1] * j, offsets[2] + strides[2] * k));
 								percentage.setPart(percentage.getPart() + 1);
 							}

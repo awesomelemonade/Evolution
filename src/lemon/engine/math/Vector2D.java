@@ -1,87 +1,96 @@
 package lemon.engine.math;
 
-import lemon.engine.toolbox.Lazy;
-
-import java.util.Arrays;
+import java.nio.FloatBuffer;
 import java.util.function.UnaryOperator;
 
-public record Vector2D(float x, float y, Lazy<float[]> dataArray) implements Vector<Vector2D> {
-	public static final Vector2D ZERO = new Vector2D(0, 0);
+public interface Vector2D extends Vector<Vector2D> {
+	public static final int NUM_DIMENSIONS = 2;
+	public static final Vector2D ZERO = Vector2D.of(0, 0);
+	
+	public float x();
+	public float y();
 
-	public Vector2D(float x, float y) {
-		this(x, y, new Lazy<>(() -> new float[] {x, y}));
+	public static Vector2D of(float x, float y) {
+		return new Impl(x, y);
 	}
 
-	public Vector2D(Vector2D vector) {
-		this(vector.x, vector.y, vector.dataArray);
+	public static Vector2D ofCopy(Vector2D vector) {
+		return new Impl(vector);
 	}
-
-	@Override
-	public Vector2D operate(UnaryOperator<Float> operator) {
-		return new Vector2D(operator.apply(x), operator.apply(y));
-	}
-
-	@Override
-	public Vector2D add(Vector2D vector) {
-		return new Vector2D(x + vector.x, y + vector.y);
-	}
-
-	@Override
-	public Vector2D subtract(Vector2D vector) {
-		return new Vector2D(x - vector.x, y - vector.y);
+	
+	record Impl(float x, float y) implements Vector2D {
+		public Impl(Vector2D vector) {
+			this(vector.x(), vector.y());
+		}
 	}
 
 	@Override
-	public Vector2D multiply(Vector2D vector) {
-		return new Vector2D(x * vector.x, y * vector.y);
+	public default int numDimensions() {
+		return NUM_DIMENSIONS;
 	}
 
 	@Override
-	public Vector2D multiply(float scale) {
-		return new Vector2D(x * scale, y * scale);
+	public default void putInBuffer(FloatBuffer buffer) {
+		buffer.put(x());
+		buffer.put(y());
 	}
 
 	@Override
-	public Vector2D divide(Vector2D vector) {
-		return new Vector2D(x / vector.x, y / vector.y);
+	public default void putInArray(float[] array) {
+		array[0] = x();
+		array[1] = y();
 	}
 
 	@Override
-	public Vector2D divide(float scale) {
-		return new Vector2D(x / scale, y / scale);
+	public default Vector2D operate(UnaryOperator<Float> operator) {
+		return Vector2D.of(operator.apply(x()), operator.apply(y()));
 	}
 
 	@Override
-	public float lengthSquared() {
+	public default Vector2D add(Vector2D vector) {
+		return Vector2D.of(x() + vector.x(), y() + vector.y());
+	}
+
+	@Override
+	public default Vector2D subtract(Vector2D vector) {
+		return Vector2D.of(x() - vector.x(), y() - vector.y());
+	}
+
+	@Override
+	public default Vector2D multiply(Vector2D vector) {
+		return Vector2D.of(x() * vector.x(), y() * vector.y());
+	}
+
+	@Override
+	public default Vector2D multiply(float scale) {
+		return Vector2D.of(x() * scale, y() * scale);
+	}
+
+	@Override
+	public default Vector2D divide(Vector2D vector) {
+		return Vector2D.of(x() / vector.x(), y() / vector.y());
+	}
+
+	@Override
+	public default Vector2D divide(float scale) {
+		return Vector2D.of(x() / scale, y() / scale);
+	}
+
+	@Override
+	public default float lengthSquared() {
+		float x = x();
+		float y = y();
 		return x * x + y * y;
 	}
 
 	@Override
-	public float dotProduct(Vector2D vector) {
-		return x * vector.x + y * vector.y;
+	public default float dotProduct(Vector2D vector) {
+		return x() * vector.x() + y() * vector.y();
 	}
 
-	public float distanceSquared(float x, float y) {
-		float dx = this.x - x;
-		float dy = this.y - y;
+	public default float distanceSquared(float x, float y) {
+		float dx = x() - x;
+		float dy = y() - y;
 		return dx * dx + dy * dy;
-	}
-
-	@Override
-	public int hashCode() {
-		return Arrays.hashCode(this.constantData());
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		Vector2D vector = (Vector2D) o;
-		return x == vector.x && y == vector.y;
-	}
-
-	@Override
-	public String toString() {
-		return String.format("Vector2D[x=%f, y=%f]", x, y);
 	}
 }

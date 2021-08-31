@@ -132,7 +132,7 @@ public enum Game implements Screen {
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
-			terrain = new Terrain(generator, pool2, new Vector3D(5f, 5f, 5f));
+			terrain = new Terrain(generator, pool2, Vector3D.of(5f, 5f, 5f));
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			int n = 5;
@@ -267,11 +267,11 @@ public enum Game implements Screen {
 		int size = 20;
 		for (int i = -size; i <= size; i += 5) {
 			for (int j = -size; j <= size; j += 5) {
-				//puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO));
+				puzzleBalls.add(new PuzzleBall(Vector3D.of(i, 100, j), Vector3D.ZERO));
 			}
 		}
 		for (int i = 100; i <= 600; i += 10) {
-			//puzzleBalls.add(new PuzzleBall(new Vector3D(0, i, 0), new Vector3D(Vector3D.ZERO)));
+			puzzleBalls.add(new PuzzleBall(Vector3D.of(0, i, 0), Vector3D.ZERO));
 		}
 
 		debug = new ArrayList<>();
@@ -329,7 +329,7 @@ public enum Game implements Screen {
 						float spray = 0.2f;
 						float randX = (float) (Math.random() * spray - spray / 2f);
 						float randZ = (float) (Math.random() * spray - spray / 2f);
-						projectiles.add(new PuzzleBall(x.position(), new Vector3D(randX, 0.5f, randZ)));
+						projectiles.add(new PuzzleBall(x.position(), Vector3D.of(randX, 0.5f, randZ)));
 					});
 					/*for (int i = -20; i <= 20; i += 5) {
 						for (int j = -20; j <= 20; j += 5) {
@@ -344,7 +344,7 @@ public enum Game implements Screen {
 		uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
 			System.out.println("Clicked");
 		});
-		uiScreen.addWheel(new Vector2D(200f, 200f), 50f, 0f, Color.RED);
+		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED);
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(window.input().mouseButtonEvent().add(event -> {
@@ -376,7 +376,7 @@ public enum Game implements Screen {
 	private static float friction = 1f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed - maxSpeed * friction;
-	private static final Vector3D GRAVITY_VECTOR = new Vector3D(0, -0.005f, 0);
+	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.005f, 0);
 
 	@Override
 	public void update() {
@@ -387,7 +387,7 @@ public enum Game implements Screen {
 		float angle = (player.rotation().y() + MathUtil.PI / 2f);
 		float sin = (float) Math.sin(angle);
 		float cos = (float) Math.cos(angle);
-		var playerHorizontalVector = new Vector2D(playerSpeed * sin, playerSpeed * cos);
+		var playerHorizontalVector = Vector2D.of(playerSpeed * sin, playerSpeed * cos);
 		if (GameControls.STRAFE_LEFT.isActivated()) {
 			player.mutableVelocity().asXZVector().subtract(playerHorizontalVector);
 		}
@@ -397,7 +397,7 @@ public enum Game implements Screen {
 		angle = player.rotation().y();
 		sin = (float) Math.sin(angle); // Can probably be computed from the previous sin, cos
 		cos = (float) Math.cos(angle); // Can probably be computed from the previous sin, cos
-		var playerForwardVector = new Vector2D(-playerSpeed * sin, -playerSpeed * cos);
+		var playerForwardVector = Vector2D.of(-playerSpeed * sin, -playerSpeed * cos);
 		if (GameControls.MOVE_FORWARDS.isActivated()) {
 			player.mutableVelocity().asXZVector().add(playerForwardVector);
 		}
@@ -415,7 +415,7 @@ public enum Game implements Screen {
 
 		CollisionPacket.collideAndSlide(player.mutablePosition(), player.mutableVelocity(), 20);
 
-		var targetRotation = new Vector3D(
+		var targetRotation = Vector3D.of(
 				(float) Math.atan(player.velocity().y() / Math.hypot(player.velocity().x(), player.velocity().z())),
 				(float) (Math.PI + Math.atan2(player.velocity().x(), player.velocity().z())), 0f);
 		var diff = targetRotation.subtract(player.rotation())
@@ -557,7 +557,7 @@ public enum Game implements Screen {
 				puzzleBall.render();
 			}
 			for (Vector3D x : debug) {
-				PuzzleBall.render(x, new Vector3D(0.2f, 0.2f, 0.2f));
+				PuzzleBall.render(x, Vector3D.of(0.2f, 0.2f, 0.2f));
 			}
 			//debug.clear();
 			terrain.flushForRendering();
@@ -584,7 +584,7 @@ public enum Game implements Screen {
 				//GL11.glDisable(GL11.GL_CULL_FACE);
 			});
 			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
-				var position = new Vector3D(96f, 40f, 0f);
+				var position = Vector3D.of(96f, 40f, 0f);
 				try (var translationMatrix = MatrixPool.ofTranslation(position);
 					 var scalarMatrix = MatrixPool.ofScalar(8f, 8f, 8f)) {
 					var sunlightDirection = lightPosition.subtract(position).normalize();
