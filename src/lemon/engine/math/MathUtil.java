@@ -1,38 +1,43 @@
 package lemon.engine.math;
 
-import java.nio.IntBuffer;
-import java.util.Optional;
-import java.util.function.Supplier;
-
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
+
+import java.nio.IntBuffer;
+import java.util.function.Supplier;
 
 public class MathUtil {
 	public static final float PI = (float) Math.PI;
 	public static final float TAU = (float) (2.0 * Math.PI);
 
-	private MathUtil() {}
-	
+	private MathUtil() {
+	}
+
 	public static boolean inRange(float a, float min, float max) {
 		return a >= min && a <= max;
 	}
+
 	public static float toRadians(float degrees) {
 		return (float) Math.toRadians(degrees);
 	}
+
 	public static float toDegrees(float radians) {
 		return (float) Math.toDegrees(radians);
 	}
+
 	public static float getAspectRatio(long window) {
 		IntBuffer width = BufferUtils.createIntBuffer(1);
 		IntBuffer height = BufferUtils.createIntBuffer(1);
 		GLFW.glfwGetWindowSize(window, width, height);
 		return ((float) width.get()) / ((float) height.get());
 	}
+
 	public static Matrix getPerspective(Projection projection) {
 		Matrix matrix = new Matrix(4);
 		getPerspective(matrix, projection);
 		return matrix;
 	}
+
 	public static void getPerspective(Matrix matrix, Projection projection) {
 		float yScale = (float) (1f / Math.tan(projection.getFov() / 2f));
 		float xScale = yScale / projection.getAspectRatio();
@@ -45,6 +50,7 @@ public class MathUtil {
 		matrix.set(3, 2, -1);
 		matrix.set(3, 3, 0);
 	}
+
 	public static Matrix getOrtho(float width, float height, float near, float far) {
 		Matrix matrix = new Matrix(4);
 		matrix.set(0, 0, 2f / width);
@@ -56,58 +62,68 @@ public class MathUtil {
 		matrix.set(3, 3, 1);
 		return matrix;
 	}
-	public static Supplier<Matrix> getTransformationSupplier(Vector3D translation, Vector3D rotation) {
+
+	public static Supplier<Matrix> getTransformationSupplier(Supplier<Vector3D> translationSupplier, Supplier<Vector3D> rotationSupplier) {
 		Matrix a = new Matrix(4);
 		Matrix b = new Matrix(4);
 		Matrix c = new Matrix(4);
 		return () -> {
-			MathUtil.getRotationX(a, rotation.getX());
-			MathUtil.getRotationY(b, rotation.getY());
+			var translation = translationSupplier.get();
+			var rotation = rotationSupplier.get();
+			MathUtil.getRotationX(a, rotation.x());
+			MathUtil.getRotationY(b, rotation.y());
 			Matrix.multiply(c, a, b);
-			MathUtil.getRotationZ(a, rotation.getZ());
+			MathUtil.getRotationZ(a, rotation.z());
 			Matrix.multiply(b, c, a);
 			MathUtil.getTranslation(a, translation);
 			Matrix.multiply(c, b, a);
 			return c;
 		};
 	}
+
 	public static Matrix getTranslation(Vector3D vector) {
 		Matrix matrix = Matrix.getIdentity(4);
 		getTranslation(matrix, vector);
 		return matrix;
 	}
+
 	public static void getTranslation(Matrix matrix, Vector3D vector) {
 		matrix.clear();
 		matrix.set(0, 0, 1f);
 		matrix.set(1, 1, 1f);
 		matrix.set(2, 2, 1f);
 		matrix.set(3, 3, 1f);
-		matrix.set(0, 3, vector.getX());
-		matrix.set(1, 3, vector.getY());
-		matrix.set(2, 3, vector.getZ());
+		matrix.set(0, 3, vector.x());
+		matrix.set(1, 3, vector.y());
+		matrix.set(2, 3, vector.z());
 	}
+
 	public static Matrix getRotation(Vector3D rotation) {
-		return MathUtil.getRotationX(rotation.getX())
-				.multiply(MathUtil.getRotationY(rotation.getY()).multiply(MathUtil.getRotationZ(rotation.getZ())));
+		return MathUtil.getRotationX(rotation.x())
+				.multiply(MathUtil.getRotationY(rotation.y()).multiply(MathUtil.getRotationZ(rotation.z())));
 	}
-	public static Supplier<Matrix> getRotationSupplier(Vector3D rotation) {
+
+	public static Supplier<Matrix> getRotationSupplier(Supplier<Vector3D> rotationSupplier) {
 		Matrix a = new Matrix(4);
 		Matrix b = new Matrix(4);
 		Matrix c = new Matrix(4);
 		return () -> {
-			MathUtil.getRotationX(a, rotation.getX());
-			MathUtil.getRotationY(b, rotation.getY());
+			var rotation = rotationSupplier.get();
+			MathUtil.getRotationX(a, rotation.x());
+			MathUtil.getRotationY(b, rotation.y());
 			Matrix.multiply(c, a, b);
-			MathUtil.getRotationZ(a, rotation.getZ());
+			MathUtil.getRotationZ(a, rotation.z());
 			Matrix.multiply(b, c, a);
 			return b;
 		};
 	}
+
 	public static Matrix getRotationX(float angle) {
 		Matrix matrix = new Matrix(4);
 		getRotationX(matrix, angle);
 		return matrix;
 	}
+
 	public static void getRotationX(Matrix matrix, float angle) {
 		matrix.clear();
 		float sin = (float) Math.sin(angle);
@@ -119,11 +135,13 @@ public class MathUtil {
 		matrix.set(2, 2, cos);
 		matrix.set(3, 3, 1);
 	}
+
 	public static Matrix getRotationY(float angle) {
 		Matrix matrix = new Matrix(4);
 		getRotationY(matrix, angle);
 		return matrix;
 	}
+
 	public static void getRotationY(Matrix matrix, float angle) {
 		matrix.clear();
 		float sin = (float) Math.sin(angle);
@@ -135,11 +153,13 @@ public class MathUtil {
 		matrix.set(2, 2, cos);
 		matrix.set(3, 3, 1);
 	}
+
 	public static Matrix getRotationZ(float angle) {
 		Matrix matrix = new Matrix(4);
 		getRotationZ(matrix, angle);
 		return matrix;
 	}
+
 	public static void getRotationZ(Matrix matrix, float angle) {
 		matrix.clear();
 		float sin = (float) Math.sin(angle);
@@ -151,16 +171,18 @@ public class MathUtil {
 		matrix.set(2, 2, 1);
 		matrix.set(3, 3, 1);
 	}
+
 	public static Matrix getScalar(Vector3D vector) {
 		Matrix matrix = new Matrix(4);
 		getScalar(matrix, vector);
 		return matrix;
 	}
+
 	public static void getScalar(Matrix matrix, Vector3D vector) {
 		matrix.clear();
-		matrix.set(0, 0, vector.getX());
-		matrix.set(1, 1, vector.getY());
-		matrix.set(2, 2, vector.getZ());
+		matrix.set(0, 0, vector.x());
+		matrix.set(1, 1, vector.y());
+		matrix.set(2, 2, vector.z());
 		matrix.set(3, 3, 1);
 	}
 
@@ -172,5 +194,9 @@ public class MathUtil {
 	 */
 	public static float clamp(float value, float lower, float upper) {
 		return Math.max(lower, Math.min(upper, value));
+	}
+
+	public static float mod(float value, float mod) {
+		return ((value % mod) + mod) % mod;
 	}
 }

@@ -1,6 +1,7 @@
 package lemon.engine.input;
 
-public interface KeyEvent extends KeyboardEvent, KeyMods, Action {
-	public int getKey();
-	public int getScancode();
+public interface KeyEvent extends KeyboardEvent, KeyMods, InputAction {
+	public int key();
+
+	public int scancode();
 }

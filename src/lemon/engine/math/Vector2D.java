@@ -1,41 +1,96 @@
 package lemon.engine.math;
 
-public class Vector2D extends Vector<Vector2D> {
-	public static final Vector2D[] EMPTY_ARRAY = new Vector2D[] {};
-	public static final Vector2D ZERO = Vector.unmodifiableVector(new Vector2D());
-	public static final Vector2D TOP_LEFT = Vector.unmodifiableVector(new Vector2D(-1f, 1f).normalize());
-	public static final Vector2D TOP = Vector.unmodifiableVector(new Vector2D(0f, 1f).normalize());
-	public static final Vector2D TOP_RIGHT = Vector.unmodifiableVector(new Vector2D(1f, 1f).normalize());
-	public static final Vector2D LEFT = Vector.unmodifiableVector(new Vector2D(-1f, 0f).normalize());
-	public static final Vector2D RIGHT = Vector.unmodifiableVector(new Vector2D(1f, 0f).normalize());
-	public static final Vector2D BOTTOM_LEFT = Vector.unmodifiableVector(new Vector2D(-1f, -1f).normalize());
-	public static final Vector2D BOTTOM = Vector.unmodifiableVector(new Vector2D(0f, -1f).normalize());
-	public static final Vector2D BOTTOM_RIGHT = Vector.unmodifiableVector(new Vector2D(1f, -1f).normalize());
+import java.nio.FloatBuffer;
+import java.util.function.UnaryOperator;
 
-	public Vector2D() {
-		this(0, 0);
+public interface Vector2D extends Vector<Vector2D> {
+	public static final int NUM_DIMENSIONS = 2;
+	public static final Vector2D ZERO = Vector2D.of(0, 0);
+	
+	public float x();
+	public float y();
+
+	public static Vector2D of(float x, float y) {
+		return new Impl(x, y);
 	}
-	public Vector2D(float x, float y) {
-		super(Vector2D.class, Vector2D::new, x, y);
+
+	public static Vector2D ofCopy(Vector2D vector) {
+		return new Impl(vector);
 	}
-	public Vector2D(Vector2D vector) {
-		this(vector.getX(), vector.getY());
+	
+	record Impl(float x, float y) implements Vector2D {
+		public Impl(Vector2D vector) {
+			this(vector.x(), vector.y());
+		}
 	}
-	public void setX(float x) {
-		this.set(0, x);
+
+	@Override
+	public default int numDimensions() {
+		return NUM_DIMENSIONS;
 	}
-	public float getX() {
-		return this.get(0);
+
+	@Override
+	public default void putInBuffer(FloatBuffer buffer) {
+		buffer.put(x());
+		buffer.put(y());
 	}
-	public void setY(float y) {
-		this.set(1, y);
+
+	@Override
+	public default void putInArray(float[] array) {
+		array[0] = x();
+		array[1] = y();
 	}
-	public float getY() {
-		return this.get(1);
+
+	@Override
+	public default Vector2D operate(UnaryOperator<Float> operator) {
+		return Vector2D.of(operator.apply(x()), operator.apply(y()));
 	}
-	public float getDistanceSquared(float x, float y) {
-		float dx = this.getX() - x;
-		float dy = this.getY() - y;
+
+	@Override
+	public default Vector2D add(Vector2D vector) {
+		return Vector2D.of(x() + vector.x(), y() + vector.y());
+	}
+
+	@Override
+	public default Vector2D subtract(Vector2D vector) {
+		return Vector2D.of(x() - vector.x(), y() - vector.y());
+	}
+
+	@Override
+	public default Vector2D multiply(Vector2D vector) {
+		return Vector2D.of(x() * vector.x(), y() * vector.y());
+	}
+
+	@Override
+	public default Vector2D multiply(float scale) {
+		return Vector2D.of(x() * scale, y() * scale);
+	}
+
+	@Override
+	public default Vector2D divide(Vector2D vector) {
+		return Vector2D.of(x() / vector.x(), y() / vector.y());
+	}
+
+	@Override
+	public default Vector2D divide(float scale) {
+		return Vector2D.of(x() / scale, y() / scale);
+	}
+
+	@Override
+	public default float lengthSquared() {
+		float x = x();
+		float y = y();
+		return x * x + y * y;
+	}
+
+	@Override
+	public default float dotProduct(Vector2D vector) {
+		return x() * vector.x() + y() * vector.y();
+	}
+
+	public default float distanceSquared(float x, float y) {
+		float dx = x() - x;
+		float dy = y() - y;
 		return dx * dx + dy * dy;
 	}
 }

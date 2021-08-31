@@ -1,6 +1,7 @@
 package lemon.engine.input;
 
 public interface FrameBufferSizeEvent extends WindowEvent {
-	public int getWidth();
-	public int getHeight();
+	public int width();
+
+	public int height();
 }

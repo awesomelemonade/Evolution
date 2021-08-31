@@ -1,5 +1,5 @@
 package lemon.engine.input;
 
 public interface WindowMinimizeEvent extends WindowEvent {
-	public boolean isMinimized();
+	public boolean minimized();
 }

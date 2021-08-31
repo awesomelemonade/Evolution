@@ -1,33 +1,40 @@
 package lemon.evolution.destructible.beta;
 
-import lemon.engine.model.ModelBuilder;
 import lemon.engine.math.Vector3D;
-import lemon.evolution.pool.VectorPool;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class MarchingCube {
 	private float[] offsets; // [offsetX, offsetY, offsetZ]
 	private float[] strides; // [strideX, strideY, strideZ]
 	private float threshold;
 	private BoundedScalarGrid3D grid;
+
 	public MarchingCube(BoundedScalarGrid3D grid, Vector3D size, float threshold) {
 		this.grid = grid;
 		this.threshold = threshold;
 		this.offsets = new float[] {0f, 0f, 0f};
 		this.strides = new float[] {
-				size.getX() / grid.getSizeX(),
-				size.getY() / grid.getSizeY(),
-				size.getZ() / grid.getSizeZ()
+				size.x() / grid.getSizeX(),
+				size.y() / grid.getSizeY(),
+				size.z() / grid.getSizeZ()
 		};
 	}
+
 	public void setThreshold(float threshold) {
 		this.threshold = threshold;
 	}
+
 	public float getThreshold() {
 		return threshold;
 	}
-	public void addVertices(ModelBuilder builder) {
+
+	public MarchingCubeMesh generateMesh() {
+		List<Integer> indices = new ArrayList<>();
+		List<Vector3D> vertices = new ArrayList<>();
+		List<Integer> hashes = new ArrayList<>();
 		int[][][][] edgeIndices = new int[grid.getSizeX()][grid.getSizeY()][grid.getSizeZ()][3];
 		for (int[][][] a : edgeIndices) {
 			for (int[][] b : a) {
@@ -51,30 +58,34 @@ public class MarchingCube {
 							int w = cacheOffsets[3];
 							if (edgeIndices[x][y][z][w] == -1) {
 								int[] o = MarchingCubeConstants.INTERPOLATE_OFFSETS[l];
-								try (var a = VectorPool.of(offsets[0] + strides[0] * (i + o[0]),
-										offsets[1] + strides[1] * (j + o[1]), offsets[2] + strides[2] * (k + o[2]))) {
-									Vector3D b = new Vector3D(offsets[0] + strides[0] * (i + o[3]),
-											offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
-									float dataA = grid.get(i + o[0], j + o[1], k + o[2]);
-									float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
-									edgeIndices[x][y][z][w] = builder.getVertices().size();
-									builder.addVertices(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
-								}
+								var a = Vector3D.of(offsets[0] + strides[0] * (i + o[0]),
+										offsets[1] + strides[1] * (j + o[1]), offsets[2] + strides[2] * (k + o[2]));
+								var b = Vector3D.of(offsets[0] + strides[0] * (i + o[3]),
+										offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
+								float dataA = grid.get(i + o[0], j + o[1], k + o[2]);
+								float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
+								edgeIndices[x][y][z][w] = vertices.size();
+								vertices.add(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
+								hashes.add(PreNormals.hash(x, y, z, w));
 							}
 							vectorIndices[l] = edgeIndices[x][y][z][w];
 						}
 					}
 					int[] triangles = MarchingCubeConstants.TRIANGLE_TABLE[index];
 					for (int l = 0; l < triangles.length; l++) {
-						builder.addIndices(vectorIndices[triangles[l]]);
+						indices.add(vectorIndices[triangles[l]]);
 					}
 				}
 			}
 		}
+		return new MarchingCubeMesh(indices.stream().mapToInt(Integer::intValue).toArray(),
+				vertices.toArray(Vector3D[]::new), hashes.stream().mapToInt(Integer::intValue).toArray());
 	}
+
 	private Vector3D interpolate(Vector3D a, Vector3D b, float percentage) {
 		return b.subtract(a).multiply(percentage).add(a);
 	}
+
 	private int getIndex(int i, int j, int k) {
 		int index = 0;
 		if (grid.get(i, j, k) <= threshold) {

@@ -1,29 +1,20 @@
 package lemon.engine.glfw;
 
 import lemon.engine.control.GLFWWindow;
+import lemon.engine.input.FileDropEvent;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryUtil;
 
-import lemon.engine.input.FileDropEvent;
-
-public class GLFWFileDropEvent implements FileDropEvent, GLFWEvent {
-	private GLFWWindow window;
-	private String[] files;
-
-	public GLFWFileDropEvent(GLFWWindow window, int count, long files) {
-		this.window = window;
-		this.files = new String[count];
-		PointerBuffer nameBuffer = MemoryUtil.memPointerBuffer(files, count);
+public record GLFWFileDropEvent(GLFWWindow glfwWindow, String[] files) implements FileDropEvent, GLFWEvent {
+	public GLFWFileDropEvent(GLFWWindow window, int count, long address) {
+		this(window, getFiles(count, address));
+	}
+	private static String[] getFiles(int count, long address) {
+		var files = new String[count];
+		PointerBuffer nameBuffer = MemoryUtil.memPointerBuffer(address, count);
 		for (int i = 0; i < count; ++i) {
-			this.files[i] = MemoryUtil.memUTF8(MemoryUtil.memByteBufferNT1(nameBuffer.get(i)));
+			files[i] = MemoryUtil.memUTF8(MemoryUtil.memByteBufferNT1(nameBuffer.get(i)));
 		}
-	}
-	@Override
-	public GLFWWindow getWindow() {
-		return window;
-	}
-	@Override
-	public String[] getFiles() {
 		return files;
 	}
 }

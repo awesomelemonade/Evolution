@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 
 public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 	private static final MatrixPool instance = new MatrixPool();
+
 	private MatrixPool() {
 		super(PooledMatrix::new);
 	}
@@ -31,9 +32,7 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 	}
 
 	public static PooledMatrix ofTranslation(float x, float y, float z) {
-		try (var vector = VectorPool.of(x, y, z)) {
-			return MatrixPool.ofTranslation(vector);
-		}
+		return MatrixPool.ofTranslation(Vector3D.of(x, y, z));
 	}
 
 	public static PooledMatrix ofScalar(Vector3D vector) {
@@ -41,9 +40,7 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 	}
 
 	public static PooledMatrix ofScalar(float x, float y, float z) {
-		try (var vector = VectorPool.of(x, y, z)) {
-			return MatrixPool.ofScalar(vector);
-		}
+		return MatrixPool.ofScalar(Vector3D.of(x, y, z));
 	}
 
 	public static PooledMatrix ofRotationX(float x) {
@@ -62,6 +59,7 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 		private PooledMatrix() {
 			super(4);
 		}
+
 		@Override
 		public void close() {
 			instance.returnObject(this);

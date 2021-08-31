@@ -2,8 +2,8 @@ package lemon.engine.toolbox;
 
 import lemon.engine.control.Loader;
 import lemon.engine.draw.IndexedDrawable;
+import lemon.engine.math.FloatData;
 import lemon.engine.math.Percentage;
-import lemon.engine.math.Vector;
 import lemon.engine.math.Vector3D;
 import lemon.engine.thread.ThreadManager;
 import org.lwjgl.opengl.GL11;
@@ -11,8 +11,11 @@ import org.lwjgl.opengl.GL11;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.function.BiConsumer;
 
 public class ObjLoader implements Loader {
@@ -20,15 +23,16 @@ public class ObjLoader implements Loader {
 	private static final BiConsumer<ObjLoader, StringTokenizer> UNKNOWN_PROCESSOR = (loader, tokenizer) -> {
 		System.out.println("Unknown Key: " + tokenizer.nextToken(""));
 	};
+
 	static {
-		processors = new HashMap<String, BiConsumer<ObjLoader, StringTokenizer>>();
+		processors = new HashMap<>();
 		processors.put("v", (objLoader, tokenizer) -> {
-			Vector3D vertex = new Vector3D(Float.parseFloat(tokenizer.nextToken()),
+			Vector3D vertex = Vector3D.of(Float.parseFloat(tokenizer.nextToken()),
 					Float.parseFloat(tokenizer.nextToken()), Float.parseFloat(tokenizer.nextToken()));
 			objLoader.vertices.add(vertex);
 		});
 		processors.put("vn", (objLoader, tokenizer) -> {
-			Vector3D normal = new Vector3D(Float.parseFloat(tokenizer.nextToken()),
+			Vector3D normal = Vector3D.of(Float.parseFloat(tokenizer.nextToken()),
 					Float.parseFloat(tokenizer.nextToken()), Float.parseFloat(tokenizer.nextToken()));
 			objLoader.normals.add(normal);
 		});
@@ -62,8 +66,9 @@ public class ObjLoader implements Loader {
 			}
 		});
 	}
+
 	private Percentage percentage;
-	BufferedReader reader;
+	private BufferedReader reader;
 	private List<Vector3D> vertices;
 	private List<Vector3D> normals;
 	private List<Integer> indices;
@@ -72,10 +77,10 @@ public class ObjLoader implements Loader {
 	public ObjLoader(String file) {
 		this.reader = new BufferedReader(new InputStreamReader(
 				ObjLoader.class.getResourceAsStream(file)));
-		this.vertices = new ArrayList<Vector3D>();
-		this.normals = new ArrayList<Vector3D>();
-		this.indices = new ArrayList<Integer>();
-		this.cache = new HashMap<Integer, Map<Integer, Integer>>();
+		this.vertices = new ArrayList<>();
+		this.normals = new ArrayList<>();
+		this.indices = new ArrayList<>();
+		this.cache = new HashMap<>();
 		try {
 			BufferedReader lineCountReader = new BufferedReader(new InputStreamReader(
 					ObjLoader.class.getResourceAsStream(file)));
@@ -89,16 +94,18 @@ public class ObjLoader implements Loader {
 			throw new IllegalStateException(ex);
 		}
 	}
+
 	// Let's just skip the model phase
 	public IndexedDrawable toIndexedDrawable() {
 		return new IndexedDrawable(
 				indices.stream().mapToInt(i -> i).toArray(),
-				new Vector[][] {
+				new FloatData[][] {
 						vertices.toArray(Vector3D.EMPTY_ARRAY),
 						Color.randomOpaque(vertices.size()),
 						normals.toArray(Vector3D.EMPTY_ARRAY)
 				}, GL11.GL_TRIANGLES);
 	}
+
 	@Override
 	public void load() {
 		ThreadManager.INSTANCE.addThread(new Thread(() -> {
@@ -116,6 +123,7 @@ public class ObjLoader implements Loader {
 			}
 		})).start();
 	}
+
 	@Override
 	public Percentage getPercentage() {
 		return percentage;

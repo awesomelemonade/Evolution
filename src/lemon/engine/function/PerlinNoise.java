@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.ToIntFunction;
+import java.util.stream.IntStream;
 
 public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 	private IntUnaryOperator abs = AbsoluteIntValue.HASHED;
@@ -34,8 +35,11 @@ public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 		values = ThreadLocal.withInitial(() -> new float[0b1 << numDimensions]); // 2 ^ n
 		a = ThreadLocal.withInitial(() -> new int[numDimensions]);
 	}
+
 	@Override
 	public Float apply(T x) {
+		float[] xData = new float[numDimensions];
+		x.putInArray(xData);
 		float output = 0;
 		int[] intX = this.intX.get();
 		float[] fractionalX = this.fractionalX.get();
@@ -43,15 +47,18 @@ public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 		int[] a = this.a.get();
 		for (int i = 0; i < iterations; ++i) {
 			float amplitude = (float) Math.pow(persistence.apply(x), i);
-			output += interpolatedNoise(x, hashFunctions[i], intX, fractionalX, values, a) * amplitude;
-			x.multiply(2); // frequency
+			output += interpolatedNoise(xData, hashFunctions[i], intX, fractionalX, values, a) * amplitude;
+			for (int j = 0; j < xData.length; j++) {
+				xData[j] *= 2; // frequency
+			}
 		}
 		return output;
 	}
-	public float interpolatedNoise(Vector<T> x, IntUnaryOperator hashFunction, int[] intX, float[] fractionalX, float[] values, int[] a) {
+
+	public float interpolatedNoise(float[] x, IntUnaryOperator hashFunction, int[] intX, float[] fractionalX, float[] values, int[] a) {
 		for (int i = 0; i < intX.length; i++) {
-			intX[i] = (int) Math.floor(x.get(i));
-			fractionalX[i] = x.get(i) - intX[i];
+			intX[i] = (int) Math.floor(x[i]);
+			fractionalX[i] = x[i] - intX[i];
 		}
 		for (int i = 0; i < values.length; i++) {
 			for (int j = 0; j < a.length; j++) {
@@ -69,6 +76,7 @@ public class PerlinNoise<T extends Vector<T>> implements Function<T, Float> {
 		}
 		return values[0];
 	}
+
 	public float interpolate(float a, float b, float x) {
 		float ft = (float) (x * Math.PI);
 		float f = (float) ((1.0 - Math.cos(ft)) * 0.5f);

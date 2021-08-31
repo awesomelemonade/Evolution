@@ -1,17 +1,16 @@
 package lemon.engine.model;
 
-import java.nio.FloatBuffer;
-import java.util.ArrayDeque;
-import java.util.Deque;
-
 import lemon.engine.render.Renderable;
+import lemon.engine.render.VertexArray;
+import lemon.engine.render.VertexBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 
-import lemon.engine.render.VertexArray;
-import lemon.engine.render.VertexBuffer;
+import java.nio.FloatBuffer;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class LineGraph implements Renderable {
 	private Deque<Float> values;
@@ -40,14 +39,17 @@ public class LineGraph implements Renderable {
 			GL20.glEnableVertexAttribArray(1);
 		});
 	}
+
 	public void add(float f) {
 		values.removeFirst();
 		values.add(f);
 		updateVbo();
 	}
+
 	public float getLast() {
 		return values.getLast();
 	}
+
 	private FloatBuffer getDataBuffer() {
 		FloatBuffer dataBuffer = BufferUtils.createFloatBuffer(size * 2);
 		int n = 0;
@@ -58,11 +60,13 @@ public class LineGraph implements Renderable {
 		dataBuffer.flip();
 		return dataBuffer;
 	}
+
 	private void updateVbo() {
 		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 			GL15.glBufferSubData(target, 0, getDataBuffer());
 		});
 	}
+
 	private void ensureCapacity() {
 		while (this.values.size() > size) {
 			this.values.removeFirst();
@@ -71,12 +75,14 @@ public class LineGraph implements Renderable {
 			this.values.add(0f);
 		}
 	}
+
 	@Override
 	public void render() {
 		vertexArray.bind(vao -> {
 			GL11.glDrawArrays(GL11.GL_LINE_STRIP, 0, this.values.size());
 		});
 	}
+
 	public int getSize() {
 		return size;
 	}

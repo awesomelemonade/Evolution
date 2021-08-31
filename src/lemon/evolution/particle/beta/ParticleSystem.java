@@ -26,13 +26,14 @@ public class ParticleSystem implements Renderable {
 			1f, 1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f, 1f};
 	private static final int[] INDICES = {2, 0, 4, 4, 6, 2, 1, 0, 2, 2, 3, 1, 4, 5, 7, 7, 6, 4,
 			1, 3, 7, 7, 5, 1, 2, 6, 7, 7, 3, 2, 0, 1, 4, 4, 1, 5};
-	private VertexArray vertexArray;
+	private final VertexArray vertexArray;
 	private VertexBuffer vertexBuffer;
-	private int maxParticles;
-	private Deque<Particle> particles;
+	private final int maxParticles;
+	private final Deque<Particle> particles;
+
 	public ParticleSystem(int maxParticles) {
 		this.maxParticles = maxParticles;
-		this.particles = new ArrayDeque<Particle>();
+		this.particles = new ArrayDeque<>();
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
 			new VertexBuffer().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
@@ -61,11 +62,13 @@ public class ParticleSystem implements Renderable {
 			GL20.glEnableVertexAttribArray(4);
 		});
 	}
+
 	public void updateVbo() {
 		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 			GL15.glBufferSubData(target, 0, getFloatBuffer());
 		});
 	}
+
 	public FloatBuffer getInitialFloatBuffer() {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(16 * maxParticles);
 		for (int i = 0; i < maxParticles; i++) {
@@ -74,30 +77,35 @@ public class ParticleSystem implements Renderable {
 		buffer.flip();
 		return buffer;
 	}
+
 	public FloatBuffer getFloatBuffer() {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(16 * particles.size());
 		for (Particle particle : particles) {
 			particle.getTransformationMatrix()
-					.multiply(MathUtil.getScalar(new Vector3D(0.8f, 0.8f, 0.8f))).addToFloatBuffer(buffer);
+					.multiply(MathUtil.getScalar(Vector3D.of(0.8f, 0.8f, 0.8f))).addToFloatBuffer(buffer);
 		}
 		buffer.flip();
 		return buffer;
 	}
+
 	public Vector3D randomVector() {
-		return new Vector3D((float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1));
+		return Vector3D.of((float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1), (float) (Math.random() * 2 - 1));
 	}
+
 	public Vector3D randomVelocityVector() {
-		return new Vector3D((float) (Math.random() * 2 - 1), (float) (Math.random() * 5 + 2.0), (float) (Math.random() * 2 - 1));
+		return Vector3D.of((float) (Math.random() * 2 - 1), (float) (Math.random() * 5 + 2.0), (float) (Math.random() * 2 - 1));
 	}
-	private static final Vector3D GRAVITY = new Vector3D(0f, -0.01f, 0f);
+
+	private static final Vector3D GRAVITY = Vector3D.of(0f, -0.01f, 0f);
+
 	public void render() {
 		while ((!particles.isEmpty()) && particles.peekFirst().getAge().compareTo(Duration.ofSeconds(5)) >= 0) {
 			particles.poll();
 		}
 		if (particles.size() < maxParticles) {
 			if (particles.isEmpty() || particles.peekLast().getAge().compareTo(Duration.ofMillis(5)) >= 0) {
-				particles.add(new Particle(new Vector3D(Vector3D.ZERO),
-						new Vector3D((float) (-Math.random() * 3 - 2),
+				particles.add(new Particle(Vector3D.ZERO,
+						Vector3D.of((float) (-Math.random() * 3 - 2),
 								(float) ((Math.random() - 0.5) * 1.4),
 								(float) ((Math.random() - 0.5) * 1.4)),
 						randomVector(), randomVector().multiply(0.05f)));
@@ -111,7 +119,7 @@ public class ParticleSystem implements Renderable {
 		updateVbo();
 		CommonPrograms3D.PARTICLE.getShaderProgram().use(program -> {
 			program.loadColor4f(Color.RED);
-			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(new Vector3D(65f, 98f, 0f)));
+			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(65f, 98f, 0f)));
 			vertexArray.bind(vao -> {
 				GL31.glDrawElementsInstanced(GL11.GL_TRIANGLES, INDICES.length, GL11.GL_UNSIGNED_INT, 0, particles.size());
 			});

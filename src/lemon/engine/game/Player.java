@@ -1,39 +1,48 @@
 package lemon.engine.game;
 
-import lemon.engine.control.UpdateEvent;
 import lemon.engine.math.Camera;
+import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
 
-public class Player {
+public record Player(Camera camera, MutableVector3D mutableVelocity) {
 	private static final float DELTA_MODIFIER = 0.000001f;
-	private Camera camera;
-	private Vector3D velocity;
 
 	public Player(Projection projection) {
-		camera = new Camera(projection);
-		velocity = new Vector3D();
+		this(new Camera(projection), MutableVector3D.ofZero());
 	}
-	public void update(UpdateEvent event) {
-		camera.getPosition().setX(camera.getPosition().getX() + velocity.getX() * event.getDelta() * DELTA_MODIFIER);
-		camera.getPosition().setY(camera.getPosition().getY() + velocity.getY() * event.getDelta() * DELTA_MODIFIER);
-		camera.getPosition().setZ(camera.getPosition().getZ() + velocity.getZ() * event.getDelta() * DELTA_MODIFIER);
+
+	public void update(float delta) {
+		camera.mutablePosition().add(velocity().multiply(delta * DELTA_MODIFIER));
 	}
-	public Camera getCamera() {
-		return camera;
-	}
+
 	public Vector3D getVectorDirection() {
-		return new Vector3D(
-				(float) (-(Math.sin(camera.getRotation().getY())
-						* Math.cos(camera.getRotation().getX()))),
-				(float) (Math.sin(camera.getRotation().getX())),
-				(float) (-(Math.cos(camera.getRotation().getX())
-						* Math.cos(camera.getRotation().getY()))));
+		var rotation = camera.rotation();
+		return Vector3D.of(
+				(float) (-(Math.sin(rotation.y())
+						* Math.cos(rotation.x()))),
+				(float) (Math.sin(rotation.x())),
+				(float) (-(Math.cos(rotation.x())
+						* Math.cos(rotation.y()))));
 	}
-	public Vector3D getPosition() {
-		return camera.getPosition();
+
+	public MutableVector3D mutablePosition() {
+		return camera.mutablePosition();
 	}
-	public Vector3D getVelocity() {
-		return velocity;
+
+	public Vector3D position() {
+		return camera.position();
+	}
+
+	public MutableVector3D mutableRotation() {
+		return camera.mutableRotation();
+	}
+
+	public Vector3D rotation() {
+		return camera.rotation();
+	}
+
+	public Vector3D velocity() {
+		return mutableVelocity.asImmutable();
 	}
 }

@@ -1,48 +1,117 @@
 package lemon.engine.math;
 
-public class Vector3D extends Vector<Vector3D> {
-	public static final Vector3D[] EMPTY_ARRAY = new Vector3D[] {};
-	public static final Vector3D ZERO = Vector.unmodifiableVector(new Vector3D());
+import java.nio.FloatBuffer;
+import java.util.function.UnaryOperator;
 
-	public Vector3D() {
-		this(0f, 0f, 0f);
+public interface Vector3D extends Vector<Vector3D> {
+	public static final int NUM_DIMENSIONS = 3;
+	public static final Vector3D ZERO = Vector3D.of(0, 0, 0);
+	public static final Vector3D[] EMPTY_ARRAY = new Vector3D[] {};
+
+	public float x();
+	public float y();
+	public float z();
+
+	public static Vector3D of(float x, float y, float z) {
+		return new Impl(x, y, z);
 	}
-	public Vector3D(float x, float y, float z) {
-		super(Vector3D.class, Vector3D::new, x, y, z);
+
+	public static Vector3D ofCopy(Vector3D vector) {
+		return new Impl(vector);
 	}
-	public Vector3D(Vector3D vector) {
-		this(vector.getX(), vector.getY(), vector.getZ());
+
+	record Impl(float x, float y, float z) implements Vector3D {
+		public Impl(Vector3D vector) {
+			this(vector.x(), vector.y(), vector.z());
+		}
 	}
-	public void set(float x, float y, float z) {
-		setX(x);
-		setY(y);
-		setZ(z);
+
+	public default Vector3D crossProduct(Vector3D vector) { // Implemented in only Vector3D
+		float newX = this.y() * vector.z() - vector.y() * this.z();
+		float newY = this.z() * vector.x() - vector.z() * this.x();
+		float newZ = this.x() * vector.y() - vector.x() * this.y();
+		return Vector3D.of(newX, newY, newZ);
 	}
-	public void setX(float x) {
-		this.set(0, x);
+
+	@Override
+	public default int numDimensions() {
+		return NUM_DIMENSIONS;
 	}
-	public float getX() {
-		return this.get(0);
+
+	@Override
+	public default void putInBuffer(FloatBuffer buffer) {
+		buffer.put(x());
+		buffer.put(y());
+		buffer.put(z());
 	}
-	public void setY(float y) {
-		this.set(1, y);
+
+	@Override
+	public default void putInArray(float[] array) {
+		array[0] = x();
+		array[1] = y();
+		array[2] = z();
 	}
-	public float getY() {
-		return this.get(1);
+
+	@Override
+	public default Vector3D operate(UnaryOperator<Float> operator) {
+		return Vector3D.of(operator.apply(x()), operator.apply(y()), operator.apply(z()));
 	}
-	public void setZ(float z) {
-		this.set(2, z);
+
+	@Override
+	public default Vector3D add(Vector3D vector) {
+		return Vector3D.of(x() + vector.x(), y() + vector.y(), z() + vector.z());
 	}
-	public float getZ() {
-		return this.get(2);
+
+	@Override
+	public default Vector3D subtract(Vector3D vector) {
+		return Vector3D.of(x() - vector.x(), y() - vector.y(), z() - vector.z());
 	}
-	public Vector3D crossProduct(Vector3D vector) { // Implemented in only Vector3D
-		float newX = this.getY() * vector.getZ() - vector.getY() * this.getZ();
-		float newY = this.getZ() * vector.getX() - vector.getZ() * this.getX();
-		float newZ = this.getX() * vector.getY() - vector.getX() * this.getY();
-		this.setX(newX);
-		this.setY(newY);
-		this.setZ(newZ);
-		return this;
+
+	@Override
+	public default Vector3D multiply(Vector3D vector) {
+		return Vector3D.of(x() * vector.x(), y() * vector.y(), z() * vector.z());
+	}
+
+	@Override
+	public default Vector3D multiply(float scale) {
+		return Vector3D.of(x() * scale, y() * scale, z() * scale);
+	}
+
+	@Override
+	public default Vector3D divide(Vector3D vector) {
+		return Vector3D.of(x() / vector.x(), y() / vector.y(), z() / vector.z());
+	}
+
+	@Override
+	public default Vector3D divide(float scale) {
+		return Vector3D.of(x() / scale, y() / scale, z() / scale);
+	}
+
+	@Override
+	public default float lengthSquared() {
+		float x = x();
+		float y = y();
+		float z = z();
+		return x * x + y * y + z * z;
+	}
+
+	@Override
+	public default float dotProduct(Vector3D vector) {
+		return x() * vector.x() + y() * vector.y() + z() * vector.z();
+	}
+
+	public default float distanceSquared(float x, float y, float z) {
+		float dx = x() - x;
+		float dy = y() - y;
+		float dz = z() - z;
+		return dx * dx + dy * dy + dz * dz;
+	}
+
+	public default Vector2D toXYVector() {
+		return Vector2D.of(x(), y());
+	}
+
+	public default Vector2D toXZVector() {
+		return Vector2D.of(x(), z());
 	}
 }

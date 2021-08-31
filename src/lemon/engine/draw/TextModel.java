@@ -1,16 +1,15 @@
 package lemon.engine.draw;
 
-import java.nio.FloatBuffer;
-
 import lemon.engine.font.CharData;
 import lemon.engine.font.Font;
+import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 
-import lemon.engine.render.VertexArray;
+import java.nio.FloatBuffer;
 
 public class TextModel implements Drawable {
 	private VertexArray vertexArray;
@@ -23,6 +22,7 @@ public class TextModel implements Drawable {
 	public TextModel(Font font, CharSequence text) {
 		this(font, text, GL15.GL_STATIC_DRAW);
 	}
+
 	public TextModel(Font font, CharSequence text, int hint) {
 		if (text.length() == 0) {
 			throw new IllegalStateException("Text cannot be empty");
@@ -44,7 +44,9 @@ public class TextModel implements Drawable {
 			GL20.glEnableVertexAttribArray(1);
 		});
 	}
+
 	private FloatBuffer buffer;
+
 	private FloatBuffer getFloatBuffer(CharSequence text) {
 		int newCapacity = text.length() * 4 * 6;
 		if (buffer == null || buffer.capacity() < newCapacity) {
@@ -59,23 +61,24 @@ public class TextModel implements Drawable {
 			CharData data = font.getCharData(currentChar);
 			int kerning = font.getKerning(prevChar, currentChar);
 			putChar(buffer, data, cursor + kerning);
-			cursor += (data.getXAdvance() + kerning);
+			cursor += (data.xAdvance() + kerning);
 			prevChar = currentChar;
 		}
 		buffer.flip();
 		return buffer;
 	}
+
 	private void putChar(FloatBuffer buffer, CharData data, int cursor) {
 		float scaleWidth = font.getScaleWidth();
 		float scaleHeight = font.getScaleHeight();
-		float textureX = data.getX() / scaleWidth;
-		float textureY = data.getY() / scaleHeight;
-		float textureWidth = data.getWidth() / scaleWidth;
-		float textureHeight = data.getHeight() / scaleHeight;
-		float x = cursor + data.getXOffset();
-		float y = font.getLineHeight() - data.getYOffset() - font.getBase() / 2f;
-		float width = data.getWidth();
-		float height = data.getHeight();
+		float textureX = data.x() / scaleWidth;
+		float textureY = data.y() / scaleHeight;
+		float textureWidth = data.width() / scaleWidth;
+		float textureHeight = data.height() / scaleHeight;
+		float x = cursor + data.xOffset();
+		float y = font.getLineHeight() - data.yOffset() - font.getBase() / 2f;
+		float width = data.width();
+		float height = data.height();
 
 		put(buffer, x, y, textureX, textureY);
 		put(buffer, x + width, y, textureX + textureWidth, textureY);
@@ -84,9 +87,11 @@ public class TextModel implements Drawable {
 		put(buffer, x, y - height, textureX, textureY + textureHeight);
 		put(buffer, x + width, y - height, textureX + textureWidth, textureY + textureHeight);
 	}
+
 	private void put(FloatBuffer buffer, float... floats) {
 		buffer.put(floats);
 	}
+
 	@Override
 	public void draw() {
 		GL11.glEnable(GL11.GL_BLEND);
@@ -98,6 +103,7 @@ public class TextModel implements Drawable {
 		});
 		GL11.glDisable(GL11.GL_BLEND);
 	}
+
 	public void setText(CharSequence text) {
 		this.text = text;
 		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
@@ -111,6 +117,7 @@ public class TextModel implements Drawable {
 			}
 		});
 	}
+
 	public CharSequence getText() {
 		return text;
 	}

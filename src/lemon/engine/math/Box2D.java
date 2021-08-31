@@ -1,38 +1,36 @@
 package lemon.engine.math;
 
-public class Box2D extends Vector<Box2D> {
-	public Box2D(float x, float y, float width, float height) {
-		super(Box2D.class, Box2D::new, x, y, width, height);
-	}
+import java.nio.FloatBuffer;
+
+public record Box2D(float x, float y, float width, float height) implements FloatData {
+	private static final int NUM_DIMENSIONS = 4;
 	public Box2D(Box2D box) {
-		this(box.getX(), box.getY(), box.getWidth(), box.getHeight());
+		this(box.x, box.y, box.width, box.height);
 	}
+
 	public boolean intersect(float x, float y) {
-		return x > this.getX() && x < this.getX() + this.getWidth() && y > this.getY()
-				&& y < this.getY() + this.getHeight();
+		return x > this.x() && x < this.x() + this.width() && y > this.y()
+				&& y < this.y() + this.height();
 	}
-	public void setX(float x) {
-		super.set(0, x);
+
+	@Override
+	public int numDimensions() {
+		return NUM_DIMENSIONS;
 	}
-	public float getX() {
-		return super.get(0);
+
+	@Override
+	public void putInBuffer(FloatBuffer buffer) {
+		buffer.put(x);
+		buffer.put(y);
+		buffer.put(width);
+		buffer.put(height);
 	}
-	public void setY(float y) {
-		super.set(1, y);
-	}
-	public float getY() {
-		return super.get(1);
-	}
-	public void setWidth(float width) {
-		super.set(2, width);
-	}
-	public float getWidth() {
-		return super.get(2);
-	}
-	public void setHeight(float height) {
-		super.set(3, height);
-	}
-	public float getHeight() {
-		return super.get(3);
+
+	@Override
+	public void putInArray(float[] array) {
+		array[0] = x;
+		array[1] = y;
+		array[2] = width;
+		array[3] = height;
 	}
 }

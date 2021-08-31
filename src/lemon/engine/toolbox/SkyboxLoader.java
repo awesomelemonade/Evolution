@@ -1,5 +1,8 @@
 package lemon.engine.toolbox;
 
+import lemon.engine.texture.CubeMapData;
+
+import javax.imageio.ImageIO;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -7,10 +10,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.StringTokenizer;
-
-import javax.imageio.ImageIO;
-
-import lemon.engine.texture.CubeMapData;
 
 public class SkyboxLoader {
 	private String directory;
@@ -20,6 +19,7 @@ public class SkyboxLoader {
 		this.directory = directory;
 		this.configFilename = configFilename;
 	}
+
 	public CubeMapData load() {
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(

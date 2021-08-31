@@ -2,18 +2,8 @@ package lemon.engine.time;
 
 import lemon.engine.control.GLFWWindow;
 
-public class Benchmark {
-	private GLFWWindow window;
-	private float[] data;
-
-	public Benchmark(GLFWWindow window, float... data) {
-		this.window = window;
-		this.data = data;
-	}
-	public GLFWWindow getGLFWWindow() {
-		return window;
-	}
-	public float[] getData() {
-		return data;
+public record Benchmark(GLFWWindow window, float[] data) {
+	public static Benchmark of(GLFWWindow window, float... data) {
+		return new Benchmark(window, data);
 	}
 }

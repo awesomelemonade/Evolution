@@ -1,19 +1,20 @@
 package lemon.engine.time;
 
+import lemon.engine.model.LineGraph;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import lemon.engine.model.LineGraph;
-
 public class Benchmarker {
-	private Map<String, LineGraph> graphs;
+	private final Map<String, LineGraph> graphs;
 
 	public Benchmarker() {
-		graphs = new LinkedHashMap<String, LineGraph>();
+		graphs = new LinkedHashMap<>();
 	}
+
 	public void benchmark(Benchmark benchmark) {
-		float[] data = benchmark.getData();
+		float[] data = benchmark.data();
 		int n = 0;
 		for (LineGraph graph : graphs.values()) {
 			if (n >= data.length) {
@@ -22,15 +23,19 @@ public class Benchmarker {
 			graph.add(data[n++]);
 		}
 	}
+
 	public void put(String name, LineGraph graph) {
 		graphs.put(name, graph);
 	}
+
 	public LineGraph getLineGraph(String name) {
 		return graphs.get(name);
 	}
+
 	public Set<String> getNames() {
 		return graphs.keySet();
 	}
+
 	public int getSize() {
 		return graphs.size();
 	}

@@ -6,6 +6,7 @@ public class PlayerControl {
 	public void setActivated(boolean activated) {
 		this.activated = activated;
 	}
+
 	public boolean isActivated() {
 		return activated;
 	}

@@ -16,9 +16,8 @@ public class TimeSync {
 	/**
 	 * An accurate sync method that adapts automatically to the system it runs on to
 	 * provide reliable results.
-	 * 
-	 * @param fps
-	 *            The desired frame rate, in frames per second
+	 *
+	 * @param fps The desired frame rate, in frames per second
 	 * @author kappa (On the LWJGL Forums)
 	 */
 	public void sync(int fps) {
@@ -68,6 +67,7 @@ public class TimeSync {
 			}
 		}
 	}
+
 	public int getFps() {
 		return fps;
 	}

@@ -1,18 +1,17 @@
 package lemon.engine.splash;
 
-import java.nio.FloatBuffer;
-
+import lemon.engine.math.Box2D;
+import lemon.engine.math.Percentage;
 import lemon.engine.render.Renderable;
+import lemon.engine.render.VertexArray;
+import lemon.engine.render.VertexBuffer;
+import lemon.engine.toolbox.Color;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 
-import lemon.engine.math.Box2D;
-import lemon.engine.math.Percentage;
-import lemon.engine.render.VertexArray;
-import lemon.engine.render.VertexBuffer;
-import lemon.engine.toolbox.Color;
+import java.nio.FloatBuffer;
 
 public class LoadingBar implements Renderable {
 	private VertexArray vertexArray;
@@ -40,40 +39,35 @@ public class LoadingBar implements Renderable {
 			GL20.glEnableVertexAttribArray(1);
 		});
 	}
+
 	@Override
 	public void render() {
-		updateVbo();
+		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			GL15.glBufferSubData(target, 0, this.getFloatBuffer());
+		});
 		vertexArray.bind(vao -> {
 			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
 		});
 	}
-	public void updateVbo() {
-		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
-			GL15.glBufferSubData(target, 0, this.getFloatBuffer());
-		});
-	}
+
 	private FloatBuffer getFloatBuffer() {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(24);
 		for (int i = 0; i <= 1; ++i) {
 			for (int j = 0; j <= 1; ++j) {
-				this.addPositionBuffer(buffer, box.getX() + box.getWidth() * i * percentage.getPercentage(),
-						box.getY() + box.getHeight() * j);
-				this.addColorBuffer(buffer, colors[j * 2 + i]);
+				this.addPositionBuffer(buffer, box.x() + box.width() * i * percentage.getPercentage(),
+						box.y() + box.height() * j);
+				colors[j * 2 + i].putInBuffer(buffer);
 			}
 		}
 		buffer.flip();
 		return buffer;
 	}
+
 	private void addPositionBuffer(FloatBuffer buffer, float x, float y) {
 		buffer.put(x);
 		buffer.put(y);
 	}
-	private void addColorBuffer(FloatBuffer buffer, Color color) {
-		buffer.put(color.getRed());
-		buffer.put(color.getGreen());
-		buffer.put(color.getBlue());
-		buffer.put(color.getAlpha());
-	}
+
 	public void setPercentage(Percentage percentage) {
 		this.percentage = percentage;
 	}

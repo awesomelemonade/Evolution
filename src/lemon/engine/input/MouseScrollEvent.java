@@ -1,6 +1,7 @@
 package lemon.engine.input;
 
 public interface MouseScrollEvent extends MouseEvent {
-	public double getXOffset();
-	public double getYOffset();
+	public double xOffset();
+
+	public double yOffset();
 }
