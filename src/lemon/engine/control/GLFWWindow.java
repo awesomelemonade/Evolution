@@ -71,7 +71,7 @@ public class GLFWWindow implements Disposable {
 			// Event Driven
 			long updateTime = System.nanoTime();
 			long delta = updateTime - deltaTime;
-			currentScreen.update();
+			currentScreen.update(delta);
 			deltaTime = updateTime;
 			updateTime = System.nanoTime() - updateTime;
 			long renderTime = System.nanoTime();

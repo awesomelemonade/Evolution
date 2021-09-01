@@ -29,6 +29,7 @@ import lemon.engine.texture.TextureData;
 import lemon.engine.time.Benchmarker;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
+import lemon.engine.toolbox.Histogram;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.engine.toolbox.SkyboxLoader;
 import lemon.evolution.destructible.beta.ScalarField;
@@ -103,6 +104,8 @@ public enum Game implements Screen {
 	private ThreadPoolExecutor pool;
 	private ThreadPoolExecutor pool2;
 
+	private Histogram histogram;
+
 	private final Disposables disposables = new Disposables();
 
 	private static final Color[] DEBUG_GRAPH_COLORS = {
@@ -117,11 +120,13 @@ public enum Game implements Screen {
 			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> vector.y() < -30f ? 0f : -(vector.y() + noise.apply(vector.divide(100f)) * 5f);
+			histogram = new Histogram(0.1f);
 			scalarField = vector -> {
 				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
 				float terrain = (float) (-Math.tanh(vector.y() / 100.0) * 100.0 +
 						Math.pow(2f, noise2d.apply(vector.toXZVector().divide(300f))) * 5.0 +
 						Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
+				histogram.add(terrain);
 				/*float x = vector.getY() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
 				test[0] = Math.min(test[0], x);
 				test[1] = Math.max(test[1], x);
@@ -300,6 +305,9 @@ public enum Game implements Screen {
 			}
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
+		System.out.println("=====[Histogram]=====");
+		histogram.print();
+		System.out.println("=====================");
 
 		dragonModel = dragonLoader.toIndexedDrawable();
 		lightPosition = player.position();
@@ -362,10 +370,14 @@ public enum Game implements Screen {
 
 	private final PlayerControl EXPLODE = new PlayerControl();
 
+	public Vector3D getCrosshairLocation() {
+		float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
+		return player.position().add(player.getVectorDirection().multiply(realDistance));
+	}
+
 	public void generateExplosionAtCrosshair() {
 		if (depthDistance != 1f) {
-			float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
-			Vector3D position = player.position().add(player.getVectorDirection().multiply(realDistance));
+			var position = getCrosshairLocation();
 			terrain.generateExplosion(position, 5f);
 		}
 	}
@@ -381,9 +393,11 @@ public enum Game implements Screen {
 	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.005f, 0);
 
 	@Override
-	public void update() {
+	public void update(long deltaTime) {
 		if (EXPLODE.isActivated()) {
-			generateExplosionAtCrosshair();
+			float dt = (float) (((double) deltaTime) / 3.0e7);
+			var point = getCrosshairLocation();
+			terrain.terraform(point, 8f, dt, -5f);
 		}
 
 		float angle = (player.rotation().y() + MathUtil.PI / 2f);

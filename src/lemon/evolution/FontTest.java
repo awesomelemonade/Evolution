@@ -55,7 +55,7 @@ public enum FontTest implements Screen {
 	}
 
 	@Override
-	public void update() {
+	public void update(long deltaTime) {
 //		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d",
 //				EventManager.INSTANCE.getListenersRegistered(),
 //				EventManager.INSTANCE.getListenerMethodsRegistered(),

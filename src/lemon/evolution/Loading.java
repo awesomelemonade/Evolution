@@ -40,7 +40,7 @@ public class Loading implements Screen {
 	}
 
 	@Override
-	public void update() {
+	public void update(long deltaTime) {
 		if (loaderIndex >= loaders.length) { // Ensures that we wait 1 frame - renders the loading bar full
 			callback.run();
 		} else {

@@ -3,6 +3,7 @@ package lemon.evolution.destructible.beta;
 import lemon.engine.draw.Drawable;
 import lemon.engine.function.AbsoluteIntValue;
 import lemon.engine.function.SzudzikIntPair;
+import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class Terrain {
 	private final Map<Long, TerrainChunk> chunks;
@@ -83,7 +85,7 @@ public class Terrain {
 		return count / total;
 	}
 
-	public void generateExplosion(Vector3D point, float radius) {
+	public void forEachChunk(Vector3D point, float radius, Consumer<TerrainChunk> chunk) {
 		int floorX = (int) Math.floor((point.x() - radius) / scalar.x());
 		int ceilX = (int) Math.ceil((point.x() + radius) / scalar.x());
 		int floorY = (int) Math.floor((point.y() - radius) / scalar.y());
@@ -99,14 +101,47 @@ public class Terrain {
 		for (int i = floorChunkX; i <= ceilChunkX; i++) {
 			for (int j = floorChunkY; j <= ceilChunkY; j++) {
 				for (int k = floorChunkZ; k <= ceilChunkZ; k++) {
-					generateExplosionInChunk(i, j, k, point, radius);
+					chunk.accept(getChunk(i, j, k));
 				}
 			}
 		}
 	}
 
-	public void generateExplosionInChunk(int chunkX, int chunkY, int chunkZ, Vector3D point, float radius) {
-		TerrainChunk chunk = getChunk(chunkX, chunkY, chunkZ);
+	public void generateExplosion(Vector3D point, float radius) {
+		forEachChunk(point, radius, chunk -> generateExplosionInChunk(chunk, point, radius));
+	}
+
+	public void terraform(Vector3D point, float radius, float dt, float brushSpeed) {
+		forEachChunk(point, radius, chunk -> terraform(chunk, point, radius, dt, brushSpeed));
+	}
+
+	public float smoothstep(float min, float max, float t) {
+		t = MathUtil.saturate((t - min) / (max - min));
+		return t * t * (3 - 2 * t);
+	}
+
+	public void terraform(TerrainChunk chunk, Vector3D origin, float radius, float dt, float brushSpeed) {
+		chunk.updateData(data -> {
+			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
+			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
+			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
+			for (int i = 0; i < TerrainChunk.SIZE; i++) {
+				for (int j = 0; j < TerrainChunk.SIZE; j++) {
+					for (int k = 0; k < TerrainChunk.SIZE; k++) {
+						var point = Vector3D.of(offsetX + i, offsetY + j, offsetZ + k).multiply(scalar);
+						float distanceSquared = origin.distanceSquared(point);
+						if (distanceSquared <= radius * radius) {
+							float distance = (float) Math.sqrt(distanceSquared);
+							float brushWeight = smoothstep(radius, radius * 0.7f, distance);
+							data[i][j][k] += brushSpeed * brushWeight * dt;
+						}
+					}
+				}
+			}
+		});
+	}
+
+	public void generateExplosionInChunk(TerrainChunk chunk, Vector3D point, float radius) {
 		chunk.updateData(data -> {
 			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
 			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
