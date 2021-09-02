@@ -67,24 +67,6 @@ public class Terrain {
 		return BoundedScalarGrid3D.of((a, b, c) -> this.get(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
 	}
 
-	public static float getPercentage(Vector3D lower, Vector3D upper, float resolution, float radius) {
-		float radiusSquared = radius * radius;
-		float count = 0;
-		float total = 0;
-		for (float x = lower.x(); x <= upper.x(); x += resolution) {
-			for (float y = lower.y(); y <= upper.y(); y += resolution) {
-				for (float z = lower.z(); z <= upper.z(); z += resolution) {
-					float lengthSquared = x * x + y * y + z * z;
-					if (lengthSquared >= radiusSquared) {
-						count++;
-					}
-					total++;
-				}
-			}
-		}
-		return count / total;
-	}
-
 	public void forEachChunk(Vector3D point, float radius, Consumer<TerrainChunk> chunk) {
 		int floorX = (int) Math.floor((point.x() - radius) / scalar.x());
 		int ceilX = (int) Math.ceil((point.x() + radius) / scalar.x());
@@ -108,7 +90,7 @@ public class Terrain {
 	}
 
 	public void generateExplosion(Vector3D point, float radius) {
-		forEachChunk(point, radius, chunk -> generateExplosionInChunk(chunk, point, radius));
+		terraform(point, radius, 1f, -100f);
 	}
 
 	public void terraform(Vector3D point, float radius, float dt, float brushSpeed) {
@@ -134,28 +116,6 @@ public class Terrain {
 							float distance = (float) Math.sqrt(distanceSquared);
 							float brushWeight = smoothstep(radius, radius * 0.7f, distance);
 							data[i][j][k] += brushSpeed * brushWeight * dt;
-						}
-					}
-				}
-			}
-		});
-	}
-
-	public void generateExplosionInChunk(TerrainChunk chunk, Vector3D point, float radius) {
-		chunk.updateData(data -> {
-			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
-			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
-			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
-			for (int i = 0; i < TerrainChunk.SIZE; i++) {
-				for (int j = 0; j < TerrainChunk.SIZE; j++) {
-					for (int k = 0; k < TerrainChunk.SIZE; k++) {
-						var lower = Vector3D.of(offsetX + i - 0.5f, offsetY + j - 0.5f, offsetZ + k - 0.5f)
-								.multiply(scalar).subtract(point);
-						var upper = Vector3D.of(offsetX + i + 0.5f, offsetY + j + 0.5f, offsetZ + k + 0.5f)
-								.multiply(scalar).subtract(point);
-						float percentage = getPercentage(lower, upper, scalar.x() / 4f, radius) * 2f - 1f;
-						if (percentage < 1f) {
-							data[i][j][k] = Math.min(data[i][j][k], percentage);
 						}
 					}
 				}
