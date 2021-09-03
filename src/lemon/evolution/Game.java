@@ -36,6 +36,7 @@ import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
+import lemon.evolution.destructible.beta.TerrainRenderer;
 import lemon.evolution.physics.beta.CollisionPacket;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.puzzle.PuzzleBall;
@@ -80,12 +81,11 @@ public enum Game implements Screen {
 	private Player player;
 
 	private FrameBuffer frameBuffer;
-	private Texture colorTexture;
-	private Texture depthTexture;
 
 	private Benchmarker benchmarker;
 
 	private Terrain terrain;
+	private TerrainRenderer terrainRenderer;
 
 	private ObjLoader dragonLoader;
 	private Drawable dragonModel;
@@ -140,6 +140,7 @@ public enum Game implements Screen {
 			pool2.setRejectedExecutionHandler((runnable, executor) -> {});
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
 			terrain = new Terrain(generator, pool2, Vector3D.of(5f, 5f, 5f));
+			terrainRenderer = new TerrainRenderer(terrain, 5);
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			int n = 5;
@@ -202,10 +203,10 @@ public enum Game implements Screen {
 
 		updateViewMatrices();
 
-		frameBuffer = new FrameBuffer();
+		frameBuffer = disposables.add(new FrameBuffer());
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
-			colorTexture = new Texture();
+			Texture colorTexture = disposables.add(new Texture());
 			TextureBank.COLOR.bind(() -> {
 				GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, windowWidth, windowHeight, 0, GL11.GL_RGB,
@@ -214,7 +215,7 @@ public enum Game implements Screen {
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
 			});
-			depthTexture = new Texture();
+			Texture depthTexture = disposables.add(new Texture());
 			TextureBank.DEPTH.bind(() -> {
 				GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, windowWidth, windowHeight, 0,
@@ -318,15 +319,6 @@ public enum Game implements Screen {
 
 		disposables.add(window.input().keyEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_RELEASE) {
-				if (event.key() == GLFW.GLFW_KEY_R) {
-					System.out.println("Set Origin: " + player.position());
-					line.mutableOrigin().set(player.position());
-					lightPosition = player.position();
-				}
-				if (event.key() == GLFW.GLFW_KEY_T) {
-					line.mutableDirection().set(player.position().subtract(line.origin()));
-					System.out.println("Set Direction: " + line.direction());
-				}
 				if (event.key() == GLFW.GLFW_KEY_G) {
 					puzzleBalls.add(new PuzzleBall(player.position(), player.velocity()));
 				}
@@ -341,16 +333,11 @@ public enum Game implements Screen {
 						float randZ = (float) (Math.random() * spray - spray / 2f);
 						projectiles.add(new PuzzleBall(x.position(), Vector3D.of(randX, 0.5f, randZ)));
 					});
-					/*for (int i = -20; i <= 20; i += 5) {
-						for (int j = -20; j <= 20; j += 5) {
-							puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO.copy()));
-						}
-					}*/
 				}
 			}
 		}));
 
-		uiScreen = new UIScreen(window.input());
+		uiScreen = disposables.add(new UIScreen(window.input()));
 		uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
 			System.out.println("Clicked");
 		});
@@ -410,10 +397,7 @@ public enum Game implements Screen {
 		if (GameControls.STRAFE_RIGHT.isActivated()) {
 			player.mutableVelocity().asXZVector().add(playerHorizontalVector);
 		}
-		angle = player.rotation().y();
-		sin = (float) Math.sin(angle); // Can probably be computed from the previous sin, cos
-		cos = (float) Math.cos(angle); // Can probably be computed from the previous sin, cos
-		var playerForwardVector = Vector2D.of(-playerSpeed * sin, -playerSpeed * cos);
+		var playerForwardVector = Vector2D.of(playerSpeed * cos, -playerSpeed * sin);
 		if (GameControls.MOVE_FORWARDS.isActivated()) {
 			player.mutableVelocity().asXZVector().add(playerForwardVector);
 		}
@@ -576,7 +560,6 @@ public enum Game implements Screen {
 				PuzzleBall.render(x, Vector3D.of(0.2f, 0.2f, 0.2f));
 			}
 			//debug.clear();
-			terrain.flushForRendering();
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.TERRAIN.getShaderProgram().use(program -> {
 				//GL11.glEnable(GL11.GL_CULL_FACE);
@@ -584,19 +567,10 @@ public enum Game implements Screen {
 				int playerChunkX = terrain.getChunkX(player.position().x());
 				int playerChunkY = terrain.getChunkY(player.position().y());
 				int playerChunkZ = terrain.getChunkZ(player.position().z());
-				int n = 5;
-				for (int i = -n; i <= n; i++) {
-					for (int j = -n; j <= n; j++) {
-						for (int k = -n; k <= n; k++) {
-							terrain.drawOrQueue(
-									playerChunkX + i, playerChunkY + j, playerChunkZ + k,
-									(matrix, drawable) -> {
-										program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
-										drawable.draw();
-									});
-						}
-					}
-				}
+				terrainRenderer.render(playerChunkX, playerChunkY, playerChunkZ, (matrix, drawable) -> {
+					program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
+					drawable.draw();
+				});
 				//GL11.glDisable(GL11.GL_CULL_FACE);
 			});
 			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
@@ -684,8 +658,6 @@ public enum Game implements Screen {
 			CommonDrawables.SKYBOX.draw();
 		});
 	}
-
-	private MutableLine line = new MutableLine();
 
 	@Override
 	public void dispose() {

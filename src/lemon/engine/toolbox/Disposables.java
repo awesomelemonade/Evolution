@@ -10,8 +10,9 @@ public class Disposables implements Disposable {
 		list = new ArrayList<>();
 	}
 
-	public void add(Disposable disposable) {
+	public <T extends Disposable> T add(T disposable) {
 		list.add(disposable);
+		return disposable;
 	}
 
 	@Override
