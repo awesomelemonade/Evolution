@@ -19,10 +19,12 @@ public class Evolution {
 
 	public static void main(String[] args) {
 		LogManager.getLogManager().reset();
+		Logger rootLogger = Logger.getLogger("");
 		logger.setLevel(Level.ALL);
 		ConsoleHandler consoleHandler = new ConsoleHandler();
+		consoleHandler.setLevel(Level.ALL);
 		consoleHandler.setFormatter(new SimpleFormatter());
-		logger.addHandler(consoleHandler);
+		rootLogger.addHandler(consoleHandler);
 		try (GLFWWindow window = new GLFWWindow(() -> {
 			// GLFW Window Settings
 			GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GL11.GL_FALSE);

@@ -7,11 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class Benchmarker {
-	private final Map<String, LineGraph> graphs;
-
-	public Benchmarker() {
-		graphs = new LinkedHashMap<>();
-	}
+	private final Map<String, LineGraph> graphs = new LinkedHashMap<>();
 
 	public void benchmark(Benchmark benchmark) {
 		float[] data = benchmark.data();

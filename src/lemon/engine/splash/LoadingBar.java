@@ -6,6 +6,7 @@ import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
 import lemon.engine.toolbox.Color;
+import lemon.engine.toolbox.Disposable;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -13,16 +14,16 @@ import org.lwjgl.opengl.GL20;
 
 import java.nio.FloatBuffer;
 
-public class LoadingBar implements Renderable {
+public class LoadingBar implements Renderable, Disposable {
 	private VertexArray vertexArray;
 	private VertexBuffer vertexBuffer;
-	private Percentage percentage;
 	private Color[] colors;
 	private Box2D box;
+	private float progress;
 
-	public LoadingBar(Percentage percentage, Box2D box, Color... colors) {
+	public LoadingBar(Box2D box, Color... colors) {
 		vertexArray = new VertexArray();
-		this.percentage = percentage;
+		this.progress = 0f;
 		this.colors = new Color[4];
 		for (int i = 0; i < this.colors.length; ++i) {
 			this.colors[i] = colors[i % colors.length];
@@ -54,7 +55,7 @@ public class LoadingBar implements Renderable {
 		FloatBuffer buffer = BufferUtils.createFloatBuffer(24);
 		for (int i = 0; i <= 1; ++i) {
 			for (int j = 0; j <= 1; ++j) {
-				this.addPositionBuffer(buffer, box.x() + box.width() * i * percentage.getPercentage(),
+				this.addPositionBuffer(buffer, box.x() + box.width() * i * progress,
 						box.y() + box.height() * j);
 				colors[j * 2 + i].putInBuffer(buffer);
 			}
@@ -68,7 +69,13 @@ public class LoadingBar implements Renderable {
 		buffer.put(y);
 	}
 
-	public void setPercentage(Percentage percentage) {
-		this.percentage = percentage;
+	public void setProgress(float progress) {
+		this.progress = progress;
+	}
+
+	@Override
+	public void dispose() {
+		vertexBuffer.dispose();
+		vertexArray.dispose();
 	}
 }

@@ -6,7 +6,7 @@ import lemon.engine.toolbox.Disposable;
 public interface Screen extends Disposable {
 	public void onLoad(GLFWWindow window);
 
-	public void update();
+	public void update(long deltaTime);
 
 	public void render();
 }

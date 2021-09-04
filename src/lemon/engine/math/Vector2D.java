@@ -22,6 +22,11 @@ public interface Vector2D extends Vector<Vector2D> {
 		public Impl(Vector2D vector) {
 			this(vector.x(), vector.y());
 		}
+
+		@Override
+		public String toString() {
+			return String.format("Vector2D[x=%f, y=%f]", x, y);
+		}
 	}
 
 	@Override

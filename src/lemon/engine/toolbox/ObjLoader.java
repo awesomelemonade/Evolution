@@ -67,7 +67,8 @@ public class ObjLoader implements Loader {
 		});
 	}
 
-	private Percentage percentage;
+	private int numLinesRead;
+	private int totalLines;
 	private BufferedReader reader;
 	private List<Vector3D> vertices;
 	private List<Vector3D> normals;
@@ -88,7 +89,7 @@ public class ObjLoader implements Loader {
 			while (lineCountReader.readLine() != null) {
 				lines++;
 			}
-			this.percentage = new Percentage(lines);
+			this.totalLines = lines;
 		} catch (IOException ex) {
 			ex.printStackTrace();
 			throw new IllegalStateException(ex);
@@ -115,9 +116,9 @@ public class ObjLoader implements Loader {
 					StringTokenizer tokenizer = new StringTokenizer(line);
 					String key = tokenizer.nextToken();
 					processors.getOrDefault(key, UNKNOWN_PROCESSOR).accept(this, tokenizer);
-					percentage.setPart(percentage.getPart() + 1);
+					numLinesRead++;
 				}
-				percentage.setPart(percentage.getWhole());
+				numLinesRead = totalLines;
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
@@ -125,7 +126,7 @@ public class ObjLoader implements Loader {
 	}
 
 	@Override
-	public Percentage getPercentage() {
-		return percentage;
+	public float getProgress() {
+		return ((float) numLinesRead) / ((float) totalLines);
 	}
 }

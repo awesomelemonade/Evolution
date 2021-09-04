@@ -168,6 +168,11 @@ public interface MutableVector3D {
 		public MutableVector2D asXZVector() {
 			return xz;
 		}
+
+		@Override
+		public String toString() {
+			return String.format("MutableVector3D[x=%f, y=%f, z=%f]", x, y, z);
+		}
 	}
 
 	// standard

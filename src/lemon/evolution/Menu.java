@@ -47,7 +47,7 @@ public enum Menu implements Screen {
 	}
 
 	@Override
-	public void update() {
+	public void update(long deltaTime) {
 
 	}
 

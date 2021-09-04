@@ -4,8 +4,6 @@ import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
-import lemon.engine.draw.TextModel;
-import lemon.engine.font.Font;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
@@ -16,7 +14,6 @@ import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
-import lemon.engine.math.MutableLine;
 import lemon.engine.math.Percentage;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector2D;
@@ -29,12 +26,15 @@ import lemon.engine.texture.TextureData;
 import lemon.engine.time.Benchmarker;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
+import lemon.engine.toolbox.Histogram;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.engine.toolbox.SkyboxLoader;
+import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
+import lemon.evolution.destructible.beta.TerrainRenderer;
 import lemon.evolution.physics.beta.CollisionPacket;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.puzzle.PuzzleBall;
@@ -51,7 +51,6 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
@@ -59,11 +58,9 @@ import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Formatter;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.ToIntFunction;
@@ -74,27 +71,22 @@ public enum Game implements Screen {
 	INSTANCE;
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 
+	private GLFWWindow window;
 	private boolean loaded;
 
 	private Player player;
 
 	private FrameBuffer frameBuffer;
-	private Texture colorTexture;
-	private Texture depthTexture;
 
+	private DebugOverlay debugOverlay;
 	private Benchmarker benchmarker;
 
 	private Terrain terrain;
+	private TerrainRenderer terrainRenderer;
 
 	private ObjLoader dragonLoader;
 	private Drawable dragonModel;
 	private Vector3D lightPosition;
-
-	private TextModel debugTextModel;
-	private TextModel keyTextModel;
-
-	private int windowWidth;
-	private int windowHeight;
 
 	public List<Vector3D> debug;
 
@@ -103,11 +95,9 @@ public enum Game implements Screen {
 	private ThreadPoolExecutor pool;
 	private ThreadPoolExecutor pool2;
 
-	private final Disposables disposables = new Disposables();
+	private Histogram histogram;
 
-	private static final Color[] DEBUG_GRAPH_COLORS = {
-			Color.RED, Color.GREEN, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN
-	};
+	private final Disposables disposables = new Disposables();
 
 	@Override
 	public void onLoad(GLFWWindow window) {
@@ -117,11 +107,13 @@ public enum Game implements Screen {
 			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> vector.y() < -30f ? 0f : -(vector.y() + noise.apply(vector.divide(100f)) * 5f);
+			histogram = new Histogram(0.1f);
 			scalarField = vector -> {
 				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
 				float terrain = (float) (-Math.tanh(vector.y() / 100.0) * 100.0 +
 						Math.pow(2f, noise2d.apply(vector.toXZVector().divide(300f))) * 5.0 +
 						Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
+				histogram.add(terrain);
 				/*float x = vector.getY() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
 				test[0] = Math.min(test[0], x);
 				test[1] = Math.max(test[1], x);
@@ -135,30 +127,27 @@ public enum Game implements Screen {
 			pool2.setRejectedExecutionHandler((runnable, executor) -> {});
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
 			terrain = new Terrain(generator, pool2, Vector3D.of(5f, 5f, 5f));
+			terrainRenderer = new TerrainRenderer(terrain, 5);
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
-			int n = 5;
-			int numChunksToPreload = (2 * n + 1) * (2 * n + 1) * (2 * n + 1);
-			Percentage terrainLoaderPercentage = new Percentage(numChunksToPreload);
+			player = new Player(new Projection(MathUtil.toRadians(60f),
+					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f));
+			player.mutablePosition().set(0f, 300f, 0f);
+
 			// Add loaders
 			Loading loading = new Loading(() -> {
 				window.switchScreen(Game.INSTANCE);
 			}, dragonLoader, new Loader() {
+				int generatorStartSize;
 				@Override
 				public void load() {
-					for (int i = -n; i <= n; i++) {
-						for (int j = -n; j <= n; j++) {
-							for (int k = -n; k <= n; k++) {
-								terrain.preloadChunk(i, j, k);
-							}
-						}
-					}
+					terrainRenderer.preload(player.position());
+					generatorStartSize = generator.getQueueSize();
 				}
 
 				@Override
-				public Percentage getPercentage() {
-					terrainLoaderPercentage.setPart(numChunksToPreload - generator.getQueueSize());
-					return terrainLoaderPercentage;
+				public float getProgress() {
+					return 1f - ((float) generator.getQueueSize()) / ((float) generatorStartSize);
 				}
 			});
 			window.switchScreen(loading);
@@ -168,14 +157,12 @@ public enum Game implements Screen {
 
 
 		logger.log(Level.FINE, "Initializing");
+		this.window = window;
 		disposables.add(() -> pool.shutdown());
 		disposables.add(() -> pool2.shutdown());
 		//GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
-		IntBuffer width = BufferUtils.createIntBuffer(1);
-		IntBuffer height = BufferUtils.createIntBuffer(1);
-		GLFW.glfwGetWindowSize(GLFW.glfwGetCurrentContext(), width, height);
-		windowWidth = width.get();
-		windowHeight = height.get();
+		var windowWidth = window.getWidth();
+		var windowHeight = window.getHeight();
 
 		GL11.glViewport(0, 0, windowWidth, windowHeight);
 
@@ -187,9 +174,7 @@ public enum Game implements Screen {
 		benchmarker.put("freeMemory", new LineGraph(1000, 5000000000f));
 		benchmarker.put("totalMemory", new LineGraph(1000, 5000000000f));
 
-		player = new Player(new Projection(MathUtil.toRadians(60f),
-				((float) windowWidth) / ((float) windowHeight), 0.01f, 1000f));
-		player.mutablePosition().set(0f, 300f, 0f);
+		debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
 		Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
@@ -197,10 +182,10 @@ public enum Game implements Screen {
 
 		updateViewMatrices();
 
-		frameBuffer = new FrameBuffer();
+		frameBuffer = disposables.add(new FrameBuffer());
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
-			colorTexture = new Texture();
+			Texture colorTexture = disposables.add(new Texture());
 			TextureBank.COLOR.bind(() -> {
 				GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, windowWidth, windowHeight, 0, GL11.GL_RGB,
@@ -209,7 +194,7 @@ public enum Game implements Screen {
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
 			});
-			depthTexture = new Texture();
+			Texture depthTexture = disposables.add(new Texture());
 			TextureBank.DEPTH.bind(() -> {
 				GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, windowWidth, windowHeight, 0,
@@ -224,41 +209,17 @@ public enum Game implements Screen {
 			skyboxTexture.load(new SkyboxLoader("/res/darkskies", "darkskies.cfg").load());
 			GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
 		});
-		TextureBank.GRASS.bind(() -> {
-			try {
-				Texture grassTexture = new Texture();
-				grassTexture.load(new TextureData(ImageIO.read(Game.class.getResourceAsStream("/res/grass.png"))));
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, grassTexture.getId());
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		});
-		TextureBank.SLOPE.bind(() -> {
-			try {
-				Texture slopeTexture = new Texture();
-				slopeTexture.load(new TextureData(ImageIO.read(Game.class.getResourceAsStream("/res/slope.png"))));
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, slopeTexture.getId());
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		});
-		TextureBank.ROCK.bind(() -> {
-			try {
-				Texture rockTexture = new Texture();
-				rockTexture.load(new TextureData(ImageIO.read(Game.class.getResourceAsStream("/res/rock.png"))));
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, rockTexture.getId());
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
-		});
-		TextureBank.BASE.bind(() -> {
-			try {
-				Texture baseTexture = new Texture();
-				baseTexture.load(new TextureData(ImageIO.read(Game.class.getResourceAsStream("/res/base.png"))));
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, baseTexture.getId());
-			} catch (IOException ex) {
-				ex.printStackTrace();
-			}
+		Map.of(
+				TextureBank.GRASS, "/res/grass.png",
+				TextureBank.SLOPE, "/res/slope.png",
+				TextureBank.ROCK, "/res/rock.png",
+				TextureBank.BASE, "/res/base.png"
+		).forEach((textureBank, path) -> {
+			textureBank.bind(() -> {
+				var texture = new Texture();
+				texture.load(new TextureData(Toolbox.readImage(path).orElseThrow()));
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getId());
+			});
 		});
 
 		GameControls.setup(window.input());
@@ -300,25 +261,15 @@ public enum Game implements Screen {
 			}
 		});
 		System.out.println("Triangles: " + CollisionPacket.triangles.size());
+		System.out.println("=====[Histogram]=====");
+		histogram.print();
+		System.out.println("=====================");
 
 		dragonModel = dragonLoader.toIndexedDrawable();
 		lightPosition = player.position();
 
-		Font font = new Font(Paths.get("/res/fonts/FreeSans.fnt"));
-		debugTextModel = new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW);
-		keyTextModel = new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW);
-
 		disposables.add(window.input().keyEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_RELEASE) {
-				if (event.key() == GLFW.GLFW_KEY_R) {
-					System.out.println("Set Origin: " + player.position());
-					line.mutableOrigin().set(player.position());
-					lightPosition = player.position();
-				}
-				if (event.key() == GLFW.GLFW_KEY_T) {
-					line.mutableDirection().set(player.position().subtract(line.origin()));
-					System.out.println("Set Direction: " + line.direction());
-				}
 				if (event.key() == GLFW.GLFW_KEY_G) {
 					puzzleBalls.add(new PuzzleBall(player.position(), player.velocity()));
 				}
@@ -333,16 +284,11 @@ public enum Game implements Screen {
 						float randZ = (float) (Math.random() * spray - spray / 2f);
 						projectiles.add(new PuzzleBall(x.position(), Vector3D.of(randX, 0.5f, randZ)));
 					});
-					/*for (int i = -20; i <= 20; i += 5) {
-						for (int j = -20; j <= 20; j += 5) {
-							puzzleBalls.add(new PuzzleBall(new Vector3D(i, 100, j), Vector3D.ZERO.copy()));
-						}
-					}*/
 				}
 			}
 		}));
 
-		uiScreen = new UIScreen(window.input());
+		uiScreen = disposables.add(new UIScreen(window.input()));
 		uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
 			System.out.println("Clicked");
 		});
@@ -362,10 +308,14 @@ public enum Game implements Screen {
 
 	private final PlayerControl EXPLODE = new PlayerControl();
 
+	public Vector3D getCrosshairLocation() {
+		float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
+		return player.position().add(player.getVectorDirection().multiply(realDistance));
+	}
+
 	public void generateExplosionAtCrosshair() {
 		if (depthDistance != 1f) {
-			float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
-			Vector3D position = player.position().add(player.getVectorDirection().multiply(realDistance));
+			var position = getCrosshairLocation();
 			terrain.generateExplosion(position, 5f);
 		}
 	}
@@ -381,9 +331,11 @@ public enum Game implements Screen {
 	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.005f, 0);
 
 	@Override
-	public void update() {
+	public void update(long deltaTime) {
 		if (EXPLODE.isActivated()) {
-			generateExplosionAtCrosshair();
+			float dt = (float) (((double) deltaTime) / 3.0e7);
+			var point = getCrosshairLocation();
+			terrain.terraform(point, 8f, dt, -5f);
 		}
 
 		float angle = (player.rotation().y() + MathUtil.PI / 2f);
@@ -396,10 +348,7 @@ public enum Game implements Screen {
 		if (GameControls.STRAFE_RIGHT.isActivated()) {
 			player.mutableVelocity().asXZVector().add(playerHorizontalVector);
 		}
-		angle = player.rotation().y();
-		sin = (float) Math.sin(angle); // Can probably be computed from the previous sin, cos
-		cos = (float) Math.cos(angle); // Can probably be computed from the previous sin, cos
-		var playerForwardVector = Vector2D.of(-playerSpeed * sin, -playerSpeed * cos);
+		var playerForwardVector = Vector2D.of(playerSpeed * cos, -playerSpeed * sin);
 		if (GameControls.MOVE_FORWARDS.isActivated()) {
 			player.mutableVelocity().asXZVector().add(playerForwardVector);
 		}
@@ -461,8 +410,8 @@ public enum Game implements Screen {
 		benchmarker.getLineGraph("freeMemory").add(current);
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
-			debugMessage.setLength(0);
-			debugFormatter.format("Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, PuzzleBalls=%d, Projectiles=%d",
+			debugOverlay.update(
+					"Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, PuzzleBalls=%d, Projectiles=%d",
 					player.position().x(),
 					player.position().y(),
 					player.position().z(),
@@ -472,12 +421,8 @@ public enum Game implements Screen {
 					pool.getTaskCount() - pool.getCompletedTaskCount(),
 					puzzleBalls.size(),
 					projectiles.size());
-			debugTextModel.setText(debugMessage);
 		}
 	}
-
-	private StringBuilder debugMessage = new StringBuilder();
-	private Formatter debugFormatter = new Formatter(debugMessage);
 
 	public void onMouseScroll(MouseScrollEvent event) {
 		playerSpeed += (float) (event.yOffset() / 100f);
@@ -550,7 +495,10 @@ public enum Game implements Screen {
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			GL11.glDepthMask(false);
-			renderSkybox();
+			// render skybox
+			CommonPrograms3D.CUBEMAP.getShaderProgram().use(program -> {
+				CommonDrawables.SKYBOX.draw();
+			});
 			GL11.glDepthMask(true);
 			for (PuzzleBall puzzleBall : puzzleBalls) {
 				puzzleBall.render();
@@ -562,27 +510,14 @@ public enum Game implements Screen {
 				PuzzleBall.render(x, Vector3D.of(0.2f, 0.2f, 0.2f));
 			}
 			//debug.clear();
-			terrain.flushForRendering();
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.TERRAIN.getShaderProgram().use(program -> {
 				//GL11.glEnable(GL11.GL_CULL_FACE);
 				//GL11.glCullFace(GL11.GL_FRONT);
-				int playerChunkX = terrain.getChunkX(player.position().x());
-				int playerChunkY = terrain.getChunkY(player.position().y());
-				int playerChunkZ = terrain.getChunkZ(player.position().z());
-				int n = 5;
-				for (int i = -n; i <= n; i++) {
-					for (int j = -n; j <= n; j++) {
-						for (int k = -n; k <= n; k++) {
-							terrain.drawOrQueue(
-									playerChunkX + i, playerChunkY + j, playerChunkZ + k,
-									(matrix, drawable) -> {
-										program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
-										drawable.draw();
-									});
-						}
-					}
-				}
+				terrainRenderer.render(player.position(), (matrix, drawable) -> {
+					program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
+					drawable.draw();
+				});
 				//GL11.glDisable(GL11.GL_CULL_FACE);
 			});
 			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
@@ -598,7 +533,7 @@ public enum Game implements Screen {
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
 			FloatBuffer depthPixelBuffer = BufferUtils.createFloatBuffer(1);
-			GL11.glReadPixels(windowWidth / 2, windowHeight / 2, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, depthPixelBuffer);
+			GL11.glReadPixels(window.getWidth() / 2, window.getHeight() / 2, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, depthPixelBuffer);
 			depthDistance = depthPixelBuffer.get(); // far plane
 		});
 		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
@@ -606,7 +541,7 @@ public enum Game implements Screen {
 		});
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 			// Render crosshair
-			try (var translationMatrix = MatrixPool.ofTranslation(windowWidth / 2f, windowHeight / 2f, 0f);
+			try (var translationMatrix = MatrixPool.ofTranslation(window.getWidth() / 2f, window.getHeight() / 2f, 0f);
 				 var scalarMatrixA = MatrixPool.ofScalar(5f, 1f, 1f);
 				 var scalarMatrixB = MatrixPool.ofScalar(1f, 5f, 1f);
 				 var matrixA = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixA);
@@ -619,59 +554,9 @@ public enum Game implements Screen {
 		});
 		//uiScreen.render();
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
-			// render graphs
-			byte counter = 0;
-			for (String benchmarker : this.benchmarker.getNames()) {
-				Color color = DEBUG_GRAPH_COLORS[counter % DEBUG_GRAPH_COLORS.length];
-				CommonPrograms2D.LINE.getShaderProgram().use(program -> {
-					program.loadColor3f(color);
-					program.loadFloat("spacing",
-							2f / (this.benchmarker.getLineGraph(benchmarker).getSize() - 1));
-					this.benchmarker.getLineGraph(benchmarker).render();
-				});
-				byte finalCounter = counter;
-				CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
-					program.loadColor4f("filterColor", color);
-					try (var translationMatrix = MatrixPool.ofTranslation(windowWidth - 200f, windowHeight - 50f - (finalCounter * 30f), 0f);
-						 var scalarMatrix = MatrixPool.ofScalar(10f, 10f, 1f);
-						 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
-						program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, transformationMatrix);
-					}
-					CommonDrawables.COLORED_QUAD.draw();
-					program.loadColor4f("filterColor", Color.WHITE);
-				});
-				CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
-					try (var translationMatrix = MatrixPool.ofTranslation(windowWidth - 170f, windowHeight - 55f - (finalCounter * 30f), 0f);
-						 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 1f);
-						 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
-						program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
-					}
-					program.loadColor3f("color", Color.WHITE);
-					keyTextModel.setText(benchmarker);
-					keyTextModel.draw();
-				});
-				counter++;
-			}
-			// render debug text
-			CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
-				try (var translationMatrix = MatrixPool.ofTranslation(5f, windowHeight - 20, 0f);
-					 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 1f);
-					 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
-					program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
-				}
-				program.loadColor3f("color", Color.WHITE);
-				debugTextModel.draw();
-			});
+			debugOverlay.render();
 		}
 	}
-
-	public void renderSkybox() {
-		CommonPrograms3D.CUBEMAP.getShaderProgram().use(program -> {
-			CommonDrawables.SKYBOX.draw();
-		});
-	}
-
-	private MutableLine line = new MutableLine();
 
 	@Override
 	public void dispose() {

@@ -24,6 +24,10 @@ public interface Vector3D extends Vector<Vector3D> {
 		public Impl(Vector3D vector) {
 			this(vector.x(), vector.y(), vector.z());
 		}
+		@Override
+		public String toString() {
+			return String.format("Vector3D[x=%f, y=%f, z=%f", x, y, z);
+		}
 	}
 
 	public default Vector3D crossProduct(Vector3D vector) { // Implemented in only Vector3D

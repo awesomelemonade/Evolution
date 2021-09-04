@@ -1,7 +1,9 @@
 package lemon.engine.toolbox;
 
+import lemon.evolution.Game;
 import org.lwjgl.BufferUtils;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -15,6 +17,17 @@ import java.util.Optional;
 
 public class Toolbox {
 	private Toolbox() {
+	}
+
+	public static Optional<BufferedImage> readImage(String path) {
+		return Optional.ofNullable(Toolbox.class.getResourceAsStream(path)).map(stream -> {
+			try {
+				return ImageIO.read(stream);
+			} catch (IOException e) {
+				e.printStackTrace();
+				return null;
+			}
+		});
 	}
 
 	public static Optional<StringBuilder> getFile(String path) {

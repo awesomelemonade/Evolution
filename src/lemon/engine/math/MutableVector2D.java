@@ -48,6 +48,11 @@ public interface MutableVector2D {
 			public Vector2D asImmutable() {
 				return immutable;
 			}
+
+			@Override
+			public String toString() {
+				return String.format("MutableVector2D[x=%f, y=%f]", x, y);
+			}
 		};
 	}
 

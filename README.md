@@ -1,14 +1,14 @@
 Evolution
 =========
-A project created by awesomelemonade. First versions created in 2012 (not uploaded to github). First commit in this version dates back to 2015. This project is a playground for experimenting with various ideas I have learned throughout my experience with computer graphics.
+First versions created in 2012 (not uploaded to github). First commit in this version dates back to 2015. This project is a playground for experimenting with various ideas related to computer graphics.
 
 Features
 --------
-* Event system via Java's reflection (@Subscribe annotation)
+* Event system (old version used Java reflection and @Subscribe annotation)
 * Signed Distance Field Font Rendering: Implemented a technique shown in [this Valve paper](https://steamcdn-a.akamaihd.net/apps/valve/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf) by Chris Green
 * OpenGL 3+ Rendering (Vertex Arrays, Vertex Buffers, Shaders, Shader Programs, GLSL, Uniform Variables, etc)
 * TimeSync using lwjgl's implementation of sync() to sync frame rates - [discussion here](http://forum.lwjgl.org/index.php?topic=5653.0)
-* Multithreading (Splitting of update() and render(), Calculating Perlin Noise)
+* Multithreading (Terrain Generation w/ "Computable" and ThreadPoolExecutor)
 * Cubemap rendering technique for skyboxes
 * Terrain generation using [perlin noise](https://web.archive.org/web/20160325134143/http://freespace.virgin.net/hugo.elias/models/m_perlin.htm)
 * Raytracing with Moller Trumbore Intersection algorithm
@@ -23,18 +23,13 @@ Features
 * Phong (Ambient + Diffuse + Specular) lighting
 * Object model loading (ObjLoader) using .obj files for 3D rendering
 * Infinite Terrain generation with overhangs and caves - [stackoverflow](https://stackoverflow.com/questions/39695764/generating-voxel-overhangs-with-3d-noise), [sourceforge](http://accidentalnoise.sourceforge.net/minecraftworlds.html)
-* Multithread terrain generation on the fly with ThreadPoolExecutor and ThreadLocal
 * Explosions (Carvings) in Marching Cube terrain w/ even sampling
-* RAII-styled object pools for memory conservation ([ObjectPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/ObjectPool.java), [VectorPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/VectorPool.java), [MatrixPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/MatrixPool.java))
+* RAII-styled object pools for memory conservation ([ObjectPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/ObjectPool.java), [MatrixPool](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/pool/MatrixPool.java))
 * Efficient continuous collision detection and response on marching cube mesh ([CollisionPacket](https://github.com/awesomelemonade/Evolution/blob/master/src/lemon/evolution/physicsbeta/CollisionPacket.java))
   * Initially based on [Kasper Fauerby's paper](http://www.peroxide.dk/papers/collision/collision.pdf)
 * MarchingCube normal calculation for terrain coloring/texturing - [rastertek](https://www.rastertek.com/tertut14.html)
 * Multitexturing for terrain
 * Triplanar texturing for terrain
-
-Plans
------
-* Normal mapping for textures
 
 Ideas
 -----

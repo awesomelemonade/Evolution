@@ -4,6 +4,7 @@ import lemon.engine.font.CharData;
 import lemon.engine.font.Font;
 import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
+import lemon.engine.toolbox.Disposable;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
@@ -11,7 +12,7 @@ import org.lwjgl.opengl.GL20;
 
 import java.nio.FloatBuffer;
 
-public class TextModel implements Drawable {
+public class TextModel implements Drawable, Disposable {
 	private VertexArray vertexArray;
 	private VertexBuffer vertexBuffer;
 	private Font font;
@@ -120,5 +121,11 @@ public class TextModel implements Drawable {
 
 	public CharSequence getText() {
 		return text;
+	}
+
+	@Override
+	public void dispose() {
+		vertexBuffer.dispose();
+		vertexArray.dispose();
 	}
 }

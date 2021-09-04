@@ -196,6 +196,10 @@ public class MathUtil {
 		return Math.max(lower, Math.min(upper, value));
 	}
 
+	public static float saturate(float value) {
+		return clamp(value, 0f, 1f);
+	}
+
 	public static float mod(float value, float mod) {
 		return ((value % mod) + mod) % mod;
 	}
