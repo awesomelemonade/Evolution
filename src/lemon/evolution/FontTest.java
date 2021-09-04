@@ -9,41 +9,34 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.TextureBank;
+import lemon.engine.toolbox.Disposables;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 
-import java.nio.IntBuffer;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
 public enum FontTest implements Screen {
 	INSTANCE;
+	private final Disposables disposables = new Disposables();
 	private Font font;
 	private Map<TextModel, Matrix> text;
 
 	@Override
 	public void onLoad(GLFWWindow window) {
-		IntBuffer width = BufferUtils.createIntBuffer(1);
-		IntBuffer height = BufferUtils.createIntBuffer(1);
-		GLFW.glfwGetWindowSize(GLFW.glfwGetCurrentContext(), width, height);
-		int window_width = width.get();
-		int window_height = height.get();
-		GL11.glViewport(0, 0, window_width, window_height);
-		Matrix projectionMatrix = MathUtil.getOrtho(window_width, window_height, -1, 1);
+		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
+		Matrix projectionMatrix = MathUtil.getOrtho(window.getWidth(), window.getHeight(), -1, 1);
 		CommonProgramsSetup.setup2D(projectionMatrix);
 		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
 			program.loadVector("color", Vector3D.of(0f, 1f, 1f));
 		});
-		font = new Font(Paths.get("/res/fonts/FreeSans.fnt"));
-		text = new HashMap<TextModel, Matrix>();
-		//text = new Text(font, "Evolution");
+		font = disposables.add(new Font(Paths.get("/res/fonts/FreeSans.fnt")));
+		text = new HashMap<>();
 
 		text.put(new TextModel(font, "ABCDEFG"), MathUtil.getScalar(Vector3D.of(0.005f, 0.005f, 0.005f)));
 		text.put(new TextModel(font, "the quick brown fox jumped over the lazy dog"), MathUtil.getScalar(Vector3D.of(0.2f, 0.2f, 0.2f)));
@@ -52,14 +45,12 @@ public enum FontTest implements Screen {
 		text.put(new TextModel(font, "[UNKNOWN: Listeners]", GL15.GL_DYNAMIC_DRAW),
 				MathUtil.getTranslation(Vector3D.of(0f, 50f, 0f))
 						.multiply(MathUtil.getScalar(Vector3D.of(0.2f, 0.2f, 0.2f))));
+
+		text.keySet().forEach(disposables::add);
 	}
 
 	@Override
 	public void update(long deltaTime) {
-//		String message = String.format("Listeners Registered=%d, Methods=%d, Preloaded=%d",
-//				EventManager.INSTANCE.getListenersRegistered(),
-//				EventManager.INSTANCE.getListenerMethodsRegistered(),
-//				EventManager.INSTANCE.getPreloadedMethodsRegistered());
 		String message = "A test message";
 		text.keySet().forEach(textModel -> {
 			if (textModel.getText().toString().contains("Listeners")) {
@@ -92,6 +83,6 @@ public enum FontTest implements Screen {
 
 	@Override
 	public void dispose() {
-
+		disposables.dispose();
 	}
 }
