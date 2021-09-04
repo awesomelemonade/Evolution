@@ -1,13 +1,15 @@
 package lemon.engine.control;
 
-import lemon.engine.math.Percentage;
-
 public interface Loader {
 	public void load();
 
-	public Percentage getPercentage();
+	public float getProgress();
 
 	public default boolean isCompleted() {
-		return getPercentage().isCompleted();
+		return getProgress() >= 1f;
+	}
+
+	public default String getDescription() {
+		return this.toString();
 	}
 }

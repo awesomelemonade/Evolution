@@ -32,8 +32,7 @@ public class Loading implements Screen {
 	@Override
 	public void onLoad(GLFWWindow window) {
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
-		this.loadingBar = new LoadingBar(loaders[loaderIndex].getPercentage(),
-				new Box2D(-1f, -1.1f, 2f, 0.3f),
+		this.loadingBar = new LoadingBar(new Box2D(-1f, -1.1f, 2f, 0.3f),
 				new Color(1f, 0f, 0f), new Color(1f, 0f, 0f),
 				new Color(0f, 0f, 0f), new Color(0f, 0f, 0f));
 		loaders[loaderIndex].load();
@@ -45,12 +44,13 @@ public class Loading implements Screen {
 			callback.run();
 		} else {
 			Loader currentLoader = loaders[loaderIndex];
+			loadingBar.setProgress(loaders[loaderIndex].getProgress());
 			if (currentLoader.isCompleted()) {
-				logger.log(Level.INFO, String.format("Loaded %s", currentLoader.toString()));
+				logger.log(Level.INFO, String.format("Loaded %s", currentLoader.getDescription()));
 				loaderIndex++;
 				if (loaderIndex < loaders.length) {
-					loadingBar.setPercentage(loaders[loaderIndex].getPercentage());
 					loaders[loaderIndex].load();
+					loadingBar.setProgress(loaders[loaderIndex].getProgress());
 				}
 			}
 		}
@@ -65,6 +65,6 @@ public class Loading implements Screen {
 
 	@Override
 	public void dispose() {
-
+		loadingBar.dispose();
 	}
 }

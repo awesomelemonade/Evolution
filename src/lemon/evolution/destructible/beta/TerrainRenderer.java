@@ -2,6 +2,7 @@ package lemon.evolution.destructible.beta;
 
 import lemon.engine.draw.Drawable;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Vector3D;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,9 +15,21 @@ public class TerrainRenderer {
 	private float renderDistance;
 	private List<TerrainOffset> terrainOffsets = new ArrayList<>(); // Use Guava's immutable list
 
-	public TerrainRenderer(Terrain terrain, float chunkDistance) {
+	public TerrainRenderer(Terrain terrain, float renderDistance) {
 		this.terrain = terrain;
-		setRenderDistance(chunkDistance);
+		setRenderDistance(renderDistance);
+	}
+
+	public void preload(Vector3D position) {
+		preload(terrain.getChunkX(position.x()), terrain.getChunkY(position.y()), terrain.getChunkZ(position.z()));
+	}
+
+	public void preload(int chunkX, int chunkY, int chunkZ) {
+		terrainOffsets.forEach(offset -> terrain.preloadChunk(chunkX + offset.x, chunkY + offset.y, chunkZ + offset.z));
+	}
+
+	public void render(Vector3D position, BiConsumer<Matrix, Drawable> drawer) {
+		render(terrain.getChunkX(position.x()), terrain.getChunkY(position.y()), terrain.getChunkZ(position.z()), drawer);
 	}
 
 	public void render(int chunkX, int chunkY, int chunkZ, BiConsumer<Matrix, Drawable> drawer) {
@@ -46,8 +59,14 @@ public class TerrainRenderer {
 		}
 		terrainOffsets.sort(Comparator.comparingInt(offset -> offset.x * offset.x + offset.y * offset.y + offset.z * offset.z));
 	}
+
 	public List<TerrainOffset> getTerrainOffsets() {
 		return Collections.unmodifiableList(terrainOffsets);
 	}
+
+	public float getRenderDistance() {
+		return renderDistance;
+	}
+
 	public record TerrainOffset(int x, int y, int z) {}
 }

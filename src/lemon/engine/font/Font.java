@@ -2,6 +2,7 @@ package lemon.engine.font;
 
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureData;
+import lemon.engine.toolbox.Disposable;
 
 import javax.imageio.ImageIO;
 import java.io.BufferedReader;
@@ -12,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-public class Font {
+public class Font implements Disposable {
 	private int lineHeight;
 	private int base;
 	private int scaleWidth;
@@ -112,5 +113,10 @@ public class Font {
 
 	public int getScaleHeight() {
 		return scaleHeight;
+	}
+
+	@Override
+	public void dispose() {
+		texture.dispose();
 	}
 }
