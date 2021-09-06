@@ -1,43 +1,35 @@
 name: Unit Test Results
 
 on:
-  workflow_run:
-    workflows: ["CI/CD"]
-    types:
-      - completed
+  pull_request:
+    branches: [ master ]
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  debug:
-    name: Debug
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Debug Action
-        uses: hmarr/debug-action@v2.0.0
-
+  # This workflow contains a single job called "build"
   unit-test-results:
-    name: Unit Test Results
+    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    if: >
-      github.event.workflow_run.conclusion != 'skipped' && (
-        github.event.sender.login == 'dependabot[bot]' ||
-        github.event.workflow_run.head_repository.full_name != github.repository
-      )
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Download and Extract Artifacts
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        run: |
-          mkdir -p artifacts && cd artifacts
-          artifacts_url=${{ github.event.workflow_run.artifacts_url }}
-          gh api "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
-          do
-            IFS=$'\t' read name url <<< "$artifact"
-            gh api $url > "$name.zip"
-            unzip -d "$name" "$name.zip"
-          done
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Runs a single command using the runners shell
+      - name: Run a one-line script
+        run: echo Hello, world!
       - name: Publish Unit Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
         with:
-          commit: ${{ github.event.workflow_run.head_sha }}
-          files: "artifacts/**/*.xml"
+          files: test-results/**/*.xml
+      # Runs a set of commands using the runners shell
+      - name: Run a multi-line script
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
+
