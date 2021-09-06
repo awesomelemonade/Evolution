@@ -1,4 +1,4 @@
-name: Unit Test Results
+name: Publish Unit Tests
 
 on:
   pull_request:

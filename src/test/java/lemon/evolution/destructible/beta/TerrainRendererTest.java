@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TerrainRendererTest {
 	private static final List<Float> radii = List.of(0f, 1.5f, 2f, 3.14f, 5f, 10f, 20f);
 	@Test
-	public void checkForDuplicates() {
+	public void testForDuplicates() {
 		TerrainRenderer renderer = new TerrainRenderer(null, 0f);
 		for (float radius : radii) {
 			renderer.setRenderDistance(radius);
@@ -18,7 +18,7 @@ public class TerrainRendererTest {
 		}
 	}
 	@Test
-	public void checkForCompletion() {
+	public void testForCompletion() {
 		TerrainRenderer renderer = new TerrainRenderer(null, 0f);
 		for (float radius : radii) {
 			renderer.setRenderDistance(radius);

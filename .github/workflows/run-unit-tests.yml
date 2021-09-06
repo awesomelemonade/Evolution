@@ -1,5 +1,7 @@
-name: tests
-on: push
+name: Run Unit Tests
+on:
+  pull_request:
+    branches: [ master ]
 jobs:
   run_tests:
     runs-on: ubuntu-latest
