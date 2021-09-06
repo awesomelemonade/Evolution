@@ -1,7 +1,6 @@
 package lemon.engine.splash;
 
 import lemon.engine.math.Box2D;
-import lemon.engine.math.Percentage;
 import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;

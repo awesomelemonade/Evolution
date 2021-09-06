@@ -14,7 +14,6 @@ import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
-import lemon.engine.math.Percentage;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
@@ -54,8 +53,6 @@ import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
-import javax.imageio.ImageIO;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
