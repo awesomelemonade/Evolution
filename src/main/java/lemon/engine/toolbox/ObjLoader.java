@@ -3,7 +3,6 @@ package lemon.engine.toolbox;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.math.FloatData;
-import lemon.engine.math.Percentage;
 import lemon.engine.math.Vector3D;
 import lemon.engine.thread.ThreadManager;
 import org.lwjgl.opengl.GL11;
