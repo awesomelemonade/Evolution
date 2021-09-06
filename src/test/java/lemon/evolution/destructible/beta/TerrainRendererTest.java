@@ -18,10 +18,6 @@ public class TerrainRendererTest {
 		}
 	}
 	@Test
-	public void testFalse() {
-		assertTrue(false);
-	}
-	@Test
 	public void testForCompletion() {
 		TerrainRenderer renderer = new TerrainRenderer(null, 0f);
 		for (float radius : radii) {

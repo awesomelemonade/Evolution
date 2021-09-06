@@ -4,6 +4,7 @@ on:
     branches: [ master ]
 jobs:
   run_tests:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
