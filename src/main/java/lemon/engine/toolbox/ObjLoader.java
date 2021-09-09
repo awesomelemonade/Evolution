@@ -1,5 +1,6 @@
 package lemon.engine.toolbox;
 
+import com.google.common.collect.ImmutableMap;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.math.FloatData;
@@ -18,53 +19,42 @@ import java.util.StringTokenizer;
 import java.util.function.BiConsumer;
 
 public class ObjLoader implements Loader {
-	private static Map<String, BiConsumer<ObjLoader, StringTokenizer>> processors;
-	private static final BiConsumer<ObjLoader, StringTokenizer> UNKNOWN_PROCESSOR = (loader, tokenizer) -> {
-		System.out.println("Unknown Key: " + tokenizer.nextToken(""));
-	};
-
-	static {
-		processors = new HashMap<>();
-		processors.put("v", (objLoader, tokenizer) -> {
-			Vector3D vertex = Vector3D.of(Float.parseFloat(tokenizer.nextToken()),
-					Float.parseFloat(tokenizer.nextToken()), Float.parseFloat(tokenizer.nextToken()));
-			objLoader.vertices.add(vertex);
-		});
-		processors.put("vn", (objLoader, tokenizer) -> {
-			Vector3D normal = Vector3D.of(Float.parseFloat(tokenizer.nextToken()),
-					Float.parseFloat(tokenizer.nextToken()), Float.parseFloat(tokenizer.nextToken()));
-			objLoader.normals.add(normal);
-		});
-		processors.put("f", (objLoader, tokenizer) -> {
-			for (int i = 0; i < 3; i++) { // triangles
-				StringTokenizer tokenizer2 = new StringTokenizer(tokenizer.nextToken(), "/");
-				int vertexIndex = Integer.parseInt(tokenizer2.nextToken());
-				int textureCoordIndex = Integer.parseInt(tokenizer2.nextToken()); // unused
-				int normalIndex = Integer.parseInt(tokenizer2.nextToken());
-				if (vertexIndex == normalIndex) {
-					objLoader.indices.add(vertexIndex - 1); // offset by 1
-				} else {
-					if (objLoader.vertices.size() == objLoader.normals.size()) {
-						int a = vertexIndex - 1;
-						int b = normalIndex - 1;
-
-						if (objLoader.cache.containsKey(a) && objLoader.cache.get(a).containsKey(b)) {
-							objLoader.indices.add(objLoader.cache.get(a).get(b));
-						} else {
-							objLoader.cache.computeIfAbsent(a, key -> new HashMap<Integer, Integer>());
-							int index = objLoader.vertices.size();
-							objLoader.cache.get(a).put(b, index);
-							objLoader.indices.add(index);
-							objLoader.vertices.add(objLoader.vertices.get(a));
-							objLoader.normals.add(objLoader.normals.get(b));
-						}
+	private static final ImmutableMap<String, BiConsumer<ObjLoader, StringTokenizer>> processors = ImmutableMap.of(
+			"v", (objLoader, tokenizer) -> objLoader.vertices.add(Vector3D.ofParsed(tokenizer)),
+			"vn", (objLoader, tokenizer) -> objLoader.normals.add(Vector3D.ofParsed(tokenizer)),
+			"f", (objLoader, tokenizer) -> {
+				for (int i = 0; i < 3; i++) { // triangles
+					StringTokenizer tokenizer2 = new StringTokenizer(tokenizer.nextToken(), "/");
+					int vertexIndex = Integer.parseInt(tokenizer2.nextToken());
+					int textureCoordIndex = Integer.parseInt(tokenizer2.nextToken()); // unused
+					int normalIndex = Integer.parseInt(tokenizer2.nextToken());
+					if (vertexIndex == normalIndex) {
+						objLoader.indices.add(vertexIndex - 1); // offset by 1
 					} else {
-						throw new IllegalStateException(String.format("Unable to add face: %s", tokenizer.toString()));
+						if (objLoader.vertices.size() == objLoader.normals.size()) {
+							int a = vertexIndex - 1;
+							int b = normalIndex - 1;
+
+							if (objLoader.cache.containsKey(a) && objLoader.cache.get(a).containsKey(b)) {
+								objLoader.indices.add(objLoader.cache.get(a).get(b));
+							} else {
+								objLoader.cache.computeIfAbsent(a, key -> new HashMap<>());
+								int index = objLoader.vertices.size();
+								objLoader.cache.get(a).put(b, index);
+								objLoader.indices.add(index);
+								objLoader.vertices.add(objLoader.vertices.get(a));
+								objLoader.normals.add(objLoader.normals.get(b));
+							}
+						} else {
+							throw new IllegalStateException(String.format("Unable to add face: %s", tokenizer.toString()));
+						}
 					}
 				}
 			}
-		});
-	}
+	);
+	private static final BiConsumer<ObjLoader, StringTokenizer> UNKNOWN_PROCESSOR = (loader, tokenizer) -> {
+		System.out.println("Unknown Key: " + tokenizer.nextToken(""));
+	};
 
 	private int numLinesRead;
 	private int totalLines;

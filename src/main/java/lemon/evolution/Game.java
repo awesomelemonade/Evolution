@@ -219,8 +219,9 @@ public enum Game implements Screen {
 			});
 		});
 
-		GameControls.setup(window.input());
-		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_Y, EXPLODE);
+		disposables.add(GameControls.setup(window.input()));
+		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_T, ADD_TERRAIN);
+		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_Y, REMOVE_TERRAIN);
 
 		puzzleBalls = new ArrayList<>();
 		projectiles = new ArrayList<>();
@@ -303,7 +304,8 @@ public enum Game implements Screen {
 		disposables.add(window.input().cursorPositionEvent().add(this::onMousePosition));
 	}
 
-	private final PlayerControl EXPLODE = new PlayerControl();
+	private final PlayerControl ADD_TERRAIN = new PlayerControl();
+	private final PlayerControl REMOVE_TERRAIN = new PlayerControl();
 
 	public Vector3D getCrosshairLocation() {
 		float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
@@ -329,7 +331,12 @@ public enum Game implements Screen {
 
 	@Override
 	public void update(long deltaTime) {
-		if (EXPLODE.isActivated()) {
+		if (ADD_TERRAIN.isActivated()) {
+			float dt = (float) (((double) deltaTime) / 3.0e7);
+			var point = getCrosshairLocation();
+			terrain.terraform(point, 8f, dt, 5f);
+		}
+		if (REMOVE_TERRAIN.isActivated()) {
 			float dt = (float) (((double) deltaTime) / 3.0e7);
 			var point = getCrosshairLocation();
 			terrain.terraform(point, 8f, dt, -5f);
@@ -361,7 +368,7 @@ public enum Game implements Screen {
 		player.mutableVelocity().multiply(friction);
 		//player.mutableVelocity().add(GRAVITY_VECTOR);
 
-		CollisionPacket.collideAndSlide(player.mutablePosition(), player.mutableVelocity(), 20);
+		CollisionPacket.collideAndSlide(player.mutablePosition(), player.mutableVelocity(), player.velocity(), 20);
 
 		var targetRotation = Vector3D.of(
 				(float) Math.atan(player.velocity().y() / Math.hypot(player.velocity().x(), player.velocity().z())),
@@ -383,7 +390,7 @@ public enum Game implements Screen {
 		float totalLength = 0;
 		for (PuzzleBall puzzleBall : puzzleBalls) {
 			puzzleBall.mutableVelocity().add(GRAVITY_VECTOR);
-			CollisionPacket.collideAndSlide(puzzleBall.mutablePosition(), puzzleBall.mutableVelocity());
+			CollisionPacket.collideAndSlide(puzzleBall.mutablePosition(), puzzleBall.mutableVelocity(), puzzleBall.velocity());
 			totalLength += puzzleBall.velocity().length();
 		}
 		puzzleBalls.removeIf(x -> x.position().y() <= -300f);
@@ -508,15 +515,7 @@ public enum Game implements Screen {
 			}
 			//debug.clear();
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
-			CommonPrograms3D.TERRAIN.getShaderProgram().use(program -> {
-				//GL11.glEnable(GL11.GL_CULL_FACE);
-				//GL11.glCullFace(GL11.GL_FRONT);
-				terrainRenderer.render(player.position(), (matrix, drawable) -> {
-					program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
-					drawable.draw();
-				});
-				//GL11.glDisable(GL11.GL_CULL_FACE);
-			});
+			terrainRenderer.render(player.position());
 			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
 				var position = Vector3D.of(96f, 40f, 0f);
 				try (var translationMatrix = MatrixPool.ofTranslation(position);

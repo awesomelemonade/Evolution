@@ -135,11 +135,11 @@ public class CollisionPacket {
 	}
 
 	// response steps
-	public static void collideAndSlide(MutableVector3D position, MutableVector3D velocity) {
-		collideAndSlide(position, velocity, MAX_RECURSION_DEPTH);
+	public static void collideAndSlide(MutableVector3D position, MutableVector3D velocity, Vector3D currentVelocity) {
+		collideAndSlide(position, velocity, currentVelocity, MAX_RECURSION_DEPTH);
 	}
 
-	public static void collideAndSlide(MutableVector3D position, MutableVector3D velocity, int maxRecursionDepth) {
+	public static void collideAndSlide(MutableVector3D position, MutableVector3D velocity, Vector3D currentVelocity, int maxRecursionDepth) {
 		// Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
 
 		// calculate position and velocity in eSpace
@@ -147,7 +147,7 @@ public class CollisionPacket {
 		// velocity.divide(eRadius);
 
 		// Iterate until we have our final position
-		collideWithWorld(position, velocity, 0, velocity.asImmutable(), maxRecursionDepth);
+		collideWithWorld(position, velocity, 0, currentVelocity, maxRecursionDepth);
 
 		// Convert final result back to r3
 		// position.multiply(eRadius);

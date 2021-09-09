@@ -1,5 +1,7 @@
 package lemon.engine.event;
 
+import com.google.errorprone.annotations.CheckReturnValue;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -11,6 +13,7 @@ public class Event {
 	 * @param listener Listener
 	 * @return Remover
 	 */
+	@CheckReturnValue
 	public Runnable add(Runnable listener) {
 		Object key = new Object();
 		cachedListeners = null;

@@ -40,8 +40,6 @@ public class Toolbox {
 			}
 			reader.close();
 			return Optional.of(builder);
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
