@@ -58,6 +58,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.ToIntFunction;
@@ -106,17 +107,19 @@ public enum Game implements Screen {
 			ScalarField<Vector3D> scalarField = vector -> vector.y() < -30f ? 0f : -(vector.y() + noise.apply(vector.divide(100f)) * 5f);
 			histogram = new Histogram(0.1f);
 			scalarField = vector -> {
+				if (vector.y() < 0f) {
+					return 0f;
+				}
 				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
+				float cylinder = (float) (50.0 - Math.sqrt(distanceSquared));
+				if (cylinder < -100f) {
+					return cylinder;
+				}
 				float terrain = (float) (-Math.tanh(vector.y() / 100.0) * 100.0 +
 						Math.pow(2f, noise2d.apply(vector.toXZVector().divide(300f))) * 5.0 +
 						Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
 				histogram.add(terrain);
-				/*float x = vector.getY() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
-				test[0] = Math.min(test[0], x);
-				test[1] = Math.max(test[1], x);
-				System.out.println(Arrays.toString(test));
-				return x;*/
-				return vector.y() < 0 ? 0f : Math.min((float) (250.0 - Math.sqrt(distanceSquared)), terrain);
+				return Math.min(cylinder, terrain);
 			};
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -124,7 +127,7 @@ public enum Game implements Screen {
 			pool2.setRejectedExecutionHandler((runnable, executor) -> {});
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
 			terrain = new Terrain(generator, pool2, Vector3D.of(5f, 5f, 5f));
-			terrainRenderer = new TerrainRenderer(terrain, 5);
+			terrainRenderer = new TerrainRenderer(terrain, 10);
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			player = new Player(new Projection(MathUtil.toRadians(60f),
@@ -157,7 +160,7 @@ public enum Game implements Screen {
 		this.window = window;
 		disposables.add(() -> pool.shutdown());
 		disposables.add(() -> pool2.shutdown());
-		//GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+		GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		var windowWidth = window.getWidth();
 		var windowHeight = window.getHeight();
 
@@ -225,15 +228,6 @@ public enum Game implements Screen {
 
 		puzzleBalls = new ArrayList<>();
 		projectiles = new ArrayList<>();
-		int size = 20;
-		for (int i = -size; i <= size; i += 5) {
-			for (int j = -size; j <= size; j += 5) {
-				puzzleBalls.add(new PuzzleBall(Vector3D.of(i, 100, j), Vector3D.ZERO));
-			}
-		}
-		for (int i = 100; i <= 600; i += 10) {
-			puzzleBalls.add(new PuzzleBall(Vector3D.of(0, i, 0), Vector3D.ZERO));
-		}
 
 		debug = new ArrayList<>();
 		CollisionPacket.consumers.add((position, velocity) -> collision -> {
@@ -269,7 +263,7 @@ public enum Game implements Screen {
 		disposables.add(window.input().keyEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_RELEASE) {
 				if (event.key() == GLFW.GLFW_KEY_G) {
-					puzzleBalls.add(new PuzzleBall(player.position(), player.velocity()));
+					projectiles.add(new PuzzleBall(player.position(), player.getVectorDirection().multiply(10f)));
 				}
 				if (event.key() == GLFW.GLFW_KEY_C) {
 					puzzleBalls.clear();
@@ -282,6 +276,14 @@ public enum Game implements Screen {
 						float randZ = (float) (Math.random() * spray - spray / 2f);
 						projectiles.add(new PuzzleBall(x.position(), Vector3D.of(randX, 0.5f, randZ)));
 					});
+				}
+				if (event.key() == GLFW.GLFW_KEY_H) {
+					int size = 20;
+					for (int i = -size; i <= size; i += 5) {
+						for (int j = -size; j <= size; j += 5) {
+							puzzleBalls.add(new PuzzleBall(Vector3D.of(i, 100, j), Vector3D.ZERO));
+						}
+					}
 				}
 			}
 		}));
@@ -307,16 +309,16 @@ public enum Game implements Screen {
 	private final PlayerControl ADD_TERRAIN = new PlayerControl();
 	private final PlayerControl REMOVE_TERRAIN = new PlayerControl();
 
-	public Vector3D getCrosshairLocation() {
+	public Optional<Vector3D> getCrosshairLocation() {
+		if (depthDistance == 1f) {
+			return Optional.empty();
+		}
 		float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
-		return player.position().add(player.getVectorDirection().multiply(realDistance));
+		return Optional.of(player.position().add(player.getVectorDirection().multiply(realDistance)));
 	}
 
 	public void generateExplosionAtCrosshair() {
-		if (depthDistance != 1f) {
-			var position = getCrosshairLocation();
-			terrain.generateExplosion(position, 5f);
-		}
+		getCrosshairLocation().ifPresent(position -> terrain.generateExplosion(position, 5f));
 	}
 
 	float depthDistance = 0;
@@ -333,13 +335,11 @@ public enum Game implements Screen {
 	public void update(long deltaTime) {
 		if (ADD_TERRAIN.isActivated()) {
 			float dt = (float) (((double) deltaTime) / 3.0e7);
-			var point = getCrosshairLocation();
-			terrain.terraform(point, 8f, dt, 5f);
+			getCrosshairLocation().ifPresent(point -> terrain.terraform(point, 8f, dt, 5f));
 		}
 		if (REMOVE_TERRAIN.isActivated()) {
 			float dt = (float) (((double) deltaTime) / 3.0e7);
-			var point = getCrosshairLocation();
-			terrain.terraform(point, 8f, dt, -5f);
+			getCrosshairLocation().ifPresent(point -> terrain.terraform(point, 8f, dt, -5f));
 		}
 
 		float angle = (player.rotation().y() + MathUtil.PI / 2f);
@@ -366,7 +366,7 @@ public enum Game implements Screen {
 			player.mutableVelocity().subtractY(playerSpeed);
 		}
 		player.mutableVelocity().multiply(friction);
-		//player.mutableVelocity().add(GRAVITY_VECTOR);
+		player.mutableVelocity().add(GRAVITY_VECTOR);
 
 		CollisionPacket.collideAndSlide(player.mutablePosition(), player.mutableVelocity(), player.velocity(), 20);
 

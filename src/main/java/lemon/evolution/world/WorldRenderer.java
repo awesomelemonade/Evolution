@@ -1,6 +1,7 @@
 package lemon.evolution.world;
 
 import lemon.engine.math.Vector3D;
+import lemon.engine.render.Renderable;
 import lemon.evolution.destructible.beta.TerrainRenderer;
 
 public class WorldRenderer {
@@ -14,5 +15,6 @@ public class WorldRenderer {
 
 	public void render(Vector3D position) {
 		terrainRenderer.render(position);
+		world.renderables().forEach(Renderable::render);
 	}
 }
