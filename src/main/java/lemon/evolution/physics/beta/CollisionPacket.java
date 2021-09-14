@@ -5,10 +5,7 @@ import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 
 public class CollisionPacket {
 	private static final float BUFFER_DISTANCE = 0.001f;
@@ -138,25 +135,26 @@ public class CollisionPacket {
 	public static void collideAndSlide(BiFunction<Vector3D, Vector3D, Collision> checker, MutableVector3D position, MutableVector3D velocity, Vector3D force, float dt) {
 		force = force.multiply(dt);
 		velocity.add(force);
-		collideAndSlide(checker, position, velocity, velocity.asImmutable().multiply(dt), force, MAX_RECURSION_DEPTH);
+		collideAndSlide(checker, position, velocity, force, dt, MAX_RECURSION_DEPTH);
 	}
 
-	public static void collideAndSlide(BiFunction<Vector3D, Vector3D, Collision> checker, MutableVector3D position, MutableVector3D velocity, Vector3D currentVelocity, Vector3D currentForce, int maxRecursionDepth) {
-		collideWithWorld(checker, position, velocity, currentVelocity, currentForce, 0, maxRecursionDepth);
+	public static void collideAndSlide(BiFunction<Vector3D, Vector3D, Collision> checker, MutableVector3D position, MutableVector3D velocity, Vector3D currentForce, float dt, int maxRecursionDepth) {
+		collideWithWorld(checker, position, velocity, currentForce, dt, 0, maxRecursionDepth);
 	}
 
 	public static void collideWithWorld(BiFunction<Vector3D, Vector3D, Collision> collisionChecker,
 										MutableVector3D mutablePosition, MutableVector3D mutableVelocity,
-										Vector3D remainingVelocity, Vector3D remainingForce,
+										Vector3D force, float remainingDt,
 										int collisionRecursionDepth, int maxRecursionDepth) {
 		if (collisionRecursionDepth > maxRecursionDepth) {
 			return;
 		}
+		var position = mutablePosition.asImmutable();
+		var velocity = mutableVelocity.asImmutable();
+		var remainingVelocity = velocity.multiply(remainingDt);
 		if (remainingVelocity.lengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {
 			return;
 		}
-		var position = mutablePosition.asImmutable();
-		var velocity = mutableVelocity.asImmutable();
 		var collision = collisionChecker.apply(position, remainingVelocity);
 		if (collision.getT() >= 1f) {
 			float length = remainingVelocity.length() - BUFFER_DISTANCE;
@@ -165,18 +163,23 @@ public class CollisionPacket {
 			}
 			return;
 		}
+		var unhandledDt = (1f - collision.getT()) * remainingDt;
 		var usedVelocity = remainingVelocity.multiply(collision.getT());
-		var collisionPosition = position.add(usedVelocity);
-		var negSlidePlaneNormal = collision.getIntersection().subtract(collisionPosition).normalize();
-		remainingVelocity = remainingVelocity.subtract(usedVelocity);
-		var normalRemainingVelocity = negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(remainingVelocity));
-		remainingVelocity = remainingVelocity.subtract(normalRemainingVelocity);
-		var normalVelocity = negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity));
-		mutableVelocity.subtract(normalVelocity);
+		var negSlidePlaneNormal = collision.getIntersection().subtract(position.add(usedVelocity)).normalize();
+		// update position
 		float length = usedVelocity.length() - BUFFER_DISTANCE;
 		if (length > 0) {
 			mutablePosition.add(usedVelocity.scaleToLength(length));
 		}
-		collideWithWorld(collisionChecker, mutablePosition, mutableVelocity, remainingVelocity, remainingForce, collisionRecursionDepth + 1, maxRecursionDepth);
+		// update velocity
+		mutableVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity)));
+		// friction
+		var mu = 1f;
+		var normalForceMagnitude = negSlidePlaneNormal.dotProduct(force);
+		var frictionForce = velocity.scaleToLength(-mu * normalForceMagnitude);
+		mutableVelocity.add(frictionForce.multiply(unhandledDt));
+		force = force.subtract(negSlidePlaneNormal.multiply(normalForceMagnitude));
+		// recursive
+		collideWithWorld(collisionChecker, mutablePosition, mutableVelocity, force, unhandledDt, collisionRecursionDepth + 1, maxRecursionDepth);
 	}
 }
