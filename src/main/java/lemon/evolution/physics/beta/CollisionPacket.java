@@ -174,11 +174,15 @@ public class CollisionPacket {
 		// update velocity
 		mutableVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity)));
 		// friction
-		var mu = 1f;
 		var normalForceMagnitude = negSlidePlaneNormal.dotProduct(force);
-		var frictionForce = velocity.scaleToLength(-mu * normalForceMagnitude);
-		mutableVelocity.add(frictionForce.multiply(unhandledDt));
-		force = force.subtract(negSlidePlaneNormal.multiply(normalForceMagnitude));
+		if (normalForceMagnitude > 0) {
+			var mu = 1f;
+			var velocityLength = velocity.length();
+			var frictionForceMagnitude = Math.min(mu * normalForceMagnitude * unhandledDt, velocityLength);
+			var frictionForce = velocity.scaleToLength(frictionForceMagnitude);
+			mutableVelocity.subtract(frictionForce);
+			force = force.subtract(negSlidePlaneNormal.multiply(normalForceMagnitude));
+		}
 		// recursive
 		collideWithWorld(collisionChecker, mutablePosition, mutableVelocity, force, unhandledDt, collisionRecursionDepth + 1, maxRecursionDepth);
 	}
