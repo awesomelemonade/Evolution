@@ -135,26 +135,20 @@ public class CollisionPacket {
 	}
 
 	// response steps
-	public static void collideAndSlide(MutableVector3D position, MutableVector3D velocity, Vector3D currentVelocity) {
-		collideAndSlide(position, velocity, currentVelocity, MAX_RECURSION_DEPTH);
+	public static void collideAndSlide(BiFunction<Vector3D, Vector3D, Collision> checker, MutableVector3D position, MutableVector3D velocity, Vector3D force, float dt) {
+		force = force.multiply(dt);
+		velocity.add(force);
+		collideAndSlide(checker, position, velocity, velocity.asImmutable().multiply(dt), force, MAX_RECURSION_DEPTH);
 	}
 
-	public static void collideAndSlide(MutableVector3D position, MutableVector3D velocity, Vector3D currentVelocity, int maxRecursionDepth) {
-		// Vector3D eRadius = new Vector3D(1f, 1f, 1f); // ellipsoid radius
-
-		// calculate position and velocity in eSpace
-		// position.divide(eRadius);
-		// velocity.divide(eRadius);
-
-		// Iterate until we have our final position
-		collideWithWorld(position, velocity, 0, currentVelocity, maxRecursionDepth);
-
-		// Convert final result back to r3
-		// position.multiply(eRadius);
-		// velocity.multiply(eRadius);
+	public static void collideAndSlide(BiFunction<Vector3D, Vector3D, Collision> checker, MutableVector3D position, MutableVector3D velocity, Vector3D currentVelocity, Vector3D currentForce, int maxRecursionDepth) {
+		collideWithWorld(checker, position, velocity, currentVelocity, currentForce, 0, maxRecursionDepth);
 	}
 
-	public static void collideWithWorld(MutableVector3D mutablePosition, MutableVector3D mutableVelocity, int collisionRecursionDepth, Vector3D remainingVelocity, int maxRecursionDepth) {
+	public static void collideWithWorld(BiFunction<Vector3D, Vector3D, Collision> collisionChecker,
+										MutableVector3D mutablePosition, MutableVector3D mutableVelocity,
+										Vector3D remainingVelocity, Vector3D remainingForce,
+										int collisionRecursionDepth, int maxRecursionDepth) {
 		if (collisionRecursionDepth > maxRecursionDepth) {
 			return;
 		}
@@ -163,7 +157,7 @@ public class CollisionPacket {
 		}
 		var position = mutablePosition.asImmutable();
 		var velocity = mutableVelocity.asImmutable();
-		Collision collision = checkCollision(position, remainingVelocity);
+		var collision = collisionChecker.apply(position, remainingVelocity);
 		if (collision.getT() >= 1f) {
 			float length = remainingVelocity.length() - BUFFER_DISTANCE;
 			if (length > 0) {
@@ -175,56 +169,14 @@ public class CollisionPacket {
 		var collisionPosition = position.add(usedVelocity);
 		var negSlidePlaneNormal = collision.getIntersection().subtract(collisionPosition).normalize();
 		remainingVelocity = remainingVelocity.subtract(usedVelocity);
-		remainingVelocity = remainingVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(remainingVelocity)));
-		mutableVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity)));
-		/*if (collisionRecursionDepth == 0) {
-			mutableVelocity.multiply(0.995f);
-			remainingVelocity = remainingVelocity.multiply(0.995f);
-		}*/
+		var normalRemainingVelocity = negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(remainingVelocity));
+		remainingVelocity = remainingVelocity.subtract(normalRemainingVelocity);
+		var normalVelocity = negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity));
+		mutableVelocity.subtract(normalVelocity);
 		float length = usedVelocity.length() - BUFFER_DISTANCE;
 		if (length > 0) {
 			mutablePosition.add(usedVelocity.scaleToLength(length));
 		}
-		collideWithWorld(mutablePosition, mutableVelocity, collisionRecursionDepth + 1, remainingVelocity, maxRecursionDepth);
+		collideWithWorld(collisionChecker, mutablePosition, mutableVelocity, remainingVelocity, remainingForce, collisionRecursionDepth + 1, maxRecursionDepth);
 	}
-
-	// Super temporary stuff below
-	public static final List<Triangle> triangles = new ArrayList<>();
-	public static final List<BiFunction<Vector3D, Vector3D, Consumer<Collision>>> consumers = new ArrayList<>();
-
-	public static Collision checkCollision(Vector3D position, Vector3D velocity) {
-		Collision collision = new Collision(Float.MAX_VALUE, Vector3D.ZERO);
-		// transform packet.basePoint and packet.velocity from eSpace to r3 space?
-		for (BiFunction<Vector3D, Vector3D, Consumer<Collision>> consumer : consumers) {
-			consumer.apply(position, velocity).accept(collision);
-		}
-		for (Triangle triangle : triangles) {
-			CollisionPacket.checkTriangle(position, velocity, triangle, collision);
-		}
-		return collision;
-	}
-
-
-	// response steps
-	public static boolean collideAndSlideIntersect(MutableVector3D position, MutableVector3D velocity) {
-		return collideWithWorldIntersect(position, velocity.asImmutable());
-	}
-
-	public static boolean collideWithWorldIntersect(MutableVector3D mutablePosition, Vector3D remainingVelocity) {
-		Collision collision = checkCollision(mutablePosition.asImmutable(), remainingVelocity);
-		if (collision.getT() >= 1f) {
-			float length = remainingVelocity.length() - BUFFER_DISTANCE;
-			if (length > 0) {
-				mutablePosition.add(remainingVelocity.scaleToLength(length));
-			}
-			return false;
-		}
-		var usedVelocity = remainingVelocity.multiply(collision.getT());
-		float length = usedVelocity.length() - BUFFER_DISTANCE;
-		if (length > 0) {
-			mutablePosition.add(usedVelocity.scaleToLength(length));
-		}
-		return true;
-	}
-
 }

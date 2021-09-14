@@ -1,23 +1,25 @@
 package lemon.evolution.world;
 
+import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.Renderable;
 import lemon.evolution.destructible.beta.Terrain;
-import lemon.evolution.physics.beta.CollisionPacket;
+import lemon.evolution.physics.beta.CollisionContext;
 
 import java.util.HashSet;
 import java.util.Set;
 
 public class World {
-	private static final float DT_SCALE = 1f;
-	private static final float FRICTION = 0.98f;
+	private static final float AIR_RESISTANCE = 0.98f;
 	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.005f, 0);
 	private final Terrain terrain;
+	private final CollisionContext collisionContext;
 	private final Set<Renderable> renderables = new HashSet<>();
 	private final Set<Entity> entities = new HashSet<>();
 
-	public World(Terrain terrain) {
+	public World(Terrain terrain, CollisionContext collisionContext) {
 		this.terrain = terrain;
+		this.collisionContext = collisionContext;
 	}
 
 	public void addEntity(Entity entity) {
@@ -36,10 +38,8 @@ public class World {
 
 	public void update(float dt) {
 		for (Entity entity : entities) {
-			entity.mutableVelocity().add(GRAVITY_VECTOR.multiply(DT_SCALE * dt));
-			entity.mutableVelocity().multiply(FRICTION * DT_SCALE * dt);
-			CollisionPacket.collideAndSlide(entity.mutablePosition(), entity.mutableVelocity(), entity.velocity().multiply(DT_SCALE * dt));
-			entity.mutablePosition().add(entity.velocity().multiply(DT_SCALE * dt));
+			entity.mutableVelocity().multiply(MathUtil.pow(AIR_RESISTANCE, dt));
+			collisionContext.collideAndSlide(entity.mutablePosition(), entity.mutableVelocity(), GRAVITY_VECTOR, dt);
 		}
 	}
 

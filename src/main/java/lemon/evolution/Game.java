@@ -34,6 +34,7 @@ import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.destructible.beta.TerrainRenderer;
+import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.physics.beta.CollisionPacket;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.puzzle.PuzzleBall;
@@ -73,6 +74,7 @@ public enum Game implements Screen {
 	private boolean loaded;
 
 	private Player player;
+	private CollisionContext collisionContext;
 
 	private FrameBuffer frameBuffer;
 
@@ -127,7 +129,7 @@ public enum Game implements Screen {
 			pool2.setRejectedExecutionHandler((runnable, executor) -> {});
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
 			terrain = new Terrain(generator, pool2, Vector3D.of(5f, 5f, 5f));
-			terrainRenderer = new TerrainRenderer(terrain, 10);
+			terrainRenderer = new TerrainRenderer(terrain, 2.5f);
 			dragonLoader = new ObjLoader("/res/dragon.obj");
 
 			player = new Player(new Projection(MathUtil.toRadians(60f),
@@ -230,7 +232,7 @@ public enum Game implements Screen {
 		projectiles = new ArrayList<>();
 
 		debug = new ArrayList<>();
-		CollisionPacket.consumers.add((position, velocity) -> collision -> {
+		collisionContext = (position, velocity, collision) -> {
 			var after = position.add(velocity);
 			int minChunkX = terrain.getChunkX(Math.min(position.x(), after.x()) - 1f);
 			int maxChunkX = terrain.getChunkX(Math.max(position.x(), after.x()) + 1f);
@@ -251,8 +253,7 @@ public enum Game implements Screen {
 					}
 				}
 			}
-		});
-		System.out.println("Triangles: " + CollisionPacket.triangles.size());
+		};
 		System.out.println("=====[Histogram]=====");
 		histogram.print();
 		System.out.println("=====================");
@@ -329,16 +330,15 @@ public enum Game implements Screen {
 	private static float friction = 1f;
 	private static float maxSpeed = 0.03f;
 	private static float playerSpeed = maxSpeed - maxSpeed * friction;
-	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.005f, 0);
+	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.05f, 0);
 
 	@Override
 	public void update(long deltaTime) {
+		float dt = (float) (((double) deltaTime) / 3.0e7);
 		if (ADD_TERRAIN.isActivated()) {
-			float dt = (float) (((double) deltaTime) / 3.0e7);
 			getCrosshairLocation().ifPresent(point -> terrain.terraform(point, 8f, dt, 5f));
 		}
 		if (REMOVE_TERRAIN.isActivated()) {
-			float dt = (float) (((double) deltaTime) / 3.0e7);
 			getCrosshairLocation().ifPresent(point -> terrain.terraform(point, 8f, dt, -5f));
 		}
 
@@ -365,10 +365,8 @@ public enum Game implements Screen {
 		if (GameControls.MOVE_DOWN.isActivated()) {
 			player.mutableVelocity().subtractY(playerSpeed);
 		}
-		player.mutableVelocity().multiply(friction);
-		player.mutableVelocity().add(GRAVITY_VECTOR);
-
-		CollisionPacket.collideAndSlide(player.mutablePosition(), player.mutableVelocity(), player.velocity(), 20);
+		player.mutableVelocity().multiply(MathUtil.pow(friction, dt));
+		collisionContext.collideAndSlide(player.mutablePosition(), player.mutableVelocity(), GRAVITY_VECTOR, dt);
 
 		var targetRotation = Vector3D.of(
 				(float) Math.atan(player.velocity().y() / Math.hypot(player.velocity().x(), player.velocity().z())),
@@ -389,24 +387,20 @@ public enum Game implements Screen {
 
 		float totalLength = 0;
 		for (PuzzleBall puzzleBall : puzzleBalls) {
-			puzzleBall.mutableVelocity().add(GRAVITY_VECTOR);
-			CollisionPacket.collideAndSlide(puzzleBall.mutablePosition(), puzzleBall.mutableVelocity(), puzzleBall.velocity());
+			collisionContext.collideAndSlide(puzzleBall.mutablePosition(), puzzleBall.mutableVelocity(), GRAVITY_VECTOR, dt);
 			totalLength += puzzleBall.velocity().length();
 		}
 		puzzleBalls.removeIf(x -> x.position().y() <= -300f);
 
-		for (PuzzleBall projectile : projectiles) {
-			projectile.mutableVelocity().add(GRAVITY_VECTOR);
-		}
-		projectiles.removeIf(x -> x.position().y() <= 0f);
 		projectiles.removeIf(x -> {
-			x.mutableVelocity().add(GRAVITY_VECTOR);
-			if (CollisionPacket.collideAndSlideIntersect(x.mutablePosition(), x.mutableVelocity())) {
+			//x.mutableVelocity().add(GRAVITY_VECTOR);
+			/*if (CollisionPacket.collideAndSlideIntersect(x.mutablePosition(), x.mutableVelocity())) {
 				terrain.generateExplosion(x.position(), 10f);
 				return true;
-			}
+			}*/
 			return false;
 		});
+		projectiles.removeIf(x -> x.position().y() <= 0f);
 
 		benchmarker.getLineGraph("debugData").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();
