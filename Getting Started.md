@@ -26,7 +26,7 @@ Red = Bug, Orange = On Hold, Blue = Large Task, Purple = Small Task
 
 Categories
 * New: Items that have not been seen yet.
-* Ideas: Items that have been seen (and color labeled)
+* Prioritized: Items that have been seen (and color labeled)
 * Selected for Dev: Items that are prioritized to be done in the near future
 * In Progress: Items that someone is working on
 * Completed: Items that are completed
