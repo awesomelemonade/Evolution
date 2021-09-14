@@ -8,16 +8,4 @@ public record CubeMapData(int width, int height, ByteBuffer[] data) {
 			throw new IllegalArgumentException("ByteBuffer array has to be 6 length");
 		}
 	}
-
-	public int width() {
-		return width;
-	}
-
-	public int height() {
-		return height;
-	}
-
-	public ByteBuffer[] data() {
-		return data;
-	}
 }

@@ -1,24 +1,21 @@
 package lemon.evolution.util;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.engine.glfw.GLFWInput;
+import lemon.engine.toolbox.Disposable;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class BasicControlActivator {
-	private static final Map<Integer, PlayerControl> keyboardHolds;
-	private static final Map<Integer, PlayerControl> keyboardToggles;
-	private static final Map<Integer, PlayerControl> mouseHolds;
+	private static final Map<Integer, PlayerControl> keyboardHolds = new HashMap<>();
+	private static final Map<Integer, PlayerControl> keyboardToggles = new HashMap<>();
+	private static final Map<Integer, PlayerControl> mouseHolds = new HashMap<>();
 
-	static {
-		keyboardHolds = new HashMap<>();
-		keyboardToggles = new HashMap<>();
-		mouseHolds = new HashMap<>();
-	}
-
-	public static void setup(GLFWInput input) {
-		input.keyEvent().add(event -> {
+	@CheckReturnValue
+	public static Disposable setup(GLFWInput input) {
+		var kHolds = input.keyEvent().add(event -> {
 			PlayerControl control = keyboardHolds.get(event.key());
 			if (control == null) {
 				return;
@@ -30,7 +27,7 @@ public class BasicControlActivator {
 				control.setActivated(false);
 			}
 		});
-		input.keyEvent().add(event -> {
+		var kToggles = input.keyEvent().add(event -> {
 			PlayerControl control = keyboardToggles.get(event.key());
 			if (control == null) {
 				return;
@@ -39,7 +36,7 @@ public class BasicControlActivator {
 				control.setActivated(!control.isActivated());
 			}
 		});
-		input.mouseButtonEvent().add(event -> {
+		var mHolds = input.mouseButtonEvent().add(event -> {
 			PlayerControl control = mouseHolds.get(event.button());
 			if (control == null) {
 				return;
@@ -51,6 +48,7 @@ public class BasicControlActivator {
 				control.setActivated(false);
 			}
 		});
+		return Disposable.of(kHolds, kToggles, mHolds);
 	}
 
 	public static void bindKeyboardHold(int key, PlayerControl control) {

@@ -5,15 +5,7 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL20;
 
-public class UniformVariable {
-	private final int id;
-	private final String name;
-
-	public UniformVariable(int id, String name) {
-		this.id = id;
-		this.name = name;
-	}
-
+public record UniformVariable(int id, String name) {
 	public void loadInt(int value) {
 		GL20.glUniform1i(id, value);
 	}
@@ -40,13 +32,5 @@ public class UniformVariable {
 
 	public void loadMatrix(Matrix matrix) {
 		GL20.glUniformMatrix4fv(id, false, matrix.toFloatBuffer());
-	}
-
-	public int getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
 	}
 }

@@ -1,6 +1,7 @@
 package lemon.engine.math;
 
 import java.nio.FloatBuffer;
+import java.util.StringTokenizer;
 import java.util.function.UnaryOperator;
 
 public interface Vector3D extends Vector<Vector3D> {
@@ -18,6 +19,12 @@ public interface Vector3D extends Vector<Vector3D> {
 
 	public static Vector3D ofCopy(Vector3D vector) {
 		return new Impl(vector);
+	}
+
+	public static Vector3D ofParsed(StringTokenizer tokenizer) {
+		return of(Float.parseFloat(tokenizer.nextToken()),
+				Float.parseFloat(tokenizer.nextToken()),
+				Float.parseFloat(tokenizer.nextToken()));
 	}
 
 	record Impl(float x, float y, float z) implements Vector3D {

@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class ShaderProgram implements Disposable {
-	private int id;
-	private Map<String, UniformVariable> uniformVariables;
+	private final int id;
+	private final Map<String, UniformVariable> uniformVariables = new HashMap<>();
 
 	public ShaderProgram(int[] indices, String[] names, Shader... shaders) {
 		if (indices.length != names.length) {
@@ -39,14 +39,10 @@ public class ShaderProgram implements Disposable {
 		if (GL20.glGetProgrami(id, GL20.GL_VALIDATE_STATUS) == GL11.GL_FALSE) {
 			throw new IllegalStateException("Shader Program Validation Fail: " + GL20.glGetProgramInfoLog(id));
 		}
-		uniformVariables = new HashMap<>();
 	}
 
 	public UniformVariable getUniformVariable(String name) {
-		if (!uniformVariables.containsKey(name)) {
-			uniformVariables.put(name, new UniformVariable(GL20.glGetUniformLocation(id, name), name));
-		}
-		return uniformVariables.get(name);
+		return uniformVariables.computeIfAbsent(name, n -> new UniformVariable(GL20.glGetUniformLocation(id, n), n));
 	}
 
 	public void loadInt(String name, int value) {

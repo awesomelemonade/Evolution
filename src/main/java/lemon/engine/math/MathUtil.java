@@ -17,6 +17,10 @@ public class MathUtil {
 		return a >= min && a <= max;
 	}
 
+	public static float pow(float base, float power) {
+		return (float) Math.pow(base, power);
+	}
+
 	public static float toRadians(float degrees) {
 		return (float) Math.toRadians(degrees);
 	}

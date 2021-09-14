@@ -30,4 +30,9 @@ public class Collision {
 	public Vector3D getIntersection() {
 		return intersection;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("Collision[t=%f, intersection=%s]", t, intersection);
+	}
 }

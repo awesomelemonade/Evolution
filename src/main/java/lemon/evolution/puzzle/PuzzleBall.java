@@ -5,7 +5,6 @@ import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.model.Model;
-import lemon.engine.model.ModelBuilder;
 import lemon.engine.model.SphereModelBuilder;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.Renderable;
@@ -13,9 +12,10 @@ import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Lazy;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms3D;
+import lemon.evolution.world.Entity;
 import org.lwjgl.opengl.GL11;
 
-public class PuzzleBall implements Renderable {
+public class PuzzleBall implements Entity, Renderable {
 	private static final int RADIUS = 1;
 	private static final int ITERATIONS = 5;
 	private static final Lazy<Drawable> sphere = new Lazy<>(() -> {
@@ -38,33 +38,17 @@ public class PuzzleBall implements Renderable {
 
 	@Override
 	public void render() {
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
-			try (var translationMatrix = MatrixPool.ofTranslation(position())) {
-				program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix);
-			}
-			sphere.get().draw();
-		});
-		GL11.glDisable(GL11.GL_DEPTH_TEST);
-		GL11.glDisable(GL11.GL_BLEND);
+		PuzzleBall.render(position());
 	}
 
+	@Override
 	public MutableVector3D mutablePosition() {
 		return position;
 	}
 
+	@Override
 	public MutableVector3D mutableVelocity() {
 		return velocity;
-	}
-
-	public Vector3D position() {
-		return position.asImmutable();
-	}
-
-	public Vector3D velocity() {
-		return velocity.asImmutable();
 	}
 
 	public static void render(Vector3D position) {
