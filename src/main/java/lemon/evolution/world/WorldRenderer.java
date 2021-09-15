@@ -17,4 +17,8 @@ public class WorldRenderer {
 		terrainRenderer.render(position);
 		world.renderables().forEach(Renderable::render);
 	}
+
+	public TerrainRenderer terrainRenderer() {
+		return terrainRenderer;
+	}
 }

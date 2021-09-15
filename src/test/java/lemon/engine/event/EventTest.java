@@ -1,5 +1,6 @@
 package lemon.engine.event;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,8 +25,26 @@ public class EventTest {
 		event.callListeners();
 		listener.assertFired(2);
 		// Test removing listeners
-		removable.run();
+		removable.dispose();
 		event.callListeners();
 		listener.assertFired(1);
+	}
+
+	static class TestListener implements Runnable {
+		private int count = 0;
+		public void reset() {
+			count = 0;
+		}
+		public void assertNeverFired() {
+			Assertions.assertEquals(0, count);
+			reset();
+		}
+		public void assertFired(int count) {
+			Assertions.assertEquals(count, this.count);
+			reset();
+		}
+		public void run() {
+			count++;
+		}
 	}
 }
