@@ -32,3 +32,29 @@ Categories
 * Completed: Items that are completed
 
 Feel free to add anything to the "New" category. Any item that is not "on hold" can be worked on if you are interested in it.
+
+Merging your work
+-----------------
+
+* Create a new branch
+  ```
+  git branch <name-of-branch>
+  git checkout <name-of-branch>
+  ```
+* Commit
+  ```
+  git add <file-path>
+  git add <file-path2>
+  ...
+  git commit -m 'Message'
+  ```
+  * Pro Tip: You can use `git add .` to add everything. Ensure that you added the files you want with `git status`
+* Push
+  ```
+  git push origin <name-of-branch>
+  ```
+* Create a pull request
+  * Go to https://github.com/awesomelemonade/Evolution/pulls
+  * New pull request -> Select <name-of-branch>
+  * Request Code Review
+  * Ensure no unit tests are failing (results should be shown on your PR page)
