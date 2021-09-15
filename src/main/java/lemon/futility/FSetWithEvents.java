@@ -5,6 +5,7 @@ import lemon.engine.event.EventWith;
 import lemon.engine.toolbox.Disposable;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -161,6 +162,6 @@ public record FSetWithEvents<T>(Set<T> backingSet, EventWith<T> onAdd, EventWith
 				set.remove(clazz.cast(item));
 			}
 		}));
-		return set;
+		return Collections.unmodifiableSet(set);
 	}
 }

@@ -34,7 +34,6 @@ import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
-import lemon.evolution.destructible.beta.TerrainRenderer;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.physics.beta.CollisionPacket;
 import lemon.evolution.pool.MatrixPool;
@@ -130,6 +129,8 @@ public enum Game implements Screen {
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 			pool.setRejectedExecutionHandler((runnable, executor) -> {});
 			pool2.setRejectedExecutionHandler((runnable, executor) -> {});
+			disposables.add(() -> pool.shutdown());
+			disposables.add(() -> pool2.shutdown());
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
 			var terrain = new Terrain(generator, pool2, Vector3D.of(5f, 5f, 5f));
 			collisionContext = (position, velocity, collision) -> {
@@ -164,9 +165,7 @@ public enum Game implements Screen {
 			player.mutablePosition().set(0f, 300f, 0f);
 
 			// Add loaders
-			Loading loading = new Loading(() -> {
-				window.switchScreen(Game.INSTANCE);
-			}, dragonLoader, new Loader() {
+			Loading loading = new Loading(window::popScreen, dragonLoader, new Loader() {
 				int generatorStartSize;
 				@Override
 				public void load() {
@@ -179,7 +178,7 @@ public enum Game implements Screen {
 					return 1f - ((float) generator.getQueueSize()) / ((float) generatorStartSize);
 				}
 			});
-			window.switchScreen(loading);
+			window.pushScreen(loading);
 			loaded = true;
 			return;
 		}
@@ -187,8 +186,6 @@ public enum Game implements Screen {
 
 		logger.log(Level.FINE, "Initializing");
 		this.window = window;
-		disposables.add(() -> pool.shutdown());
-		disposables.add(() -> pool2.shutdown());
 		GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		var windowWidth = window.getWidth();
 		var windowHeight = window.getHeight();

@@ -61,7 +61,7 @@ public enum Menu implements Screen {
 	}
 
 	public void start(Screen screen) {
-		window.switchScreen(screen);
+		window.popAndPushScreen(screen);
 	}
 
 	@Override

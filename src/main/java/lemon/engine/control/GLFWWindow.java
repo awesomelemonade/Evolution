@@ -16,23 +16,26 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class GLFWWindow implements Disposable {
+	private static final Logger logger = Logger.getLogger(GLFWWindow.class.getName());
 	private final GLFWInput glfwInput;
 	private final GLFWErrorCallback errorCallback;
-	private final TimeSync timeSync;
+	private final TimeSync timeSync = new TimeSync();
 	private final long window;
 	private final GLFWWindowSettings settings;
 	private final int width;
 	private final int height;
-	private final EventWith<Benchmark> onBenchmark;
-	private Screen currentScreen;
+	private final EventWith<Benchmark> onBenchmark = new EventWith<>();
+	private final Deque<Screen> screenStack = new ArrayDeque<>();
 
 	public GLFWWindow(GLFWWindowSettings settings, Screen initialScreen) {
-		this.timeSync = new TimeSync();
 		this.settings = settings;
-		onBenchmark = new EventWith<>();
 		GLFW.glfwSetErrorCallback(errorCallback = GLFWErrorCallback.createPrint(System.err));
 		if (!GLFW.glfwInit()) {
 			throw new IllegalStateException("GLFW not initialized");
@@ -55,8 +58,7 @@ public class GLFWWindow implements Disposable {
 		GLFW.glfwSwapInterval(0); // Disables v-sync
 		GLFW.glfwShowWindow(window);
 		GL.createCapabilities(); // GLContext.createFromCurrent();
-		currentScreen = initialScreen;
-		currentScreen.onLoad(this);
+		pushScreen(initialScreen);
 	}
 
 	public void run() {
@@ -68,7 +70,11 @@ public class GLFWWindow implements Disposable {
 				error = GL11.glGetError();
 			}
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-			// Event Driven
+			var currentScreen = screenStack.peek();
+			if (currentScreen == null) {
+				logger.log(Level.WARNING, "No screens in stack - exiting");
+				break;
+			}
 			long updateTime = System.nanoTime();
 			long delta = updateTime - deltaTime;
 			currentScreen.update(delta);
@@ -84,15 +90,32 @@ public class GLFWWindow implements Disposable {
 		}
 	}
 
-	public void switchScreen(Screen screen) {
-		currentScreen.dispose();
-		currentScreen = screen;
-		currentScreen.onLoad(this);
+	public void pushScreen(Screen screen) {
+		screenStack.push(screen);
+		screen.onLoad(this);
+	}
+
+	public void popScreen() {
+		screenStack.pop().dispose();
+		if (screenStack.isEmpty()) {
+			throw new IllegalStateException("Must have at least 1 screen in the stack");
+		}
+		screenStack.peek().onLoad(this);
+	}
+
+	public void popAndPushScreen(Screen screen) {
+		screenStack.pop().dispose();
+		screenStack.push(screen);
+		screen.onLoad(this);
 	}
 
 	@Override
 	public void dispose() {
-		currentScreen.dispose();
+		while (!screenStack.isEmpty()) {
+			var screen = screenStack.pop();
+			logger.log(Level.INFO, "Disposing " + screen.getClass().getName());
+			screen.dispose();
+		}
 		GLFW.glfwDestroyWindow(window);
 		Callbacks.glfwFreeCallbacks(window);
 		GLFW.glfwTerminate();

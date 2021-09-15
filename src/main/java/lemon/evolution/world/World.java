@@ -25,14 +25,6 @@ public class World implements Disposable {
 		this.collisionContext = collisionContext;
 	}
 
-
-	public void removeEntity(Entity entity) {
-		entities.remove(entity);
-		if (entity instanceof Renderable renderable) {
-			renderables.remove(renderable);
-		}
-	}
-
 	public void update(float dt) {
 		for (Entity entity : entities) {
 			entity.mutableVelocity().multiply(MathUtil.pow(AIR_RESISTANCE, dt));
