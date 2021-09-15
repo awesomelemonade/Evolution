@@ -5,9 +5,9 @@ Setting up the Development Environment
 --------------------------------------
 * Install IntelliJ (https://www.jetbrains.com/idea/)
 * Install Git (https://git-scm.com/downloads)
-* Setup SSH Key (https://support.atlassian.com/bitbucket-cloud/docs/set-up-an-ssh-key/)
-  * You should see a private key (id_rsa) and a public key (id_rsa.pub)
-  * Paste your public key here: https://github.com/settings/keys
+* Setup SSH Key (https://docs.github.com/en/enterprise-server@3.0/github/authenticating-to-github/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
+  * Alternatively, use https://support.atlassian.com/bitbucket-cloud/docs/set-up-an-ssh-key/
+    * Instead of Step 3, paste your public key here: https://github.com/settings/keys
 * Navigate to where your environment will be and clone the Evolution repo
   * `git clone git@github.com:awesomelemonade/Evolution.git`
 * Import project (File -> New -> Project from Existing Sources -> Select Evolution/pom.xml)
@@ -48,7 +48,7 @@ Merging your work
   ...
   git commit -m 'Message'
   ```
-  * Pro Tip: You can use `git add .` to add everything. Ensure that you added the files you want with `git status`
+  * Pro Tip: You can use `git add .` to add everything. Ensure that you added only the files you want with `git status`
 * Push
   ```
   git push origin <name-of-branch>
