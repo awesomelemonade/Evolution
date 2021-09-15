@@ -6,6 +6,7 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.evolution.util.CommonPrograms3D;
+import org.lwjgl.opengl.GL11;
 
 import java.util.Comparator;
 import java.util.function.BiConsumer;
@@ -30,12 +31,14 @@ public class TerrainRenderer {
 	}
 
 	public void render(Vector3D position) {
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		CommonPrograms3D.TERRAIN.getShaderProgram().use(program -> {
 			draw(position, (matrix, drawable) -> {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
 				drawable.draw();
 			});
 		});
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
 	}
 
 	public void draw(Vector3D position, BiConsumer<Matrix, Drawable> drawer) {

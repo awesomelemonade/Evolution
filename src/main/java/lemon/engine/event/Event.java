@@ -1,6 +1,7 @@
 package lemon.engine.event;
 
 import com.google.errorprone.annotations.CheckReturnValue;
+import lemon.engine.toolbox.Disposable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,7 +15,7 @@ public class Event {
 	 * @return Remover
 	 */
 	@CheckReturnValue
-	public Runnable add(Runnable listener) {
+	public Disposable add(Runnable listener) {
 		Object key = new Object();
 		cachedListeners = null;
 		listeners.put(key, listener);
