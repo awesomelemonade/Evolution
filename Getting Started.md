@@ -8,9 +8,13 @@ Setting up the Development Environment
 * Setup SSH Key (https://docs.github.com/en/enterprise-server@3.0/github/authenticating-to-github/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
   * Alternatively, use https://support.atlassian.com/bitbucket-cloud/docs/set-up-an-ssh-key/
     * Instead of Step 3, paste your public key here: https://github.com/settings/keys
+* Install Java 16 JDK (or higher)
+  * https://www.oracle.com/java/technologies/downloads/#java16
 * Navigate to where your environment will be and clone the Evolution repo
   * `git clone git@github.com:awesomelemonade/Evolution.git`
 * Import project (File -> New -> Project from Existing Sources -> Select Evolution/pom.xml)
+  * In IntelliJ, set the Project SDK to the downloaded Java 16 JDK
+    * File -> Project Structure -> Project Settings -> Project -> Project SDK
 * Run project
   * Open up `src/main/java/lemon/evolution/Evolution.java` in IntelliJ
   * Click on the green arrow to the left of the main method -> Run 'Evolution.main()'
@@ -18,7 +22,9 @@ Setting up the Development Environment
   * Open up IntelliJ's project explorer
   * Right click src/test/java -> Run 'All Tests'
     * ![RunAllTests](doc-images/Evolution-RunAllTests.PNG)
-
+* To update the code from GitHub (also known as remote)
+  * `cd path/to/Evolution/`
+  * `git pull origin master`
 
 Trello Guide
 ------------
