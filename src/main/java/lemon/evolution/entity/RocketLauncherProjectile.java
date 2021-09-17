@@ -34,6 +34,14 @@ public class RocketLauncherProjectile implements Entity, Renderable {
 			boolean collided = world.collisionContext().collideAndCheck(position, velocity, Vector3D.ZERO, dt);
 			if (collided) {
 				world.terrain().generateExplosion(position.asImmutable(), 8f);
+				world.entities().forEach(entity -> {
+					float strength = Math.min(10f, 50f / entity.position().distanceSquared(position.asImmutable()));
+					var direction = entity.position().subtract(position.asImmutable());
+					while (direction.equals(Vector3D.ZERO)) {
+						direction = Vector3D.of((float) (Math.random() - 0.5f), (float) (Math.random() - 0.5f), (float) (Math.random() - 0.5f));
+					}
+					entity.mutableVelocity().add(direction.scaleToLength(strength));
+				});
 			}
 			return collided;
 		};
@@ -43,7 +51,7 @@ public class RocketLauncherProjectile implements Entity, Renderable {
 	public void render() {
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
-			var sunlightDirection = Vector3D.of(0f, -1f, 0f);
+			var sunlightDirection = Vector3D.of(0f, 1f, 0f);
 			try (var translationMatrix = MatrixPool.ofTranslation(position.asImmutable());
 				 var rotationMatrix = MatrixPool.ofLookAt(velocity.asImmutable());
 				 var adjustedMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
