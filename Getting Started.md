@@ -18,20 +18,24 @@ Setting up the Development Environment
 * Run project
   * Open up `src/main/java/lemon/evolution/Evolution.java` in IntelliJ
   * Click on the green arrow to the left of the main method -> Run 'Evolution.main()'
+    * ![RunMain](doc-images/Evolution/RunMain.PNG]
   * If you run into any library errors, try the following
     * Restart IntelliJ
-	* Refresh Maven (View -> Tool Windows -> Maven)
-	  * Click on "Reload All Maven Projects"
-	    * ![ReloadMaven](doc-images/Evolution-ReloadMavenProjects.PNG)
-	* Add the following line depending on your OS after <lwjgl.version> in pom.xml
-	  * Windows: `<lwjgl.natives>natives-windows</lwjgl.natives>`
-	  * Mac: `<lwjgl.natives>natives-macos</lwjgl.natives>`
-	  * Linux: `<lwjgl.natives>natives-linux</lwjgl.natives>`
-	  * Refresh Maven (See the previous item)
+    * Refresh Maven (View -> Tool Windows -> Maven)
+      * Click on "Reload All Maven Projects"
+        * ![ReloadMaven](doc-images/Evolution-ReloadMavenProjects.PNG)
+    * Add the following line (choose the one corresponding to your OS) after the `<lwjgl.version>` line in pom.xml
+      * Windows: `<lwjgl.natives>natives-windows</lwjgl.natives>`
+      * Mac: `<lwjgl.natives>natives-macos</lwjgl.natives>`
+      * Linux: `<lwjgl.natives>natives-linux</lwjgl.natives>`
+      * Refresh Maven (See the previous item)
+  * A successful run should pop up the menu screen (which is currently a black screen with three white rectangles)
 * Run tests
   * Open up IntelliJ's project explorer
   * Right click src/test/java -> Run 'All Tests'
     * ![RunAllTests](doc-images/Evolution-RunAllTests.PNG)
+  * A successful run should look something like this
+    * ![SuccessfulTests](doc-images/Evolution-SuccessfulTests.PNG]
 * To update the code from GitHub (also known as remote)
   * `cd path/to/Evolution/`
   * `git pull origin master`
