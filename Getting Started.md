@@ -66,7 +66,7 @@ Merging your work
   git add <file-path>
   git add <file-path2>
   ...
-  git commit -m 'Message'
+  git commit -m '<message>'
   ```
   * Pro Tip: You can use `git add .` to add everything. Ensure that you added only the files you want with `git status`
 * Push
