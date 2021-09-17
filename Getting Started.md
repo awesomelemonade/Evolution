@@ -18,7 +18,7 @@ Setting up the Development Environment
 * Run project
   * Open up `src/main/java/lemon/evolution/Evolution.java` in IntelliJ
   * Click on the green arrow to the left of the main method -> Run 'Evolution.main()'
-    * ![RunMain](doc-images/Evolution/RunMain.PNG]
+    * ![RunMain](doc-images/Evolution/RunMain.PNG)
   * If you run into any library errors, try the following
     * Restart IntelliJ
     * Refresh Maven (View -> Tool Windows -> Maven)
@@ -35,7 +35,7 @@ Setting up the Development Environment
   * Right click src/test/java -> Run 'All Tests'
     * ![RunAllTests](doc-images/Evolution-RunAllTests.PNG)
   * A successful run should look something like this
-    * ![SuccessfulTests](doc-images/Evolution-SuccessfulTests.PNG]
+    * ![SuccessfulTests](doc-images/Evolution-SuccessfulTests.PNG)
 * To update the code from GitHub (also known as remote)
   * `cd path/to/Evolution/`
   * `git pull origin master`
