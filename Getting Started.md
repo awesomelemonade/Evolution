@@ -18,7 +18,7 @@ Setting up the Development Environment
 * Run project
   * Open up `src/main/java/lemon/evolution/Evolution.java` in IntelliJ
   * Click on the green arrow to the left of the main method -> Run 'Evolution.main()'
-    * ![RunMain](doc-images/Evolution/RunMain.PNG)
+    * ![RunMain](doc-images/Evolution-RunMain.PNG)
   * If you run into any library errors, try the following
     * Restart IntelliJ
     * Refresh Maven (View -> Tool Windows -> Maven)
