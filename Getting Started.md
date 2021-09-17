@@ -18,6 +18,16 @@ Setting up the Development Environment
 * Run project
   * Open up `src/main/java/lemon/evolution/Evolution.java` in IntelliJ
   * Click on the green arrow to the left of the main method -> Run 'Evolution.main()'
+  * If you run into any library errors, try the following
+    * Restart IntelliJ
+	* Refresh Maven (View -> Tool Windows -> Maven)
+	  * Click on "Reload All Maven Projects"
+	    * ![ReloadMaven](doc-images/Evolution-ReloadMavenProjects.PNG)
+	* Add the following line depending on your OS after <lwjgl.version> in pom.xml
+	  * Windows: `<lwjgl.natives>natives-windows</lwjgl.natives>`
+	  * Mac: `<lwjgl.natives>natives-macos</lwjgl.natives>`
+	  * Linux: `<lwjgl.natives>natives-linux</lwjgl.natives>`
+	  * Refresh Maven (See the previous item)
 * Run tests
   * Open up IntelliJ's project explorer
   * Right click src/test/java -> Run 'All Tests'
