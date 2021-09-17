@@ -1,5 +1,6 @@
 package lemon.evolution;
 
+import lemon.engine.TaskQueue;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
@@ -16,6 +17,7 @@ import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Projection;
+import lemon.engine.math.Vector;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.model.LineGraph;
@@ -61,6 +63,7 @@ import org.lwjgl.opengl.GL32;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -69,6 +72,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public enum Game implements Screen {
 	INSTANCE;
@@ -88,16 +92,14 @@ public enum Game implements Screen {
 	private World world;
 	private WorldRenderer worldRenderer;
 
-	private ObjLoader dragonLoader;
 	private Drawable dragonModel;
 	private Vector3D lightPosition;
 
-	private ObjLoader rocketLauncherUnloadedLoader;
 	private Drawable rocketLauncherUnloadedModel;
-	private ObjLoader rocketLauncherLoadedLoader;
 	private Drawable rocketLauncherLoadedModel;
-	private ObjLoader rocketLauncherProjectileLoader;
 	private Drawable rocketLauncherProjectileModel;
+
+	private TaskQueue postLoadTasks = new TaskQueue();
 
 	public List<Vector3D> debug;
 
@@ -167,10 +169,14 @@ public enum Game implements Screen {
 			world = disposables.add(new World(terrain, collisionContext));
 			worldRenderer = new WorldRenderer(world);
 
-			dragonLoader = new ObjLoader("/res/dragon.obj");
-			rocketLauncherUnloadedLoader = new ObjLoader("/res/rocket-launcher-unloaded.obj");
-			rocketLauncherLoadedLoader = new ObjLoader("/res/rocket-launcher-loaded.obj");
-			rocketLauncherProjectileLoader = new ObjLoader("/res/rocket-launcher-projectile.obj");
+			var dragonLoader = new ObjLoader("/res/dragon.obj", postLoadTasks::add,
+					objLoader -> dragonModel = objLoader.toIndexedDrawable());
+			var rocketLauncherUnloadedLoader = new ObjLoader("/res/rocket-launcher-unloaded.obj", postLoadTasks::add,
+					objLoader -> rocketLauncherUnloadedModel = objLoader.toIndexedDrawable());
+			var rocketLauncherLoadedLoader = new ObjLoader("/res/rocket-launcher-loaded.obj", postLoadTasks::add,
+					objLoader -> rocketLauncherLoadedModel = objLoader.toIndexedDrawable());
+			var rocketLauncherProjectileLoader = new ObjLoader("/res/rocket-launcher-projectile.obj", postLoadTasks::add,
+					objLoader -> rocketLauncherProjectileModel = objLoader.toIndexedDrawable());
 
 			player = new Player(new Projection(MathUtil.toRadians(60f),
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f));
@@ -200,6 +206,7 @@ public enum Game implements Screen {
 
 
 		logger.log(Level.FINE, "Initializing");
+		postLoadTasks.run();
 		this.window = window;
 		GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		var windowWidth = window.getWidth();
@@ -273,10 +280,6 @@ public enum Game implements Screen {
 		histogram.print();
 		System.out.println("=====================");
 
-		dragonModel = dragonLoader.toIndexedDrawable();
-		rocketLauncherUnloadedModel = rocketLauncherUnloadedLoader.toIndexedDrawable();
-		rocketLauncherLoadedModel = rocketLauncherLoadedLoader.toIndexedDrawable();
-		rocketLauncherProjectileModel = rocketLauncherProjectileLoader.toIndexedDrawable();
 		lightPosition = player.position();
 
 		disposables.add(window.input().keyEvent().add(event -> {

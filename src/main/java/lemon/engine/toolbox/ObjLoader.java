@@ -17,7 +17,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class ObjLoader implements Loader {
 	private static final ImmutableMap<String, BiConsumer<ObjLoader, String[]>> processors = ImmutableMap.of(
@@ -58,13 +60,21 @@ public class ObjLoader implements Loader {
 	private final List<Vector3D> modelNormals = new ArrayList<>();
 	private final List<Integer> modelIndices = new ArrayList<>();
 	private final Map<Integer, Map<Integer, Integer>> cache = new HashMap<>();
+	private final Consumer<ObjLoader> postLoadCallback;
 	private final Disposable disposables = Disposable.of(
 			parsedVertices::clear, modelVertices::clear,
 			parsedNormals::clear, modelNormals::clear,
 			modelIndices::clear, cache::clear
 	);
 
-	public ObjLoader(String file) {
+	public ObjLoader(String file, Executor executor, Consumer<ObjLoader> postLoadCallback) {
+		this(file, objLoader -> executor.execute(() -> {
+			postLoadCallback.accept(objLoader);
+			objLoader.disposables.dispose();
+		}));
+	}
+
+	private ObjLoader(String file, Consumer<ObjLoader> postLoadCallback) {
 		this.reader = new BufferedReader(new InputStreamReader(
 				ObjLoader.class.getResourceAsStream(file)));
 		try {
@@ -79,6 +89,7 @@ public class ObjLoader implements Loader {
 			ex.printStackTrace();
 			throw new IllegalStateException(ex);
 		}
+		this.postLoadCallback = postLoadCallback;
 	}
 
 	// Let's just skip the model phase
@@ -107,16 +118,12 @@ public class ObjLoader implements Loader {
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
+			postLoadCallback.accept(this);
 		})).start();
 	}
 
 	@Override
 	public float getProgress() {
 		return ((float) numLinesRead) / ((float) totalLines);
-	}
-
-	@Override
-	public void dispose() {
-		disposables.dispose();
 	}
 }

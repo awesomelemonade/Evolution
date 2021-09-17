@@ -28,9 +28,10 @@ public interface Vector3D extends Vector<Vector3D> {
 		public Impl(Vector3D vector) {
 			this(vector.x(), vector.y(), vector.z());
 		}
+
 		@Override
 		public String toString() {
-			return String.format("Vector3D[x=%f, y=%f, z=%f", x, y, z);
+			return Vector3D.toString(this);
 		}
 	}
 
@@ -121,5 +122,9 @@ public interface Vector3D extends Vector<Vector3D> {
 
 	public default Vector2D toXZVector() {
 		return Vector2D.of(x(), z());
+	}
+
+	public static String toString(Vector3D vector) {
+		return String.format("Vector3D[x=%f, y=%f, z=%f]", vector.x(), vector.y(), vector.z());
 	}
 }

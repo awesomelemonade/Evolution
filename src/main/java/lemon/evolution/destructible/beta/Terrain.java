@@ -1,5 +1,6 @@
 package lemon.evolution.destructible.beta;
 
+import lemon.engine.TaskQueue;
 import lemon.engine.draw.Drawable;
 import lemon.engine.function.AbsoluteIntValue;
 import lemon.engine.function.SzudzikIntPair;
@@ -19,21 +20,17 @@ public class Terrain {
 	private final TerrainGenerator generator;
 	private final Executor poolExecutor;
 	private final Vector3D scalar;
-	private final ConcurrentLinkedQueue<Runnable> updaters;
+	private final TaskQueue updaters = new TaskQueue();
 
 	public Terrain(TerrainGenerator generator, Executor poolExecutor, Vector3D scalar) {
 		this.chunks = new ConcurrentHashMap<>();
 		this.generator = generator;
 		this.poolExecutor = poolExecutor;
 		this.scalar = scalar;
-		this.updaters = new ConcurrentLinkedQueue<>();
 	}
 
 	public void flushForRendering() {
-		Runnable current;
-		while ((current = updaters.poll()) != null) {
-			current.run();
-		}
+		updaters.run();
 	}
 
 	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {

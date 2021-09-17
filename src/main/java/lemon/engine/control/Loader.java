@@ -1,8 +1,6 @@
 package lemon.engine.control;
 
-import lemon.engine.toolbox.Disposable;
-
-public interface Loader extends Disposable {
+public interface Loader {
 	public void load();
 
 	public float getProgress();
@@ -13,9 +11,5 @@ public interface Loader extends Disposable {
 
 	public default String getDescription() {
 		return this.toString();
-	}
-
-	public default void dispose() {
-		// Do Nothing
 	}
 }

@@ -179,8 +179,10 @@ public class CollisionPacket {
 			var mu = 1f;
 			var velocityLength = velocity.length();
 			var frictionForceMagnitude = Math.min(mu * normalForceMagnitude * unhandledDt, velocityLength);
-			var frictionForce = velocity.scaleToLength(frictionForceMagnitude);
-			mutableVelocity.subtract(frictionForce);
+			if (frictionForceMagnitude > 0) {
+				var frictionForce = velocity.scaleToLength(frictionForceMagnitude);
+				mutableVelocity.subtract(frictionForce);
+			}
 			force = force.subtract(negSlidePlaneNormal.multiply(normalForceMagnitude));
 		}
 		// recursive
