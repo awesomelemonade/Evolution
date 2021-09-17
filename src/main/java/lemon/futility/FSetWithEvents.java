@@ -12,9 +12,30 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public record FSetWithEvents<T>(Set<T> backingSet, EventWith<T> onAdd, EventWith<T> onRemove) implements Set<T> {
+public class FSetWithEvents<T> implements Set<T> {
+	private final Set<T> backingSet;
+	private final EventWith<T> onAdd;
+	private final EventWith<T> onRemove;
 	public FSetWithEvents() {
 		this(new HashSet<>(), new EventWith<>(), new EventWith<>());
+	}
+
+	public FSetWithEvents(Set<T> backingSet, EventWith<T> onAdd, EventWith<T> onRemove) {
+		this.backingSet = backingSet;
+		this.onAdd = onAdd;
+		this.onRemove = onRemove;
+	}
+
+	public Set<T> backingSet() {
+		return Collections.unmodifiableSet(backingSet);
+	}
+
+	public EventWith<T> onAdd() {
+		return onAdd;
+	}
+
+	public EventWith<T> onRemove() {
+		return onRemove;
 	}
 
 	@Override

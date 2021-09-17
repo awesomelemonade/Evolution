@@ -1,4 +1,4 @@
-package lemon.evolution.puzzle;
+package lemon.evolution.entity;
 
 import lemon.engine.draw.Drawable;
 import lemon.engine.draw.IndexedDrawable;

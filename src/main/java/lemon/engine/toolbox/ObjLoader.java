@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,58 +20,53 @@ import java.util.StringTokenizer;
 import java.util.function.BiConsumer;
 
 public class ObjLoader implements Loader {
-	private static final ImmutableMap<String, BiConsumer<ObjLoader, StringTokenizer>> processors = ImmutableMap.of(
-			"v", (objLoader, tokenizer) -> objLoader.vertices.add(Vector3D.ofParsed(tokenizer)),
-			"vn", (objLoader, tokenizer) -> objLoader.normals.add(Vector3D.ofParsed(tokenizer)),
-			"f", (objLoader, tokenizer) -> {
+	private static final ImmutableMap<String, BiConsumer<ObjLoader, String[]>> processors = ImmutableMap.of(
+			"v", (objLoader, split) -> objLoader.parsedVertices.add(Vector3D.ofParsed(split[1], split[2], split[3])),
+			"vn", (objLoader, split) -> objLoader.parsedNormals.add(Vector3D.ofParsed(split[1], split[2], split[3])),
+			"vt", (objLoader, split) -> {}, // ignored
+			"f", (objLoader, split) -> {
 				for (int i = 0; i < 3; i++) { // triangles
-					StringTokenizer tokenizer2 = new StringTokenizer(tokenizer.nextToken(), "/");
-					int vertexIndex = Integer.parseInt(tokenizer2.nextToken());
-					int textureCoordIndex = Integer.parseInt(tokenizer2.nextToken()); // unused
-					int normalIndex = Integer.parseInt(tokenizer2.nextToken());
-					if (vertexIndex == normalIndex) {
-						objLoader.indices.add(vertexIndex - 1); // offset by 1
+					StringTokenizer tokenizer2 = new StringTokenizer(split[i + 1], "/");
+					int vertexIndex = Integer.parseInt(tokenizer2.nextToken()) - 1;
+					int textureCoordIndex = Integer.parseInt(tokenizer2.nextToken()) - 1; // unused
+					int normalIndex = Integer.parseInt(tokenizer2.nextToken()) - 1;
+					var a = vertexIndex;
+					var b = normalIndex;
+					if (objLoader.cache.containsKey(a) && objLoader.cache.get(a).containsKey(b)) {
+						objLoader.modelIndices.add(objLoader.cache.get(a).get(b));
 					} else {
-						if (objLoader.vertices.size() == objLoader.normals.size()) {
-							int a = vertexIndex - 1;
-							int b = normalIndex - 1;
-
-							if (objLoader.cache.containsKey(a) && objLoader.cache.get(a).containsKey(b)) {
-								objLoader.indices.add(objLoader.cache.get(a).get(b));
-							} else {
-								objLoader.cache.computeIfAbsent(a, key -> new HashMap<>());
-								int index = objLoader.vertices.size();
-								objLoader.cache.get(a).put(b, index);
-								objLoader.indices.add(index);
-								objLoader.vertices.add(objLoader.vertices.get(a));
-								objLoader.normals.add(objLoader.normals.get(b));
-							}
-						} else {
-							throw new IllegalStateException(String.format("Unable to add face: %s", tokenizer.toString()));
-						}
+						objLoader.cache.computeIfAbsent(a, key -> new HashMap<>());
+						int index = objLoader.modelVertices.size();
+						objLoader.cache.get(a).put(b, index);
+						objLoader.modelIndices.add(index);
+						objLoader.modelVertices.add(objLoader.parsedVertices.get(a));
+						objLoader.modelNormals.add(objLoader.parsedNormals.get(b));
 					}
 				}
 			}
 	);
-	private static final BiConsumer<ObjLoader, StringTokenizer> UNKNOWN_PROCESSOR = (loader, tokenizer) -> {
-		System.out.println("Unknown Key: " + tokenizer.nextToken(""));
+	private static final BiConsumer<ObjLoader, String[]> UNKNOWN_PROCESSOR = (loader, split) -> {
+		System.out.println("Unknown Key: " + Arrays.toString(split));
 	};
 
 	private int numLinesRead;
 	private int totalLines;
-	private BufferedReader reader;
-	private List<Vector3D> vertices;
-	private List<Vector3D> normals;
-	private List<Integer> indices;
-	private Map<Integer, Map<Integer, Integer>> cache;
+	private final BufferedReader reader;
+	private final List<Vector3D> parsedVertices = new ArrayList<>();
+	private final List<Vector3D> modelVertices = new ArrayList<>();
+	private final List<Vector3D> parsedNormals = new ArrayList<>();
+	private final List<Vector3D> modelNormals = new ArrayList<>();
+	private final List<Integer> modelIndices = new ArrayList<>();
+	private final Map<Integer, Map<Integer, Integer>> cache = new HashMap<>();
+	private final Disposable disposables = Disposable.of(
+			parsedVertices::clear, modelVertices::clear,
+			parsedNormals::clear, modelNormals::clear,
+			modelIndices::clear, cache::clear
+	);
 
 	public ObjLoader(String file) {
 		this.reader = new BufferedReader(new InputStreamReader(
 				ObjLoader.class.getResourceAsStream(file)));
-		this.vertices = new ArrayList<>();
-		this.normals = new ArrayList<>();
-		this.indices = new ArrayList<>();
-		this.cache = new HashMap<>();
 		try {
 			BufferedReader lineCountReader = new BufferedReader(new InputStreamReader(
 					ObjLoader.class.getResourceAsStream(file)));
@@ -88,11 +84,11 @@ public class ObjLoader implements Loader {
 	// Let's just skip the model phase
 	public IndexedDrawable toIndexedDrawable() {
 		return new IndexedDrawable(
-				indices.stream().mapToInt(i -> i).toArray(),
+				modelIndices.stream().mapToInt(i -> i).toArray(),
 				new FloatData[][] {
-						vertices.toArray(Vector3D.EMPTY_ARRAY),
-						Color.randomOpaque(vertices.size()),
-						normals.toArray(Vector3D.EMPTY_ARRAY)
+						modelVertices.toArray(Vector3D.EMPTY_ARRAY),
+						Color.randomOpaque(modelVertices.size()),
+						modelNormals.toArray(Vector3D.EMPTY_ARRAY)
 				}, GL11.GL_TRIANGLES);
 	}
 
@@ -102,9 +98,9 @@ public class ObjLoader implements Loader {
 			try {
 				String line;
 				while ((line = reader.readLine()) != null) {
-					StringTokenizer tokenizer = new StringTokenizer(line);
-					String key = tokenizer.nextToken();
-					processors.getOrDefault(key, UNKNOWN_PROCESSOR).accept(this, tokenizer);
+					String[] split = line.split(" ");
+					String key = split[0];
+					processors.getOrDefault(key, UNKNOWN_PROCESSOR).accept(this, split);
 					numLinesRead++;
 				}
 				numLinesRead = totalLines;
@@ -117,5 +113,10 @@ public class ObjLoader implements Loader {
 	@Override
 	public float getProgress() {
 		return ((float) numLinesRead) / ((float) totalLines);
+	}
+
+	@Override
+	public void dispose() {
+		disposables.dispose();
 	}
 }

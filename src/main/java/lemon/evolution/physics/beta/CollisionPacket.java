@@ -163,14 +163,14 @@ public class CollisionPacket {
 			}
 			return;
 		}
-		var unhandledDt = (1f - collision.getT()) * remainingDt;
 		var usedVelocity = remainingVelocity.multiply(collision.getT());
-		var negSlidePlaneNormal = collision.getIntersection().subtract(position.add(usedVelocity)).normalize();
 		// update position
 		float length = usedVelocity.length() - BUFFER_DISTANCE;
 		if (length > 0) {
 			mutablePosition.add(usedVelocity.scaleToLength(length));
 		}
+		var unhandledDt = (1f - collision.getT()) * remainingDt;
+		var negSlidePlaneNormal = collision.getIntersection().subtract(position.add(usedVelocity)).normalize();
 		// update velocity
 		mutableVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity)));
 		// friction
@@ -185,5 +185,32 @@ public class CollisionPacket {
 		}
 		// recursive
 		collideWithWorld(collisionChecker, mutablePosition, mutableVelocity, force, unhandledDt, collisionRecursionDepth + 1, maxRecursionDepth);
+	}
+
+	public static boolean collideAndCheck(BiFunction<Vector3D, Vector3D, Collision> collisionChecker,
+									  MutableVector3D mutablePosition, MutableVector3D mutableVelocity, Vector3D force, float dt) {
+		force = force.multiply(dt);
+		mutableVelocity.add(force);
+		var position = mutablePosition.asImmutable();
+		var velocity = mutableVelocity.asImmutable();
+		var remainingVelocity = velocity.multiply(dt);
+		if (remainingVelocity.lengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {
+			return false;
+		}
+		var collision = collisionChecker.apply(position, remainingVelocity);
+		if (collision.getT() >= 1f) {
+			float length = remainingVelocity.length() - BUFFER_DISTANCE;
+			if (length > 0) {
+				mutablePosition.add(remainingVelocity.scaleToLength(length));
+			}
+			return false;
+		} else {
+			var usedVelocity = remainingVelocity.multiply(collision.getT());
+			float length = usedVelocity.length() - BUFFER_DISTANCE;
+			if (length > 0) {
+				mutablePosition.add(usedVelocity.scaleToLength(length));
+			}
+			return true;
+		}
 	}
 }

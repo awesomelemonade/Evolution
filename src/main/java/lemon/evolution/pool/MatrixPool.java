@@ -43,6 +43,10 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 		return MatrixPool.ofScalar(Vector3D.of(x, y, z));
 	}
 
+	public static PooledMatrix ofRotation(Vector3D vector) {
+		return MatrixPool.of(matrix -> MathUtil.getRotation(matrix, vector));
+	}
+
 	public static PooledMatrix ofRotationX(float x) {
 		return MatrixPool.of(matrix -> MathUtil.getRotationX(matrix, x));
 	}
@@ -53,6 +57,14 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 
 	public static PooledMatrix ofRotationZ(float z) {
 		return MatrixPool.of(matrix -> MathUtil.getRotationZ(matrix, z));
+	}
+
+	public static PooledMatrix ofLookAt(Vector3D direction) {
+		return ofLookAt(direction, Vector3D.of(0f, 1f, 0f));
+	}
+
+	public static PooledMatrix ofLookAt(Vector3D direction, Vector3D up) {
+		return MatrixPool.of(matrix -> MathUtil.lookAt(matrix, direction, up));
 	}
 
 	public static class PooledMatrix extends Matrix implements AutoCloseable {

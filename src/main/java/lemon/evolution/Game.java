@@ -34,10 +34,11 @@ import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
+import lemon.evolution.entity.RocketLauncherProjectile;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.physics.beta.CollisionPacket;
 import lemon.evolution.pool.MatrixPool;
-import lemon.evolution.puzzle.PuzzleBall;
+import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.ui.beta.UIScreen;
@@ -46,6 +47,7 @@ import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.util.PlayerControl;
 import lemon.evolution.util.ShaderProgramHolder;
+import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
 import lemon.evolution.world.WorldRenderer;
 import org.lwjgl.BufferUtils;
@@ -89,6 +91,13 @@ public enum Game implements Screen {
 	private ObjLoader dragonLoader;
 	private Drawable dragonModel;
 	private Vector3D lightPosition;
+
+	private ObjLoader rocketLauncherUnloadedLoader;
+	private Drawable rocketLauncherUnloadedModel;
+	private ObjLoader rocketLauncherLoadedLoader;
+	private Drawable rocketLauncherLoadedModel;
+	private ObjLoader rocketLauncherProjectileLoader;
+	private Drawable rocketLauncherProjectileModel;
 
 	public List<Vector3D> debug;
 
@@ -159,13 +168,19 @@ public enum Game implements Screen {
 			worldRenderer = new WorldRenderer(world);
 
 			dragonLoader = new ObjLoader("/res/dragon.obj");
+			rocketLauncherUnloadedLoader = new ObjLoader("/res/rocket-launcher-unloaded.obj");
+			rocketLauncherLoadedLoader = new ObjLoader("/res/rocket-launcher-loaded.obj");
+			rocketLauncherProjectileLoader = new ObjLoader("/res/rocket-launcher-projectile.obj");
 
 			player = new Player(new Projection(MathUtil.toRadians(60f),
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f));
 			player.mutablePosition().set(0f, 300f, 0f);
 
 			// Add loaders
-			Loading loading = new Loading(window::popScreen, dragonLoader, new Loader() {
+			Loading loading = new Loading(window::popScreen,
+					dragonLoader, rocketLauncherUnloadedLoader,
+					rocketLauncherLoadedLoader, rocketLauncherProjectileLoader,
+					new Loader() {
 				int generatorStartSize;
 				@Override
 				public void load() {
@@ -253,11 +268,15 @@ public enum Game implements Screen {
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_Y, REMOVE_TERRAIN);
 
 		debug = new ArrayList<>();
+		debug.add(Vector3D.ZERO);
 		System.out.println("=====[Histogram]=====");
 		histogram.print();
 		System.out.println("=====================");
 
 		dragonModel = dragonLoader.toIndexedDrawable();
+		rocketLauncherUnloadedModel = rocketLauncherUnloadedLoader.toIndexedDrawable();
+		rocketLauncherLoadedModel = rocketLauncherLoadedLoader.toIndexedDrawable();
+		rocketLauncherProjectileModel = rocketLauncherProjectileLoader.toIndexedDrawable();
 		lightPosition = player.position();
 
 		disposables.add(window.input().keyEvent().add(event -> {
@@ -266,7 +285,7 @@ public enum Game implements Screen {
 					world.entities().add(new PuzzleBall(player.position(), player.getVectorDirection().multiply(10f)));
 				}
 				if (event.key() == GLFW.GLFW_KEY_C) {
-					world.entities().removeIf(x -> x instanceof PuzzleBall);
+					world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof RocketLauncherProjectile);
 					debug.clear();
 				}
 				if (event.key() == GLFW.GLFW_KEY_H) {
@@ -276,6 +295,9 @@ public enum Game implements Screen {
 							world.entities().add(new PuzzleBall(Vector3D.of(i, 100, j), Vector3D.ZERO));
 						}
 					}
+				}
+				if (event.key() == GLFW.GLFW_KEY_SPACE) {
+					player.mutableVelocity().addY(2f);
 				}
 			}
 		}));
@@ -288,9 +310,11 @@ public enum Game implements Screen {
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(window.input().mouseButtonEvent().add(event -> {
-			if (event.action() == GLFW.GLFW_RELEASE) {
-				if (event.button() == GLFW.GLFW_MOUSE_BUTTON_2) {
-					generateExplosionAtCrosshair();
+			if (event.action() == GLFW.GLFW_PRESS) {
+				if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
+					world.entities().add(new RocketLauncherProjectile(
+							new Location(world, player.position().add(player.getVectorDirection().multiply(0.99f))),
+							player.getVectorDirection().multiply(2f), rocketLauncherProjectileModel));
 				}
 			}
 		}));
@@ -316,7 +340,7 @@ public enum Game implements Screen {
 	private float depthDistance = 0;
 
 	private static float playerSpeed = 0f;
-	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.05f, 0);
+	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0f, -0.05f, 0f);
 
 	@Override
 	public void update(long deltaTime) {
@@ -488,6 +512,25 @@ public enum Game implements Screen {
 					program.loadVector("viewPos", player.position());
 				}
 				dragonModel.draw();
+			});
+			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
+				var sunlightDirection = lightPosition.normalize();
+				program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+				program.loadVector("sunlightDirection", sunlightDirection);
+				program.loadVector("viewPos", player.position());
+				rocketLauncherProjectileModel.draw();
+			});
+			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
+				try (var translationMatrix = MatrixPool.ofTranslation(Vector3D.of(3.5f, -4f, 1f));
+					 var rotationMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
+					var sunlightDirection = Vector3D.of(-3.5f, 4f, -1f).normalize();
+					program.loadMatrix(MatrixType.MODEL_MATRIX, (rotationMatrix.multiply(translationMatrix)));
+					program.loadVector("sunlightDirection", sunlightDirection);
+					program.loadVector("viewPos", player.position());
+					program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+				}
+				rocketLauncherLoadedModel.draw();
+				//rocketLauncherUnloadedModel.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
 			FloatBuffer depthPixelBuffer = BufferUtils.createFloatBuffer(1);

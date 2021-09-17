@@ -26,10 +26,20 @@ public class World implements Disposable {
 	}
 
 	public void update(float dt) {
-		for (Entity entity : entities) {
-			entity.mutableVelocity().multiply(MathUtil.pow(AIR_RESISTANCE, dt));
-			collisionContext.collideAndSlide(entity.mutablePosition(), entity.mutableVelocity(), GRAVITY_VECTOR, dt);
-		}
+		entities.removeIf(entity -> {
+			var updater = entity.manualUpdater();
+			if (updater == null) {
+				entity.mutableVelocity().multiply(MathUtil.pow(AIR_RESISTANCE, dt));
+				collisionContext.collideAndSlide(entity.mutablePosition(), entity.mutableVelocity(), GRAVITY_VECTOR, dt);
+				return false;
+			} else {
+				return updater.test(dt);
+			}
+		});
+	}
+
+	public CollisionContext collisionContext() {
+		return collisionContext;
 	}
 
 	public Terrain terrain() {
