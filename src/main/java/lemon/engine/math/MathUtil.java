@@ -1,5 +1,6 @@
 package lemon.engine.math;
 
+import lemon.evolution.pool.MatrixPool;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 
@@ -15,6 +16,10 @@ public class MathUtil {
 
 	public static boolean inRange(float a, float min, float max) {
 		return a >= min && a <= max;
+	}
+
+	public static float pow(float base, float power) {
+		return (float) Math.pow(base, power);
 	}
 
 	public static float toRadians(float degrees) {
@@ -103,6 +108,15 @@ public class MathUtil {
 				.multiply(MathUtil.getRotationY(rotation.y()).multiply(MathUtil.getRotationZ(rotation.z())));
 	}
 
+	public static void getRotation(Matrix matrix, Vector3D rotation) {
+		MathUtil.getRotationY(matrix, rotation.y());
+		try (var a = MatrixPool.ofRotationX(rotation.x());
+			 var b = MatrixPool.ofMultiplied(a, matrix)) {
+			MathUtil.getRotationZ(a, rotation.z());
+			Matrix.multiply(matrix, b, a);
+		}
+	}
+
 	public static Supplier<Matrix> getRotationSupplier(Supplier<Vector3D> rotationSupplier) {
 		Matrix a = new Matrix(4);
 		Matrix b = new Matrix(4);
@@ -183,6 +197,25 @@ public class MathUtil {
 		matrix.set(0, 0, vector.x());
 		matrix.set(1, 1, vector.y());
 		matrix.set(2, 2, vector.z());
+		matrix.set(3, 3, 1);
+	}
+
+	public static void lookAt(Matrix matrix, Vector3D direction, Vector3D up) {
+		var f = direction.normalize();
+		var u = up.normalize();
+		var s = f.crossProduct(u).normalize();
+		u = s.crossProduct(f);
+
+		matrix.clear();
+		matrix.set(0, 0, s.x());
+		matrix.set(1, 0, s.y());
+		matrix.set(2, 0, s.z());
+		matrix.set(0, 1, u.x());
+		matrix.set(1, 1, u.y());
+		matrix.set(2, 1, u.z());
+		matrix.set(0, 2, -f.x());
+		matrix.set(1, 2, -f.y());
+		matrix.set(2, 2, -f.z());
 		matrix.set(3, 3, 1);
 	}
 

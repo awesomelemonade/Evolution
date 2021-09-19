@@ -1,7 +1,7 @@
 package lemon.engine.splash;
 
+import lemon.engine.draw.Drawable;
 import lemon.engine.math.Box2D;
-import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
 import lemon.engine.render.VertexBuffer;
 import lemon.engine.toolbox.Color;
@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL20;
 
 import java.nio.FloatBuffer;
 
-public class LoadingBar implements Renderable, Disposable {
+public class LoadingBar implements Drawable, Disposable {
 	private VertexArray vertexArray;
 	private VertexBuffer vertexBuffer;
 	private Color[] colors;
@@ -41,7 +41,7 @@ public class LoadingBar implements Renderable, Disposable {
 	}
 
 	@Override
-	public void render() {
+	public void draw() {
 		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 			GL15.glBufferSubData(target, 0, this.getFloatBuffer());
 		});

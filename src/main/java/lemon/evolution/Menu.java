@@ -55,13 +55,13 @@ public enum Menu implements Screen {
 	public void render() {
 		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
 			for (Quad2D button : buttons) {
-				button.render();
+				button.draw();
 			}
 		});
 	}
 
 	public void start(Screen screen) {
-		window.switchScreen(screen);
+		window.popAndPushScreen(screen);
 	}
 
 	@Override
