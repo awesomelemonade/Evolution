@@ -1,5 +1,6 @@
 package lemon.engine.game2d;
 
+import lemon.engine.draw.Drawable;
 import lemon.engine.math.Box2D;
 import lemon.engine.render.Renderable;
 import lemon.engine.render.VertexArray;
@@ -12,7 +13,7 @@ import org.lwjgl.opengl.GL20;
 
 import java.nio.FloatBuffer;
 
-public class Quad2D implements Renderable {
+public class Quad2D implements Drawable {
 	private final VertexArray vertexArray;
 	private final Box2D box;
 	private final Color[] colors;
@@ -36,7 +37,7 @@ public class Quad2D implements Renderable {
 	}
 
 	@Override
-	public void render() {
+	public void draw() {
 		vertexArray.bind(vao -> {
 			GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
 		});

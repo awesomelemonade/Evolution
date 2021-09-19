@@ -1,6 +1,6 @@
 package lemon.evolution.destructible.beta;
 
-import lemon.engine.TaskQueue;
+import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.draw.Drawable;
 import lemon.engine.function.AbsoluteIntValue;
 import lemon.engine.function.SzudzikIntPair;
@@ -10,7 +10,6 @@ import lemon.engine.math.Vector3D;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -20,7 +19,7 @@ public class Terrain {
 	private final TerrainGenerator generator;
 	private final Executor poolExecutor;
 	private final Vector3D scalar;
-	private final TaskQueue updaters = new TaskQueue();
+	private final TaskQueue updaters = TaskQueue.ofConcurrent();
 
 	public Terrain(TerrainGenerator generator, Executor poolExecutor, Vector3D scalar) {
 		this.chunks = new ConcurrentHashMap<>();

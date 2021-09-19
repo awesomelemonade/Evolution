@@ -1,6 +1,6 @@
 package lemon.evolution;
 
-import lemon.engine.TaskQueue;
+import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
@@ -17,7 +17,6 @@ import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Projection;
-import lemon.engine.math.Vector;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.model.LineGraph;
@@ -39,6 +38,7 @@ import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.entity.RocketLauncherProjectile;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.physics.beta.CollisionPacket;
+import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.screen.beta.Screen;
@@ -63,7 +63,6 @@ import org.lwjgl.opengl.GL32;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -72,7 +71,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public enum Game implements Screen {
 	INSTANCE;
@@ -99,7 +97,7 @@ public enum Game implements Screen {
 	private Drawable rocketLauncherLoadedModel;
 	private Drawable rocketLauncherProjectileModel;
 
-	private TaskQueue postLoadTasks = new TaskQueue();
+	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
 
 	public List<Vector3D> debug;
 
@@ -182,8 +180,7 @@ public enum Game implements Screen {
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f));
 			player.mutablePosition().set(0f, 300f, 0f);
 
-			// Add loaders
-			Loading loading = new Loading(window::popScreen,
+			window.pushScreen(new Loading(window::popScreen,
 					dragonLoader, rocketLauncherUnloadedLoader,
 					rocketLauncherLoadedLoader, rocketLauncherProjectileLoader,
 					new Loader() {
@@ -198,8 +195,7 @@ public enum Game implements Screen {
 				public float getProgress() {
 					return 1f - ((float) generator.getQueueSize()) / ((float) generatorStartSize);
 				}
-			});
-			window.pushScreen(loading);
+			}));
 			loaded = true;
 			return;
 		}
@@ -276,16 +272,13 @@ public enum Game implements Screen {
 
 		debug = new ArrayList<>();
 		debug.add(Vector3D.ZERO);
-		System.out.println("=====[Histogram]=====");
-		histogram.print();
-		System.out.println("=====================");
 
 		lightPosition = player.position();
 
 		disposables.add(window.input().keyEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_RELEASE) {
 				if (event.key() == GLFW.GLFW_KEY_G) {
-					world.entities().add(new PuzzleBall(player.position(), player.getVectorDirection().multiply(10f)));
+					world.entities().add(new PuzzleBall(new Location(world, player.position()), player.getVectorDirection().multiply(10f)));
 				}
 				if (event.key() == GLFW.GLFW_KEY_C) {
 					world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof RocketLauncherProjectile);
@@ -295,7 +288,7 @@ public enum Game implements Screen {
 					int size = 20;
 					for (int i = -size; i <= size; i += 5) {
 						for (int j = -size; j <= size; j += 5) {
-							world.entities().add(new PuzzleBall(Vector3D.of(i, 100, j), Vector3D.ZERO));
+							world.entities().add(new PuzzleBall(new Location(world, Vector3D.of(i, 100, j)), Vector3D.ZERO));
 						}
 					}
 				}
@@ -379,7 +372,7 @@ public enum Game implements Screen {
 		if (GameControls.MOVE_DOWN.isActivated()) {
 			mutableForce.subtractY(playerSpeed);
 		}
-		collisionContext.collideAndSlide(player.mutablePosition(), player.mutableVelocity(), mutableForce.asImmutable(), dt);
+		collisionContext.collideWithWorld(player.mutablePosition(), player.mutableVelocity(), mutableForce, dt, CollisionResponse.SLIDE);
 
 		// Surfing
 		var targetRotation = Vector3D.of(
@@ -410,7 +403,8 @@ public enum Game implements Screen {
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			debugOverlay.update(
-					"Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, NumEntities=%d, PlayerSpeed=%f",
+					"FPS=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, NumEntities=%d, PlayerSpeed=%f",
+					window.timeSync().getFps(),
 					player.position().x(),
 					player.position().y(),
 					player.position().z(),

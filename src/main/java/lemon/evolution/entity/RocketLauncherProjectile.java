@@ -6,6 +6,8 @@ import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.Renderable;
+import lemon.evolution.physics.beta.Collision;
+import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.world.Entity;
@@ -19,32 +21,31 @@ public class RocketLauncherProjectile implements Entity, Renderable {
 	private final World world;
 	private final MutableVector3D position;
 	private final MutableVector3D velocity;
+	private final MutableVector3D force;
 	private final Drawable model;
 
 	public RocketLauncherProjectile(Location location, Vector3D velocity, Drawable model) {
 		this.world = location.world();
 		this.position = MutableVector3D.of(location.position());
 		this.velocity = MutableVector3D.of(velocity);
+		this.force = MutableVector3D.ofZero();
 		this.model = model;
 	}
 
 	@Override
-	public Predicate<Float> manualUpdater() {
-		return dt -> {
-			boolean collided = world.collisionContext().collideAndCheck(position, velocity, Vector3D.ZERO, dt);
-			if (collided) {
-				world.terrain().generateExplosion(position.asImmutable(), 8f);
-				world.entities().forEach(entity -> {
-					float strength = Math.min(10f, 50f / entity.position().distanceSquared(position.asImmutable()));
-					var direction = entity.position().subtract(position.asImmutable());
-					while (direction.equals(Vector3D.ZERO)) {
-						direction = Vector3D.of((float) (Math.random() - 0.5f), (float) (Math.random() - 0.5f), (float) (Math.random() - 0.5f));
-					}
-					entity.mutableVelocity().add(direction.scaleToLength(strength));
-				});
+	public CollisionResponse onCollide(Collision collision) {
+		var explosionPosition = collision.getIntersection();
+		world.terrain().generateExplosion(explosionPosition, 8f);
+		world.entities().forEach(entity -> {
+			float strength = Math.min(10f, 50f / entity.position().distanceSquared(explosionPosition));
+			var direction = entity.position().subtract(explosionPosition);
+			if (direction.equals(Vector3D.ZERO)) {
+				direction = Vector3D.ofRandomUnitVector();
 			}
-			return collided;
-		};
+			entity.mutableVelocity().add(direction.scaleToLength(strength));
+		});
+		world.entities().remove(this);
+		return CollisionResponse.STOP;
 	}
 
 	@Override
@@ -64,6 +65,11 @@ public class RocketLauncherProjectile implements Entity, Renderable {
 	}
 
 	@Override
+	public World world() {
+		return world;
+	}
+
+	@Override
 	public MutableVector3D mutablePosition() {
 		return position;
 	}
@@ -71,5 +77,10 @@ public class RocketLauncherProjectile implements Entity, Renderable {
 	@Override
 	public MutableVector3D mutableVelocity() {
 		return velocity;
+	}
+
+	@Override
+	public MutableVector3D mutableForce() {
+		return force;
 	}
 }

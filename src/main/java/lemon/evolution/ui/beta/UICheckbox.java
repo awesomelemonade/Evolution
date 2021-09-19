@@ -4,7 +4,7 @@ import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
 import lemon.engine.toolbox.Disposable;
 
-public class UIToggleButton implements UIInputComponent {
+public class UICheckbox implements UIInputComponent {
 	private Box2D box;
 	private boolean toggled;
 
