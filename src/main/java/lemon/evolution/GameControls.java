@@ -20,7 +20,7 @@ public class GameControls {
 	@CheckReturnValue
 	public static Disposable setup(GLFWInput input) {
 		var disposable = BasicControlActivator.setup(input);
-		BasicControlActivator.bindMouseHolds(GLFW.GLFW_MOUSE_BUTTON_1, CAMERA_ROTATE);
+		BasicControlActivator.bindMouseHolds(GLFW.GLFW_MOUSE_BUTTON_2, CAMERA_ROTATE);
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_W, MOVE_FORWARDS);
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_S, MOVE_BACKWARDS);
 		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_A, STRAFE_LEFT);

@@ -42,7 +42,11 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 	}
 
 	public default T scaleToLength(float length) {
-		return this.multiply(length / this.length());
+		float currentLength = this.length();
+		if (currentLength == 0f) {
+			throw new IllegalStateException("Cannot scale a vector with length 0");
+		}
+		return this.multiply(length / currentLength);
 	}
 
 	public default T average(T vector) {

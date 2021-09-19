@@ -6,9 +6,10 @@ import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class CollisionPacket {
-	private static final float BUFFER_DISTANCE = 0.001f;
+	public static final float BUFFER_DISTANCE = 0.001f;
 	private static final int MAX_RECURSION_DEPTH = 5;
 
 	public static void checkTriangle(Vector3D position, Vector3D velocity, Triangle triangle, Collision collision) {
@@ -132,21 +133,19 @@ public class CollisionPacket {
 	}
 
 	// response steps
-	public static void collideAndSlide(BiFunction<Vector3D, Vector3D, Collision> checker, MutableVector3D position, MutableVector3D velocity, Vector3D force, float dt) {
-		force = force.multiply(dt);
-		velocity.add(force);
-		collideAndSlide(checker, position, velocity, force, dt, MAX_RECURSION_DEPTH);
-	}
-
-	public static void collideAndSlide(BiFunction<Vector3D, Vector3D, Collision> checker, MutableVector3D position, MutableVector3D velocity, Vector3D currentForce, float dt, int maxRecursionDepth) {
-		collideWithWorld(checker, position, velocity, currentForce, dt, 0, maxRecursionDepth);
+	public static void collideWithWorld(BiFunction<Vector3D, Vector3D, Collision> collisionChecker,
+									   MutableVector3D position, MutableVector3D velocity, MutableVector3D force,
+									   float dt, Function<Collision, CollisionResponse> responder) {
+		force.multiply(dt);
+		velocity.add(force.asImmutable());
+		collideWithWorld(collisionChecker, position, velocity, force, dt, responder, 0, MAX_RECURSION_DEPTH);
 	}
 
 	public static void collideWithWorld(BiFunction<Vector3D, Vector3D, Collision> collisionChecker,
-										MutableVector3D mutablePosition, MutableVector3D mutableVelocity,
-										Vector3D force, float remainingDt,
+										MutableVector3D mutablePosition, MutableVector3D mutableVelocity, MutableVector3D mutableForce,
+										float remainingDt, Function<Collision, CollisionResponse> responder,
 										int collisionRecursionDepth, int maxRecursionDepth) {
-		if (collisionRecursionDepth > maxRecursionDepth) {
+		if (remainingDt <= 0f || collisionRecursionDepth > maxRecursionDepth) {
 			return;
 		}
 		var position = mutablePosition.asImmutable();
@@ -163,27 +162,9 @@ public class CollisionPacket {
 			}
 			return;
 		}
-		var unhandledDt = (1f - collision.getT()) * remainingDt;
-		var usedVelocity = remainingVelocity.multiply(collision.getT());
-		var negSlidePlaneNormal = collision.getIntersection().subtract(position.add(usedVelocity)).normalize();
-		// update position
-		float length = usedVelocity.length() - BUFFER_DISTANCE;
-		if (length > 0) {
-			mutablePosition.add(usedVelocity.scaleToLength(length));
-		}
-		// update velocity
-		mutableVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity)));
-		// friction
-		var normalForceMagnitude = negSlidePlaneNormal.dotProduct(force);
-		if (normalForceMagnitude > 0) {
-			var mu = 1f;
-			var velocityLength = velocity.length();
-			var frictionForceMagnitude = Math.min(mu * normalForceMagnitude * unhandledDt, velocityLength);
-			var frictionForce = velocity.scaleToLength(frictionForceMagnitude);
-			mutableVelocity.subtract(frictionForce);
-			force = force.subtract(negSlidePlaneNormal.multiply(normalForceMagnitude));
-		}
+		var response = responder.apply(collision);
+		var unhandledDt = response.execute(collision, mutablePosition, mutableVelocity, mutableForce, remainingVelocity, remainingDt);
 		// recursive
-		collideWithWorld(collisionChecker, mutablePosition, mutableVelocity, force, unhandledDt, collisionRecursionDepth + 1, maxRecursionDepth);
+		collideWithWorld(collisionChecker, mutablePosition, mutableVelocity, mutableForce, unhandledDt, responder, collisionRecursionDepth + 1, maxRecursionDepth);
 	}
 }

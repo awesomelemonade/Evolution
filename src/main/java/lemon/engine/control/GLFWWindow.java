@@ -151,6 +151,10 @@ public class GLFWWindow implements Disposable {
 		return glfwInput;
 	}
 
+	public TimeSync timeSync() {
+		return timeSync;
+	}
+
 	public EventWith<Benchmark> onBenchmark() {
 		return onBenchmark;
 	}

@@ -33,6 +33,11 @@ public interface MutableVector3D {
 			public float z() {
 				return z;
 			}
+
+			@Override
+			public String toString() {
+				return Vector3D.toString(this);
+			}
 		};
 		private final MutableVector2D xy = new MutableVector2D() {
 			private final Vector2D immutable = new Vector2D() {

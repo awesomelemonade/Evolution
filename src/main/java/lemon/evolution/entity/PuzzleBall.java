@@ -1,4 +1,4 @@
-package lemon.evolution.puzzle;
+package lemon.evolution.entity;
 
 import lemon.engine.draw.Drawable;
 import lemon.engine.draw.IndexedDrawable;
@@ -13,6 +13,8 @@ import lemon.engine.toolbox.Lazy;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.world.Entity;
+import lemon.evolution.world.Location;
+import lemon.evolution.world.World;
 import org.lwjgl.opengl.GL11;
 
 public class PuzzleBall implements Entity, Renderable {
@@ -28,17 +30,26 @@ public class PuzzleBall implements Entity, Renderable {
 					return new Model(indices, vertices, colors);
 				}).map(IndexedDrawable::new);
 	});
+	private final World world;
 	private final MutableVector3D position;
 	private final MutableVector3D velocity;
+	private final MutableVector3D force;
 
-	public PuzzleBall(Vector3D position, Vector3D velocity) {
-		this.position = MutableVector3D.of(position);
+	public PuzzleBall(Location location, Vector3D velocity) {
+		this.world = location.world();
+		this.position = MutableVector3D.of(location.position());
 		this.velocity = MutableVector3D.of(velocity);
+		this.force = MutableVector3D.ofZero();
 	}
 
 	@Override
 	public void render() {
 		PuzzleBall.render(position());
+	}
+
+	@Override
+	public World world() {
+		return world;
 	}
 
 	@Override
@@ -49,6 +60,11 @@ public class PuzzleBall implements Entity, Renderable {
 	@Override
 	public MutableVector3D mutableVelocity() {
 		return velocity;
+	}
+
+	@Override
+	public MutableVector3D mutableForce() {
+		return force;
 	}
 
 	public static void render(Vector3D position) {

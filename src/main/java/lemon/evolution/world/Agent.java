@@ -1,22 +1,24 @@
 package lemon.evolution.world;
 
 import lemon.engine.math.MutableVector3D;
-import lemon.engine.math.Vector3D;
 
 public class Agent implements Entity {
+	private final World world;
 	private final MutableVector3D position;
 	private final MutableVector3D velocity;
-	private final Location location;
+	private final MutableVector3D force;
 	private Inventory inventory;
 
-	public Agent(World world, Vector3D position) {
-		this.position = MutableVector3D.of(position);
+	public Agent(Location location) {
+		this.world = location.world();
+		this.position = MutableVector3D.of(location.position());
 		this.velocity = MutableVector3D.ofZero();
-		this.location = new Location(world, this.position.asImmutable());
+		this.force = MutableVector3D.ofZero();
 	}
 
-	public Location location() {
-		return location;
+	@Override
+	public World world() {
+		return world;
 	}
 
 	@Override
@@ -27,5 +29,10 @@ public class Agent implements Entity {
 	@Override
 	public MutableVector3D mutableVelocity() {
 		return velocity;
+	}
+
+	@Override
+	public MutableVector3D mutableForce() {
+		return force;
 	}
 }
