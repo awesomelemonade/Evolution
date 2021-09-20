@@ -20,6 +20,11 @@ public interface TaskQueue {
 			public void add(Runnable runnable) {
 				queue.add(runnable);
 			}
+
+			@Override
+			public int size() {
+				return queue.size();
+			}
 		};
 	}
 
@@ -38,10 +43,17 @@ public interface TaskQueue {
 			public void add(Runnable runnable) {
 				queue.add(runnable);
 			}
+
+			@Override
+			public int size() {
+				return queue.size();
+			}
 		};
 	}
 
 	public void run();
 
 	public void add(Runnable runnable);
+
+	public int size();
 }
