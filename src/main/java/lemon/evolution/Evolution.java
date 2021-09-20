@@ -17,6 +17,8 @@ import java.util.logging.SimpleFormatter;
 
 public class Evolution {
 	private static final Logger logger = Logger.getLogger(Evolution.class.getName());
+	private static final int TARGET_OPENGL_VERSION_MAJOR = 3;
+	private static final int TARGET_OPENGL_VERSION_MINOR = 3;
 
 	public static void main(String[] args) {
 		LogManager.getLogManager().reset();
@@ -34,8 +36,8 @@ public class Evolution {
 				throw new IllegalStateException();
 			}
 			// Needed for Mac Support
-			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
-			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);
+			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, TARGET_OPENGL_VERSION_MAJOR);
+			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, TARGET_OPENGL_VERSION_MINOR);
 			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GL11.GL_TRUE);
 			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
 			return GLFW.glfwCreateWindow(vidmode.width(), vidmode.height(),
