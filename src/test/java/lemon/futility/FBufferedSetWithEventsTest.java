@@ -142,8 +142,12 @@ class FBufferedSetWithEventsTest {
 			set.add(x + 10);
 		}
 		set.flush();
+		for (int i = 0; i < 10; i++) {
+			assertFalse(set.contains(i));
+		}
 		for (int i = 10; i < 20; i++) {
 			assertTrue(set.contains(i));
 		}
+		assertEquals(10, set.size());
 	}
 }
