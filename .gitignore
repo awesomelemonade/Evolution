@@ -8,3 +8,4 @@ bin/
 out/
 src/META-INF/
 target/
+pom.xml
