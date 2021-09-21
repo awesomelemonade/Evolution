@@ -24,6 +24,7 @@ public class TerrainRendererTest {
 			renderer.setRenderDistance(radius);
 			var set = new HashSet<>(renderer.getTerrainOffsets());
 			int ceil = (int) Math.ceil(radius);
+			int count = 0;
 			for (int i = -ceil; i <= ceil; i++) {
 				for (int j = -ceil; j <= ceil; j++) {
 					for (int k = -ceil; k <= ceil; k++) {
@@ -32,10 +33,12 @@ public class TerrainRendererTest {
 							int finalJ = j;
 							int finalK = k;
 							assertTrue(set.contains(new TerrainRenderer.TerrainOffset(i, j, k)), () -> String.format("radius=%f [%d, %d, %d]", radius, finalI, finalJ, finalK));
+							count++;
 						}
 					}
 				}
 			}
+			assertEquals(count, set.size());
 		}
 	}
 }

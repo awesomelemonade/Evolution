@@ -22,13 +22,13 @@ public enum CollisionResponse {
 			var velocity = mutableVelocity.asImmutable();
 			var force = mutableForce.asImmutable();
 			var usedVelocity = remainingVelocity.multiply(collision.getT());
+			var negSlidePlaneNormal = collision.getIntersection().subtract(position.add(usedVelocity)).normalize();
 			// update position
 			float length = usedVelocity.length() - CollisionPacket.BUFFER_DISTANCE;
 			if (length > 0) {
 				mutablePosition.add(usedVelocity.scaleToLength(length));
 			}
 			var unhandledDt = (1f - collision.getT()) * remainingDt;
-			var negSlidePlaneNormal = collision.getIntersection().subtract(position.add(usedVelocity)).normalize();
 			// update velocity
 			mutableVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity)));
 			// friction
@@ -56,6 +56,23 @@ public enum CollisionResponse {
 				mutablePosition.add(usedVelocity.scaleToLength(length));
 			}
 			return 0f;
+		}
+	}, BOUNCE {
+		@Override
+		public float execute(Collision collision, MutableVector3D mutablePosition, MutableVector3D mutableVelocity, MutableVector3D mutableForce,
+							 Vector3D remainingVelocity, float remainingDt) {
+			var position = mutablePosition.asImmutable();
+			var velocity = mutableVelocity.asImmutable();
+			var usedVelocity = remainingVelocity.multiply(collision.getT());
+			var negSlidePlaneNormal = collision.getIntersection().subtract(position.add(usedVelocity)).normalize();
+			// update position
+			float length = usedVelocity.length() - CollisionPacket.BUFFER_DISTANCE;
+			if (length > 0) {
+				mutablePosition.add(usedVelocity.scaleToLength(length));
+			}
+			// update velocity
+			mutableVelocity.subtract(negSlidePlaneNormal.multiply(2f * negSlidePlaneNormal.dotProduct(velocity)));
+			return (1f - collision.getT()) * remainingDt;
 		}
 	};
 
