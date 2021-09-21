@@ -4,13 +4,14 @@ Getting Started
 Setting up the Development Environment
 --------------------------------------
 * Install IntelliJ (https://www.jetbrains.com/idea/)
+  * Install the Community edition (and not Ultimate)
 * Install Git (https://git-scm.com/downloads)
 * Setup SSH Key (https://docs.github.com/en/enterprise-server@3.0/github/authenticating-to-github/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
   * Alternatively, use https://support.atlassian.com/bitbucket-cloud/docs/set-up-an-ssh-key/
     * Instead of Step 3, paste your public key here: https://github.com/settings/keys
 * Install Java 16 JDK (or higher)
   * https://www.oracle.com/java/technologies/downloads/#java16
-* Navigate to where your environment will be and clone the Evolution repo
+* Open up the terminal (or Git Bash) and navigate to where your environment will be and clone the Evolution repo
   * `git clone git@github.com:awesomelemonade/Evolution.git`
 * Import project (File -> New -> Project from Existing Sources -> Select Evolution/pom.xml)
   * In IntelliJ, set the Project SDK to the downloaded Java 16 JDK
@@ -29,7 +30,14 @@ Setting up the Development Environment
       * Mac: `<lwjgl.natives>natives-macos</lwjgl.natives>`
       * Linux: `<lwjgl.natives>natives-linux</lwjgl.natives>`
       * Refresh Maven (See the previous item)
+  * For Mac users, we need to enter "-XstartOnFirstThread" as a JVM flag (NOT as a program argument)
+    * Click on Run -> Edit Configuration
+	* Click on "Modify options" (which is under Build and run)
+	  * Java -> Add VM options
+	  * Paste "-XstartOnFirstThread" in the "VM options" textbox
   * A successful run should pop up the menu screen (which is currently a black screen with three white rectangles)
+    * Don't worry about "Unknown Key: " - it is OK
+	* Click on the first rectangle, wait for the loading bars, and the world should pop up
 * Run tests
   * Open up IntelliJ's project explorer
   * Right click src/test/java -> Run 'All Tests'
@@ -75,6 +83,6 @@ Merging your work
   ```
 * Create a pull request
   * Go to https://github.com/awesomelemonade/Evolution/pulls
-  * New pull request -> Select <name-of-branch>
+  * New pull request -> Select \<name-of-branch>
   * Request Code Review
   * Ensure no unit tests are failing (results should be shown on your PR page)

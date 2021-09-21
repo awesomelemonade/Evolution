@@ -6,6 +6,7 @@ import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryUtil;
 
 import java.util.logging.ConsoleHandler;
@@ -16,6 +17,8 @@ import java.util.logging.SimpleFormatter;
 
 public class Evolution {
 	private static final Logger logger = Logger.getLogger(Evolution.class.getName());
+	private static final int TARGET_OPENGL_VERSION_MAJOR = 3;
+	private static final int TARGET_OPENGL_VERSION_MINOR = 3;
 
 	public static void main(String[] args) {
 		LogManager.getLogManager().reset();
@@ -32,6 +35,11 @@ public class Evolution {
 			if (vidmode == null) {
 				throw new IllegalStateException();
 			}
+			// Needed for Mac Support
+			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, TARGET_OPENGL_VERSION_MAJOR);
+			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, TARGET_OPENGL_VERSION_MINOR);
+			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GL11.GL_TRUE);
+			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
 			return GLFW.glfwCreateWindow(vidmode.width(), vidmode.height(),
 					"Evolution", GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
 			//return GLFW.glfwCreateWindow(1600, 900, "Evolution", MemoryUtil.NULL, MemoryUtil.NULL);
@@ -42,8 +50,10 @@ public class Evolution {
 					ThreadManager.INSTANCE.interrupt();
 				}
 			});
-			logger.log(Level.INFO, String.format("LWJGL Version %s", Version.getVersion()));
-			logger.log(Level.INFO, String.format("OpenGL Version %s", GL11.glGetString(GL11.GL_VERSION)));
+			logger.log(Level.INFO, String.format("LWJGL Version: %s", Version.getVersion()));
+			logger.log(Level.INFO, String.format("OpenGL Version: %s", GL11.glGetString(GL11.GL_VERSION)));
+			logger.log(Level.INFO, String.format("GLFW Version: %s", GLFW.glfwGetVersionString()));
+			logger.log(Level.INFO, String.format("Supported GLSL Version: %s", GL11.glGetString(GL20.GL_SHADING_LANGUAGE_VERSION)));
 			window.run();
 		} catch (Exception ex) {
 			ex.printStackTrace();

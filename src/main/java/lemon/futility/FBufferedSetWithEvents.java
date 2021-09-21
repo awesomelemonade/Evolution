@@ -41,7 +41,8 @@ public class FBufferedSetWithEvents<T> extends FSetWithEvents<T> {
 
 			@Override
 			public void remove() {
-				operations.add(() -> FBufferedSetWithEvents.super.remove(item));
+				final var removedItem = item; // copy reference
+				operations.add(() -> FBufferedSetWithEvents.super.remove(removedItem));
 			}
 		};
 	}

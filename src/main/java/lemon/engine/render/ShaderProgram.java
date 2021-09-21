@@ -35,10 +35,6 @@ public class ShaderProgram implements Disposable {
 			GL20.glDetachShader(id, shader.id());
 			shader.dispose();
 		}
-		GL20.glValidateProgram(id);
-		if (GL20.glGetProgrami(id, GL20.GL_VALIDATE_STATUS) == GL11.GL_FALSE) {
-			throw new IllegalStateException("Shader Program Validation Fail: " + GL20.glGetProgramInfoLog(id));
-		}
 	}
 
 	public UniformVariable getUniformVariable(String name) {
