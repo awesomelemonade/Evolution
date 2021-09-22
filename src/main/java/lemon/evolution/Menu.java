@@ -13,12 +13,15 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
 
 public enum Menu implements Screen {
 	INSTANCE;
 	private GLFWWindow window;
 	private List<Quad2D> buttons;
 	private final Disposables disposables = new Disposables();
+	private static HashMap<String, Boolean> terrainType = new HashMap<>();
+
 
 	@Override
 	public void onLoad(GLFWWindow window) {
@@ -36,7 +39,10 @@ public enum Menu implements Screen {
 					for (int i = 0; i < buttons.size(); ++i) {
 						if (buttons.get(i).getBox2D().intersect(mouseX, mouseY)) {
 							switch (i) {
-								case 0, 1 -> start(Game.INSTANCE);
+								case 0 -> {terrainType.put("Field", true);
+									start(Game.INSTANCE);}
+								case 1 -> {terrainType.put("Cavern", true);
+									start(Game.INSTANCE);}
 								case 2 -> start(FontTest.INSTANCE);
 							}
 						}
@@ -44,6 +50,9 @@ public enum Menu implements Screen {
 				});
 			}
 		}));
+	}
+	public static HashMap<String, Boolean> getType(){
+		return terrainType;
 	}
 
 	@Override
