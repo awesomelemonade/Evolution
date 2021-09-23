@@ -28,7 +28,11 @@ void main(void) {
 	float slope = 1 - passNormal.y;
 
 	if (slope < 0.2) {
-		outColor = mix(grassColor, slopeColor, slope / 0.2);
+	    if (passTextureCoords.x < 0) {
+	        outColor = mix(grassColor, slopeColor, slope / 0.2);
+	    } else {
+	        outColor = mix(vec4(1.0, 1.0, 1.0, 1.0), slopeColor, slope / 0.2);
+	    }
 	} else if (slope < 0.7) {
 		outColor = mix(slopeColor, rockColor, (slope - 0.2) / 0.5);
 	} else if (slope < 1.5) {
@@ -36,4 +40,5 @@ void main(void) {
 	} else {
 		outColor = baseColor;
 	}
+
 }
