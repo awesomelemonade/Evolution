@@ -4,7 +4,7 @@ import org.lwjgl.opengl.GL13;
 
 public enum TextureBank {
 	REUSE(0), COLOR(1), DEPTH(2), SKYBOX(3),
-	GRASS(4), SLOPE(5), ROCK(6), BASE(7), SNOW(8);
+	GRASS(4), SLOPE(5), ROCK(6), BASE(7);
 	private final int id;
 
 	private TextureBank(int id) {
