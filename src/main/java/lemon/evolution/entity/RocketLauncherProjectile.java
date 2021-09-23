@@ -15,14 +15,13 @@ import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
 import org.lwjgl.opengl.GL11;
 
-import java.util.function.Predicate;
-
 public class RocketLauncherProjectile implements Entity, Renderable {
 	private final World world;
 	private final MutableVector3D position;
 	private final MutableVector3D velocity;
 	private final MutableVector3D force;
 	private final Drawable model;
+	private int count = 0;
 
 	public RocketLauncherProjectile(Location location, Vector3D velocity, Drawable model) {
 		this.world = location.world();
@@ -34,18 +33,25 @@ public class RocketLauncherProjectile implements Entity, Renderable {
 
 	@Override
 	public CollisionResponse onCollide(Collision collision) {
+		count++;
 		var explosionPosition = collision.getIntersection();
 		world.terrain().generateExplosion(explosionPosition, 8f);
 		world.entities().forEach(entity -> {
-			float strength = Math.min(10f, 50f / entity.position().distanceSquared(explosionPosition));
-			var direction = entity.position().subtract(explosionPosition);
-			if (direction.equals(Vector3D.ZERO)) {
-				direction = Vector3D.ofRandomUnitVector();
+			if (entity != this) {
+				float strength = Math.min(10f, 50f / entity.position().distanceSquared(explosionPosition));
+				var direction = entity.position().subtract(explosionPosition);
+				if (direction.equals(Vector3D.ZERO)) {
+					direction = Vector3D.ofRandomUnitVector();
+				}
+				entity.mutableVelocity().add(direction.scaleToLength(strength));
 			}
-			entity.mutableVelocity().add(direction.scaleToLength(strength));
 		});
-		world.entities().remove(this);
-		return CollisionResponse.STOP;
+		if (count >= 3) {
+			world.entities().remove(this);
+			return CollisionResponse.STOP;
+		} else {
+			return CollisionResponse.BOUNCE;
+		}
 	}
 
 	@Override

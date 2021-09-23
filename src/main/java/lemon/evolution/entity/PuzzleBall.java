@@ -10,6 +10,8 @@ import lemon.engine.render.MatrixType;
 import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Lazy;
+import lemon.evolution.physics.beta.Collision;
+import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.world.Entity;

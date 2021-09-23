@@ -4,12 +4,25 @@ import lemon.engine.math.Camera;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
+import lemon.evolution.world.Entity;
+import lemon.evolution.world.Location;
+import lemon.evolution.world.World;
 
-public record Player(Camera camera, MutableVector3D mutableVelocity) {
+public class Player implements Entity {
 	private static final float DELTA_MODIFIER = 0.000001f;
 
-	public Player(Projection projection) {
-		this(new Camera(projection), MutableVector3D.ofZero());
+	private final Camera camera;
+	private final World world;
+	private final MutableVector3D position;
+	private final MutableVector3D velocity;
+	private final MutableVector3D force;
+
+	public Player(Location location, Projection projection) {
+		this.world = location.world();
+		this.position = MutableVector3D.of(location.position());
+		this.velocity = MutableVector3D.ofZero();
+		this.force = MutableVector3D.ofZero();
+		this.camera = new Camera(position, MutableVector3D.ofZero(), projection);
 	}
 
 	public void update(float delta) {
@@ -26,12 +39,24 @@ public record Player(Camera camera, MutableVector3D mutableVelocity) {
 						* Math.cos(rotation.y()))));
 	}
 
-	public MutableVector3D mutablePosition() {
-		return camera.mutablePosition();
+	@Override
+	public World world() {
+		return world;
 	}
 
-	public Vector3D position() {
-		return camera.position();
+	@Override
+	public MutableVector3D mutablePosition() {
+		return position;
+	}
+
+	@Override
+	public MutableVector3D mutableVelocity() {
+		return velocity;
+	}
+
+	@Override
+	public MutableVector3D mutableForce() {
+		return force;
 	}
 
 	public MutableVector3D mutableRotation() {
@@ -40,9 +65,5 @@ public record Player(Camera camera, MutableVector3D mutableVelocity) {
 
 	public Vector3D rotation() {
 		return camera.rotation();
-	}
-
-	public Vector3D velocity() {
-		return mutableVelocity.asImmutable();
 	}
 }

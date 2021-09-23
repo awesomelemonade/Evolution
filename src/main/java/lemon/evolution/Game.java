@@ -47,7 +47,6 @@ import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.BasicControlActivator;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
-import lemon.evolution.util.PlayerControl;
 import lemon.evolution.util.ShaderProgramHolder;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
@@ -79,6 +78,7 @@ public enum Game implements Screen {
 	private GLFWWindow window;
 	private boolean loaded;
 
+	private GameControls<EvolutionControls> controls;
 	private Player player;
 	private CollisionContext collisionContext;
 
@@ -133,6 +133,11 @@ public enum Game implements Screen {
 						Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
 				histogram.add(terrain);
 				return Math.min(cylinder, terrain);
+				//return Math.min(cylinder, -vector.y() + 10f);
+			};
+			scalarField = vector -> {
+				float distanceSquared = (float) Math.sqrt(vector.x() * vector.x() + vector.y() * vector.y());
+				return 1f - Math.abs(distanceSquared - 20.0f);
 			};
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -176,6 +181,7 @@ public enum Game implements Screen {
 			var rocketLauncherProjectileLoader = new ObjLoader("/res/rocket-launcher-projectile.obj", postLoadTasks::add,
 					objLoader -> rocketLauncherProjectileModel = objLoader.toIndexedDrawable());
 
+			this.controls = disposables.add(EvolutionControls.getDefaultControls(window.input()));
 			player = new Player(new Projection(MathUtil.toRadians(60f),
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f));
 			player.mutablePosition().set(0f, 300f, 0f);
@@ -266,10 +272,6 @@ public enum Game implements Screen {
 			});
 		});
 
-		disposables.add(GameControls.setup(window.input()));
-		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_T, ADD_TERRAIN);
-		BasicControlActivator.bindKeyboardHold(GLFW.GLFW_KEY_Y, REMOVE_TERRAIN);
-
 		debug = new ArrayList<>();
 		debug.add(Vector3D.ZERO);
 
@@ -318,9 +320,6 @@ public enum Game implements Screen {
 		disposables.add(window.input().cursorPositionEvent().add(this::onMousePosition));
 	}
 
-	private final PlayerControl ADD_TERRAIN = new PlayerControl();
-	private final PlayerControl REMOVE_TERRAIN = new PlayerControl();
-
 	public Optional<Vector3D> getCrosshairLocation() {
 		if (depthDistance == 1f) {
 			return Optional.empty();
@@ -336,15 +335,15 @@ public enum Game implements Screen {
 	private float depthDistance = 0;
 
 	private static float playerSpeed = 0f;
-	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0f, -0.05f, 0f);
+	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0f, 0f, 0f);
 
 	@Override
 	public void update(long deltaTime) {
 		float dt = (float) (((double) deltaTime) / 3.0e7);
-		if (ADD_TERRAIN.isActivated()) {
+		if (controls.isActivated(EvolutionControls.ADD_TERRAIN)) {
 			getCrosshairLocation().ifPresent(point -> world.terrain().terraform(point, 8f, dt, 5f));
 		}
-		if (REMOVE_TERRAIN.isActivated()) {
+		if (controls.isActivated(EvolutionControls.REMOVE_TERRAIN)) {
 			getCrosshairLocation().ifPresent(point -> world.terrain().terraform(point, 8f, dt, -5f));
 		}
 
@@ -353,6 +352,8 @@ public enum Game implements Screen {
 		float cos = (float) Math.cos(angle);
 		var playerHorizontalVector = Vector2D.of(playerSpeed * sin, playerSpeed * cos);
 		var mutableForce = MutableVector3D.of(GRAVITY_VECTOR);
+
+		// TODO: We're essentially binding controls to a vector
 		if (GameControls.STRAFE_LEFT.isActivated()) {
 			mutableForce.asXZVector().subtract(playerHorizontalVector);
 		}
@@ -403,7 +404,7 @@ public enum Game implements Screen {
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (GameControls.DEBUG_TOGGLE.isActivated()) {
 			debugOverlay.update(
-					"FPS=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, NumEntities=%d, PlayerSpeed=%f",
+					"FPS=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, %d NumEntities=%d, PlayerSpeed=%f",
 					window.timeSync().getFps(),
 					player.position().x(),
 					player.position().y(),
@@ -412,6 +413,7 @@ public enum Game implements Screen {
 					world.terrain().getChunkY(player.position().y()),
 					world.terrain().getChunkZ(player.position().z()),
 					pool.getTaskCount() - pool.getCompletedTaskCount(),
+					pool2.getTaskCount() - pool2.getCompletedTaskCount(),
 					world.entities().size(),
 					playerSpeed);
 		}
