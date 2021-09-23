@@ -72,8 +72,7 @@ import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public enum Game implements Screen {
-	INSTANCE;
+public class Game implements Screen {
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 
 	private GLFWWindow window;
@@ -110,30 +109,14 @@ public enum Game implements Screen {
 
 	private final Disposables disposables = new Disposables();
 
-	@Override
+	private ScalarField scalarField;
+
+	public Game(ScalarField scalarField){
+		this.scalarField = scalarField;
+	}
+
 	public void onLoad(GLFWWindow window) {
-		if (!loaded) {
-			// Prepare loaders
-			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
-			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
-			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			ScalarField<Vector3D> scalarField = vector -> vector.y() < -30f ? 0f : -(vector.y() + noise.apply(vector.divide(100f)) * 5f);
-			histogram = new Histogram(0.1f);
-			scalarField = vector -> {
-				if (vector.y() < 0f) {
-					return 0f;
-				}
-				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
-				float cylinder = (float) (50.0 - Math.sqrt(distanceSquared));
-				if (cylinder < -100f) {
-					return cylinder;
-				}
-				float terrain = (float) (-Math.tanh(vector.y() / 100.0) * 100.0 +
-						Math.pow(2f, noise2d.apply(vector.toXZVector().divide(300f))) * 5.0 +
-						Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
-				histogram.add(terrain);
-				return Math.min(cylinder, terrain);
-			};
+		if(!loaded){
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 			pool.setRejectedExecutionHandler((runnable, executor) -> {});
