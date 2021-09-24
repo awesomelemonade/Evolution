@@ -56,6 +56,7 @@ public class CommonProgramsSetup {
 			program.loadInt("slopeSampler", TextureBank.SLOPE.getId());
 			program.loadInt("rockSampler", TextureBank.ROCK.getId());
 			program.loadInt("baseSampler", TextureBank.BASE.getId());
+			program.loadInt("snowSampler", TextureBank.SNOW.getId());
 		});
 	}
 
