@@ -3,7 +3,6 @@ package lemon.evolution.util;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
-import lemon.evolution.GameControls;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
@@ -11,8 +10,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 
 public class GLFWGameControls<T> implements GameControls<T>, Disposable {
+	private final GLFWInput input;
 	private final Set<Integer> keyboardHolds = new HashSet<>();
 	private final Set<Integer> keyboardToggles = new HashSet<>();
 	private final Set<Integer> mouseHolds = new HashSet<>();
@@ -20,6 +21,7 @@ public class GLFWGameControls<T> implements GameControls<T>, Disposable {
 	private final Disposables disposables = new Disposables();
 
 	public GLFWGameControls(GLFWInput input) {
+		this.input = input;
 		disposables.add(input.keyEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_PRESS) {
 				keyboardHolds.add(event.key());
@@ -43,6 +45,10 @@ public class GLFWGameControls<T> implements GameControls<T>, Disposable {
 				mouseHolds.remove(event.button());
 			}
 		}));
+	}
+
+	public void addCallback(Function<GLFWInput, Disposable> callback) {
+		disposables.add(callback.apply(input));
 	}
 
 	public void bindKeyboardHold(int key, T control) {

@@ -53,6 +53,7 @@ public class ObjLoader implements Loader {
 
 	private int numLinesRead;
 	private int totalLines;
+	private final String file;
 	private final BufferedReader reader;
 	private final List<Vector3D> parsedVertices = new ArrayList<>();
 	private final List<Vector3D> modelVertices = new ArrayList<>();
@@ -75,6 +76,7 @@ public class ObjLoader implements Loader {
 	}
 
 	private ObjLoader(String file, Consumer<ObjLoader> postLoadCallback) {
+		this.file = file;
 		this.reader = new BufferedReader(new InputStreamReader(
 				ObjLoader.class.getResourceAsStream(file)));
 		try {
@@ -125,5 +127,10 @@ public class ObjLoader implements Loader {
 	@Override
 	public float getProgress() {
 		return ((float) numLinesRead) / ((float) totalLines);
+	}
+
+	@Override
+	public String getDescription() {
+		return String.format("ObjLoader[file=%s]", file);
 	}
 }

@@ -10,12 +10,9 @@ import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
 import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.game.Player;
-import lemon.engine.input.CursorPositionEvent;
-import lemon.engine.input.MouseScrollEvent;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
-import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
@@ -38,15 +35,15 @@ import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.entity.RocketLauncherProjectile;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.physics.beta.CollisionPacket;
-import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.ui.beta.UIScreen;
-import lemon.evolution.util.BasicControlActivator;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
+import lemon.evolution.util.EntityController;
+import lemon.evolution.util.GLFWGameControls;
 import lemon.evolution.util.ShaderProgramHolder;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
@@ -78,9 +75,9 @@ public enum Game implements Screen {
 	private GLFWWindow window;
 	private boolean loaded;
 
-	private GameControls<EvolutionControls> controls;
+	private GLFWGameControls<EvolutionControls> controls;
 	private Player player;
-	private CollisionContext collisionContext;
+	private EntityController controller;
 
 	private FrameBuffer frameBuffer;
 
@@ -147,7 +144,7 @@ public enum Game implements Screen {
 			disposables.add(() -> pool2.shutdown());
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
 			var terrain = new Terrain(generator, pool2, Vector3D.of(5f, 5f, 5f));
-			collisionContext = (position, velocity, collision) -> {
+			CollisionContext collisionContext = (position, velocity, collision) -> {
 				var after = position.add(velocity);
 				int minChunkX = terrain.getChunkX(Math.min(position.x(), after.x()) - 1f);
 				int maxChunkX = terrain.getChunkX(Math.max(position.x(), after.x()) + 1f);
@@ -182,9 +179,11 @@ public enum Game implements Screen {
 					objLoader -> rocketLauncherProjectileModel = objLoader.toIndexedDrawable());
 
 			this.controls = disposables.add(EvolutionControls.getDefaultControls(window.input()));
-			player = new Player(new Projection(MathUtil.toRadians(60f),
-					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f));
-			player.mutablePosition().set(0f, 300f, 0f);
+			var projection = new Projection(MathUtil.toRadians(60f),
+					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
+			player = new Player(new Location(world, Vector3D.of(0f, 300f, 0f)), projection);
+			world.entities().add(player);
+			controller = new EntityController(controls, player);
 
 			window.pushScreen(new Loading(window::popScreen,
 					dragonLoader, rocketLauncherUnloadedLoader,
@@ -194,7 +193,7 @@ public enum Game implements Screen {
 				@Override
 				public void load() {
 					worldRenderer.terrainRenderer().preload(player.position());
-					generatorStartSize = generator.getQueueSize();
+					generatorStartSize = Math.max(1, generator.getQueueSize());
 				}
 
 				@Override
@@ -273,7 +272,6 @@ public enum Game implements Screen {
 		});
 
 		debug = new ArrayList<>();
-		debug.add(Vector3D.ZERO);
 
 		lightPosition = player.position();
 
@@ -316,8 +314,6 @@ public enum Game implements Screen {
 				}
 			}
 		}));
-		disposables.add(window.input().mouseScrollEvent().add(this::onMouseScroll));
-		disposables.add(window.input().cursorPositionEvent().add(this::onMousePosition));
 	}
 
 	public Optional<Vector3D> getCrosshairLocation() {
@@ -334,9 +330,6 @@ public enum Game implements Screen {
 
 	private float depthDistance = 0;
 
-	private static float playerSpeed = 0f;
-	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0f, 0f, 0f);
-
 	@Override
 	public void update(long deltaTime) {
 		float dt = (float) (((double) deltaTime) / 3.0e7);
@@ -346,52 +339,7 @@ public enum Game implements Screen {
 		if (controls.isActivated(EvolutionControls.REMOVE_TERRAIN)) {
 			getCrosshairLocation().ifPresent(point -> world.terrain().terraform(point, 8f, dt, -5f));
 		}
-
-		float angle = (player.rotation().y() + MathUtil.PI / 2f);
-		float sin = (float) Math.sin(angle);
-		float cos = (float) Math.cos(angle);
-		var playerHorizontalVector = Vector2D.of(playerSpeed * sin, playerSpeed * cos);
-		var mutableForce = MutableVector3D.of(GRAVITY_VECTOR);
-
-		// TODO: We're essentially binding controls to a vector
-		if (GameControls.STRAFE_LEFT.isActivated()) {
-			mutableForce.asXZVector().subtract(playerHorizontalVector);
-		}
-		if (GameControls.STRAFE_RIGHT.isActivated()) {
-			mutableForce.asXZVector().add(playerHorizontalVector);
-		}
-		var playerForwardVector = Vector2D.of(playerSpeed * cos, -playerSpeed * sin);
-		if (GameControls.MOVE_FORWARDS.isActivated()) {
-			mutableForce.asXZVector().add(playerForwardVector);
-		}
-		if (GameControls.MOVE_BACKWARDS.isActivated()) {
-			mutableForce.asXZVector().subtract(playerForwardVector);
-		}
-		if (GameControls.MOVE_UP.isActivated()) {
-			mutableForce.addY(playerSpeed);
-		}
-		if (GameControls.MOVE_DOWN.isActivated()) {
-			mutableForce.subtractY(playerSpeed);
-		}
-		collisionContext.collideWithWorld(player.mutablePosition(), player.mutableVelocity(), mutableForce, dt, CollisionResponse.SLIDE);
-
-		// Surfing
-		var targetRotation = Vector3D.of(
-				(float) Math.atan(player.velocity().y() / Math.hypot(player.velocity().x(), player.velocity().z())),
-				(float) (Math.PI + Math.atan2(player.velocity().x(), player.velocity().z())), 0f);
-		var diff = targetRotation.subtract(player.rotation())
-				.operate(x -> {
-					x %= MathUtil.TAU;
-					x += x < -MathUtil.PI ? MathUtil.TAU : 0f;
-					x -= x > MathUtil.PI ? MathUtil.TAU : 0f;
-					return x;
-				});
-		float diffLength = diff.length();
-		if (diffLength > 0.0075f) {
-			diff = diff.scaleToLength(Math.max(diffLength * 0.125f, 0.0075f));
-		}
-		//player.mutableRotation().add(diff);
-
+		controller.update();
 
 		var totalLength = world.entities().stream().map(entity -> entity instanceof PuzzleBall ball ? ball.velocity().length() : 0).reduce(0f, Float::sum);
 		world.entities().removeIf(entity -> entity instanceof PuzzleBall ball && ball.position().y() <= -300f);
@@ -402,7 +350,7 @@ public enum Game implements Screen {
 		float available = Runtime.getRuntime().totalMemory();
 		benchmarker.getLineGraph("freeMemory").add(current);
 		benchmarker.getLineGraph("totalMemory").add(available);
-		if (GameControls.DEBUG_TOGGLE.isActivated()) {
+		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
 			debugOverlay.update(
 					"FPS=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, %d NumEntities=%d, PlayerSpeed=%f",
 					window.timeSync().getFps(),
@@ -415,36 +363,7 @@ public enum Game implements Screen {
 					pool.getTaskCount() - pool.getCompletedTaskCount(),
 					pool2.getTaskCount() - pool2.getCompletedTaskCount(),
 					world.entities().size(),
-					playerSpeed);
-		}
-	}
-
-	public void onMouseScroll(MouseScrollEvent event) {
-		playerSpeed += (float) (event.yOffset() / 100f);
-		if (playerSpeed < 0) {
-			playerSpeed = 0;
-		}
-		player.camera().getProjection()
-				.setFov(player.camera().getProjection().getFov() + ((float) (event.yOffset() / 10000f)));
-		updateProjectionMatrices();
-	}
-
-	private double lastMouseX;
-	private double lastMouseY;
-	private double mouseX;
-	private double mouseY;
-	private static final float MOUSE_SENSITIVITY = 0.001f;
-
-	public void onMousePosition(CursorPositionEvent event) {
-		lastMouseX = mouseX;
-		lastMouseY = mouseY;
-		mouseX = event.x();
-		mouseY = event.y();
-		if (GameControls.CAMERA_ROTATE.isActivated()) {
-			float deltaY = (float) (-(mouseX - lastMouseX) * MOUSE_SENSITIVITY);
-			float deltaX = (float) (-(mouseY - lastMouseY) * MOUSE_SENSITIVITY);
-			player.mutableRotation().asXYVector().add(deltaX, deltaY)
-					.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
+					controller.playerSpeed());
 		}
 	}
 
@@ -513,13 +432,6 @@ public enum Game implements Screen {
 				dragonModel.draw();
 			});
 			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
-				var sunlightDirection = lightPosition.normalize();
-				program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
-				program.loadVector("sunlightDirection", sunlightDirection);
-				program.loadVector("viewPos", player.position());
-				rocketLauncherProjectileModel.draw();
-			});
-			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
 				try (var translationMatrix = MatrixPool.ofTranslation(Vector3D.of(3.5f, -4f, 1f));
 					 var rotationMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
 					var sunlightDirection = Vector3D.of(-3.5f, 4f, -1f).normalize();
@@ -553,7 +465,7 @@ public enum Game implements Screen {
 			}
 		});
 		//uiScreen.render();
-		if (GameControls.DEBUG_TOGGLE.isActivated()) {
+		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
 			debugOverlay.render();
 		}
 	}
