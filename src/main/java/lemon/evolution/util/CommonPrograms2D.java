@@ -16,9 +16,9 @@ public enum CommonPrograms2D implements ShaderProgramHolder {
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/textVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/textFragmentShader").orElseThrow()));
 	private ShaderProgram shaderProgram;
-	private int[] indices;
-	private String[] names;
-	private Shader[] shaders;
+	private final int[] indices;
+	private final String[] names;
+	private final Shader[] shaders;
 
 	private CommonPrograms2D(int[] indices, String[] names, Shader... shaders) {
 		this.indices = indices;

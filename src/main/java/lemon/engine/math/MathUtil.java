@@ -200,6 +200,12 @@ public class MathUtil {
 		matrix.set(3, 3, 1);
 	}
 
+	public static Matrix lookAt(Vector3D direction) {
+		Matrix matrix = new Matrix(4);
+		lookAt(matrix, direction, Vector3D.of(0f, 1f, 0f));
+		return matrix;
+	}
+
 	public static void lookAt(Matrix matrix, Vector3D direction, Vector3D up) {
 		var f = direction.normalize();
 		var u = up.normalize();
