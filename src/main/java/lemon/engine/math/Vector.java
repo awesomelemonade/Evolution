@@ -52,4 +52,8 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 	public default T average(T vector) {
 		return this.add(vector).divide(2);
 	}
+
+	public default boolean hasNaN() {
+		return Float.isNaN(lengthSquared());
+	}
 }

@@ -37,6 +37,14 @@ public class MathUtil {
 		return ((float) width.get()) / ((float) height.get());
 	}
 
+	public static Vector3D getVectorDirection(Vector3D rotation) {
+		var cosX = Math.cos(rotation.x());
+		return Vector3D.of(
+				(float) (-(Math.sin(rotation.y()) * cosX)),
+				(float) (Math.sin(rotation.x())),
+				(float) (-(cosX * Math.cos(rotation.y()))));
+	}
+
 	public static Matrix getPerspective(Projection projection) {
 		Matrix matrix = new Matrix(4);
 		getPerspective(matrix, projection);

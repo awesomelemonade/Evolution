@@ -1,8 +1,13 @@
 package lemon.engine.event;
 
+import com.google.errorprone.annotations.CheckReturnValue;
+import lemon.engine.toolbox.Disposable;
+
+import java.util.function.Consumer;
+
 public class Observable<T> {
-	private EventWith<T> onSet = new EventWith<>();
-	private EventWith<T> onChange = new EventWith<>();
+	private final EventWith<T> onSet = new EventWith<>();
+	private final EventWith<T> onChange = new EventWith<>();
 	private T value;
 
 	public Observable(T value) {
@@ -26,7 +31,17 @@ public class Observable<T> {
 		return onSet;
 	}
 
+	@CheckReturnValue
+	public Disposable onSet(Consumer<? super T> listener) {
+		return onSet.add(listener);
+	}
+
 	public EventWith<T> onChange() {
 		return onChange;
+	}
+
+	@CheckReturnValue
+	public Disposable onChange(Consumer<? super T> listener) {
+		return onChange.add(listener);
 	}
 }

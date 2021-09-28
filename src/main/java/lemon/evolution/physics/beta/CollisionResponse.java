@@ -18,23 +18,22 @@ public enum CollisionResponse {
 		@Override
 		public float execute(Collision collision, MutableVector3D mutablePosition, MutableVector3D mutableVelocity, MutableVector3D mutableForce,
 							 Vector3D remainingVelocity, float remainingDt) {
-			var position = mutablePosition.asImmutable();
 			var velocity = mutableVelocity.asImmutable();
 			var force = mutableForce.asImmutable();
-			var usedVelocity = remainingVelocity.multiply(collision.getT());
-			var negSlidePlaneNormal = collision.getIntersection().subtract(position.add(usedVelocity)).normalize();
+			var usedVelocity = collision.usedVelocity();
+			var negSlidePlaneNormal = collision.negSlidePlaneNormal();
 			// update position
 			float length = usedVelocity.length() - CollisionPacket.BUFFER_DISTANCE;
 			if (length > 0) {
 				mutablePosition.add(usedVelocity.scaleToLength(length));
 			}
-			var unhandledDt = (1f - collision.getT()) * remainingDt;
+			var unhandledDt = (1f - collision.t()) * remainingDt;
 			// update velocity
 			mutableVelocity.subtract(negSlidePlaneNormal.multiply(negSlidePlaneNormal.dotProduct(velocity)));
 			// friction
 			var normalForceMagnitude = negSlidePlaneNormal.dotProduct(force);
 			if (normalForceMagnitude > 0) {
-				var mu = 1f;
+				var mu = velocity.lengthSquared() < 0.01f * 0.01f ? 2.5f : 0.1f;
 				var velocityLength = velocity.length();
 				var frictionForceMagnitude = Math.min(mu * normalForceMagnitude * unhandledDt, velocityLength);
 				if (frictionForceMagnitude > 0) {
@@ -49,7 +48,7 @@ public enum CollisionResponse {
 		@Override
 		public float execute(Collision collision, MutableVector3D mutablePosition, MutableVector3D mutableVelocity, MutableVector3D mutableForce,
 									  Vector3D remainingVelocity, float remainingDt) {
-			var usedVelocity = remainingVelocity.multiply(collision.getT());
+			var usedVelocity = collision.usedVelocity();
 			// update position
 			float length = usedVelocity.length() - CollisionPacket.BUFFER_DISTANCE;
 			if (length > 0) {
@@ -61,10 +60,9 @@ public enum CollisionResponse {
 		@Override
 		public float execute(Collision collision, MutableVector3D mutablePosition, MutableVector3D mutableVelocity, MutableVector3D mutableForce,
 							 Vector3D remainingVelocity, float remainingDt) {
-			var position = mutablePosition.asImmutable();
 			var velocity = mutableVelocity.asImmutable();
-			var usedVelocity = remainingVelocity.multiply(collision.getT());
-			var negSlidePlaneNormal = collision.getIntersection().subtract(position.add(usedVelocity)).normalize();
+			var usedVelocity = collision.usedVelocity();
+			var negSlidePlaneNormal = collision.negSlidePlaneNormal();
 			// update position
 			float length = usedVelocity.length() - CollisionPacket.BUFFER_DISTANCE;
 			if (length > 0) {
@@ -72,7 +70,7 @@ public enum CollisionResponse {
 			}
 			// update velocity
 			mutableVelocity.subtract(negSlidePlaneNormal.multiply(2f * negSlidePlaneNormal.dotProduct(velocity)));
-			return (1f - collision.getT()) * remainingDt;
+			return (1f - collision.t()) * remainingDt;
 		}
 	};
 
