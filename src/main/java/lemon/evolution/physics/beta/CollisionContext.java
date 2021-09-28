@@ -15,7 +15,7 @@ public interface CollisionContext {
 	public default void collideWithWorld(MutableVector3D position, MutableVector3D velocity, MutableVector3D force,
 										 float dt, Function<Collision, CollisionResponse> responder) {
 		CollisionPacket.collideWithWorld((p, v) -> {
-			var collision = new Collision(Float.MAX_VALUE, null);
+			var collision = new Collision();
 			checkCollision(p, v, collision);
 			return collision;
 		}, position, velocity, force, dt, responder);

@@ -78,7 +78,7 @@ public class CollisionPacket {
 		float temp = b >= 0 ? -b - sqrtDet : -b + sqrtDet;
 		float root1Numerator = temp;
 		float root1Denominator = 2f * a;
-		float rightSideMultiplied1 = Math.min(1f, collision.getT()) * root1Denominator;
+		float rightSideMultiplied1 = Math.min(1f, collision.t()) * root1Denominator;
 		if (root1Numerator >= 0f && root1Numerator <= rightSideMultiplied1) {
 			float root1 = MathUtil.clamp(root1Numerator / root1Denominator, 0f, 1f);
 			var scaledVelocity = velocity.multiply(root1);
@@ -92,7 +92,7 @@ public class CollisionPacket {
 		}
 		float root2Numerator = 2f * c;
 		float root2Denominator = temp;
-		float rightSideMultiplied2 = Math.min(1f, collision.getT()) * root2Denominator;
+		float rightSideMultiplied2 = Math.min(1f, collision.t()) * root2Denominator;
 		if (root2Numerator >= 0f && root2Numerator <= rightSideMultiplied2) {
 			float root2 = MathUtil.clamp(root2Numerator / root2Denominator, 0f, 1f);
 			var scaledVelocity = velocity.multiply(root2);
@@ -118,14 +118,14 @@ public class CollisionPacket {
 		float temp = b >= 0 ? -b - sqrtDet : -b + sqrtDet;
 		float root1Numerator = temp;
 		float root1Denominator = 2f * a;
-		float rightSideMultiplied1 = Math.min(1f, collision.getT()) * root1Denominator;
+		float rightSideMultiplied1 = Math.min(1f, collision.t()) * root1Denominator;
 		if (root1Numerator >= 0f && root1Numerator <= rightSideMultiplied1) {
 			float t = MathUtil.clamp(root1Numerator / root1Denominator, 0f, 1f);
 			collision.set(t, vertex);
 		}
 		float root2Numerator = 2f * c;
 		float root2Denominator = temp;
-		float rightSideMultiplied2 = Math.min(1f, collision.getT()) * root2Denominator;
+		float rightSideMultiplied2 = Math.min(1f, collision.t()) * root2Denominator;
 		if (root2Numerator >= 0f && root2Numerator <= rightSideMultiplied2) {
 			float t = MathUtil.clamp(root2Numerator / root2Denominator, 0f, 1f);
 			collision.set(t, vertex);
@@ -155,13 +155,16 @@ public class CollisionPacket {
 			return;
 		}
 		var collision = collisionChecker.apply(position, remainingVelocity);
-		if (collision.getT() >= 1f) {
+		if (collision.t() >= 1f) {
 			float length = remainingVelocity.length() - BUFFER_DISTANCE;
 			if (length > 0) {
 				mutablePosition.add(remainingVelocity.scaleToLength(length));
 			}
 			return;
 		}
+		var usedVelocity = remainingVelocity.multiply(collision.t());
+		var negSlidePlaneNormal = collision.intersection().subtract(position.add(usedVelocity)).normalize();
+		collision.calc(usedVelocity, negSlidePlaneNormal);
 		var response = responder.apply(collision);
 		var unhandledDt = response.execute(collision, mutablePosition, mutableVelocity, mutableForce, remainingVelocity, remainingDt);
 		// recursive

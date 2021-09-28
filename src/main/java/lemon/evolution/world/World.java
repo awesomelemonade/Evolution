@@ -1,5 +1,6 @@
 package lemon.evolution.world;
 
+import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Disposable;
@@ -12,7 +13,8 @@ import lemon.futility.FSetWithEvents;
 import java.util.Set;
 
 public class World implements Disposable {
-	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.05f, 0);
+	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.2f, 0);
+	private static final float AIR_FRICTION = 0.95f;
 	private final Disposables disposables = new Disposables();
 	private final Terrain terrain;
 	private final CollisionContext collisionContext;
@@ -26,7 +28,12 @@ public class World implements Disposable {
 
 	public void update(float dt) {
 		entities.forEach(entity -> {
-			collisionContext.collideWithWorld(entity.mutablePosition(), entity.mutableVelocity(), entity.mutableForce(), dt, entity::onCollide);
+			entity.onUpdate().callListeners();
+			entity.mutableVelocity().multiply(MathUtil.pow(AIR_FRICTION, dt));
+			collisionContext.collideWithWorld(entity.mutablePosition(), entity.mutableVelocity(), entity.mutableForce(), dt, collision -> {
+				entity.onCollide().callListeners(collision);
+				return entity.getCollisionResponse();
+			});
 			entity.mutableForce().set(entity.getEnvironmentalForce());
 		});
 		entities.flush();

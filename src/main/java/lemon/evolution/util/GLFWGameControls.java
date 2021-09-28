@@ -1,23 +1,22 @@
 package lemon.evolution.util;
 
+import lemon.engine.event.Observable;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
+import lemon.futility.FSetWithEvents;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 
 public class GLFWGameControls<T> implements GameControls<T>, Disposable {
 	private final GLFWInput input;
-	private final Set<Integer> keyboardHolds = new HashSet<>();
-	private final Set<Integer> keyboardToggles = new HashSet<>();
-	private final Set<Integer> mouseHolds = new HashSet<>();
-	private final Map<T, BooleanSupplier> controls = new HashMap<>();
+	private final FSetWithEvents<Integer> keyboardHolds = new FSetWithEvents<>();
+	private final FSetWithEvents<Integer> keyboardToggles = new FSetWithEvents<>();
+	private final FSetWithEvents<Integer> mouseHolds = new FSetWithEvents<>();
+	private final Map<T, Observable<Boolean>> controls = new HashMap<>();
 	private final Disposables disposables = new Disposables();
 
 	public GLFWGameControls(GLFWInput input) {
@@ -52,21 +51,35 @@ public class GLFWGameControls<T> implements GameControls<T>, Disposable {
 	}
 
 	public void bindKeyboardHold(int key, T control) {
-		controls.put(control, () -> keyboardHolds.contains(key));
+		bind(key, control, keyboardHolds);
 	}
 
 	public void bindKeyboardToggle(int key, T control) {
-		controls.put(control, () -> keyboardToggles.contains(key));
+		bind(key, control, keyboardToggles);
 	}
 
 	public void bindMouseHold(int key, T control) {
-		controls.put(control, () -> mouseHolds.contains(key));
+		bind(key, control, mouseHolds);
+	}
+
+	private void bind(int key, T control, FSetWithEvents<Integer> set) {
+		var observable = activated(control);
+		observable.setValue(keyboardHolds.contains(key));
+		disposables.add(set.onAdd(k -> {
+			if (k == key) {
+				observable.setValue(true);
+			}
+		}));
+		disposables.add(set.onRemove(k -> {
+			if (k == key) {
+				observable.setValue(false);
+			}
+		}));
 	}
 
 	@Override
-	public boolean isActivated(T control) {
-		var supplier = controls.get(control);
-		return supplier != null && supplier.getAsBoolean();
+	public Observable<Boolean> activated(T control) {
+		return controls.computeIfAbsent(control, c -> new Observable<>(false));
 	}
 
 	@Override

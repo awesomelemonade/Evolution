@@ -1,5 +1,8 @@
 package lemon.evolution.world;
 
+import lemon.engine.event.Event;
+import lemon.engine.event.EventWith;
+import lemon.engine.math.MathUtil;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Vector3D;
 import lemon.evolution.physics.beta.Collision;
@@ -16,6 +19,12 @@ public interface Entity {
 	public default Vector3D force() {
 		return mutableForce().asImmutable();
 	}
+	public default Vector3D rotation() {
+		return velocity();
+	}
+	public default Vector3D vectorDirection() {
+		return MathUtil.getVectorDirection(rotation());
+	}
 	public MutableVector3D mutablePosition();
 	public MutableVector3D mutableVelocity();
 	public MutableVector3D mutableForce();
@@ -25,7 +34,10 @@ public interface Entity {
 	public default Location location() {
 		return new Location(world(), position());
 	}
-	public default CollisionResponse onCollide(Collision collision) {
+	public Event onUpdate();
+	public EventWith<Collision> onCollide();
+	public default CollisionResponse getCollisionResponse() {
 		return CollisionResponse.SLIDE;
 	}
+	public GroundWatcher groundWatcher();
 }

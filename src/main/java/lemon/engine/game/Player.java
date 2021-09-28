@@ -1,22 +1,27 @@
 package lemon.engine.game;
 
+import lemon.engine.event.Event;
+import lemon.engine.event.EventWith;
 import lemon.engine.math.Camera;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Projection;
-import lemon.engine.math.Vector3D;
+import lemon.evolution.physics.beta.Collision;
+import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.ControllableEntity;
+import lemon.evolution.world.GroundWatcher;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
 
 public class Player implements ControllableEntity {
-	private static final float DELTA_MODIFIER = 0.000001f;
-
 	private final Camera camera;
 	private final World world;
 	private final MutableVector3D position;
 	private final MutableVector3D velocity;
 	private final MutableVector3D force;
 	private final MutableVector3D rotation;
+	private final Event onUpdate = new Event();
+	private final EventWith<Collision> onCollide = new EventWith<>();
+	private final GroundWatcher groundWatcher = new GroundWatcher(this);
 
 	public Player(Location location, Projection projection) {
 		this.world = location.world();
@@ -27,18 +32,24 @@ public class Player implements ControllableEntity {
 		this.camera = new Camera(position, rotation, projection);
 	}
 
-	public void update(float delta) {
-		camera.mutablePosition().add(velocity().multiply(delta * DELTA_MODIFIER));
+	@Override
+	public Event onUpdate() {
+		return onUpdate;
 	}
 
-	public Vector3D getVectorDirection() {
-		var rotation = camera.rotation();
-		return Vector3D.of(
-				(float) (-(Math.sin(rotation.y())
-						* Math.cos(rotation.x()))),
-				(float) (Math.sin(rotation.x())),
-				(float) (-(Math.cos(rotation.x())
-						* Math.cos(rotation.y()))));
+	@Override
+	public EventWith<Collision> onCollide() {
+		return onCollide;
+	}
+
+	@Override
+	public CollisionResponse getCollisionResponse() {
+		return CollisionResponse.SLIDE;
+	}
+
+	@Override
+	public GroundWatcher groundWatcher() {
+		return groundWatcher;
 	}
 
 	@Override

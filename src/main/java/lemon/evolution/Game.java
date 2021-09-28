@@ -132,10 +132,6 @@ public enum Game implements Screen {
 				return Math.min(cylinder, terrain);
 				//return Math.min(cylinder, -vector.y() + 10f);
 			};
-			scalarField = vector -> {
-				float distanceSquared = (float) Math.sqrt(vector.x() * vector.x() + vector.y() * vector.y());
-				return 1f - Math.abs(distanceSquared - 20.0f);
-			};
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 			pool.setRejectedExecutionHandler((runnable, executor) -> {});
@@ -183,7 +179,7 @@ public enum Game implements Screen {
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
 			player = new Player(new Location(world, Vector3D.of(0f, 300f, 0f)), projection);
 			world.entities().add(player);
-			controller = new EntityController(controls, player);
+			controller = disposables.add(new EntityController(controls, player));
 
 			window.pushScreen(new Loading(window::popScreen,
 					dragonLoader, rocketLauncherUnloadedLoader,
@@ -278,7 +274,8 @@ public enum Game implements Screen {
 		disposables.add(window.input().keyEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_RELEASE) {
 				if (event.key() == GLFW.GLFW_KEY_G) {
-					world.entities().add(new PuzzleBall(new Location(world, player.position()), player.getVectorDirection().multiply(10f)));
+					world.entities().add(new PuzzleBall(new Location(world, player.position()),
+							player.vectorDirection().multiply(10f)));
 				}
 				if (event.key() == GLFW.GLFW_KEY_C) {
 					world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof RocketLauncherProjectile);
@@ -291,9 +288,6 @@ public enum Game implements Screen {
 							world.entities().add(new PuzzleBall(new Location(world, Vector3D.of(i, 100, j)), Vector3D.ZERO));
 						}
 					}
-				}
-				if (event.key() == GLFW.GLFW_KEY_SPACE) {
-					player.mutableVelocity().addY(2f);
 				}
 			}
 		}));
@@ -309,8 +303,8 @@ public enum Game implements Screen {
 			if (event.action() == GLFW.GLFW_PRESS) {
 				if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
 					world.entities().add(new RocketLauncherProjectile(
-							new Location(world, player.position().add(player.getVectorDirection().multiply(0.99f))),
-							player.getVectorDirection().multiply(2f), rocketLauncherProjectileModel));
+							new Location(world, player.position().add(player.vectorDirection().multiply(0.99f))),
+							player.vectorDirection().multiply(2f), rocketLauncherProjectileModel));
 				}
 			}
 		}));
@@ -321,7 +315,7 @@ public enum Game implements Screen {
 			return Optional.empty();
 		}
 		float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
-		return Optional.of(player.position().add(player.getVectorDirection().multiply(realDistance)));
+		return Optional.of(player.position().add(player.vectorDirection().multiply(realDistance)));
 	}
 
 	public void generateExplosionAtCrosshair() {
@@ -352,7 +346,7 @@ public enum Game implements Screen {
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
 			debugOverlay.update(
-					"FPS=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, %d NumEntities=%d, PlayerSpeed=%f",
+					"FPS=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, %d NumEntities=%d, PlayerSpeed=%f, isOnGround=%s",
 					window.timeSync().getFps(),
 					player.position().x(),
 					player.position().y(),
@@ -363,7 +357,8 @@ public enum Game implements Screen {
 					pool.getTaskCount() - pool.getCompletedTaskCount(),
 					pool2.getTaskCount() - pool2.getCompletedTaskCount(),
 					world.entities().size(),
-					controller.playerSpeed());
+					controller.playerSpeed(),
+					player.groundWatcher().isOnGround() ? "true" : "false");
 		}
 	}
 
