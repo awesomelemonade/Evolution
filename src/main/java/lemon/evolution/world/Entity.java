@@ -29,7 +29,7 @@ public interface Entity {
 	public MutableVector3D mutableVelocity();
 	public MutableVector3D mutableForce();
 	public default Vector3D getEnvironmentalForce() {
-		return world().getEnvironmentalForce();
+		return world().getEnvironmentalForce(this);
 	}
 	public default Location location() {
 		return new Location(world(), position());

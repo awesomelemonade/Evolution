@@ -2,7 +2,6 @@ package lemon.evolution.util;
 
 import lemon.engine.event.Observable;
 import lemon.engine.math.MathUtil;
-import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;

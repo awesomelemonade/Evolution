@@ -1,10 +1,7 @@
 package lemon.evolution.entity;
 
 import lemon.engine.draw.Drawable;
-import lemon.engine.event.Event;
-import lemon.engine.event.EventWith;
 import lemon.engine.math.MathUtil;
-import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.Renderable;
@@ -44,7 +41,7 @@ public class RocketLauncherProjectile extends AbstractEntity implements Disposab
 
 	@Override
 	public Vector3D getEnvironmentalForce() {
-		return count == 0 ? Vector3D.ZERO : world().getEnvironmentalForce();
+		return count == 0 ? Vector3D.ZERO : super.getEnvironmentalForce();
 	}
 
 	@Override
