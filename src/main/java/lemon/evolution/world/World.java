@@ -12,7 +12,8 @@ import lemon.futility.FSetWithEvents;
 import java.util.Set;
 
 public class World implements Disposable {
-	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.05f, 0);
+	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.2f, 0);
+	private static final float AIR_FRICTION = -0.08f;
 	private final Disposables disposables = new Disposables();
 	private final Terrain terrain;
 	private final CollisionContext collisionContext;
@@ -26,14 +27,18 @@ public class World implements Disposable {
 
 	public void update(float dt) {
 		entities.forEach(entity -> {
-			collisionContext.collideWithWorld(entity.mutablePosition(), entity.mutableVelocity(), entity.mutableForce(), dt, entity::onCollide);
+			entity.onUpdate().callListeners();
+			collisionContext.collideWithWorld(entity.mutablePosition(), entity.mutableVelocity(), entity.mutableForce(), dt, collision -> {
+				entity.onCollide().callListeners(collision);
+				return entity.getCollisionResponse();
+			});
 			entity.mutableForce().set(entity.getEnvironmentalForce());
 		});
 		entities.flush();
 	}
 
-	public Vector3D getEnvironmentalForce() {
-		return GRAVITY_VECTOR;
+	public Vector3D getEnvironmentalForce(Entity entity) {
+		return GRAVITY_VECTOR.add(entity.velocity().multiply(AIR_FRICTION));
 	}
 
 	public CollisionContext collisionContext() {

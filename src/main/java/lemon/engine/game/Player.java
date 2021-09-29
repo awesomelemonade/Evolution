@@ -1,48 +1,83 @@
 package lemon.engine.game;
 
+import lemon.engine.event.Event;
+import lemon.engine.event.EventWith;
 import lemon.engine.math.Camera;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Projection;
-import lemon.engine.math.Vector3D;
+import lemon.evolution.physics.beta.Collision;
+import lemon.evolution.physics.beta.CollisionResponse;
+import lemon.evolution.world.ControllableEntity;
+import lemon.evolution.world.GroundWatcher;
+import lemon.evolution.world.Location;
+import lemon.evolution.world.World;
 
-public record Player(Camera camera, MutableVector3D mutableVelocity) {
-	private static final float DELTA_MODIFIER = 0.000001f;
+public class Player implements ControllableEntity {
+	private final Camera camera;
+	private final World world;
+	private final MutableVector3D position;
+	private final MutableVector3D velocity;
+	private final MutableVector3D force;
+	private final MutableVector3D rotation;
+	private final Event onUpdate = new Event();
+	private final EventWith<Collision> onCollide = new EventWith<>();
+	private final GroundWatcher groundWatcher = new GroundWatcher(this);
 
-	public Player(Projection projection) {
-		this(new Camera(projection), MutableVector3D.ofZero());
+	public Player(Location location, Projection projection) {
+		this.world = location.world();
+		this.position = MutableVector3D.of(location.position());
+		this.velocity = MutableVector3D.ofZero();
+		this.force = MutableVector3D.ofZero();
+		this.rotation = MutableVector3D.ofZero();
+		this.camera = new Camera(position, rotation, projection);
 	}
 
-	public void update(float delta) {
-		camera.mutablePosition().add(velocity().multiply(delta * DELTA_MODIFIER));
+	@Override
+	public Event onUpdate() {
+		return onUpdate;
 	}
 
-	public Vector3D getVectorDirection() {
-		var rotation = camera.rotation();
-		return Vector3D.of(
-				(float) (-(Math.sin(rotation.y())
-						* Math.cos(rotation.x()))),
-				(float) (Math.sin(rotation.x())),
-				(float) (-(Math.cos(rotation.x())
-						* Math.cos(rotation.y()))));
+	@Override
+	public EventWith<Collision> onCollide() {
+		return onCollide;
 	}
 
+	@Override
+	public CollisionResponse getCollisionResponse() {
+		return CollisionResponse.SLIDE;
+	}
+
+	@Override
+	public GroundWatcher groundWatcher() {
+		return groundWatcher;
+	}
+
+	@Override
+	public World world() {
+		return world;
+	}
+
+	@Override
 	public MutableVector3D mutablePosition() {
-		return camera.mutablePosition();
+		return position;
 	}
 
-	public Vector3D position() {
-		return camera.position();
+	@Override
+	public MutableVector3D mutableVelocity() {
+		return velocity;
 	}
 
+	@Override
+	public MutableVector3D mutableForce() {
+		return force;
+	}
+
+	@Override
 	public MutableVector3D mutableRotation() {
-		return camera.mutableRotation();
+		return rotation;
 	}
 
-	public Vector3D rotation() {
-		return camera.rotation();
-	}
-
-	public Vector3D velocity() {
-		return mutableVelocity.asImmutable();
+	public Camera camera() {
+		return camera;
 	}
 }

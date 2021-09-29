@@ -27,9 +27,11 @@ public class Computable<T> {
 	}
 
 	private void propagateNeedsUpdate() {
-		for (var depender : dependers) {
-			depender.needsUpdate = true;
-			depender.propagateNeedsUpdate();
+		synchronized (dependers) {
+			for (var depender : dependers) {
+				depender.needsUpdate = true;
+				depender.propagateNeedsUpdate();
+			}
 		}
 	}
 
