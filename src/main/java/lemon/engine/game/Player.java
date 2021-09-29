@@ -13,6 +13,7 @@ import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
 
 public class Player implements ControllableEntity {
+	private final String name;
 	private final Camera camera;
 	private final World world;
 	private final MutableVector3D position;
@@ -23,7 +24,8 @@ public class Player implements ControllableEntity {
 	private final EventWith<Collision> onCollide = new EventWith<>();
 	private final GroundWatcher groundWatcher = new GroundWatcher(this);
 
-	public Player(Location location, Projection projection) {
+	public Player(String name, Location location, Projection projection) {
+		this.name = name;
 		this.world = location.world();
 		this.position = MutableVector3D.of(location.position());
 		this.velocity = MutableVector3D.ofZero();
@@ -75,6 +77,10 @@ public class Player implements ControllableEntity {
 	@Override
 	public MutableVector3D mutableRotation() {
 		return rotation;
+	}
+
+	public String name() {
+		return name;
 	}
 
 	public Camera camera() {

@@ -33,7 +33,7 @@ public enum CollisionResponse {
 			// friction
 			var normalForceMagnitude = negSlidePlaneNormal.dotProduct(force);
 			if (normalForceMagnitude > 0) {
-				var mu = velocity.lengthSquared() < 0.01f * 0.01f ? 2.5f : 0.1f;
+				var mu = velocity.lengthSquared() < 0.075f * 0.075f ? 2.5f : 0.1f;
 				var velocityLength = velocity.length();
 				var frictionForceMagnitude = Math.min(mu * normalForceMagnitude * unhandledDt, velocityLength);
 				if (frictionForceMagnitude > 0) {
