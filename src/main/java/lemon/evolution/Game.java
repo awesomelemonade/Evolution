@@ -139,7 +139,7 @@ public enum Game implements Screen {
 			disposables.add(() -> pool2.shutdown());
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
 			var terrain = new Terrain(generator, pool2, Vector3D.of(1f, 1f, 1f));
-			CollisionContext collisionContext = (position, velocity, collision) -> {
+			CollisionContext collisionContext = (position, velocity, checker) -> {
 				var after = position.add(velocity);
 				int minChunkX = terrain.getChunkX(Math.min(position.x(), after.x()) - 1f);
 				int maxChunkX = terrain.getChunkX(Math.max(position.x(), after.x()) + 1f);
@@ -151,12 +151,8 @@ public enum Game implements Screen {
 					for (int j = minChunkY; j <= maxChunkY; j++) {
 						for (int k = minChunkZ; k <= maxChunkZ; k++) {
 							// TODO: something similar to i * i + j * j + k * k <= indexRadius * indexRadius
-							TerrainChunk chunk = terrain.getChunk(i, j, k);
-							chunk.getTriangles().ifPresent(triangles -> {
-								triangles.forEach(triangle -> {
-									CollisionPacket.checkTriangle(position, velocity, triangle, collision);
-								});
-							});
+							terrain.getChunk(i, j, k).getTriangles()
+									.ifPresent(triangles -> triangles.forEach(checker));
 						}
 					}
 				}
@@ -201,6 +197,7 @@ public enum Game implements Screen {
 		postLoadTasks.run();
 		this.window = window;
 		GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+		disposables.add(() -> GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL));
 		var windowWidth = window.getWidth();
 		var windowHeight = window.getHeight();
 
@@ -220,7 +217,7 @@ public enum Game implements Screen {
 		var projection = new Projection(MathUtil.toRadians(60f),
 				((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
 		var playersBuilder = new ImmutableList.Builder<Player>();
-		int numPlayers = 4;
+		int numPlayers = 2;
 		for (int i = 0 ; i < numPlayers; i++) {
 			var distance = 25f;
 			var angle = MathUtil.TAU * ((float) i) / numPlayers;
@@ -232,7 +229,11 @@ public enum Game implements Screen {
 		}
 		var players = playersBuilder.build();
 		world.entities().addAll(players);
+		world.entities().flush();
 		gameLoop = disposables.add(new GameLoop(players, controls));
+		gameLoop.onWinner(player -> {
+			window.popAndPushScreen(Menu.INSTANCE);
+		});
 
 		Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);

@@ -26,7 +26,7 @@ public class Player implements ControllableEntity {
 	private final Event onUpdate = new Event();
 	private final EventWith<Collision> onCollide = new EventWith<>();
 	private final GroundWatcher groundWatcher = disposables.add(new GroundWatcher(this));
-	private final Observable<Boolean> alive = new Observable<>(false);
+	private final Observable<Boolean> alive;
 
 	public Player(String name, Location location, Projection projection) {
 		this.name = name;
@@ -39,9 +39,9 @@ public class Player implements ControllableEntity {
 		disposables.add(onUpdate.add(() -> {
 			if (position.y() < -250f) {
 				world.entities().remove(this);
-				alive.setValue(false);
 			}
 		}));
+		this.alive = world.entities().observableContains(this, disposables::add);
 	}
 
 	@Override

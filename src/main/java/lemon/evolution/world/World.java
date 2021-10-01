@@ -49,7 +49,7 @@ public class World implements Disposable {
 		return terrain;
 	}
 
-	public FSetWithEvents<Entity> entities() {
+	public FBufferedSetWithEvents<Entity> entities() {
 		return entities;
 	}
 

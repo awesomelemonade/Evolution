@@ -114,6 +114,10 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 		return current.getValue();
 	}
 
+	public Observable<T> observableCurrent() {
+		return current;
+	}
+
 	public float playerSpeed() {
 		return playerSpeed;
 	}

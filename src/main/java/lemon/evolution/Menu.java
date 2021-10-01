@@ -10,12 +10,17 @@ import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public enum Menu implements Screen {
 	INSTANCE;
+	private static final Logger logger = Logger.getLogger(Menu.class.getName());
 	private GLFWWindow window;
 	private List<Quad2D> buttons;
 	private final Disposables disposables = new Disposables();
@@ -24,6 +29,9 @@ public enum Menu implements Screen {
 	public void onLoad(GLFWWindow window) {
 		this.window = window;
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
+		int[] currentViewport = new int[4];
+		GL11.glGetIntegerv(GL11.GL_VIEWPORT, currentViewport);
+		logger.log(Level.INFO, "Current Viewport: " + Arrays.toString(currentViewport));
 		buttons = new ArrayList<>();
 		for (int i = 0; i < 3; ++i) {
 			buttons.add(new Quad2D(new Box2D(-0.3f, -0.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
