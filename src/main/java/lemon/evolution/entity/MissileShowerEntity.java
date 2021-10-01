@@ -1,5 +1,6 @@
 package lemon.evolution.entity;
 
+import lemon.engine.draw.Drawable;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
@@ -7,43 +8,34 @@ import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.Game;
-import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.world.AbstractEntity;
 import lemon.evolution.world.Location;
 import org.lwjgl.opengl.GL11;
 
-public class RocketLauncherProjectile extends AbstractEntity implements Disposable, Renderable {
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
+public class MissileShowerEntity extends AbstractEntity implements Disposable, Renderable {
+	private final Instant creationTime;
 	private final Disposables disposables = new Disposables();
 
-	public RocketLauncherProjectile(Location location, Vector3D velocity) {
+	public MissileShowerEntity(Location location, Vector3D velocity) {
 		super(location, velocity);
-		this.disposables.add(this.onCollide().add(collision -> {
-			var explosionPosition = collision.intersection();
-			world().terrain().generateExplosion(explosionPosition, 3f);
-			world().entities().forEach(entity -> {
-				if (entity != this) {
-					float strength = Math.min(2f, 10f / entity.position().distanceSquared(explosionPosition));
-					var direction = entity.position().subtract(explosionPosition);
-					if (direction.equals(Vector3D.ZERO)) {
-						direction = Vector3D.ofRandomUnitVector();
-					}
-					entity.mutableVelocity().add(direction.scaleToLength(strength));
+		this.creationTime = Instant.now();
+		disposables.add(this.onUpdate().add(() -> {
+			if (Instant.now().isAfter(creationTime.plus(1, ChronoUnit.SECONDS))) {
+				removeFromWorld();
+				var numRockets = 256;
+				var upwardVelocity = Vector3D.of(0f, 1f, 0f);
+				for (int i = 0; i < numRockets; i++) {
+					var angle = (float) (Math.random() * MathUtil.TAU);
+					var horizontalVelocity = Vector3D.of(MathUtil.cos(angle), 0, MathUtil.sin(angle)).multiply((float) (Math.random() * 1f));
+					world().entities().add(new RocketLauncherProjectile(location(), upwardVelocity.add(horizontalVelocity)));
 				}
-			});
-		}));
-		this.disposables.add(this.onUpdate().add(() -> {
-			if (position().y() < -200f) {
-				world().entities().remove(this);
 			}
 		}));
-	}
-
-	@Override
-	public CollisionResponse getCollisionResponse() {
-		removeFromWorld();
-		return CollisionResponse.STOP;
 	}
 
 	@Override

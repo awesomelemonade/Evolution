@@ -7,12 +7,11 @@ import lemon.engine.toolbox.Disposables;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.futility.FBufferedSetWithEvents;
-import lemon.futility.FSetWithEvents;
 
 import java.util.Set;
 
 public class World implements Disposable {
-	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.1f, 0);
+	private static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.07f, 0);
 	private static final float AIR_FRICTION = -0.02f;
 	private final Disposables disposables = new Disposables();
 	private final Terrain terrain;

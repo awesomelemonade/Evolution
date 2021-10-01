@@ -6,8 +6,7 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.EvolutionControls;
-import lemon.evolution.Game;
-import lemon.evolution.entity.RocketLauncherProjectile;
+import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.world.ControllableEntity;
 import org.lwjgl.glfw.GLFW;
 
@@ -41,10 +40,9 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 		controls.addCallback(input -> input.mouseButtonEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_PRESS && event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
 				var currentEntity = current.getValue();
-				currentEntity.world().entities().add(new RocketLauncherProjectile(
+				currentEntity.world().entities().add(new MissileShowerEntity(
 						currentEntity.location().add(currentEntity.vectorDirection().multiply(0.95f)),
-						currentEntity.vectorDirection().multiply(2f),
-						Game.INSTANCE.rocketLauncherProjectileModel // TODO: Temporary
+						currentEntity.vectorDirection().multiply(5f)
 				));
 			}
 		}));

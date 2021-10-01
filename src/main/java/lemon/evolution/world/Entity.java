@@ -40,4 +40,8 @@ public interface Entity {
 		return CollisionResponse.SLIDE;
 	}
 	public GroundWatcher groundWatcher();
+
+	public default void removeFromWorld() {
+		world().entities().remove(this);
+	}
 }

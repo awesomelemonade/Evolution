@@ -29,9 +29,6 @@ public enum Menu implements Screen {
 	public void onLoad(GLFWWindow window) {
 		this.window = window;
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
-		int[] currentViewport = new int[4];
-		GL11.glGetIntegerv(GL11.GL_VIEWPORT, currentViewport);
-		logger.log(Level.INFO, "Current Viewport: " + Arrays.toString(currentViewport));
 		buttons = new ArrayList<>();
 		for (int i = 0; i < 3; ++i) {
 			buttons.add(new Quad2D(new Box2D(-0.3f, -0.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
