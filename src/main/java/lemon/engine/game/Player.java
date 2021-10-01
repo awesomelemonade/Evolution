@@ -2,9 +2,11 @@ package lemon.engine.game;
 
 import lemon.engine.event.Event;
 import lemon.engine.event.EventWith;
+import lemon.engine.event.Observable;
 import lemon.engine.math.Camera;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Projection;
+import lemon.engine.toolbox.Disposables;
 import lemon.evolution.physics.beta.Collision;
 import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.ControllableEntity;
@@ -13,6 +15,7 @@ import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
 
 public class Player implements ControllableEntity {
+	private final Disposables disposables = new Disposables();
 	private final String name;
 	private final Camera camera;
 	private final World world;
@@ -22,7 +25,8 @@ public class Player implements ControllableEntity {
 	private final MutableVector3D rotation;
 	private final Event onUpdate = new Event();
 	private final EventWith<Collision> onCollide = new EventWith<>();
-	private final GroundWatcher groundWatcher = new GroundWatcher(this);
+	private final GroundWatcher groundWatcher = disposables.add(new GroundWatcher(this));
+	private final Observable<Boolean> alive = new Observable<>(false);
 
 	public Player(String name, Location location, Projection projection) {
 		this.name = name;
@@ -32,6 +36,12 @@ public class Player implements ControllableEntity {
 		this.force = MutableVector3D.ofZero();
 		this.rotation = MutableVector3D.ofZero();
 		this.camera = new Camera(position, rotation, projection);
+		disposables.add(onUpdate.add(() -> {
+			if (position.y() < -250f) {
+				world.entities().remove(this);
+				alive.setValue(false);
+			}
+		}));
 	}
 
 	@Override
@@ -85,5 +95,9 @@ public class Player implements ControllableEntity {
 
 	public Camera camera() {
 		return camera;
+	}
+
+	public Observable<Boolean> alive() {
+		return alive;
 	}
 }

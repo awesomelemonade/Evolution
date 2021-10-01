@@ -14,8 +14,8 @@ import org.lwjgl.glfw.GLFW;
 public class EntityController<T extends ControllableEntity> implements Disposable {
 	private static final boolean USE_SURF = false;
 	private static final float MOUSE_SENSITIVITY = 0.001f;
-	private static final float JUMP_HEIGHT = 8f;
-	private static float playerSpeed = 0.2f;
+	private static final float JUMP_HEIGHT = 2f;
+	private static float playerSpeed = 0.08f;
 	private final Disposables disposables = new Disposables();
 	private final GLFWGameControls<EvolutionControls> controls;
 	private final Observable<T> current;
@@ -53,6 +53,11 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 				var currentEntity = current.getValue();
 				currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(JUMP_HEIGHT));
 			}
+		}));
+		var currentCleanup = new Disposables(current.getValue().onUpdate().add(this::update));
+		disposables.add(current.onChange(newEntity -> {
+			currentCleanup.dispose();
+			currentCleanup.add(newEntity.onUpdate().add(this::update));
 		}));
 	}
 

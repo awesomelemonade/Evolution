@@ -25,10 +25,10 @@ public class RocketLauncherProjectile extends AbstractEntity implements Disposab
 		this.disposables.add(this.onCollide().add(collision -> {
 			count++;
 			var explosionPosition = collision.intersection();
-			world().terrain().generateExplosion(explosionPosition, 8f);
+			world().terrain().generateExplosion(explosionPosition, 3f);
 			world().entities().forEach(entity -> {
 				if (entity != this) {
-					float strength = Math.min(5f, 50f / entity.position().distanceSquared(explosionPosition));
+					float strength = Math.min(2f, 10f / entity.position().distanceSquared(explosionPosition));
 					var direction = entity.position().subtract(explosionPosition);
 					if (direction.equals(Vector3D.ZERO)) {
 						direction = Vector3D.ofRandomUnitVector();
@@ -36,6 +36,11 @@ public class RocketLauncherProjectile extends AbstractEntity implements Disposab
 					entity.mutableVelocity().add(direction.scaleToLength(strength));
 				}
 			});
+		}));
+		this.disposables.add(this.onUpdate().add(() -> {
+			if (position().y() < -200f) {
+				world().entities().remove(this);
+			}
 		}));
 	}
 
@@ -61,8 +66,9 @@ public class RocketLauncherProjectile extends AbstractEntity implements Disposab
 			var sunlightDirection = Vector3D.of(0f, 1f, 0f);
 			try (var translationMatrix = MatrixPool.ofTranslation(position());
 				 var rotationMatrix = MatrixPool.ofLookAt(velocity());
-				 var adjustedMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
-				program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(adjustedMatrix));
+				 var adjustedMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f);
+				 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 0.2f)) {
+				program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(adjustedMatrix).multiply(scalarMatrix));
 				program.loadVector("sunlightDirection", sunlightDirection);
 				model.draw();
 			}
