@@ -10,6 +10,7 @@ uniform sampler2D grassSampler;
 uniform sampler2D slopeSampler;
 uniform sampler2D rockSampler;
 uniform sampler2D baseSampler;
+uniform sampler2D snowSampler;
 
 vec4 getTriplanarTexturing(in sampler2D sampler, in vec3 textureCoords, in vec3 weights) {
 	return texture(sampler, textureCoords.yz) * weights.x +
@@ -24,11 +25,16 @@ void main(void) {
 	vec4 slopeColor = getTriplanarTexturing(slopeSampler, passTextureCoords, blendWeights);
 	vec4 rockColor = getTriplanarTexturing(rockSampler, passTextureCoords, blendWeights);
 	vec4 baseColor = getTriplanarTexturing(baseSampler, passTextureCoords, blendWeights);
+	vec4 snowColor = getTriplanarTexturing(snowSampler, passTextureCoords, blendWeights);
 
 	float slope = 1 - passNormal.y;
 
 	if (slope < 0.2) {
-		outColor = mix(grassColor, slopeColor, slope / 0.2);
+	    if (passTextureCoords.x < 0) {
+	        outColor = mix(grassColor, slopeColor, slope / 0.2);
+	    } else {
+	        outColor = mix(snowColor, slopeColor, slope / 0.2);
+	    }
 	} else if (slope < 0.7) {
 		outColor = mix(slopeColor, rockColor, (slope - 0.2) / 0.5);
 	} else if (slope < 1.5) {
@@ -36,4 +42,5 @@ void main(void) {
 	} else {
 		outColor = baseColor;
 	}
+
 }

@@ -258,7 +258,8 @@ public enum Game implements Screen {
 				TextureBank.GRASS, "/res/grass.png",
 				TextureBank.SLOPE, "/res/slope.png",
 				TextureBank.ROCK, "/res/rock.png",
-				TextureBank.BASE, "/res/base.png"
+				TextureBank.BASE, "/res/base.png",
+				TextureBank.SNOW, "/res/snow.png"
 		).forEach((textureBank, path) -> {
 			textureBank.bind(() -> {
 				var texture = new Texture();
