@@ -52,14 +52,14 @@ public class DebugOverlay implements Disposable {
 		byte counter = 0;
 		for (String benchmarker : this.benchmarker.getNames()) {
 			Color color = DEBUG_GRAPH_COLORS[counter % DEBUG_GRAPH_COLORS.length];
-			CommonPrograms2D.LINE.getShaderProgram().use(program -> {
+			CommonPrograms2D.LINE.use(program -> {
 				program.loadColor3f(color);
 				program.loadFloat("spacing",
 						2f / (this.benchmarker.getLineGraph(benchmarker).getSize() - 1));
 				this.benchmarker.getLineGraph(benchmarker).render();
 			});
 			byte finalCounter = counter;
-			CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+			CommonPrograms2D.COLOR.use(program -> {
 				program.loadColor4f("filterColor", color);
 				try (var translationMatrix = MatrixPool.ofTranslation(window.getWidth() - 200f, window.getHeight() - 50f - (finalCounter * 30f), 0f);
 					 var scalarMatrix = MatrixPool.ofScalar(10f, 10f, 1f);
@@ -69,7 +69,7 @@ public class DebugOverlay implements Disposable {
 				CommonDrawables.COLORED_QUAD.draw();
 				program.loadColor4f("filterColor", Color.WHITE);
 			});
-			CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
+			CommonPrograms2D.TEXT.use(program -> {
 				try (var translationMatrix = MatrixPool.ofTranslation(window.getWidth() - 170f, window.getHeight() - 55f - (finalCounter * 30f), 0f);
 					 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 1f);
 					 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
@@ -82,7 +82,7 @@ public class DebugOverlay implements Disposable {
 			counter++;
 		}
 		// render debug text
-		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
+		CommonPrograms2D.TEXT.use(program -> {
 			try (var translationMatrix = MatrixPool.ofTranslation(5f, window.getHeight() - 20, 0f);
 				 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 1f);
 				 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {

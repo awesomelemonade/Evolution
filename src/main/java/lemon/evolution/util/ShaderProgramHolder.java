@@ -1,13 +1,23 @@
 package lemon.evolution.util;
 
 import lemon.engine.render.ShaderProgram;
-import lemon.engine.toolbox.Disposable;
+import lemon.engine.render.UniformVariable;
 
-public interface ShaderProgramHolder extends Disposable {
-	public ShaderProgram getShaderProgram();
+public interface ShaderProgramHolder extends ShaderProgram {
+	public ShaderProgram shaderProgram();
+
+	@Override
+	public default int id() {
+		return shaderProgram().id();
+	}
+
+	@Override
+	public default UniformVariable getUniformVariable(String name) {
+		return shaderProgram().getUniformVariable(name);
+	}
 
 	@Override
 	public default void dispose() {
-		this.getShaderProgram().dispose();
+		shaderProgram().dispose();
 	}
 }

@@ -14,6 +14,14 @@ public class MathUtil {
 	private MathUtil() {
 	}
 
+	public static float cos(float angle) {
+		return (float) Math.cos(angle);
+	}
+
+	public static float sin(float angle) {
+		return (float) Math.sin(angle);
+	}
+
 	public static boolean inRange(float a, float min, float max) {
 		return a >= min && a <= max;
 	}
@@ -206,6 +214,12 @@ public class MathUtil {
 		matrix.set(1, 1, vector.y());
 		matrix.set(2, 2, vector.z());
 		matrix.set(3, 3, 1);
+	}
+
+	public static Matrix lookAt(Vector3D direction) {
+		Matrix matrix = new Matrix(4);
+		lookAt(matrix, direction, Vector3D.of(0f, 1f, 0f));
+		return matrix;
 	}
 
 	public static void lookAt(Matrix matrix, Vector3D direction, Vector3D up) {

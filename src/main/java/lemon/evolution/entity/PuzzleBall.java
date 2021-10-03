@@ -18,7 +18,7 @@ import org.lwjgl.opengl.GL11;
 public class PuzzleBall extends AbstractEntity implements Renderable {
 	private static final int RADIUS = 1;
 	private static final int ITERATIONS = 5;
-	private static final Lazy<Drawable> sphere = new Lazy<>(() -> {
+	private static final Lazy<Drawable> DRAWABLE = new Lazy<>(() -> {
 		return SphereModelBuilder.of(RADIUS, ITERATIONS)
 				.build((indices, vertices) -> {
 					Color[] colors = new Color[vertices.length];
@@ -42,11 +42,11 @@ public class PuzzleBall extends AbstractEntity implements Renderable {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms3D.COLOR.use(program -> {
 			try (var translationMatrix = MatrixPool.ofTranslation(position)) {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix);
 			}
-			sphere.get().draw();
+			DRAWABLE.get().draw();
 		});
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);
@@ -56,13 +56,13 @@ public class PuzzleBall extends AbstractEntity implements Renderable {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms3D.COLOR.use(program -> {
 			try (var translationMatrix = MatrixPool.ofTranslation(position);
 				 var scalarMatrix = MatrixPool.ofScalar(scalar);
 				 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
 			}
-			sphere.get().draw();
+			DRAWABLE.get().draw();
 		});
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 		GL11.glDisable(GL11.GL_BLEND);

@@ -1,5 +1,6 @@
 package lemon.evolution;
 
+import com.google.common.collect.ImmutableList;
 import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
@@ -30,11 +31,9 @@ import lemon.engine.toolbox.SkyboxLoader;
 import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
-import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.entity.RocketLauncherProjectile;
 import lemon.evolution.physics.beta.CollisionContext;
-import lemon.evolution.physics.beta.CollisionPacket;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.screen.beta.Screen;
@@ -42,13 +41,11 @@ import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
-import lemon.evolution.util.EntityController;
 import lemon.evolution.util.GLFWGameControls;
-import lemon.evolution.util.ShaderProgramHolder;
+import lemon.evolution.world.GameLoop;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
 import lemon.evolution.world.WorldRenderer;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -57,11 +54,9 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.ToIntFunction;
@@ -76,8 +71,7 @@ public enum Game implements Screen {
 	private boolean loaded;
 
 	private GLFWGameControls<EvolutionControls> controls;
-	private Player player;
-	private EntityController controller;
+	private GameLoop gameLoop;
 
 	private FrameBuffer frameBuffer;
 
@@ -92,7 +86,9 @@ public enum Game implements Screen {
 
 	private Drawable rocketLauncherUnloadedModel;
 	private Drawable rocketLauncherLoadedModel;
-	private Drawable rocketLauncherProjectileModel;
+	public Drawable rocketLauncherProjectileModel; // TODO: Temporary
+
+	private Drawable foxModel;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
 
@@ -139,8 +135,8 @@ public enum Game implements Screen {
 			disposables.add(() -> pool.shutdown());
 			disposables.add(() -> pool2.shutdown());
 			TerrainGenerator generator = new TerrainGenerator(pool, scalarField);
-			var terrain = new Terrain(generator, pool2, Vector3D.of(5f, 5f, 5f));
-			CollisionContext collisionContext = (position, velocity, collision) -> {
+			var terrain = new Terrain(generator, pool2, Vector3D.of(1f, 1f, 1f));
+			CollisionContext collisionContext = (position, velocity, checker) -> {
 				var after = position.add(velocity);
 				int minChunkX = terrain.getChunkX(Math.min(position.x(), after.x()) - 1f);
 				int maxChunkX = terrain.getChunkX(Math.max(position.x(), after.x()) + 1f);
@@ -152,12 +148,8 @@ public enum Game implements Screen {
 					for (int j = minChunkY; j <= maxChunkY; j++) {
 						for (int k = minChunkZ; k <= maxChunkZ; k++) {
 							// TODO: something similar to i * i + j * j + k * k <= indexRadius * indexRadius
-							TerrainChunk chunk = terrain.getChunk(i, j, k);
-							chunk.getTriangles().ifPresent(triangles -> {
-								triangles.forEach(triangle -> {
-									CollisionPacket.checkTriangle(position, velocity, triangle, collision);
-								});
-							});
+							terrain.getChunk(i, j, k).getTriangles()
+									.ifPresent(triangles -> triangles.forEach(checker));
 						}
 					}
 				}
@@ -173,22 +165,18 @@ public enum Game implements Screen {
 					objLoader -> rocketLauncherLoadedModel = objLoader.toIndexedDrawable());
 			var rocketLauncherProjectileLoader = new ObjLoader("/res/rocket-launcher-projectile.obj", postLoadTasks::add,
 					objLoader -> rocketLauncherProjectileModel = objLoader.toIndexedDrawable());
-
-			this.controls = disposables.add(EvolutionControls.getDefaultControls(window.input()));
-			var projection = new Projection(MathUtil.toRadians(60f),
-					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
-			player = new Player(new Location(world, Vector3D.of(0f, 300f, 0f)), projection);
-			world.entities().add(player);
-			controller = disposables.add(new EntityController(controls, player));
+			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
+					objLoader -> foxModel = objLoader.toIndexedDrawable());
 
 			window.pushScreen(new Loading(window::popScreen,
 					dragonLoader, rocketLauncherUnloadedLoader,
 					rocketLauncherLoadedLoader, rocketLauncherProjectileLoader,
+					foxLoader,
 					new Loader() {
 				int generatorStartSize;
 				@Override
 				public void load() {
-					worldRenderer.terrainRenderer().preload(player.position());
+					worldRenderer.terrainRenderer().preload(Vector3D.ZERO);
 					generatorStartSize = Math.max(1, generator.getQueueSize());
 				}
 
@@ -206,6 +194,7 @@ public enum Game implements Screen {
 		postLoadTasks.run();
 		this.window = window;
 		GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+		disposables.add(() -> GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL));
 		var windowWidth = window.getWidth();
 		var windowHeight = window.getHeight();
 
@@ -221,9 +210,31 @@ public enum Game implements Screen {
 
 		debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
+		this.controls = disposables.add(EvolutionControls.getDefaultControls(window.input()));
+		var projection = new Projection(MathUtil.toRadians(60f),
+				((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
+		var playersBuilder = new ImmutableList.Builder<Player>();
+		int numPlayers = 2;
+		for (int i = 0 ; i < numPlayers; i++) {
+			var distance = 25f;
+			var angle = MathUtil.TAU * ((float) i) / numPlayers;
+			var cos = (float) Math.cos(angle);
+			var sin = (float) Math.sin(angle);
+			var player = new Player("Player " + (i + 1), new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection);
+			player.mutableRotation().setY((float) Math.atan2(player.position().y(), player.position().x()));
+			playersBuilder.add(player);
+		}
+		var players = playersBuilder.build();
+		world.entities().addAll(players);
+		world.entities().flush();
+		gameLoop = disposables.add(new GameLoop(players, controls));
+		gameLoop.onWinner(player -> {
+			window.popAndPushScreen(Menu.INSTANCE);
+		});
+
 		Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
-		CommonProgramsSetup.setup3D(player.camera().getProjectionMatrix());
+		CommonProgramsSetup.setup3D(gameLoop.currentPlayer().camera().getProjectionMatrix());
 
 		updateViewMatrices();
 
@@ -269,14 +280,10 @@ public enum Game implements Screen {
 
 		debug = new ArrayList<>();
 
-		lightPosition = player.position();
+		lightPosition = gameLoop.currentPlayer().position();
 
 		disposables.add(window.input().keyEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_RELEASE) {
-				if (event.key() == GLFW.GLFW_KEY_G) {
-					world.entities().add(new PuzzleBall(new Location(world, player.position()),
-							player.vectorDirection().multiply(10f)));
-				}
 				if (event.key() == GLFW.GLFW_KEY_C) {
 					world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof RocketLauncherProjectile);
 					debug.clear();
@@ -291,6 +298,7 @@ public enum Game implements Screen {
 				}
 			}
 		}));
+		gameLoop.bindNumberKeys(window.input());
 
 		uiScreen = disposables.add(new UIScreen(window.input()));
 		uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
@@ -299,43 +307,13 @@ public enum Game implements Screen {
 		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED);
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
-		disposables.add(window.input().mouseButtonEvent().add(event -> {
-			if (event.action() == GLFW.GLFW_PRESS) {
-				if (event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
-					world.entities().add(new RocketLauncherProjectile(
-							new Location(world, player.position().add(player.vectorDirection().multiply(0.99f))),
-							player.vectorDirection().multiply(2f), rocketLauncherProjectileModel));
-				}
-			}
-		}));
 	}
-
-	public Optional<Vector3D> getCrosshairLocation() {
-		if (depthDistance == 1f) {
-			return Optional.empty();
-		}
-		float realDistance = (float) (0.00997367 * Math.pow(1.0 - depthDistance + 0.0000100616, -1.00036));
-		return Optional.of(player.position().add(player.vectorDirection().multiply(realDistance)));
-	}
-
-	public void generateExplosionAtCrosshair() {
-		getCrosshairLocation().ifPresent(position -> world.terrain().generateExplosion(position, 5f));
-	}
-
-	private float depthDistance = 0;
 
 	@Override
 	public void update(long deltaTime) {
 		float dt = (float) (((double) deltaTime) / 3.0e7);
-		if (controls.isActivated(EvolutionControls.ADD_TERRAIN)) {
-			getCrosshairLocation().ifPresent(point -> world.terrain().terraform(point, 8f, dt, 5f));
-		}
-		if (controls.isActivated(EvolutionControls.REMOVE_TERRAIN)) {
-			getCrosshairLocation().ifPresent(point -> world.terrain().terraform(point, 8f, dt, -5f));
-		}
-		controller.update();
 
-		var totalLength = world.entities().stream().map(entity -> entity instanceof PuzzleBall ball ? ball.velocity().length() : 0).reduce(0f, Float::sum);
+		var totalLength = world.entities().stream().map(entity -> entity instanceof PuzzleBall ball ? ball.velocity().length() : 0f).reduce(0f, Float::sum);
 		world.entities().removeIf(entity -> entity instanceof PuzzleBall ball && ball.position().y() <= -300f);
 		world.update(dt);
 
@@ -345,56 +323,31 @@ public enum Game implements Screen {
 		benchmarker.getLineGraph("freeMemory").add(current);
 		benchmarker.getLineGraph("totalMemory").add(available);
 		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
+			var player = gameLoop.currentPlayer();
 			debugOverlay.update(
-					"FPS=%d, Position=[%.02f, %.02f, %.02f], Chunk=[%d, %d, %d], NumTasks=%d, %d NumEntities=%d, PlayerSpeed=%f, isOnGround=%s",
+					"FPS=%d, Player=%s, Position=[%.02f, %.02f, %.02f], Velocity=%f, Chunk=[%d, %d, %d], NumTasks=%d, %d NumEntities=%d, PlayerSpeed=%f, isOnGround=%s",
 					window.timeSync().getFps(),
+					player.name(),
 					player.position().x(),
 					player.position().y(),
 					player.position().z(),
+					player.velocity().length(),
 					world.terrain().getChunkX(player.position().x()),
 					world.terrain().getChunkY(player.position().y()),
 					world.terrain().getChunkZ(player.position().z()),
 					pool.getTaskCount() - pool.getCompletedTaskCount(),
 					pool2.getTaskCount() - pool2.getCompletedTaskCount(),
 					world.entities().size(),
-					controller.playerSpeed(),
+					gameLoop.controller().playerSpeed(),
 					player.groundWatcher().isOnGround() ? "true" : "false");
 		}
 	}
 
 	public void updateViewMatrices() {
-		updateViewMatrix(CommonPrograms3D.COLOR);
-		updateViewMatrix(CommonPrograms3D.TEXTURE);
-		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
-		updateViewMatrix(CommonPrograms3D.PARTICLE);
-		updateViewMatrix(CommonPrograms3D.LIGHT);
-		updateViewMatrix(CommonPrograms3D.TERRAIN);
-	}
-
-	public void updateProjectionMatrices() {
-		updateProjectionMatrix(CommonPrograms3D.COLOR);
-		updateProjectionMatrix(CommonPrograms3D.TEXTURE);
-		updateProjectionMatrix(CommonPrograms3D.CUBEMAP);
-		updateProjectionMatrix(CommonPrograms3D.PARTICLE);
-		updateProjectionMatrix(CommonPrograms3D.LIGHT);
-		updateProjectionMatrix(CommonPrograms3D.TERRAIN);
-	}
-
-	public void updateViewMatrix(ShaderProgramHolder holder) {
-		holder.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.VIEW_MATRIX, player.camera().getTransformationMatrix());
-		});
-	}
-
-	public void updateCubeMapMatrix(ShaderProgramHolder holder) {
-		holder.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.VIEW_MATRIX, player.camera().getInvertedRotationMatrix());
-		});
-	}
-
-	public void updateProjectionMatrix(ShaderProgramHolder holder) {
-		holder.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.PROJECTION_MATRIX, player.camera().getProjectionMatrix());
+		var camera = gameLoop.currentPlayer().camera();
+		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, camera.getTransformationMatrix());
+		CommonPrograms3D.CUBEMAP.use(program -> {
+			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, camera.getInvertedRotationMatrix());
 		});
 	}
 
@@ -405,48 +358,62 @@ public enum Game implements Screen {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			GL11.glDepthMask(false);
 			// render skybox
-			CommonPrograms3D.CUBEMAP.getShaderProgram().use(program -> {
+			CommonPrograms3D.CUBEMAP.use(program -> {
 				CommonDrawables.SKYBOX.draw();
 			});
 			GL11.glDepthMask(true);
 			for (Vector3D x : debug) {
 				PuzzleBall.render(x, Vector3D.of(0.2f, 0.2f, 0.2f));
 			}
-			//debug.clear();
-			worldRenderer.render(player.position());
+			world.entities().forEach(entity -> {
+				if (entity instanceof Player && gameLoop.currentPlayer() != entity) {
+					//PuzzleBall.render(entity.position());
+					GL11.glEnable(GL11.GL_BLEND);
+					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+					GL11.glEnable(GL11.GL_DEPTH_TEST);
+					CommonPrograms3D.COLOR.use(program -> {
+						try (var translationMatrix = MatrixPool.ofTranslation(entity.position());
+							 var rotationMatrix = MatrixPool.ofRotation(entity.rotation());
+							 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
+							program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
+						}
+						foxModel.draw();
+					});
+					GL11.glDisable(GL11.GL_DEPTH_TEST);
+					GL11.glDisable(GL11.GL_BLEND);
+				}
+			});
+			worldRenderer.render(gameLoop.currentPlayer().position());
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
-			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
+			CommonPrograms3D.LIGHT.use(program -> {
 				var position = Vector3D.of(96f, 40f, 0f);
 				try (var translationMatrix = MatrixPool.ofTranslation(position);
 					 var scalarMatrix = MatrixPool.ofScalar(8f, 8f, 8f)) {
 					var sunlightDirection = lightPosition.subtract(position).normalize();
 					program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(scalarMatrix));
 					program.loadVector("sunlightDirection", sunlightDirection);
-					program.loadVector("viewPos", player.position());
+					program.loadVector("viewPos", gameLoop.currentPlayer().position());
 				}
-				dragonModel.draw();
+				//dragonModel.draw();
 			});
-			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
+			CommonPrograms3D.LIGHT.use(program -> {
 				try (var translationMatrix = MatrixPool.ofTranslation(Vector3D.of(3.5f, -4f, 1f));
 					 var rotationMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
 					var sunlightDirection = Vector3D.of(-3.5f, 4f, -1f).normalize();
 					program.loadMatrix(MatrixType.MODEL_MATRIX, (rotationMatrix.multiply(translationMatrix)));
 					program.loadVector("sunlightDirection", sunlightDirection);
-					program.loadVector("viewPos", player.position());
+					program.loadVector("viewPos", gameLoop.currentPlayer().position());
 					program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 				}
 				rocketLauncherLoadedModel.draw();
 				//rocketLauncherUnloadedModel.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
-			FloatBuffer depthPixelBuffer = BufferUtils.createFloatBuffer(1);
-			GL11.glReadPixels(window.getWidth() / 2, window.getHeight() / 2, 1, 1, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, depthPixelBuffer);
-			depthDistance = depthPixelBuffer.get(); // far plane
 		});
-		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
+		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
 		});
-		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms2D.COLOR.use(program -> {
 			// Render crosshair
 			try (var translationMatrix = MatrixPool.ofTranslation(window.getWidth() / 2f, window.getHeight() / 2f, 0f);
 				 var scalarMatrixA = MatrixPool.ofScalar(5f, 1f, 1f);

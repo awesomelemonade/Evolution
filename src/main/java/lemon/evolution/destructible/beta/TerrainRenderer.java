@@ -32,7 +32,7 @@ public class TerrainRenderer {
 
 	public void render(Vector3D position) {
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		CommonPrograms3D.TERRAIN.getShaderProgram().use(program -> {
+		CommonPrograms3D.TERRAIN.use(program -> {
 			draw(position, (matrix, drawable) -> {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
 				drawable.draw();
