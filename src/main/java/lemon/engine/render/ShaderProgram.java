@@ -1,5 +1,6 @@
 package lemon.engine.render;
 
+import com.google.common.collect.ImmutableMap;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Color;
@@ -7,91 +8,113 @@ import lemon.engine.toolbox.Disposable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-public class ShaderProgram implements Disposable {
-	private final int id;
-	private final Map<String, UniformVariable> uniformVariables = new HashMap<>();
+public interface ShaderProgram extends Disposable {
+	public static ShaderProgram of(String[] attributesInOrder, Consumer<ShaderProgram> setDefaultUniformVariables, Shader... shaders) {
+		var map = IntStream.range(0, attributesInOrder.length).boxed().collect(Collectors.toMap(Function.identity(), i -> attributesInOrder[i]));
+		return of(map, setDefaultUniformVariables, shaders);
+	}
 
-	public ShaderProgram(int[] indices, String[] names, Shader... shaders) {
-		if (indices.length != names.length) {
-			throw new IllegalArgumentException(
-					"Indices and Name Arrays have different size: " + indices.length + " - " + names.length);
+	public static ShaderProgram of(Map<Integer, String> attributes, Consumer<ShaderProgram> setDefaultUniformVariables, Shader... shaders) {
+		return new Impl(attributes, setDefaultUniformVariables, shaders);
+	}
+
+	class Impl implements ShaderProgram {
+		private final int id;
+		private final ImmutableMap<String, UniformVariable> uniformVariables;
+		public Impl(Map<Integer, String> attributes, Consumer<ShaderProgram> setDefaultUniformVariables, Shader... shaders) {
+			id = GL20.glCreateProgram();
+			for (Shader shader : shaders) {
+				GL20.glAttachShader(id, shader.id());
+			}
+			attributes.forEach((index, name) -> GL20.glBindAttribLocation(id, index, name));
+			GL20.glLinkProgram(id);
+			if (GL20.glGetProgrami(id, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
+				throw new IllegalStateException("Shader Program Link Fail: " + GL20.glGetProgramInfoLog(id));
+			}
+			for (Shader shader : shaders) {
+				GL20.glDetachShader(id, shader.id());
+				shader.dispose();
+			}
+			var builder = ImmutableMap.<String, UniformVariable>builder();
+			this.use(self -> {
+				setDefaultUniformVariables.accept(new ShaderProgram() {
+					@Override
+					public int id() {
+						return self.id();
+					}
+
+					@Override
+					public UniformVariable getUniformVariable(String name) {
+						var uniformVariable = new UniformVariable(GL20.glGetUniformLocation(id, name), name);
+						builder.put(name, uniformVariable);
+						return uniformVariable;
+					}
+
+					@Override
+					public void dispose() {
+						self.dispose();
+					}
+				});
+			});
+			uniformVariables = builder.build();
 		}
-		id = GL20.glCreateProgram();
-		for (Shader shader : shaders) {
-			GL20.glAttachShader(id, shader.id());
+
+		@Override
+		public int id() {
+			return id;
 		}
-		for (int i = 0; i < indices.length; ++i) {
-			GL20.glBindAttribLocation(id, indices[i], names[i]);
+
+		@Override
+		public UniformVariable getUniformVariable(String name) {
+			return uniformVariables.get(name);
 		}
-		GL20.glLinkProgram(id);
-		if (GL20.glGetProgrami(id, GL20.GL_LINK_STATUS) == GL11.GL_FALSE) {
-			throw new IllegalStateException("Shader Program Link Fail: " + GL20.glGetProgramInfoLog(id));
-		}
-		for (Shader shader : shaders) {
-			GL20.glDetachShader(id, shader.id());
-			shader.dispose();
+
+		@Override
+		public void dispose() {
+			GL20.glDeleteProgram(id);
 		}
 	}
 
-	public UniformVariable getUniformVariable(String name) {
-		return uniformVariables.computeIfAbsent(name, n -> new UniformVariable(GL20.glGetUniformLocation(id, n), n));
-	}
-
-	public void loadInt(String name, int value) {
+	public int id();
+	public UniformVariable getUniformVariable(String name);
+	public default void loadInt(String name, int value) {
 		this.getUniformVariable(name).loadInt(value);
 	}
-
-	public void loadFloat(String name, float value) {
+	public default void loadFloat(String name, float value) {
 		this.getUniformVariable(name).loadFloat(value);
 	}
-
-	public void loadVector(String name, Vector3D vector) {
+	public default void loadVector(String name, Vector3D vector) {
 		this.getUniformVariable(name).loadVector(vector);
 	}
-
-	public void loadColor3f(Color color) {
-		this.getUniformVariable("color").loadColor3f(color);
+	public default void loadColor3f(Color color) {
+		loadColor3f("color", color);
 	}
-
-	public void loadColor3f(String name, Color color) {
+	public default void loadColor3f(String name, Color color) {
 		this.getUniformVariable(name).loadColor3f(color);
 	}
-
-	public void loadColor4f(Color color) {
-		this.getUniformVariable("color").loadColor4f(color);
+	public default void loadColor4f(Color color) {
+		loadColor4f("color", color);
 	}
-
-	public void loadColor4f(String name, Color color) {
+	public default void loadColor4f(String name, Color color) {
 		this.getUniformVariable(name).loadColor4f(color);
 	}
-
-	public void loadBoolean(String name, boolean value) {
+	public default void loadBoolean(String name, boolean value) {
 		this.getUniformVariable(name).loadBoolean(value);
 	}
-
-	public void loadMatrix(String name, Matrix matrix) {
+	public default void loadMatrix(String name, Matrix matrix) {
 		this.getUniformVariable(name).loadMatrix(matrix);
 	}
-
-	public void loadMatrix(MatrixType type, Matrix matrix) {
-		this.loadMatrix(type.getUniformVariableName(), matrix);
+	public default void loadMatrix(MatrixType type, Matrix matrix) {
+		loadMatrix(type.getUniformVariableName(), matrix);
 	}
-
-	@Override
-	public void dispose() {
-		GL20.glDeleteProgram(id);
-	}
-
-	public int getId() {
-		return id;
-	}
-
-	public void use(Consumer<ShaderProgram> consumer) {
-		GL20.glUseProgram(this.getId());
+	public default void use(Consumer<ShaderProgram> consumer) {
+		GL20.glUseProgram(id());
 		consumer.accept(this);
 		GL20.glUseProgram(0);
 	}

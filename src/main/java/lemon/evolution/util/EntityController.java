@@ -6,19 +6,22 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.EvolutionControls;
+import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.world.ControllableEntity;
+import org.lwjgl.glfw.GLFW;
 
-public class EntityController implements Disposable {
+public class EntityController<T extends ControllableEntity> implements Disposable {
 	private static final boolean USE_SURF = false;
 	private static final float MOUSE_SENSITIVITY = 0.001f;
-	private static float playerSpeed = 0.1f;
+	private static final float JUMP_HEIGHT = 2f;
+	private static float playerSpeed = 0.08f;
 	private final Disposables disposables = new Disposables();
 	private final GLFWGameControls<EvolutionControls> controls;
-	private final Observable<ControllableEntity> current;
+	private final Observable<T> current;
 	private float lastMouseX;
 	private float lastMouseY;
 
-	public EntityController(GLFWGameControls<EvolutionControls> controls, ControllableEntity entity) {
+	public EntityController(GLFWGameControls<EvolutionControls> controls, T entity) {
 		this.controls = controls;
 		this.current = new Observable<>(entity);
 		controls.addCallback(input -> input.cursorPositionEvent().add(event -> {
@@ -34,11 +37,25 @@ public class EntityController implements Disposable {
 		controls.addCallback(input -> input.mouseScrollEvent().add(event -> {
 			playerSpeed = Math.max(0f, playerSpeed + ((float) (event.yOffset() / 100f)));
 		}));
+		controls.addCallback(input -> input.mouseButtonEvent().add(event -> {
+			if (event.action() == GLFW.GLFW_PRESS && event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
+				var currentEntity = current.getValue();
+				currentEntity.world().entities().add(new MissileShowerEntity(
+						currentEntity.location().add(currentEntity.vectorDirection().multiply(0.95f)),
+						currentEntity.vectorDirection().multiply(5f)
+				));
+			}
+		}));
 		disposables.add(controls.activated(EvolutionControls.JUMP).onChange(activated -> {
 			if (activated) {
 				var currentEntity = current.getValue();
-				currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(8f));
+				currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(JUMP_HEIGHT));
 			}
+		}));
+		var currentCleanup = new Disposables(current.getValue().onUpdate().add(this::update));
+		disposables.add(current.onChange(newEntity -> {
+			currentCleanup.dispose();
+			currentCleanup.add(newEntity.onUpdate().add(this::update));
 		}));
 	}
 
@@ -87,12 +104,16 @@ public class EntityController implements Disposable {
 		}
 	}
 
-	public void setCurrent(ControllableEntity entity) {
+	public void setCurrent(T entity) {
 		current.setValue(entity);
 	}
 
-	public ControllableEntity current() {
+	public T current() {
 		return current.getValue();
+	}
+
+	public Observable<T> observableCurrent() {
+		return current;
 	}
 
 	public float playerSpeed() {

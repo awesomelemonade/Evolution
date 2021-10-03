@@ -13,9 +13,11 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public enum Menu implements Screen {
 	INSTANCE;
+	private static final Logger logger = Logger.getLogger(Menu.class.getName());
 	private GLFWWindow window;
 	private List<Quad2D> buttons;
 	private final Disposables disposables = new Disposables();
@@ -53,7 +55,7 @@ public enum Menu implements Screen {
 
 	@Override
 	public void render() {
-		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms2D.COLOR.use(program -> {
 			for (Quad2D button : buttons) {
 				button.draw();
 			}

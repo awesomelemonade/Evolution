@@ -49,7 +49,7 @@ public class UIWheel implements UIInputComponent {
 
 	@Override
 	public void render() {
-		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms2D.COLOR.use(program -> {
 			try (var translation = MatrixPool.ofTranslation(1f, 0f, 0f);
 				 var scalar = MatrixPool.ofScalar(radius / 2f, radius / 20f, 0f);
 				 var translation2 = MatrixPool.ofTranslation(position.x(), position.y(), 0f);

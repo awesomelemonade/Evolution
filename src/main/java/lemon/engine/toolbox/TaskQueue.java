@@ -1,19 +1,19 @@
 package lemon.engine.toolbox;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public interface TaskQueue {
 	public static TaskQueue ofSingleThreaded() {
 		return new TaskQueue() {
-			private final List<Runnable> queue = new ArrayList<>();
+			private final Deque<Runnable> queue = new ArrayDeque<>();
 			@Override
 			public void run() {
-				for (Runnable runnable : queue) {
-					runnable.run();
+				Runnable current;
+				while ((current = queue.poll()) != null) {
+					current.run();
 				}
-				queue.clear();
 			}
 
 			@Override

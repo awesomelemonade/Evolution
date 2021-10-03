@@ -5,6 +5,7 @@ import lemon.engine.glfw.GLFWInput;
 import lemon.engine.time.Benchmark;
 import lemon.engine.time.TimeSync;
 import lemon.engine.toolbox.Disposable;
+import lemon.engine.toolbox.TaskQueue;
 import lemon.evolution.screen.beta.Screen;
 import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.glfw.GLFW;
@@ -33,6 +34,7 @@ public class GLFWWindow implements Disposable {
 	private final int height;
 	private final EventWith<Benchmark> onBenchmark = new EventWith<>();
 	private final Deque<Screen> screenStack = new ArrayDeque<>();
+	private final TaskQueue screenSwitchQueue = TaskQueue.ofSingleThreaded();
 
 	public GLFWWindow(GLFWWindowSettings settings, Screen initialScreen) {
 		this.settings = settings;
@@ -59,6 +61,7 @@ public class GLFWWindow implements Disposable {
 		GLFW.glfwShowWindow(window);
 		GL.createCapabilities(); // GLContext.createFromCurrent();
 		pushScreen(initialScreen);
+		screenSwitchQueue.run();
 	}
 
 	public void run() {
@@ -66,7 +69,7 @@ public class GLFWWindow implements Disposable {
 		while (!GLFW.glfwWindowShouldClose(window)) {
 			int error = GL11.glGetError();
 			while (error != GL11.GL_NO_ERROR) {
-				System.out.println(error);
+				logger.log(Level.WARNING, "OpenGL Error " + error);
 				error = GL11.glGetError();
 			}
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
@@ -84,6 +87,7 @@ public class GLFWWindow implements Disposable {
 			currentScreen.render();
 			renderTime = System.nanoTime() - renderTime;
 			onBenchmark.callListeners(Benchmark.of(this, (float) (updateTime), (float) (renderTime), ((float) delta) / 1000000f));
+			screenSwitchQueue.run();
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());
@@ -91,22 +95,28 @@ public class GLFWWindow implements Disposable {
 	}
 
 	public void pushScreen(Screen screen) {
-		screenStack.push(screen);
-		screen.onLoad(this);
+		screenSwitchQueue.add(() -> {
+			screenStack.push(screen);
+			screen.onLoad(this);
+		});
 	}
 
 	public void popScreen() {
-		screenStack.pop().dispose();
-		if (screenStack.isEmpty()) {
-			throw new IllegalStateException("Must have at least 1 screen in the stack");
-		}
-		screenStack.peek().onLoad(this);
+		screenSwitchQueue.add(() -> {
+			screenStack.pop().dispose();
+			if (screenStack.isEmpty()) {
+				throw new IllegalStateException("Must have at least 1 screen in the stack");
+			}
+			screenStack.peek().onLoad(this);
+		});
 	}
 
 	public void popAndPushScreen(Screen screen) {
-		screenStack.pop().dispose();
-		screenStack.push(screen);
-		screen.onLoad(this);
+		screenSwitchQueue.add(() -> {
+			screenStack.pop().dispose();
+			screenStack.push(screen);
+			screen.onLoad(this);
+		});
 	}
 
 	@Override

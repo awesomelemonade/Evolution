@@ -32,7 +32,7 @@ public enum FontTest implements Screen {
 		GL11.glViewport(0, 0, window.getWidth(), window.getHeight());
 		Matrix projectionMatrix = MathUtil.getOrtho(window.getWidth(), window.getHeight(), -1, 1);
 		CommonProgramsSetup.setup2D(projectionMatrix);
-		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
+		CommonPrograms2D.TEXT.use(program -> {
 			program.loadVector("color", Vector3D.of(0f, 1f, 1f));
 		});
 		font = disposables.add(new Font(Paths.get("/res/fonts/FreeSans.fnt")));
@@ -66,13 +66,13 @@ public enum FontTest implements Screen {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL13.glActiveTexture(TextureBank.REUSE.getBind());
-		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms2D.COLOR.use(program -> {
 			program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX,
 					MathUtil.getTranslation(Vector3D.of(150f, 150f, 0f))
 							.multiply(MathUtil.getScalar(Vector3D.of(100f, 100f, 100f))));
 			CommonDrawables.COLORED_QUAD.draw();
 		});
-		CommonPrograms2D.TEXT.getShaderProgram().use(program -> {
+		CommonPrograms2D.TEXT.use(program -> {
 			text.forEach((model, matrix) -> {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
 				model.draw();

@@ -78,9 +78,9 @@ public class TerrainChunk {
 			PreNormals preNormals = new PreNormals();
 			List<Triangle> triangles = new ArrayList<>();
 			Vector3D[] transformed = new Vector3D[vertices.length];
-			var x = Vector3D.of(5f * chunkX * TerrainChunk.SIZE, 5f * chunkY * TerrainChunk.SIZE, 5f * chunkZ * TerrainChunk.SIZE);
+			var x = Vector3D.of(chunkX * TerrainChunk.SIZE, chunkY * TerrainChunk.SIZE, chunkZ * TerrainChunk.SIZE);
 			for (int i = 0; i < vertices.length; i++) {
-				transformed[i] = vertices[i].multiply(5f).add(x);
+				transformed[i] = vertices[i].add(x).multiply(scalar);
 			}
 			for (int i = 0; i < indices.length; i += 3) {
 				Vector3D a = transformed[indices[i]];

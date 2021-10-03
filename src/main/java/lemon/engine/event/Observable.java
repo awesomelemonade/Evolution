@@ -44,4 +44,10 @@ public class Observable<T> {
 	public Disposable onChange(Consumer<? super T> listener) {
 		return onChange.add(listener);
 	}
+
+	@CheckReturnValue
+	public Disposable onChangeAndRun(Consumer<? super T> listener) {
+		listener.accept(value);
+		return onChange.add(listener);
+	}
 }

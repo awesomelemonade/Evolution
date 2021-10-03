@@ -117,7 +117,7 @@ public class ParticleSystem implements Renderable {
 			particle.update();
 		}
 		updateVbo();
-		CommonPrograms3D.PARTICLE.getShaderProgram().use(program -> {
+		CommonPrograms3D.PARTICLE.use(program -> {
 			program.loadColor4f(Color.RED);
 			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(65f, 98f, 0f)));
 			vertexArray.bind(vao -> {
