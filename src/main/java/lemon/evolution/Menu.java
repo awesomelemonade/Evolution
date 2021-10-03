@@ -55,7 +55,7 @@ public enum Menu implements Screen {
 
 	@Override
 	public void render() {
-		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms2D.COLOR.use(program -> {
 			for (Quad2D button : buttons) {
 				button.draw();
 			}

@@ -1,64 +1,126 @@
 package lemon.evolution.util;
 
+import lemon.engine.math.Matrix;
+import lemon.engine.math.Vector3D;
+import lemon.engine.render.MatrixType;
 import lemon.engine.render.Shader;
 import lemon.engine.render.ShaderProgram;
+import lemon.engine.texture.TextureBank;
+import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Toolbox;
 import org.lwjgl.opengl.GL20;
 
+import java.util.function.Consumer;
+
 public enum CommonPrograms3D implements ShaderProgramHolder {
-	COLOR(new int[] {0, 1}, new String[] {"position", "color"},
+	COLOR(names("position", "color"), program -> {
+		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/colorVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/colorFragmentShader").orElseThrow())),
-	TEXTURE(new int[] {0, 1}, new String[] {"position", "textureCoords"},
+	TEXTURE(names("position", "textureCoords"), program -> {
+		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadInt("textureSampler", TextureBank.REUSE.getId());
+	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/textureVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/textureFragmentShader").orElseThrow())),
-	CUBEMAP(new int[] {0}, new String[] {"position"},
+	CUBEMAP(names("position"), program -> {
+		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadInt("cubemapSampler", TextureBank.SKYBOX.getId());
+	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/cubemapVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/cubemapFragmentShader").orElseThrow())),
-	POST_PROCESSING(new int[] {0, 1}, new String[] {"position", "textureCoords"},
+	POST_PROCESSING(names("position", "textureCoords"), program -> {
+		program.loadInt("colorSampler", TextureBank.COLOR.getId());
+		program.loadInt("depthSampler", TextureBank.DEPTH.getId());
+	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/postVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/postFragmentShader").orElseThrow())),
-	PARTICLE(new int[] {0, 1}, new String[] {"position", "transformationMatrix"},
+	PARTICLE(names("position", "transformationMatrix"), program -> {
+		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadColor4f(Color.WHITE);
+	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/particleVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/particleFragmentShader").orElseThrow())),
-	LIGHT(new int[] {0, 1, 2}, new String[] {"position", "color", "normal"},
+	LIGHT(names("position", "color", "normal"), program -> {
+		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadVector("sunlightDirection", Vector3D.of(0f, -1f, 0f));
+		program.loadVector("viewPos", Vector3D.ZERO);
+	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/lightVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/lightFragmentShader").orElseThrow())),
-	TERRAIN(new int[] {0, 1, 2}, new String[] {"position", "color", "normal"},
+	TERRAIN(names("position", "color", "normal"), program -> {
+		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadInt("grassSampler", TextureBank.GRASS.getId());
+		program.loadInt("slopeSampler", TextureBank.SLOPE.getId());
+		program.loadInt("rockSampler", TextureBank.ROCK.getId());
+		program.loadInt("baseSampler", TextureBank.BASE.getId());
+	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/terrainVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/terrainFragmentShader").orElseThrow()));
 	private ShaderProgram shaderProgram;
-	private int[] indices;
-	private String[] names;
-	private Shader[] shaders;
+	private final String[] names;
+	private final Consumer<ShaderProgram> setDefaultUniformVariables;
+	private final Shader[] shaders;
 
-	private CommonPrograms3D(int[] indices, String[] names, Shader... shaders) {
-		this.indices = indices;
+	private CommonPrograms3D(String[] names, Consumer<ShaderProgram> setDefaultUniformVariables, Shader... shaders) {
 		this.names = names;
+		this.setDefaultUniformVariables = setDefaultUniformVariables;
 		this.shaders = shaders;
 	}
 
 	public void init() {
 		if (shaderProgram == null) {
-			shaderProgram = new ShaderProgram(indices, names, shaders);
+			shaderProgram = ShaderProgram.of(names, setDefaultUniformVariables, shaders);
 		}
 	}
 
 	@Override
-	public ShaderProgram getShaderProgram() {
+	public ShaderProgram shaderProgram() {
 		return shaderProgram;
 	}
 
 	public static void initAll() {
 		for (CommonPrograms3D program : CommonPrograms3D.values()) {
-			program.init();
+			if (program.shaderProgram() == null) {
+				program.init();
+			} else {
+				program.use(p -> program.setDefaultUniformVariables.accept(program));
+			}
+		}
+	}
+
+	public static void setMatrices(MatrixType type, Matrix matrix) {
+		for (var program : CommonPrograms3D.values()) {
+			program.use(p -> {
+				var uniform = p.getUniformVariable(type.getUniformVariableName());
+				if (uniform != null) {
+					uniform.loadMatrix(matrix);
+				}
+			});
 		}
 	}
 
 	public static void disposeAll() {
 		for (CommonPrograms3D program : CommonPrograms3D.values()) {
-			// TODO: May not be initialized
-			program.dispose();
+			if (program.shaderProgram() != null) {
+				program.dispose();
+			}
 		}
+	}
+
+	private static String[] names(String... names) {
+		return names;
 	}
 }

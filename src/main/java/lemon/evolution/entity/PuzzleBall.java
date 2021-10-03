@@ -42,7 +42,7 @@ public class PuzzleBall extends AbstractEntity implements Renderable {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms3D.COLOR.use(program -> {
 			try (var translationMatrix = MatrixPool.ofTranslation(position)) {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix);
 			}
@@ -56,7 +56,7 @@ public class PuzzleBall extends AbstractEntity implements Renderable {
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms3D.COLOR.use(program -> {
 			try (var translationMatrix = MatrixPool.ofTranslation(position);
 				 var scalarMatrix = MatrixPool.ofScalar(scalar);
 				 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {

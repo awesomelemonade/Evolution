@@ -58,7 +58,7 @@ public class Loading implements Screen {
 
 	@Override
 	public void render() {
-		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms2D.COLOR.use(program -> {
 			loadingBar.draw();
 		});
 	}

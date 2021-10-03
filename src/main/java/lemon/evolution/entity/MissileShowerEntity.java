@@ -41,7 +41,7 @@ public class MissileShowerEntity extends AbstractEntity implements Disposable, R
 	@Override
 	public void render() {
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
-		CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
+		CommonPrograms3D.LIGHT.use(program -> {
 			var sunlightDirection = Vector3D.of(0f, 1f, 0f);
 			try (var translationMatrix = MatrixPool.ofTranslation(position());
 				 var rotationMatrix = MatrixPool.ofLookAt(velocity());

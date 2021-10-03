@@ -31,11 +31,9 @@ import lemon.engine.toolbox.SkyboxLoader;
 import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
-import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.entity.RocketLauncherProjectile;
 import lemon.evolution.physics.beta.CollisionContext;
-import lemon.evolution.physics.beta.CollisionPacket;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.screen.beta.Screen;
@@ -44,7 +42,6 @@ import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.util.GLFWGameControls;
-import lemon.evolution.util.ShaderProgramHolder;
 import lemon.evolution.world.GameLoop;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
@@ -347,38 +344,10 @@ public enum Game implements Screen {
 	}
 
 	public void updateViewMatrices() {
-		updateViewMatrix(CommonPrograms3D.COLOR);
-		updateViewMatrix(CommonPrograms3D.TEXTURE);
-		updateCubeMapMatrix(CommonPrograms3D.CUBEMAP);
-		updateViewMatrix(CommonPrograms3D.PARTICLE);
-		updateViewMatrix(CommonPrograms3D.LIGHT);
-		updateViewMatrix(CommonPrograms3D.TERRAIN);
-	}
-
-	public void updateProjectionMatrices() {
-		updateProjectionMatrix(CommonPrograms3D.COLOR);
-		updateProjectionMatrix(CommonPrograms3D.TEXTURE);
-		updateProjectionMatrix(CommonPrograms3D.CUBEMAP);
-		updateProjectionMatrix(CommonPrograms3D.PARTICLE);
-		updateProjectionMatrix(CommonPrograms3D.LIGHT);
-		updateProjectionMatrix(CommonPrograms3D.TERRAIN);
-	}
-
-	public void updateViewMatrix(ShaderProgramHolder holder) {
-		holder.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.VIEW_MATRIX, gameLoop.currentPlayer().camera().getTransformationMatrix());
-		});
-	}
-
-	public void updateCubeMapMatrix(ShaderProgramHolder holder) {
-		holder.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.VIEW_MATRIX, gameLoop.currentPlayer().camera().getInvertedRotationMatrix());
-		});
-	}
-
-	public void updateProjectionMatrix(ShaderProgramHolder holder) {
-		holder.getShaderProgram().use(program -> {
-			program.loadMatrix(MatrixType.PROJECTION_MATRIX, gameLoop.currentPlayer().camera().getProjectionMatrix());
+		var camera = gameLoop.currentPlayer().camera();
+		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, camera.getTransformationMatrix());
+		CommonPrograms3D.CUBEMAP.use(program -> {
+			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, camera.getInvertedRotationMatrix());
 		});
 	}
 
@@ -389,7 +358,7 @@ public enum Game implements Screen {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			GL11.glDepthMask(false);
 			// render skybox
-			CommonPrograms3D.CUBEMAP.getShaderProgram().use(program -> {
+			CommonPrograms3D.CUBEMAP.use(program -> {
 				CommonDrawables.SKYBOX.draw();
 			});
 			GL11.glDepthMask(true);
@@ -402,7 +371,7 @@ public enum Game implements Screen {
 					GL11.glEnable(GL11.GL_BLEND);
 					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 					GL11.glEnable(GL11.GL_DEPTH_TEST);
-					CommonPrograms3D.COLOR.getShaderProgram().use(program -> {
+					CommonPrograms3D.COLOR.use(program -> {
 						try (var translationMatrix = MatrixPool.ofTranslation(entity.position());
 							 var rotationMatrix = MatrixPool.ofRotation(entity.rotation());
 							 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
@@ -416,7 +385,7 @@ public enum Game implements Screen {
 			});
 			worldRenderer.render(gameLoop.currentPlayer().position());
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
-			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
+			CommonPrograms3D.LIGHT.use(program -> {
 				var position = Vector3D.of(96f, 40f, 0f);
 				try (var translationMatrix = MatrixPool.ofTranslation(position);
 					 var scalarMatrix = MatrixPool.ofScalar(8f, 8f, 8f)) {
@@ -427,7 +396,7 @@ public enum Game implements Screen {
 				}
 				//dragonModel.draw();
 			});
-			CommonPrograms3D.LIGHT.getShaderProgram().use(program -> {
+			CommonPrograms3D.LIGHT.use(program -> {
 				try (var translationMatrix = MatrixPool.ofTranslation(Vector3D.of(3.5f, -4f, 1f));
 					 var rotationMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
 					var sunlightDirection = Vector3D.of(-3.5f, 4f, -1f).normalize();
@@ -441,10 +410,10 @@ public enum Game implements Screen {
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
 		});
-		CommonPrograms3D.POST_PROCESSING.getShaderProgram().use(program -> {
+		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
 		});
-		CommonPrograms2D.COLOR.getShaderProgram().use(program -> {
+		CommonPrograms2D.COLOR.use(program -> {
 			// Render crosshair
 			try (var translationMatrix = MatrixPool.ofTranslation(window.getWidth() / 2f, window.getHeight() / 2f, 0f);
 				 var scalarMatrixA = MatrixPool.ofScalar(5f, 1f, 1f);
