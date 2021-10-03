@@ -13,6 +13,14 @@ import org.lwjgl.opengl.GL20;
 import java.util.function.Consumer;
 
 public enum CommonPrograms3D implements ShaderProgramHolder {
+
+	WATER(names("position"), program -> {
+		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+	},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/waterVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/waterFragmentShader").orElseThrow())),
 	COLOR(names("position", "color"), program -> {
 		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);

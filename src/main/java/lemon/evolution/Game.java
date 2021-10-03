@@ -1,6 +1,8 @@
 package lemon.evolution;
 
 import com.google.common.collect.ImmutableList;
+import lemon.engine.draw.UnindexedDrawable;
+import lemon.engine.math.*;
 import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
@@ -11,12 +13,6 @@ import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
 import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.game.Player;
-import lemon.engine.math.Box2D;
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Matrix;
-import lemon.engine.math.Projection;
-import lemon.engine.math.Vector2D;
-import lemon.engine.math.Vector3D;
 import lemon.engine.model.LineGraph;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
@@ -42,6 +38,7 @@ import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.util.GLFWGameControls;
+import lemon.evolution.water.beta.WaterQuad;
 import lemon.evolution.world.GameLoop;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
@@ -89,6 +86,8 @@ public enum Game implements Screen {
 	public Drawable rocketLauncherProjectileModel; // TODO: Temporary
 
 	private Drawable foxModel;
+
+	private Drawable waterQuad;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
 
@@ -167,6 +166,8 @@ public enum Game implements Screen {
 					objLoader -> rocketLauncherProjectileModel = objLoader.toIndexedDrawable());
 			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
 					objLoader -> foxModel = objLoader.toIndexedDrawable());
+
+			waterQuad = new UnindexedDrawable(new FloatData[][] {WaterQuad.QUAD_VERTICES, WaterQuad.QUAD_COLORS}, GL11.GL_TRIANGLES);
 
 			window.pushScreen(new Loading(window::popScreen,
 					dragonLoader, rocketLauncherUnloadedLoader,
@@ -407,6 +408,9 @@ public enum Game implements Screen {
 				}
 				rocketLauncherLoadedModel.draw();
 				//rocketLauncherUnloadedModel.draw();
+			});
+			CommonPrograms3D.WATER.use(program -> {
+				waterQuad.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
 		});
