@@ -1,6 +1,7 @@
 package lemon.engine.render;
 
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Plane;
 import lemon.engine.math.Vector3D;
 import lemon.engine.math.Vector4D;
 import lemon.engine.toolbox.Color;
@@ -21,6 +22,10 @@ public record UniformVariable(int id, String name) {
 
 	public void loadVector(Vector4D vector) {
 		GL20.glUniform4f(id, vector.x(), vector.y(), vector.z(), vector.w());
+	}
+
+	public void loadPlane(Plane plane) {
+		GL20.glUniform4f(id, plane.a(), plane.b(), plane.c(), plane.d());
 	}
 
 	public void loadColor4f(Color color) {

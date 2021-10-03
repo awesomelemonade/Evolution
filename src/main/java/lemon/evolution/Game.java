@@ -1,6 +1,10 @@
 package lemon.evolution;
 
 import com.google.common.collect.ImmutableList;
+import lemon.engine.draw.Drawable;
+import lemon.engine.draw.UnindexedDrawable;
+import lemon.engine.math.*;
+import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
@@ -46,8 +50,11 @@ import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.util.GLFWGameControls;
+import lemon.evolution.water.beta.WaterFrameBuffer;
+import lemon.evolution.water.beta.WaterQuad;
 import lemon.evolution.world.CsvWorldLoader;
 import lemon.evolution.world.Entity;
+import lemon.evolution.water.beta.WaterQuad;
 import lemon.evolution.world.GameLoop;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
@@ -93,6 +100,9 @@ public class Game implements Screen {
 
 	private FrameBuffer frameBuffer;
 
+	private WaterFrameBuffer reflectionFrameBuffer;
+	private WaterFrameBuffer refractionFrameBuffer;
+
 	private DebugOverlay debugOverlay;
 	private Benchmarker benchmarker;
 
@@ -102,6 +112,8 @@ public class Game implements Screen {
 	private Vector3D lightPosition;
 
 	private ViewModel viewModel;
+
+	private Drawable waterQuad;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
 
@@ -230,6 +242,8 @@ public class Game implements Screen {
 
 			resources = new GameResources(window, worldRenderer, gameLoop, controls);
 
+			waterQuad = new UnindexedDrawable(new FloatData[][] {WaterQuad.QUAD_VERTICES, WaterQuad.QUAD_COLORS}, GL11.GL_TRIANGLES);
+
 			window.pushScreen(new Loading(window::popScreen, resources.loaders(postLoadTasks::add),
 					new Loader() {
 				int generatorStartSize;
@@ -349,9 +363,9 @@ public class Game implements Screen {
 
 			lightPosition = gameLoop.currentPlayer().position();
 
-			var texture = new Texture();
-			texture.load(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow(), true));
-			particleSystem = disposables.add(new ParticleSystem(100000, texture));
+			var particleTexture = new Texture();
+			particleTexture.load(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow(), true));
+			particleSystem = disposables.add(new ParticleSystem(100000, particleTexture));
 			disposables.add(world.onExplosion((position, radius) -> particleSystem.addExplosionParticles(position, radius)));
 
 			disposables.add(window.input().keyEvent().add(event -> {
@@ -386,6 +400,57 @@ public class Game implements Screen {
 				gameLoop.getGatedControls().setEnabled(true);
 				viewModel.setVisible(true);
 			}));
+
+			/* REFLECTION FRAME BUFFER FOR WATER */
+			reflectionFrameBuffer = disposables.add(new WaterFrameBuffer(windowWidth, windowHeight, WaterFrameBuffer.Type.REFLECTION));
+			reflectionFrameBuffer.bind(rfb -> {
+				/* Texture Attachment */
+				int texture1 = GL11.glGenTextures();
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture1);
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, WaterFrameBuffer.REFLECTION_WIDTH, WaterFrameBuffer.REFLECTION_HEIGHT,
+						0, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, texture1, 0);
+
+				/* Depth Buffer Attachment */
+				int depthBuffer = GL30.glGenRenderbuffers();
+				GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, depthBuffer);
+				GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL11.GL_DEPTH_COMPONENT, WaterFrameBuffer.REFLECTION_WIDTH, WaterFrameBuffer.REFLECTION_HEIGHT);
+				GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GL30.GL_RENDERBUFFER, depthBuffer);
+
+				/* Unbind */
+				GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+				GL11.glViewport(0, 0, windowWidth, windowHeight);
+
+			});
+
+			/* REFLECTION FRAME BUFFER FOR WATER */
+			refractionFrameBuffer = disposables.add(new WaterFrameBuffer(windowWidth, windowHeight, WaterFrameBuffer.Type.REFRACTION));
+			refractionFrameBuffer.bind(refractionFrameBuffer -> {
+				/* Texture Attachment */
+				int texture2 = GL11.glGenTextures();
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, WaterFrameBuffer.REFRACTION_WIDTH, WaterFrameBuffer.REFRACTION_HEIGHT,
+						0, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, texture2, 0);
+
+				/* Depth Texture Attachment */
+				int depthTexture = GL11.glGenTextures();
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, WaterFrameBuffer.REFRACTION_WIDTH, WaterFrameBuffer.REFRACTION_HEIGHT,
+						0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture, 0);
+
+				/* Unbind */
+				GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+				GL11.glViewport(0, 0, windowWidth, windowHeight);
+			});
+
 
 			uiScreen = disposables.add(new UIScreen(window.input()));
 			disposables.add(controls.activated(EvolutionControls.SHOW_UI).onChangeAndRun(activated -> uiScreen.visible().setValue(activated)));
@@ -468,6 +533,9 @@ public class Game implements Screen {
 		world.update(dt);
 
 		gameLoop.update();
+
+		GL11.glEnable(GL30.GL_CLIP_DISTANCE0); // Start of clipping plane stuff for the water
+
 		if (controls.isActivated(EvolutionControls.FREECAM)) {
 			float MOUSE_SENSITIVITY = .001f;
 			controls.addCallback(GLFWInput::cursorPositionEvent, event -> {
@@ -565,6 +633,11 @@ public class Game implements Screen {
 			worldRenderer.render(gameLoop.currentPlayer().position());
 			worldRenderTime = System.nanoTime() - worldRenderTime;
 			benchmarker.getLineGraph("worldRenderTime").add(worldRenderTime);
+			GL11.glEnable(GL11.GL_DEPTH_TEST);
+			CommonPrograms3D.WATER.use(program -> {
+				waterQuad.draw();
+			});
+			GL11.glDisable(GL11.GL_DEPTH_TEST);
 			var particleTime = System.nanoTime();
 			particleSystem.render(gameLoop.currentPlayer().position());
 			particleTime = System.nanoTime() - particleTime;
