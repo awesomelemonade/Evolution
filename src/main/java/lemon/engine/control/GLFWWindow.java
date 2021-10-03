@@ -34,7 +34,7 @@ public class GLFWWindow implements Disposable {
 	private final int height;
 	private final EventWith<Benchmark> onBenchmark = new EventWith<>();
 	private final Deque<Screen> screenStack = new ArrayDeque<>();
-	private final TaskQueue screenStackDisposeQueue = TaskQueue.ofSingleThreaded();
+	private final TaskQueue screenSwitchQueue = TaskQueue.ofSingleThreaded();
 
 	public GLFWWindow(GLFWWindowSettings settings, Screen initialScreen) {
 		this.settings = settings;
@@ -61,6 +61,7 @@ public class GLFWWindow implements Disposable {
 		GLFW.glfwShowWindow(window);
 		GL.createCapabilities(); // GLContext.createFromCurrent();
 		pushScreen(initialScreen);
+		screenSwitchQueue.run();
 	}
 
 	public void run() {
@@ -86,7 +87,7 @@ public class GLFWWindow implements Disposable {
 			currentScreen.render();
 			renderTime = System.nanoTime() - renderTime;
 			onBenchmark.callListeners(Benchmark.of(this, (float) (updateTime), (float) (renderTime), ((float) delta) / 1000000f));
-			screenStackDisposeQueue.run();
+			screenSwitchQueue.run();
 			GLFW.glfwSwapBuffers(window);
 			GLFW.glfwPollEvents();
 			timeSync.sync(settings.getTargetFrameRate());
@@ -94,24 +95,28 @@ public class GLFWWindow implements Disposable {
 	}
 
 	public void pushScreen(Screen screen) {
-		screenStack.push(screen);
-		screen.onLoad(this);
+		screenSwitchQueue.add(() -> {
+			screenStack.push(screen);
+			screen.onLoad(this);
+		});
 	}
 
 	public void popScreen() {
-		var popped = screenStack.pop();
-		screenStackDisposeQueue.add(popped::dispose);
-		if (screenStack.isEmpty()) {
-			throw new IllegalStateException("Must have at least 1 screen in the stack");
-		}
-		screenStack.peek().onLoad(this);
+		screenSwitchQueue.add(() -> {
+			screenStack.pop().dispose();
+			if (screenStack.isEmpty()) {
+				throw new IllegalStateException("Must have at least 1 screen in the stack");
+			}
+			screenStack.peek().onLoad(this);
+		});
 	}
 
 	public void popAndPushScreen(Screen screen) {
-		var popped = screenStack.pop();
-		screenStackDisposeQueue.add(popped::dispose);
-		screenStack.push(screen);
-		screen.onLoad(this);
+		screenSwitchQueue.add(() -> {
+			screenStack.pop().dispose();
+			screenStack.push(screen);
+			screen.onLoad(this);
+		});
 	}
 
 	@Override
