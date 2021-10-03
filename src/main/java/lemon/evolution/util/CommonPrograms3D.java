@@ -1,6 +1,8 @@
 package lemon.evolution.util;
 
+import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.render.Shader;
@@ -15,9 +17,13 @@ import java.util.function.Consumer;
 public enum CommonPrograms3D implements ShaderProgramHolder {
 
 	WATER(names("position"), program -> {
-		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(0f, 10f, 0f)));
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		var fov = 60f / 360f * MathUtil.TAU; // in radians
+		var aspectRatio = ((float) 1920) / ((float) 1080);
+
+		var projectionMatrix = MathUtil.getPerspective(new Projection(fov, aspectRatio, 0.001f, 1000f));
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/waterVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/waterFragmentShader").orElseThrow())),

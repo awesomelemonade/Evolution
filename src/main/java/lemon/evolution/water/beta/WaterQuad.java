@@ -7,12 +7,12 @@ import lemon.engine.toolbox.Color;
 public class WaterQuad {
 
     public static final FloatData[] QUAD_VERTICES = {
-            v(-1f, 10f, -1f),
-            v(-1f, 10f, 1f),
-            v( 1f, 10f, 1f),
-            v(-1f, 10f, -1f),
-            v( 1f, 10f, -1f),
-            v( 1f, 10f,  1f),
+            v(-1f, 0f, -1f),
+            v(-1f, 0f, 1f),
+            v( 1f, 0f, 1f),
+            v(-1f, 0f, -1f),
+            v( 1f, 0f, -1f),
+            v( 1f, 0f,  1f),
     };
 
     public static final FloatData[] QUAD_COLORS = {
