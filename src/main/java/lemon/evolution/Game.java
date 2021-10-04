@@ -74,8 +74,7 @@ import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 import java.util.logging.Logger;
 
-public enum Game implements Screen {
-	INSTANCE;
+public class Game implements Screen {
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 
 	private GLFWWindow window;
@@ -112,6 +111,12 @@ public enum Game implements Screen {
 	private Histogram histogram;
 
 	private final Disposables disposables = new Disposables();
+
+	private ScalarField scalarfield;
+
+	public Game(ScalarField scalarfield) {
+		this.scalarfield = scalarfield;
+	}
 
 	@Override
 	public void onLoad(GLFWWindow window) {
