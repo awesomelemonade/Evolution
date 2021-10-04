@@ -57,7 +57,7 @@ public class RocketLauncherProjectile extends AbstractEntity implements Disposab
 				 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 0.2f)) {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(adjustedMatrix).multiply(scalarMatrix));
 				program.loadVector("sunlightDirection", sunlightDirection);
-				Game.INSTANCE.rocketLauncherProjectileModel.draw();
+				Game.rocketLauncherProjectileModel.draw();
 			}
 		});
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
