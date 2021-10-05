@@ -2,17 +2,21 @@ package lemon.evolution.world;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
+import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.engine.event.EventWith;
 import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
+import lemon.engine.toolbox.Scheduler;
 import lemon.evolution.EvolutionControls;
 import lemon.evolution.util.EntityController;
 import lemon.evolution.util.GLFWGameControls;
+import lemon.evolution.util.GatedGLFWGameControls;
 import lemon.futility.FSetWithEvents;
 import org.lwjgl.glfw.GLFW;
 
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
@@ -22,11 +26,13 @@ public class GameLoop implements Disposable {
 	private final EntityController<Player> controller;
 	private final Iterator<Player> cycler;
 	private final EventWith<Player> onWinner = new EventWith<>();
+	private final Scheduler scheduler = new Scheduler();
 
 	public GameLoop(ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
+		var gatedControls = new GatedGLFWGameControls<>(controls);
 		this.cycler = Iterators.filter(Iterators.cycle(allPlayers), player -> player.alive().getValue());
 		this.allPlayers = allPlayers;
-		this.controller = disposables.add(new EntityController<>(controls, cycler.next()));
+		this.controller = disposables.add(new EntityController<>(gatedControls, cycler.next()));
 		var disposeWhenNotAlive = new Disposables();
 		disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
 			disposeWhenNotAlive.add(player.alive().onChange(alive -> {
@@ -37,20 +43,17 @@ public class GameLoop implements Disposable {
 			}));
 		}));
 		// Win Condition
-		var alivePlayers = new FSetWithEvents<Player>();
-		for (var player : allPlayers) {
-			disposables.add(player.alive().onChangeAndRun(alive -> {
-				if (alive) {
-					alivePlayers.add(player);
-				} else {
-					alivePlayers.remove(player);
-				}
-			}));
-		}
+		var alivePlayers = FSetWithEvents.ofFiltered(allPlayers, Player::alive, disposables::add);
 		disposables.add(alivePlayers.onRemove(player -> {
 			if (alivePlayers.size() == 1) {
 				onWinner.callListeners(alivePlayers.stream().findFirst().orElseThrow());
 			}
+		}));
+		// Time limit for turns
+		disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
+			gatedControls.setEnabled(true);
+			scheduler.add(Duration.ofSeconds(8), () -> gatedControls.setEnabled(false));
+			scheduler.add(Duration.ofSeconds(10), this::endCurrentTurn);
 		}));
 	}
 
@@ -73,6 +76,10 @@ public class GameLoop implements Disposable {
 		}
 	}
 
+	public void update() {
+		scheduler.run();
+	}
+
 	public EntityController<Player> controller() {
 		return controller;
 	}
@@ -81,11 +88,16 @@ public class GameLoop implements Disposable {
 		return controller.current();
 	}
 
+	public void endCurrentTurn() {
+		controller.setCurrent(cycler.next());
+	}
+
 	@Override
 	public void dispose() {
 		disposables.dispose();
 	}
 
+	@CheckReturnValue
 	public Disposable onWinner(Consumer<? super Player> listener) {
 		return onWinner.add(listener);
 	}

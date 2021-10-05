@@ -1,6 +1,7 @@
 package lemon.evolution.util;
 
 import lemon.engine.event.Observable;
+import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
@@ -16,15 +17,15 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 	private static final float JUMP_HEIGHT = 2f;
 	private static float playerSpeed = 0.08f;
 	private final Disposables disposables = new Disposables();
-	private final GLFWGameControls<EvolutionControls> controls;
+	private final GameControls<EvolutionControls, GLFWInput> controls;
 	private final Observable<T> current;
 	private float lastMouseX;
 	private float lastMouseY;
 
-	public EntityController(GLFWGameControls<EvolutionControls> controls, T entity) {
+	public EntityController(GameControls<EvolutionControls, GLFWInput> controls, T entity) {
 		this.controls = controls;
 		this.current = new Observable<>(entity);
-		controls.addCallback(input -> input.cursorPositionEvent().add(event -> {
+		controls.addCallback(GLFWInput::cursorPositionEvent, event -> {
 			if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
 				float deltaY = (float) (-(event.x() - lastMouseX) * MOUSE_SENSITIVITY);
 				float deltaX = (float) (-(event.y() - lastMouseY) * MOUSE_SENSITIVITY);
@@ -33,11 +34,11 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 				lastMouseX = (float) event.x();
 				lastMouseY = (float) event.y();
 			}
-		}));
-		controls.addCallback(input -> input.mouseScrollEvent().add(event -> {
+		});
+		controls.addCallback(GLFWInput::mouseScrollEvent, event -> {
 			playerSpeed = Math.max(0f, playerSpeed + ((float) (event.yOffset() / 100f)));
-		}));
-		controls.addCallback(input -> input.mouseButtonEvent().add(event -> {
+		});
+		controls.addCallback(GLFWInput::mouseButtonEvent, event -> {
 			if (event.action() == GLFW.GLFW_PRESS && event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
 				var currentEntity = current.getValue();
 				currentEntity.world().entities().add(new MissileShowerEntity(
@@ -45,7 +46,7 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 						currentEntity.vectorDirection().multiply(5f)
 				));
 			}
-		}));
+		});
 		disposables.add(controls.activated(EvolutionControls.JUMP).onChange(activated -> {
 			if (activated) {
 				var currentEntity = current.getValue();

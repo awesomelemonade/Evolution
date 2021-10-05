@@ -19,11 +19,8 @@ public interface Entity {
 	public default Vector3D force() {
 		return mutableForce().asImmutable();
 	}
-	public default Vector3D rotation() {
-		return velocity();
-	}
 	public default Vector3D vectorDirection() {
-		return MathUtil.getVectorDirection(rotation());
+		return velocity();
 	}
 	public MutableVector3D mutablePosition();
 	public MutableVector3D mutableVelocity();

@@ -228,9 +228,9 @@ public enum Game implements Screen {
 		world.entities().addAll(players);
 		world.entities().flush();
 		gameLoop = disposables.add(new GameLoop(players, controls));
-		gameLoop.onWinner(player -> {
+		disposables.add(gameLoop.onWinner(player -> {
 			window.popAndPushScreen(Menu.INSTANCE);
-		});
+		}));
 
 		Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
@@ -317,6 +317,8 @@ public enum Game implements Screen {
 		world.entities().removeIf(entity -> entity instanceof PuzzleBall ball && ball.position().y() <= -300f);
 		world.update(dt);
 
+		gameLoop.update();
+
 		benchmarker.getLineGraph("debugData").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();
 		float available = Runtime.getRuntime().totalMemory();
@@ -366,14 +368,14 @@ public enum Game implements Screen {
 				PuzzleBall.render(x, Vector3D.of(0.2f, 0.2f, 0.2f));
 			}
 			world.entities().forEach(entity -> {
-				if (entity instanceof Player && gameLoop.currentPlayer() != entity) {
+				if (entity instanceof Player player && gameLoop.currentPlayer() != entity) {
 					//PuzzleBall.render(entity.position());
 					GL11.glEnable(GL11.GL_BLEND);
 					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 					GL11.glEnable(GL11.GL_DEPTH_TEST);
 					CommonPrograms3D.COLOR.use(program -> {
-						try (var translationMatrix = MatrixPool.ofTranslation(entity.position());
-							 var rotationMatrix = MatrixPool.ofRotation(entity.rotation());
+						try (var translationMatrix = MatrixPool.ofTranslation(player.position());
+							 var rotationMatrix = MatrixPool.ofRotation(player.rotation());
 							 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
 							program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
 						}

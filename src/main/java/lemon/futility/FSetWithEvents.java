@@ -11,12 +11,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class FSetWithEvents<T> implements Set<T> {
 	private final Set<T> backingSet;
 	private final EventWith<T> onAdd;
 	private final EventWith<T> onRemove;
+
 	public FSetWithEvents() {
 		this(new HashSet<>(), new EventWith<>(), new EventWith<>());
 	}
@@ -123,6 +125,7 @@ public class FSetWithEvents<T> implements Set<T> {
 		var backingIterator = backingSet.iterator();
 		return new Iterator<>() {
 			T item = null;
+
 			@Override
 			public boolean hasNext() {
 				return backingIterator.hasNext();
@@ -200,5 +203,22 @@ public class FSetWithEvents<T> implements Set<T> {
 			}
 		}));
 		return observable;
+	}
+
+	public static <T> FSetWithEvents<T> ofFiltered(Collection<T> collection,
+												   Function<T, Observable<Boolean>> mapper,
+												   Consumer<Disposable> disposer) {
+		var set = new FSetWithEvents<T>();
+		for (var item : collection) {
+			var observable = mapper.apply(item);
+			disposer.accept(observable.onChangeAndRun(inSet -> {
+				if (inSet) {
+					set.add(item);
+				} else {
+					set.remove(item);
+				}
+			}));
+		}
+		return set;
 	}
 }

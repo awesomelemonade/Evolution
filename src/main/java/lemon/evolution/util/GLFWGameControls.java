@@ -1,5 +1,6 @@
 package lemon.evolution.util;
 
+import lemon.engine.event.EventWith;
 import lemon.engine.event.Observable;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
@@ -9,9 +10,10 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class GLFWGameControls<T> implements GameControls<T>, Disposable {
+public class GLFWGameControls<T> implements GameControls<T, GLFWInput>, Disposable {
 	private final GLFWInput input;
 	private final FSetWithEvents<Integer> keyboardHolds = new FSetWithEvents<>();
 	private final FSetWithEvents<Integer> keyboardToggles = new FSetWithEvents<>();
@@ -46,8 +48,9 @@ public class GLFWGameControls<T> implements GameControls<T>, Disposable {
 		}));
 	}
 
-	public void addCallback(Function<GLFWInput, Disposable> callback) {
-		disposables.add(callback.apply(input));
+	@Override
+	public <U> void addCallback(Function<GLFWInput, EventWith<U>> inputEvent, Consumer<? super U> callback) {
+		disposables.add(inputEvent.apply(input).add(callback));
 	}
 
 	public void bindKeyboardHold(int key, T control) {
