@@ -9,10 +9,12 @@ import lemon.engine.math.Box2D;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
+import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
 import lemon.engine.toolbox.Histogram;
 import lemon.evolution.destructible.beta.ScalarField;
+import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
@@ -28,7 +30,8 @@ public enum Menu implements Screen {
 	private List<Quad2D> buttons;
 	private final Disposables disposables = new Disposables();
 	private Histogram histogram;
-	private int[] drawnButtons = {0, 1, 2};
+	private final int[] drawnButtons = {0, 1, 2};
+	private Quad2D scrollBar;
 
 
 	@Override
@@ -37,8 +40,10 @@ public enum Menu implements Screen {
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
 		buttons = new ArrayList<>();
 		for (int i = 0; i < 6; ++i) {
-			buttons.add(new Quad2D(new Box2D(-0.3f, -0.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
+			buttons.add(new Quad2D(new Box2D(-0.3f, -.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
 		}
+		float height = (.5f  / (float)(buttons.size()-2));
+		scrollBar = new Quad2D(new Box2D(0.35f, -.2f - height, .025f, height), new Color(1f, 1f, 1f));
 		disposables.add(window.input().mouseScrollEvent().add(event -> {
 			if (event.yOffset() > 0) {
 				if (drawnButtons[0] != 0) {
@@ -47,7 +52,7 @@ public enum Menu implements Screen {
 					}
 				}
 			} else {
-				if (drawnButtons[2] != buttons.toArray().length - 1) {
+				if (drawnButtons[2] != buttons.size() - 1) {
 					for (int i = 0; i < 3; ++i) {
 						++drawnButtons[i];
 					}
@@ -60,7 +65,7 @@ public enum Menu implements Screen {
 					float mouseX = (2f * rawMouseX / event.glfwWindow().getWidth()) - 1f;
 					float mouseY = (2f * rawMouseY / event.glfwWindow().getHeight()) - 1f;
 					for (int i = 0; i < buttons.size(); ++i) {
-						if (buttons.get(i).getBox2D().intersect(mouseX, mouseY)) {
+						if (buttons.get(i).getBox2D().intersect(mouseX, mouseY - drawnButtons[0] * .2f)) {
 							switch (i) {
 								case 0 -> {
 									ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
@@ -125,13 +130,17 @@ public enum Menu implements Screen {
 
 	@Override
 	public void render() {
-		CommonPrograms2D.COLOR.use(program -> {
-			int counter = 0;
+		CommonPrograms2D.MENUBUTTON.use(program -> {
+			int i = 0;
 			for (int buttonNum : drawnButtons) {
-				buttons.get(buttonNum).getBox2D().y();
+				program.loadFloat("yOffset", .2f * buttonNum - .2f * i);
 				buttons.get(buttonNum).draw();
-				++counter;
+				++i;
 			}
+		});
+		CommonPrograms2D.MENUSCROLLER.use(program -> {
+			program.loadFloat("scrollPortion", ((.5f / (float)(buttons.size() - 2)) * drawnButtons[0]));
+			scrollBar.draw();
 		});
 	}
 
