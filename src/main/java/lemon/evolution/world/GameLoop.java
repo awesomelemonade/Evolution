@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.engine.event.EventWith;
+import lemon.engine.event.Observable;
 import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
@@ -27,6 +28,7 @@ public class GameLoop implements Disposable {
 	private final Iterator<Player> cycler;
 	private final EventWith<Player> onWinner = new EventWith<>();
 	private final Scheduler scheduler = new Scheduler();
+	private final Observable<Boolean> running = new Observable<>(false);
 
 	public GameLoop(ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
 		var gatedControls = new GatedGLFWGameControls<>(controls);
@@ -50,10 +52,23 @@ public class GameLoop implements Disposable {
 			}
 		}));
 		// Time limit for turns
-		disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
-			gatedControls.setEnabled(true);
-			scheduler.add(Duration.ofSeconds(8), () -> gatedControls.setEnabled(false));
-			scheduler.add(Duration.ofSeconds(10), this::endCurrentTurn);
+		controls.addCallback(GLFWInput::keyEvent, event -> {
+			if (event.key() == GLFW.GLFW_KEY_ENTER && event.action() == GLFW.GLFW_PRESS) {
+				running.setValue(true);
+			}
+		});
+		Disposables disposeOnStop = new Disposables();
+		disposables.add(running.onChangeAndRun(running -> {
+			if (running) {
+				disposeOnStop.add(controller.observableCurrent().onChangeAndRun(player -> {
+					gatedControls.setEnabled(true);
+					disposeOnStop.add(scheduler.add(Duration.ofSeconds(8), () -> gatedControls.setEnabled(false)));
+					disposeOnStop.add(scheduler.add(Duration.ofSeconds(10), this::endCurrentTurn));
+				}));
+				disposeOnStop.add(() -> gatedControls.setEnabled(true));
+			} else {
+				disposeOnStop.dispose();
+			}
 		}));
 	}
 

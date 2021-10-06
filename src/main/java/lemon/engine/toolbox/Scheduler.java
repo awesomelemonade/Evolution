@@ -6,22 +6,36 @@ import java.util.Comparator;
 import java.util.PriorityQueue;
 
 public class Scheduler {
-	private final PriorityQueue<Task> queue = new PriorityQueue<>(Comparator.comparing(Task::executionTime));
+	private final PriorityQueue<Task> queue = new PriorityQueue<>(Comparator.comparing(task -> task.executionTime));
 
-	public void add(Instant executionTime, Runnable runnable) {
-		queue.add(new Task(executionTime, runnable));
+	public Disposable add(Instant executionTime, Runnable runnable) {
+		var task = new Task(executionTime, runnable);
+		queue.add(task);
+		return () -> task.cancelled = true;
 	}
 
-	public void add(Duration future, Runnable runnable) {
-		add(Instant.now().plus(future), runnable);
+	public Disposable add(Duration future, Runnable runnable) {
+		return add(Instant.now().plus(future), runnable);
 	}
 
 	public void run() {
 		var now = Instant.now();
-		while ((!queue.isEmpty()) && queue.peek().executionTime().isBefore(now)) {
-			queue.poll().runnable().run();
+		while ((!queue.isEmpty()) && queue.peek().executionTime.isBefore(now)) {
+			var task = queue.poll();
+			if (!task.cancelled) {
+				task.runnable.run();
+			}
 		}
 	}
 
-	public static record Task(Instant executionTime, Runnable runnable) {}
+	public static class Task {
+		private final Instant executionTime;
+		private final Runnable runnable;
+		private boolean cancelled;
+		public Task(Instant executionTime, Runnable runnable) {
+			this.executionTime = executionTime;
+			this.runnable = runnable;
+			this.cancelled = false;
+		}
+	}
 }
