@@ -13,6 +13,22 @@ import org.lwjgl.opengl.GL20;
 import java.util.function.Consumer;
 
 public enum CommonPrograms2D implements ShaderProgramHolder {
+	MENUBUTTON(names("position", "color"), program -> {
+		program.loadFloat("yOffset", -.3f);
+		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadColor4f("filterColor", Color.WHITE);
+	},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/menuButtonVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/menuButtonFragmentShader").orElseThrow())),
+	MENUSCROLLER(names("position", "color"), program -> {
+		program.loadFloat("scrollPortion", -.5f);
+		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadColor4f("filterColor", Color.WHITE);
+	},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/menuScrollerVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/menuScrollerFragmentShader").orElseThrow())),
 	COLOR(names("position", "color"), program -> {
 		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
