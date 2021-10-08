@@ -9,7 +9,6 @@ import lemon.engine.toolbox.Disposables;
 import lemon.evolution.EvolutionControls;
 import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.world.ControllableEntity;
-import org.lwjgl.glfw.GLFW;
 
 public class EntityController<T extends ControllableEntity> implements Disposable {
 	private static final boolean USE_SURF = false;
@@ -38,23 +37,19 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 		controls.addCallback(GLFWInput::mouseScrollEvent, event -> {
 			playerSpeed = Math.max(0f, playerSpeed + ((float) (event.yOffset() / 100f)));
 		});
-		controls.addCallback(GLFWInput::mouseButtonEvent, event -> {
-			if (event.action() == GLFW.GLFW_PRESS && event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
-				var currentEntity = current.getValue();
-				currentEntity.world().entities().add(new MissileShowerEntity(
-						currentEntity.location().add(currentEntity.vectorDirection().multiply(0.95f)),
-						currentEntity.vectorDirection().multiply(5f)
-				));
-			}
-		});
-		disposables.add(controls.activated(EvolutionControls.JUMP).onChange(activated -> {
-			if (activated) {
-				var currentEntity = current.getValue();
-				currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(JUMP_HEIGHT));
-			}
+		disposables.add(controls.onActivated(EvolutionControls.USE_ITEM, () -> {
+			var currentEntity = current.getValue();
+			currentEntity.world().entities().add(new MissileShowerEntity(
+					currentEntity.location().add(currentEntity.vectorDirection().multiply(0.95f)),
+					currentEntity.vectorDirection().multiply(5f)
+			));
 		}));
-		var currentCleanup = new Disposables(current.getValue().onUpdate().add(this::update));
-		disposables.add(current.onChange(newEntity -> {
+		disposables.add(controls.onActivated(EvolutionControls.JUMP, () -> {
+			var currentEntity = current.getValue();
+			currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(JUMP_HEIGHT));
+		}));
+		var currentCleanup = new Disposables();
+		disposables.add(current.onChangeAndRun(newEntity -> {
 			currentCleanup.dispose();
 			currentCleanup.add(newEntity.onUpdate().add(this::update));
 		}));

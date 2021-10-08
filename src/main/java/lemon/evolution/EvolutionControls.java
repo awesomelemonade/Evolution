@@ -18,7 +18,8 @@ public enum EvolutionControls {
 	ADD_TERRAIN(keyboardHold(GLFW.GLFW_KEY_T)),
 	REMOVE_TERRAIN(keyboardHold(GLFW.GLFW_KEY_Y)),
 	END_TURN(keyboardHold(GLFW.GLFW_KEY_BACKSPACE)),
-	START_GAME(keyboardHold(GLFW.GLFW_KEY_ENTER));
+	START_GAME(keyboardHold(GLFW.GLFW_KEY_ENTER)),
+	USE_ITEM(mouseHold(GLFW.GLFW_MOUSE_BUTTON_1));
 
 	private final BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> defaultBinder;
 	private EvolutionControls(BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> defaultBinder) {
