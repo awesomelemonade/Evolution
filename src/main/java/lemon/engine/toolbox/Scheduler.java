@@ -5,16 +5,16 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
-public class Scheduler {
+public class Scheduler implements Disposable {
 	private final PriorityQueue<Task> queue = new PriorityQueue<>(Comparator.comparing(task -> task.executionTime));
 
-	public Disposable add(Instant executionTime, Runnable runnable) {
+	public Task add(Instant executionTime, Runnable runnable) {
 		var task = new Task(executionTime, runnable);
 		queue.add(task);
-		return () -> task.cancelled = true;
+		return task;
 	}
 
-	public Disposable add(Duration future, Runnable runnable) {
+	public Task add(Duration future, Runnable runnable) {
 		return add(Instant.now().plus(future), runnable);
 	}
 
@@ -28,7 +28,12 @@ public class Scheduler {
 		}
 	}
 
-	public static class Task {
+	@Override
+	public void dispose() {
+		queue.clear();
+	}
+
+	public static class Task implements Disposable {
 		private final Instant executionTime;
 		private final Runnable runnable;
 		private boolean cancelled;
@@ -36,6 +41,11 @@ public class Scheduler {
 			this.executionTime = executionTime;
 			this.runnable = runnable;
 			this.cancelled = false;
+		}
+
+		@Override
+		public void dispose() {
+			this.cancelled = true;
 		}
 	}
 }

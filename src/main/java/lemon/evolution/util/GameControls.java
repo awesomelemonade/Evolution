@@ -2,12 +2,17 @@ package lemon.evolution.util;
 
 import lemon.engine.event.EventWith;
 import lemon.engine.event.Observable;
+import lemon.engine.toolbox.Disposable;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public interface GameControls<T, U> {
 	public Observable<Boolean> activated(T control);
+
+	public default Disposable onActivated(T control, Runnable runnable) {
+		return activated(control).onChangeTo(true, runnable);
+	}
 
 	public default boolean isActivated(T control) {
 		return activated(control).getValue();

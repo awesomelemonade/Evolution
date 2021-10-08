@@ -19,19 +19,22 @@ import org.lwjgl.glfw.GLFW;
 
 import java.time.Duration;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class GameLoop implements Disposable {
 	private final Disposables disposables = new Disposables();
+	private final Disposables endTurnDisposables = new Disposables();
+	private final GatedGLFWGameControls<EvolutionControls> gatedControls;
 	private final ImmutableList<Player> allPlayers;
 	private final EntityController<Player> controller;
 	private final Iterator<Player> cycler;
 	private final EventWith<Player> onWinner = new EventWith<>();
-	private final Scheduler scheduler = new Scheduler();
-	private final Observable<Boolean> running = new Observable<>(false);
+	private final Scheduler scheduler = disposables.add(new Scheduler());
 
 	public GameLoop(ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
-		var gatedControls = new GatedGLFWGameControls<>(controls);
+		this.gatedControls = new GatedGLFWGameControls<>(controls);
 		this.cycler = Iterators.filter(Iterators.cycle(allPlayers), player -> player.alive().getValue());
 		this.allPlayers = allPlayers;
 		this.controller = disposables.add(new EntityController<>(gatedControls, cycler.next()));
@@ -52,24 +55,20 @@ public class GameLoop implements Disposable {
 			}
 		}));
 		// Time limit for turns
-		controls.addCallback(GLFWInput::keyEvent, event -> {
-			if (event.key() == GLFW.GLFW_KEY_ENTER && event.action() == GLFW.GLFW_PRESS) {
-				running.setValue(true);
-			}
-		});
-		Disposables disposeOnStop = new Disposables();
-		disposables.add(running.onChangeAndRun(running -> {
-			if (running) {
-				disposeOnStop.add(controller.observableCurrent().onChangeAndRun(player -> {
-					gatedControls.setEnabled(true);
-					disposeOnStop.add(scheduler.add(Duration.ofSeconds(8), () -> gatedControls.setEnabled(false)));
-					disposeOnStop.add(scheduler.add(Duration.ofSeconds(10), this::endCurrentTurn));
-				}));
-				disposeOnStop.add(() -> gatedControls.setEnabled(true));
-			} else {
-				disposeOnStop.dispose();
-			}
+		disposables.add(controls.onActivated(EvolutionControls.START_GAME, () -> {
+			disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
+				gatedControls.setEnabled(true);
+				endTurnDisposables.add(scheduler.add(Duration.ofSeconds(8), this::endTurn));
+				endTurnDisposables.add(controls.onActivated(EvolutionControls.END_TURN, this::endTurn));
+			}));
 		}));
+		disposables.add(() -> gatedControls.setEnabled(true));
+	}
+
+	public void endTurn() {
+		gatedControls.setEnabled(false);
+		scheduler.add(Duration.ofSeconds(2), this::cycleToNextPlayer);
+		endTurnDisposables.dispose();
 	}
 
 	public void bindNumberKeys(GLFWInput input) {
@@ -103,7 +102,7 @@ public class GameLoop implements Disposable {
 		return controller.current();
 	}
 
-	public void endCurrentTurn() {
+	public void cycleToNextPlayer() {
 		controller.setCurrent(cycler.next());
 	}
 

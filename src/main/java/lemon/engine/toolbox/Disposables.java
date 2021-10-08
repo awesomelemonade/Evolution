@@ -2,6 +2,7 @@ package lemon.engine.toolbox;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 public class Disposables implements Disposable {
@@ -13,6 +14,10 @@ public class Disposables implements Disposable {
 
 	public Disposables(Disposable... disposables) {
 		list.addAll(Arrays.asList(disposables));
+	}
+
+	public Disposables(Collection<? extends Disposable> disposables) {
+		list.addAll(disposables);
 	}
 
 	public <T extends Disposable> T add(T disposable) {
