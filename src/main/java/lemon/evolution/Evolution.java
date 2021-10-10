@@ -44,17 +44,19 @@ public class Evolution {
 					"Evolution", GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
 			//return GLFW.glfwCreateWindow(1600, 900, "Evolution", MemoryUtil.NULL, MemoryUtil.NULL);
 		}, Menu.INSTANCE)) {
-			window.input().keyEvent().add(event -> {
+			var disposable = window.input().keyEvent().add(event -> {
 				if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
 					GLFW.glfwSetWindowShouldClose(window.getId(), true);
 					ThreadManager.INSTANCE.interrupt();
 				}
 			});
+			System.getProperties().list(System.out);
 			logger.log(Level.INFO, String.format("LWJGL Version: %s", Version.getVersion()));
 			logger.log(Level.INFO, String.format("OpenGL Version: %s", GL11.glGetString(GL11.GL_VERSION)));
 			logger.log(Level.INFO, String.format("GLFW Version: %s", GLFW.glfwGetVersionString()));
 			logger.log(Level.INFO, String.format("Supported GLSL Version: %s", GL11.glGetString(GL20.GL_SHADING_LANGUAGE_VERSION)));
 			window.run();
+			disposable.dispose();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

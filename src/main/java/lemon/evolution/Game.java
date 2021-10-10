@@ -220,7 +220,7 @@ public enum Game implements Screen {
 			var angle = MathUtil.TAU * ((float) i) / numPlayers;
 			var cos = (float) Math.cos(angle);
 			var sin = (float) Math.sin(angle);
-			var player = new Player("Player " + (i + 1), new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection);
+			var player = disposables.add(new Player("Player " + (i + 1), new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
 			player.mutableRotation().setY((float) Math.atan2(player.position().y(), player.position().x()));
 			playersBuilder.add(player);
 		}
