@@ -260,7 +260,7 @@ public enum Game implements Screen {
 		logger.log(Level.FINE, "Initializing");
 		postLoadTasks.run();
 		this.window = window;
-		GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+		// GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 		disposables.add(() -> GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL));
 		var windowWidth = window.getWidth();
 		var windowHeight = window.getHeight();
@@ -392,12 +392,14 @@ public enum Game implements Screen {
 				return 0f;
 			}
 		});
+
 		disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
 		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f),
 				world.terrain(),
 				() -> gameLoop.currentPlayer());
 		uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png");
-
+		
+		uiScreen.addInventory();
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(() -> loaded = false);
 	}

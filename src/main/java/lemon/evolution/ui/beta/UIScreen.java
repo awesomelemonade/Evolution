@@ -50,6 +50,10 @@ public class UIScreen extends AbstractUIComponent {
 	public UIImage addImage(Box2D box, Texture texture) {
 		return addComponent(new UIImage(this, box, texture));
 	}
+	
+	public UIInventory addInventory() {
+		return addComponent(new UIInventory(this));
+	}
 
 	@Override
 	public void render() {
