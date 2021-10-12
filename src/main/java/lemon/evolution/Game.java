@@ -1,11 +1,11 @@
 package lemon.evolution;
 
 import com.google.common.collect.ImmutableList;
-import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
+import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
@@ -18,6 +18,8 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.model.LineGraph;
+import lemon.engine.model.Model;
+import lemon.engine.model.SphereModelBuilder;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
@@ -28,20 +30,23 @@ import lemon.engine.toolbox.Disposables;
 import lemon.engine.toolbox.Histogram;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.engine.toolbox.SkyboxLoader;
+import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainGenerator;
+import lemon.evolution.entity.MissileShowerEntity;
+import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.entity.RocketLauncherProjectile;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
-import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.util.GLFWGameControls;
+import lemon.evolution.world.Entity;
 import lemon.evolution.world.GameLoop;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
@@ -54,11 +59,10 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,18 +85,12 @@ public enum Game implements Screen {
 	private World world;
 	private WorldRenderer worldRenderer;
 
-	private Drawable dragonModel;
 	private Vector3D lightPosition;
 
 	private Drawable rocketLauncherUnloadedModel;
 	private Drawable rocketLauncherLoadedModel;
-	public Drawable rocketLauncherProjectileModel; // TODO: Temporary
-
-	private Drawable foxModel;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
-
-	public List<Vector3D> debug;
 
 	private UIScreen uiScreen;
 
@@ -155,18 +153,85 @@ public enum Game implements Screen {
 				}
 			};
 			world = disposables.add(new World(terrain, collisionContext));
-			worldRenderer = new WorldRenderer(world);
+			worldRenderer = disposables.add(new WorldRenderer(world));
 
+			var entityRenderer = worldRenderer.entityRenderer();
+			var sphereDrawable = SphereModelBuilder.of(1, 5)
+					.build((indices, vertices) -> {
+						Color[] colors = new Color[vertices.length];
+						for (int i = 0; i < colors.length; i++) {
+							colors[i] = Color.randomOpaque();
+						}
+						return new Model(indices, vertices, colors);
+					}).map(IndexedDrawable::new);
+			entityRenderer.registerIndividual(PuzzleBall.class, ball -> {
+				GL11.glEnable(GL11.GL_BLEND);
+				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+				GL11.glEnable(GL11.GL_DEPTH_TEST);
+				CommonPrograms3D.COLOR.use(program -> {
+					try (var translationMatrix = MatrixPool.ofTranslation(ball.position());
+						 var scalarMatrix = MatrixPool.ofScalar(1f, 1f, 1f);
+						 //var scalarMatrix = MatrixPool.ofScalar(ball.scalar());
+						 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+						program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
+					}
+					sphereDrawable.draw();
+				});
+				GL11.glDisable(GL11.GL_DEPTH_TEST);
+				GL11.glDisable(GL11.GL_BLEND);
+			});
 			var dragonLoader = new ObjLoader("/res/dragon.obj", postLoadTasks::add,
-					objLoader -> dragonModel = objLoader.toIndexedDrawable());
+					objLoader -> {
+						var drawable = objLoader.toIndexedDrawable();
+					});
 			var rocketLauncherUnloadedLoader = new ObjLoader("/res/rocket-launcher-unloaded.obj", postLoadTasks::add,
 					objLoader -> rocketLauncherUnloadedModel = objLoader.toIndexedDrawable());
 			var rocketLauncherLoadedLoader = new ObjLoader("/res/rocket-launcher-loaded.obj", postLoadTasks::add,
 					objLoader -> rocketLauncherLoadedModel = objLoader.toIndexedDrawable());
 			var rocketLauncherProjectileLoader = new ObjLoader("/res/rocket-launcher-projectile.obj", postLoadTasks::add,
-					objLoader -> rocketLauncherProjectileModel = objLoader.toIndexedDrawable());
+					objLoader -> {
+						var drawable = objLoader.toIndexedDrawable();
+						Consumer<Entity> renderer = entity -> {
+							GL11.glEnable(GL11.GL_DEPTH_TEST);
+							CommonPrograms3D.LIGHT.use(program -> {
+								var sunlightDirection = Vector3D.of(0f, 1f, 0f);
+								try (var translationMatrix = MatrixPool.ofTranslation(entity.position());
+									 var rotationMatrix = MatrixPool.ofLookAt(entity.velocity());
+									 var adjustedMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f);
+									 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 0.2f)) {
+									program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(adjustedMatrix).multiply(scalarMatrix));
+									program.loadVector("sunlightDirection", sunlightDirection);
+									drawable.draw();
+								}
+							});
+							GL11.glDisable(GL11.GL_DEPTH_TEST);
+						};
+						entityRenderer.registerIndividual(RocketLauncherProjectile.class, renderer);
+						entityRenderer.registerIndividual(MissileShowerEntity.class, renderer);
+					});
 			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
-					objLoader -> foxModel = objLoader.toIndexedDrawable());
+					objLoader -> {
+						var drawable = objLoader.toIndexedDrawable();
+						entityRenderer.registerCollection(Player.class, players -> {
+							for (var player : players) {
+								if (player != gameLoop.currentPlayer()) {
+									GL11.glEnable(GL11.GL_BLEND);
+									GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+									GL11.glEnable(GL11.GL_DEPTH_TEST);
+									CommonPrograms3D.COLOR.use(program -> {
+										try (var translationMatrix = MatrixPool.ofTranslation(player.position());
+											 var rotationMatrix = MatrixPool.ofRotation(player.rotation());
+											 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
+											program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
+										}
+										drawable.draw();
+									});
+									GL11.glDisable(GL11.GL_DEPTH_TEST);
+									GL11.glDisable(GL11.GL_BLEND);
+								}
+							}
+						});
+					});
 
 			window.pushScreen(new Loading(window::popScreen,
 					dragonLoader, rocketLauncherUnloadedLoader,
@@ -278,15 +343,12 @@ public enum Game implements Screen {
 			});
 		});
 
-		debug = new ArrayList<>();
-
 		lightPosition = gameLoop.currentPlayer().position();
 
 		disposables.add(window.input().keyEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_RELEASE) {
 				if (event.key() == GLFW.GLFW_KEY_C) {
 					world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof RocketLauncherProjectile);
-					debug.clear();
 				}
 				if (event.key() == GLFW.GLFW_KEY_H) {
 					int size = 20;
@@ -364,27 +426,6 @@ public enum Game implements Screen {
 				CommonDrawables.SKYBOX.draw();
 			});
 			GL11.glDepthMask(true);
-			for (Vector3D x : debug) {
-				PuzzleBall.render(x, Vector3D.of(0.2f, 0.2f, 0.2f));
-			}
-			world.entities().forEach(entity -> {
-				if (entity instanceof Player player && gameLoop.currentPlayer() != entity) {
-					//PuzzleBall.render(entity.position());
-					GL11.glEnable(GL11.GL_BLEND);
-					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-					GL11.glEnable(GL11.GL_DEPTH_TEST);
-					CommonPrograms3D.COLOR.use(program -> {
-						try (var translationMatrix = MatrixPool.ofTranslation(player.position());
-							 var rotationMatrix = MatrixPool.ofRotation(player.rotation());
-							 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
-							program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
-						}
-						foxModel.draw();
-					});
-					GL11.glDisable(GL11.GL_DEPTH_TEST);
-					GL11.glDisable(GL11.GL_BLEND);
-				}
-			});
 			worldRenderer.render(gameLoop.currentPlayer().position());
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.LIGHT.use(program -> {
