@@ -23,10 +23,15 @@ public class World implements Disposable {
 	public void update(float dt) {
 		entities.forEach(entity -> {
 			entity.onUpdate().callListeners();
-			collisionContext.collideWithWorld(entity.mutablePosition(), entity.mutableVelocity(), entity.mutableForce(), dt, collision -> {
-				entity.onCollide().callListeners(collision);
-				return entity.getCollisionResponse();
-			});
+			collisionContext.collideWithWorld(
+					entity.mutablePosition(),
+					entity.mutableVelocity(),
+					entity.mutableForce(),
+					entity.scalar(),
+					dt,
+					entity.onCollide()::callListeners,
+					entity::getCollisionResponse
+			);
 			entity.mutableForce().set(entity.getEnvironmentalForce());
 		});
 		entities.flush();

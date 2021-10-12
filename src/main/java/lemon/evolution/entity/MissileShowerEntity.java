@@ -15,20 +15,27 @@ public class MissileShowerEntity extends AbstractEntity implements Disposable {
 	private final Disposables disposables = new Disposables();
 
 	public MissileShowerEntity(Location location, Vector3D velocity) {
-		super(location, velocity);
+		super(location, velocity, Vector3D.of(0.2f, 0.2f, 0.2f));
 		this.creationTime = Instant.now();
 		disposables.add(this.onUpdate().add(() -> {
 			if (Instant.now().isAfter(creationTime.plus(1, ChronoUnit.SECONDS))) {
-				removeFromWorld();
-				var numRockets = 256;
-				var upwardVelocity = Vector3D.of(0f, 1f, 0f);
-				for (int i = 0; i < numRockets; i++) {
-					var angle = (float) (Math.random() * MathUtil.TAU);
-					var horizontalVelocity = Vector3D.of(MathUtil.cos(angle), 0, MathUtil.sin(angle)).multiply((float) (Math.random() * 1f));
-					world().entities().add(new RocketLauncherProjectile(location(), upwardVelocity.add(horizontalVelocity)));
-				}
+				explode(location());
 			}
 		}));
+		disposables.add(this.onCollide().add(intersection -> {
+			explode(new Location(world(), intersection));
+		}));
+	}
+
+	public void explode(Location location) {
+		removeFromWorld();
+		var numRockets = 256;
+		var upwardVelocity = Vector3D.of(0f, 1f, 0f);
+		for (int i = 0; i < numRockets; i++) {
+			var angle = (float) (Math.random() * MathUtil.TAU);
+			var horizontalVelocity = Vector3D.of(MathUtil.cos(angle), 0, MathUtil.sin(angle)).multiply((float) (Math.random() * 1f));
+			world().entities().add(new RocketLauncherProjectile(location, upwardVelocity.add(horizontalVelocity)));
+		}
 	}
 
 	@Override

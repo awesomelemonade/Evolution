@@ -11,12 +11,12 @@ public class RocketLauncherProjectile extends AbstractEntity implements Disposab
 	private final Disposables disposables = new Disposables();
 
 	public RocketLauncherProjectile(Location location, Vector3D velocity) {
-		super(location, velocity);
-		this.disposables.add(this.onCollide().add(collision -> {
-			var explosionPosition = collision.intersection();
+		super(location, velocity, Vector3D.of(0.2f, 0.2f, 0.2f));
+		this.disposables.add(this.onCollide().add(explosionPosition -> {
+			removeFromWorld();
 			world().terrain().generateExplosion(explosionPosition, 3f);
 			world().entities().forEach(entity -> {
-				if (entity != this) {
+				if (!(entity instanceof RocketLauncherProjectile)) {
 					float strength = Math.min(2f, 10f / entity.position().distanceSquared(explosionPosition));
 					var direction = entity.position().subtract(explosionPosition);
 					if (direction.equals(Vector3D.ZERO)) {
@@ -35,7 +35,6 @@ public class RocketLauncherProjectile extends AbstractEntity implements Disposab
 
 	@Override
 	public CollisionResponse getCollisionResponse() {
-		removeFromWorld();
 		return CollisionResponse.STOP;
 	}
 

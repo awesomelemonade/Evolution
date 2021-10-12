@@ -6,7 +6,7 @@ import lemon.engine.toolbox.Disposables;
 import lemon.evolution.destructible.beta.TerrainRenderer;
 
 public class WorldRenderer implements Disposable {
-	private static final float RENDER_DISTANCE = 2.5f;
+	private static final float RENDER_DISTANCE = 5f;
 	private final Disposables disposables = new Disposables();
 	private final TerrainRenderer terrainRenderer;
 	private final EntityRenderer entityRenderer;

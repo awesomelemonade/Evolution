@@ -115,7 +115,7 @@ public enum Game implements Screen {
 					return 0f;
 				}
 				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
-				float cylinder = (float) (50.0 - Math.sqrt(distanceSquared));
+				float cylinder = (float) (150.0 - Math.sqrt(distanceSquared));
 				if (cylinder < -100f) {
 					return cylinder;
 				}
@@ -170,8 +170,7 @@ public enum Game implements Screen {
 				GL11.glEnable(GL11.GL_DEPTH_TEST);
 				CommonPrograms3D.COLOR.use(program -> {
 					try (var translationMatrix = MatrixPool.ofTranslation(ball.position());
-						 var scalarMatrix = MatrixPool.ofScalar(1f, 1f, 1f);
-						 //var scalarMatrix = MatrixPool.ofScalar(ball.scalar());
+						 var scalarMatrix = MatrixPool.ofScalar(ball.scalar());
 						 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
 						program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
 					}
@@ -198,7 +197,7 @@ public enum Game implements Screen {
 								try (var translationMatrix = MatrixPool.ofTranslation(entity.position());
 									 var rotationMatrix = MatrixPool.ofLookAt(entity.velocity());
 									 var adjustedMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f);
-									 var scalarMatrix = MatrixPool.ofScalar(0.2f, 0.2f, 0.2f)) {
+									 var scalarMatrix = MatrixPool.ofScalar(entity.scalar())) {
 									program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(adjustedMatrix).multiply(scalarMatrix));
 									program.loadVector("sunlightDirection", sunlightDirection);
 									drawable.draw();
@@ -220,7 +219,7 @@ public enum Game implements Screen {
 									GL11.glEnable(GL11.GL_DEPTH_TEST);
 									CommonPrograms3D.COLOR.use(program -> {
 										try (var translationMatrix = MatrixPool.ofTranslation(player.position());
-											 var rotationMatrix = MatrixPool.ofRotation(player.rotation());
+											 var rotationMatrix = MatrixPool.ofRotation(player.rotation().add(Vector3D.of(0f, MathUtil.PI, 0f)));
 											 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
 											program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
 										}
@@ -351,10 +350,11 @@ public enum Game implements Screen {
 					world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof RocketLauncherProjectile);
 				}
 				if (event.key() == GLFW.GLFW_KEY_H) {
+					var ballSize = (float) (Math.random());
 					int size = 20;
 					for (int i = -size; i <= size; i += 5) {
 						for (int j = -size; j <= size; j += 5) {
-							world.entities().add(new PuzzleBall(new Location(world, Vector3D.of(i, 100, j)), Vector3D.ZERO));
+							world.entities().add(new PuzzleBall(new Location(world, Vector3D.of(i, 100, j)), Vector3D.ZERO, Vector3D.of(ballSize, ballSize, ballSize)));
 						}
 					}
 				}
@@ -369,6 +369,7 @@ public enum Game implements Screen {
 		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED);
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
+		disposables.add(() -> loaded = false);
 	}
 
 	@Override
