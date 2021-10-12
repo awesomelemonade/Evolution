@@ -25,7 +25,7 @@ import java.util.function.Function;
 
 public class GameLoop implements Disposable {
 	private final Disposables disposables = new Disposables();
-	private final Disposables endTurnDisposables = new Disposables();
+	private final Disposables endTurnDisposables = disposables.add(new Disposables());
 	private final GatedGLFWGameControls<EvolutionControls> gatedControls;
 	private final ImmutableList<Player> allPlayers;
 	private final EntityController<Player> controller;
@@ -38,7 +38,7 @@ public class GameLoop implements Disposable {
 		this.cycler = Iterators.filter(Iterators.cycle(allPlayers), player -> player.alive().getValue());
 		this.allPlayers = allPlayers;
 		this.controller = disposables.add(new EntityController<>(gatedControls, cycler.next()));
-		var disposeWhenNotAlive = new Disposables();
+		var disposeWhenNotAlive = disposables.add(new Disposables());
 		disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
 			disposeWhenNotAlive.add(player.alive().onChange(alive -> {
 				if (!alive) {
@@ -55,12 +55,14 @@ public class GameLoop implements Disposable {
 			}
 		}));
 		// Time limit for turns
-		disposables.add(controls.onActivated(EvolutionControls.START_GAME, () -> {
+		var disposeOnStart = disposables.add(new Disposables());
+		disposeOnStart.add(controls.onActivated(EvolutionControls.START_GAME, () -> {
 			disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
 				gatedControls.setEnabled(true);
 				endTurnDisposables.add(scheduler.add(Duration.ofSeconds(8), this::endTurn));
 				endTurnDisposables.add(controls.onActivated(EvolutionControls.END_TURN, this::endTurn));
 			}));
+			disposeOnStart.dispose();
 		}));
 		disposables.add(() -> gatedControls.setEnabled(true));
 	}

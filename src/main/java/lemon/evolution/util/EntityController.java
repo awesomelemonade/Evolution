@@ -48,7 +48,7 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 			var currentEntity = current.getValue();
 			currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(JUMP_HEIGHT));
 		}));
-		var currentCleanup = new Disposables();
+		var currentCleanup = disposables.add(new Disposables());
 		disposables.add(current.onChangeAndRun(newEntity -> {
 			currentCleanup.dispose();
 			currentCleanup.add(newEntity.onUpdate().add(this::update));

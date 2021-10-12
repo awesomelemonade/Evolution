@@ -8,6 +8,10 @@ import java.util.List;
 public class Disposables implements Disposable {
 	private final List<Disposable> list = new ArrayList<>();
 
+	public Disposables() {
+		// Do Nothing
+	}
+
 	public Disposables(Disposable disposable) {
 		list.add(disposable);
 	}
