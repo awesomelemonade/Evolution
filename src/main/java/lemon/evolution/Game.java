@@ -296,7 +296,7 @@ public enum Game implements Screen {
 			logger.fine("Initializing");
 			postLoadTasks.run();
 			this.window = window;
-			GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+			//GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 			disposables.add(() -> GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL));
 			var windowWidth = window.getWidth();
 			var windowHeight = window.getHeight();
@@ -432,6 +432,8 @@ public enum Game implements Screen {
 				minimap.visible().setValue(visible);
 			}));
 			uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png").visible().setValue(false);
+
+			uiScreen.addInventory();
 
 			disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 			disposables.add(() -> loaded = false);
