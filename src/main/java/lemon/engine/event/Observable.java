@@ -50,4 +50,20 @@ public class Observable<T> {
 		listener.accept(value);
 		return onChange.add(listener);
 	}
+
+	@CheckReturnValue
+	public Disposable onChangeTo(T value, Runnable runnable) {
+		return onChange.add(to -> {
+			if (to.equals(value)) {
+				runnable.run();
+			}
+		});
+	}
+
+	public static Observable<Boolean> ofAnd(Observable<Boolean> a, Observable<Boolean> b, Consumer<Disposable> disposer) {
+		var ret = new Observable<>(a.getValue() && b.getValue());
+		disposer.accept(a.onChange(condition -> ret.setValue(condition && b.getValue())));
+		disposer.accept(b.onChange(condition -> ret.setValue(condition && a.getValue())));
+		return ret;
+	}
 }

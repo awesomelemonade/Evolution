@@ -2,6 +2,7 @@ package lemon.evolution.item;
 
 import lemon.engine.game.Player;
 import lemon.evolution.entity.MissileShowerEntity;
+import lemon.evolution.world.ControllableEntity;
 
 public enum MissileShowerItemType implements ItemType {
 	INSTANCE;
@@ -12,7 +13,7 @@ public enum MissileShowerItemType implements ItemType {
 	}
 
 	@Override
-	public void use(Player player) {
+	public void use(ControllableEntity player) {
 		player.world().entities().add(new MissileShowerEntity(
 				player.location().add(player.vectorDirection().multiply(0.95f)),
 				player.vectorDirection().multiply(5f)

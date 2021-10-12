@@ -1,6 +1,7 @@
 package lemon.evolution.util;
 
 import lemon.engine.event.Observable;
+import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
@@ -8,7 +9,6 @@ import lemon.engine.toolbox.Disposables;
 import lemon.evolution.EvolutionControls;
 import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.world.ControllableEntity;
-import org.lwjgl.glfw.GLFW;
 
 public class EntityController<T extends ControllableEntity> implements Disposable {
 	private static final boolean USE_SURF = false;
@@ -16,15 +16,15 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 	private static final float JUMP_HEIGHT = 2f;
 	private static float playerSpeed = 0.08f;
 	private final Disposables disposables = new Disposables();
-	private final GLFWGameControls<EvolutionControls> controls;
+	private final GameControls<EvolutionControls, GLFWInput> controls;
 	private final Observable<T> current;
 	private float lastMouseX;
 	private float lastMouseY;
 
-	public EntityController(GLFWGameControls<EvolutionControls> controls, T entity) {
+	public EntityController(GameControls<EvolutionControls, GLFWInput> controls, T entity) {
 		this.controls = controls;
 		this.current = new Observable<>(entity);
-		controls.addCallback(input -> input.cursorPositionEvent().add(event -> {
+		controls.addCallback(GLFWInput::cursorPositionEvent, event -> {
 			if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
 				float deltaY = (float) (-(event.x() - lastMouseX) * MOUSE_SENSITIVITY);
 				float deltaX = (float) (-(event.y() - lastMouseY) * MOUSE_SENSITIVITY);
@@ -33,27 +33,23 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 				lastMouseX = (float) event.x();
 				lastMouseY = (float) event.y();
 			}
-		}));
-		controls.addCallback(input -> input.mouseScrollEvent().add(event -> {
+		});
+		controls.addCallback(GLFWInput::mouseScrollEvent, event -> {
 			playerSpeed = Math.max(0f, playerSpeed + ((float) (event.yOffset() / 100f)));
+		});
+		disposables.add(controls.onActivated(EvolutionControls.USE_ITEM, () -> {
+			var currentEntity = current.getValue();
+			currentEntity.world().entities().add(new MissileShowerEntity(
+					currentEntity.location().add(currentEntity.vectorDirection().multiply(0.95f)),
+					currentEntity.vectorDirection().multiply(5f)
+			));
 		}));
-		controls.addCallback(input -> input.mouseButtonEvent().add(event -> {
-			if (event.action() == GLFW.GLFW_PRESS && event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
-				var currentEntity = current.getValue();
-				currentEntity.world().entities().add(new MissileShowerEntity(
-						currentEntity.location().add(currentEntity.vectorDirection().multiply(0.95f)),
-						currentEntity.vectorDirection().multiply(5f)
-				));
-			}
+		disposables.add(controls.onActivated(EvolutionControls.JUMP, () -> {
+			var currentEntity = current.getValue();
+			currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(JUMP_HEIGHT));
 		}));
-		disposables.add(controls.activated(EvolutionControls.JUMP).onChange(activated -> {
-			if (activated) {
-				var currentEntity = current.getValue();
-				currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(JUMP_HEIGHT));
-			}
-		}));
-		var currentCleanup = new Disposables(current.getValue().onUpdate().add(this::update));
-		disposables.add(current.onChange(newEntity -> {
+		var currentCleanup = disposables.add(new Disposables());
+		disposables.add(current.onChangeAndRun(newEntity -> {
 			currentCleanup.dispose();
 			currentCleanup.add(newEntity.onUpdate().add(this::update));
 		}));

@@ -1,24 +1,36 @@
 package lemon.evolution.world;
 
 import lemon.engine.math.Vector3D;
-import lemon.engine.render.Renderable;
+import lemon.engine.toolbox.Disposable;
+import lemon.engine.toolbox.Disposables;
 import lemon.evolution.destructible.beta.TerrainRenderer;
 
-public class WorldRenderer {
+public class WorldRenderer implements Disposable {
 	private static final float RENDER_DISTANCE = 2.5f;
-	private final World world;
+	private final Disposables disposables = new Disposables();
 	private final TerrainRenderer terrainRenderer;
+	private final EntityRenderer entityRenderer;
+
 	public WorldRenderer(World world) {
-		this.world = world;
 		this.terrainRenderer = new TerrainRenderer(world.terrain(), RENDER_DISTANCE);
+		this.entityRenderer = disposables.add(new EntityRenderer(world.entities()));
 	}
 
 	public void render(Vector3D position) {
 		terrainRenderer.render(position);
-		world.renderables().forEach(Renderable::render);
+		entityRenderer.render();
 	}
 
 	public TerrainRenderer terrainRenderer() {
 		return terrainRenderer;
+	}
+
+	public EntityRenderer entityRenderer() {
+		return entityRenderer;
+	}
+
+	@Override
+	public void dispose() {
+		disposables.dispose();
 	}
 }
