@@ -1,6 +1,9 @@
 package lemon.evolution;
 
 import com.google.common.collect.ImmutableList;
+import lemon.engine.glfw.GLFWInput;
+import lemon.engine.math.*;
+import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
@@ -11,12 +14,6 @@ import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
 import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.game.Player;
-import lemon.engine.math.Box2D;
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Matrix;
-import lemon.engine.math.Projection;
-import lemon.engine.math.Vector2D;
-import lemon.engine.math.Vector3D;
 import lemon.engine.model.LineGraph;
 import lemon.engine.model.Model;
 import lemon.engine.model.SphereModelBuilder;
@@ -79,6 +76,10 @@ public enum Game implements Screen {
 
 	private GLFWGameControls<EvolutionControls> controls;
 	private GameLoop gameLoop;
+
+	private Camera freecam;
+	private float lastMouseX;
+	private float lastMouseY;
 
 	private FrameBuffer frameBuffer;
 
@@ -216,7 +217,7 @@ public enum Game implements Screen {
 						var drawable = objLoader.toIndexedDrawable();
 						entityRenderer.registerCollection(Player.class, players -> {
 							for (var player : players) {
-								if (player != gameLoop.currentPlayer()) {
+								if (player != gameLoop.currentPlayer() || controls.isActivated(EvolutionControls.FREECAM)) {
 									GL11.glEnable(GL11.GL_BLEND);
 									GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 									GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -364,6 +365,18 @@ public enum Game implements Screen {
 				}
 			}
 		}));
+
+		disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(true, () -> {
+			gameLoop.getGatedControls().setEnabled(false);
+			MutableVector3D  pos = MutableVector3D.of(gameLoop.currentPlayer().mutablePosition().asImmutable());
+			MutableVector3D  rot = MutableVector3D.of(gameLoop.currentPlayer().mutableRotation().asImmutable());
+			freecam = new Camera(pos,rot,gameLoop.currentPlayer().camera().getProjection());
+		}));
+		disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(false, () -> {
+			gameLoop.getGatedControls().setEnabled(true);
+		}));
+
+
 		gameLoop.bindNumberKeys(window.input());
 
 		uiScreen = disposables.add(new UIScreen(window.input()));
@@ -398,6 +411,46 @@ public enum Game implements Screen {
 		world.update(dt);
 
 		gameLoop.update();
+		if (controls.isActivated(EvolutionControls.FREECAM)) {
+			float MOUSE_SENSITIVITY = .001f;
+			controls.addCallback(GLFWInput::cursorPositionEvent, event -> {
+				if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
+					float deltaY = (float) (-(event.x() - lastMouseX) * MOUSE_SENSITIVITY);
+					float deltaX = (float) (-(event.y() - lastMouseY) * MOUSE_SENSITIVITY);
+					freecam.mutableRotation().asXYVector().add(deltaX, deltaY)
+							.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
+					lastMouseX = (float) event.x();
+					lastMouseY = (float) event.y();
+				}
+			});
+
+			float Speed = .5f;
+			float angle = (freecam.rotation().y() + MathUtil.PI / 2f);
+			float sin = (float) Math.sin(angle);
+			float cos = (float) Math.cos(angle);
+			var playerHorizontalVector = Vector2D.of(Speed * sin, Speed * cos);
+			var mutableForce = MutableVector3D.ofZero();
+			if (controls.isActivated(EvolutionControls.STRAFE_LEFT)) {
+				mutableForce.asXZVector().subtract(playerHorizontalVector);
+			}
+			if (controls.isActivated(EvolutionControls.STRAFE_RIGHT)) {
+				mutableForce.asXZVector().add(playerHorizontalVector);
+			}
+			var playerForwardVector = Vector2D.of(Speed * cos, -Speed * sin);
+			if (controls.isActivated(EvolutionControls.MOVE_FORWARDS)) {
+				mutableForce.asXZVector().add(playerForwardVector);
+			}
+			if (controls.isActivated(EvolutionControls.MOVE_BACKWARDS)) {
+				mutableForce.asXZVector().subtract(playerForwardVector);
+			}
+			if (controls.isActivated(EvolutionControls.FLY)) {
+				mutableForce.addY(Speed);
+			}
+			if (controls.isActivated(EvolutionControls.FALL)) {
+				mutableForce.subtractY(Speed);
+			}
+			freecam.mutablePosition().add(mutableForce.asImmutable());
+		}
 
 		benchmarker.getLineGraph("debugData").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();
@@ -426,7 +479,12 @@ public enum Game implements Screen {
 	}
 
 	public void updateMatrices() {
-		var camera = gameLoop.currentPlayer().camera();
+		Camera camera;
+		if (controls.isActivated(EvolutionControls.FREECAM)) {
+			camera = freecam;
+		} else {
+			camera = gameLoop.currentPlayer().camera();
+		}
 		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, camera.getTransformationMatrix());
 		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.getProjectionMatrix());
 		CommonPrograms3D.CUBEMAP.use(program -> {
