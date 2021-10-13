@@ -30,9 +30,9 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 				float deltaX = (float) (-(event.y() - lastMouseY) * MOUSE_SENSITIVITY);
 				current.getValue().mutableRotation().asXYVector().add(deltaX, deltaY)
 						.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
-				lastMouseX = (float) event.x();
-				lastMouseY = (float) event.y();
 			}
+			lastMouseX = (float) event.x();
+			lastMouseY = (float) event.y();
 		});
 		controls.addCallback(GLFWInput::mouseScrollEvent, event -> {
 			playerSpeed = Math.max(0f, playerSpeed + ((float) (event.yOffset() / 100f)));
