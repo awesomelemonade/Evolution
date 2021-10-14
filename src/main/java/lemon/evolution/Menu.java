@@ -30,7 +30,8 @@ public enum Menu implements Screen {
 	private List<Quad2D> buttons;
 	private final Disposables disposables = new Disposables();
 	private Histogram histogram;
-	private final int[] drawnButtons = {0, 1, 2};
+	private int drawnButtons = 0;
+	private final int NUM_BUTTONS = 3;
 	private Quad2D scrollBar;
 
 
@@ -39,23 +40,19 @@ public enum Menu implements Screen {
 		this.window = window;
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
 		buttons = new ArrayList<>();
-		for (int i = 0; i < 6; ++i) {
+		for (int i = 0; i < 20; ++i) {
 			buttons.add(new Quad2D(new Box2D(-0.3f, -.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
 		}
 		float height = (.5f  / (float)(buttons.size()-2));
 		scrollBar = new Quad2D(new Box2D(0.35f, -.2f - height, .025f, height), new Color(1f, 1f, 1f));
 		disposables.add(window.input().mouseScrollEvent().add(event -> {
 			if (event.yOffset() > 0) {
-				if (drawnButtons[0] != 0) {
-					for (int i = 0; i < 3; ++i) {
-						--drawnButtons[i];
-					}
+				if (drawnButtons != 0) {
+					--drawnButtons;
 				}
 			} else {
-				if (drawnButtons[2] != buttons.size() - 1) {
-					for (int i = 0; i < 3; ++i) {
-						++drawnButtons[i];
-					}
+				if (drawnButtons != buttons.size() - 3) {
+					++drawnButtons;
 				}
 			}
 		}));
@@ -64,8 +61,13 @@ public enum Menu implements Screen {
 				event.glfwWindow().pollMouse((rawMouseX, rawMouseY) -> {
 					float mouseX = (2f * rawMouseX / event.glfwWindow().getWidth()) - 1f;
 					float mouseY = (2f * rawMouseY / event.glfwWindow().getHeight()) - 1f;
+					if (0.35f <= mouseX && mouseX <= 0.375f) {
+						if (-.2f >= mouseY && mouseY >= -.7f) {
+							drawnButtons = (int)(-((mouseY + .2))/height);
+						}
+					}
 					for (int i = 0; i < buttons.size(); ++i) {
-						if (buttons.get(i).getBox2D().intersect(mouseX, mouseY - drawnButtons[0] * .2f)) {
+						if (buttons.get(i).getBox2D().intersect(mouseX, mouseY - drawnButtons * .2f)) {
 							switch (i) {
 								case 0 -> {
 									ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
@@ -131,15 +133,13 @@ public enum Menu implements Screen {
 	@Override
 	public void render() {
 		CommonPrograms2D.MENUBUTTON.use(program -> {
-			int i = 0;
-			for (int buttonNum : drawnButtons) {
-				program.loadFloat("yOffset", .2f * buttonNum - .2f * i);
-				buttons.get(buttonNum).draw();
-				++i;
+			for (int i = 0; i < NUM_BUTTONS; ++i) {
+				program.loadFloat("yOffset", .2f * (drawnButtons + i) - .2f * i);
+				buttons.get(drawnButtons + i).draw();
 			}
 		});
 		CommonPrograms2D.MENUSCROLLER.use(program -> {
-			program.loadFloat("scrollPortion", ((.5f / (float)(buttons.size() - 2)) * drawnButtons[0]));
+			program.loadFloat("scrollPortion", ((.5f / (float)(buttons.size() - 2)) * drawnButtons));
 			scrollBar.draw();
 		});
 	}
