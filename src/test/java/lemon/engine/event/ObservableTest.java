@@ -16,11 +16,11 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ObservableTest {
 	@Mock
-	private Consumer<Integer> onSet;
-	@Mock
 	private Consumer<Integer> onChange;
 	@Mock
 	private Consumer<Integer> onChangeAndRun;
+	@Mock
+	private Consumer<Boolean> booleanListener;
 
 	private Observable<Integer> observable;
 	private final Disposables disposables = new Disposables();
@@ -30,7 +30,6 @@ class ObservableTest {
 	@BeforeEach
 	public void setup() {
 		observable = new Observable<>(INITIAL_VALUE);
-		disposables.add(observable.onSet(onSet));
 		disposables.add(observable.onChange(onChange));
 		disposables.add(observable.onChangeAndRun(onChangeAndRun));
 	}
@@ -43,7 +42,6 @@ class ObservableTest {
 	@Test
 	public void testChange() {
 		observable.setValue(1);
-		verify(onSet).accept(1);
 		verify(onChange).accept(1);
 		verify(onChangeAndRun, times(1)).accept(INITIAL_VALUE);
 		verify(onChangeAndRun, times(1)).accept(1);
@@ -53,9 +51,65 @@ class ObservableTest {
 	@Test
 	public void testNoChange() {
 		observable.setValue(INITIAL_VALUE);
-		verify(onSet).accept(INITIAL_VALUE);
 		verify(onChange, never()).accept(INITIAL_VALUE);
 		verify(onChangeAndRun, times(1)).accept(INITIAL_VALUE);
 		assertEquals(INITIAL_VALUE, observable.getValue());
+	}
+
+	@Test
+	public void testAndInitialAndFalseFalse() {
+		Observable<Boolean> a = new Observable<>(false);
+		Observable<Boolean> b = new Observable<>(false);
+		var and = Observable.ofAnd(a, b, disposables::add);
+		assertFalse(and.getValue());
+	}
+
+	@Test
+	public void testAndInitialAndTrueFalse() {
+		Observable<Boolean> a = new Observable<>(true);
+		Observable<Boolean> b = new Observable<>(false);
+		var and = Observable.ofAnd(a, b, disposables::add);
+		assertFalse(and.getValue());
+	}
+
+	@Test
+	public void testAndInitialTrueTrue() {
+		Observable<Boolean> a = new Observable<>(true);
+		Observable<Boolean> b = new Observable<>(true);
+		var and = Observable.ofAnd(a, b, disposables::add);
+		assertTrue(and.getValue());
+	}
+
+	@Test
+	public void testAndChangeToTrue() {
+		Observable<Boolean> a = new Observable<>(false);
+		Observable<Boolean> b = new Observable<>(true);
+		var and = Observable.ofAnd(a, b, disposables::add);
+		disposables.add(and.onChange(booleanListener));
+		a.setValue(true);
+		assertTrue(and.getValue());
+		verify(booleanListener).accept(true);
+	}
+
+	@Test
+	public void testAndChangeToFalse() {
+		Observable<Boolean> a = new Observable<>(true);
+		Observable<Boolean> b = new Observable<>(true);
+		var and = Observable.ofAnd(a, b, disposables::add);
+		disposables.add(and.onChange(booleanListener));
+		a.setValue(false);
+		assertFalse(and.getValue());
+		verify(booleanListener).accept(false);
+	}
+
+	@Test
+	public void testAndNoChangeStayFalse() {
+		Observable<Boolean> a = new Observable<>(true);
+		Observable<Boolean> b = new Observable<>(false);
+		var and = Observable.ofAnd(a, b, disposables::add);
+		disposables.add(and.onChange(booleanListener));
+		a.setValue(false);
+		assertFalse(and.getValue());
+		verify(booleanListener, never()).accept(false);
 	}
 }

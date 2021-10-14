@@ -6,7 +6,6 @@ import lemon.engine.toolbox.Disposable;
 import java.util.function.Consumer;
 
 public class Observable<T> {
-	private final EventWith<T> onSet = new EventWith<>();
 	private final EventWith<T> onChange = new EventWith<>();
 	private T value;
 
@@ -17,7 +16,6 @@ public class Observable<T> {
 	public void setValue(T value) {
 		boolean changed = !this.value.equals(value);
 		this.value = value;
-		onSet.callListeners(value);
 		if (changed) {
 			onChange.callListeners(value);
 		}
@@ -25,15 +23,6 @@ public class Observable<T> {
 
 	public T getValue() {
 		return value;
-	}
-
-	public EventWith<T> onSet() {
-		return onSet;
-	}
-
-	@CheckReturnValue
-	public Disposable onSet(Consumer<? super T> listener) {
-		return onSet.add(listener);
 	}
 
 	public EventWith<T> onChange() {
