@@ -6,15 +6,23 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
+import lemon.evolution.item.ItemType;
 import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.AbstractControllableEntity;
+import lemon.evolution.world.Inventory;
 import lemon.evolution.world.Location;
 
+import java.util.Optional;
+
 public class Player extends AbstractControllableEntity implements Disposable {
+	private static final float START_HEALTH = 100f;
 	private final Disposables disposables = new Disposables();
 	private final String name;
 	private final Camera camera;
+	private final Observable<Float> health = new Observable<>(START_HEALTH);
 	private final Observable<Boolean> alive;
+	private final Inventory inventory = new Inventory();
+	private final Observable<Optional<ItemType>> currentItem = new Observable<>(Optional.empty());
 
 	public Player(String name, Location location, Projection projection) {
 		super(location, Vector3D.ZERO);
@@ -25,7 +33,15 @@ public class Player extends AbstractControllableEntity implements Disposable {
 				world().entities().remove(this);
 			}
 		}));
+		disposables.add(health.onChange(newHealth -> newHealth <= 0f, () -> world().entities().remove(this)));
 		this.alive = world().entities().observableContains(this, disposables::add);
+		disposables.add(inventory.items().onFallToZero(item -> {
+			currentItem.getValue().ifPresent(current -> {
+				if (current.equals(item)) {
+					clearCurrentItem();
+				}
+			});
+		}));
 	}
 
 	@Override
@@ -41,8 +57,36 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		return camera;
 	}
 
+	public Observable<Float> health() {
+		return health;
+	}
+
 	public Observable<Boolean> alive() {
 		return alive;
+	}
+
+	public Inventory inventory() {
+		return inventory;
+	}
+
+	public void setCurrentItem(ItemType item) {
+		if (inventory.items().contains(item)) {
+			currentItem.setValue(Optional.of(item));
+		}
+	}
+
+	public void clearCurrentItem() {
+		currentItem.setValue(Optional.empty());
+	}
+
+	public Optional<ItemType> currentItem() {
+		return currentItem.getValue();
+	}
+
+	public void useCurrentItem() {
+		this.currentItem.getValue().ifPresent(item -> {
+			inventory.items().remove(item);
+		});
 	}
 
 	@Override

@@ -59,6 +59,8 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import java.nio.ByteBuffer;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -274,7 +276,7 @@ public enum Game implements Screen {
 
 		debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
-		this.controls = disposables.add(EvolutionControls.getDefaultControls(window.input()));
+		this.controls = disposables.add(GLFWGameControls.getDefaultControls(window.input(), EvolutionControls.class));
 		var projection = new Projection(MathUtil.toRadians(60f),
 				((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
 		var playersBuilder = new ImmutableList.Builder<Player>();
@@ -365,8 +367,17 @@ public enum Game implements Screen {
 		uiScreen = disposables.add(new UIScreen(window.input()));
 		uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
 			System.out.println("Clicked");
+		}).visible().setValue(false);
+		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED).visible().setValue(false);
+		uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
+			if (gameLoop.startTime != null && gameLoop.endTime != null) {
+				float progressedTime = Duration.between(gameLoop.startTime, Instant.now()).toMillis();
+				float totalTime = Duration.between(gameLoop.startTime, gameLoop.endTime).toMillis();
+				return progressedTime / totalTime;
+			} else {
+				return 0f;
+			}
 		});
-		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED);
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(() -> loaded = false);
@@ -464,13 +475,14 @@ public enum Game implements Screen {
 				 var scalarMatrixB = MatrixPool.ofScalar(1f, 5f, 1f);
 				 var matrixA = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixA);
 				 var matrixB = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixB)) {
+				program.loadColor4f("filterColor", Color.WHITE);
 				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixA);
 				CommonDrawables.COLORED_QUAD.draw();
 				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixB);
 				CommonDrawables.COLORED_QUAD.draw();
 			}
 		});
-		//uiScreen.render();
+		uiScreen.render();
 		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
 			debugOverlay.render();
 		}

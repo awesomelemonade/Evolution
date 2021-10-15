@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.engine.event.EventWith;
-import lemon.engine.event.Observable;
 import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
@@ -18,10 +17,9 @@ import lemon.futility.FSetWithEvents;
 import org.lwjgl.glfw.GLFW;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class GameLoop implements Disposable {
 	private final Disposables disposables = new Disposables();
@@ -32,6 +30,8 @@ public class GameLoop implements Disposable {
 	private final Iterator<Player> cycler;
 	private final EventWith<Player> onWinner = new EventWith<>();
 	private final Scheduler scheduler = disposables.add(new Scheduler());
+	public Instant startTime; // TODO: Temporary
+	public Instant endTime; // TODO: Temporary
 
 	public GameLoop(ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
 		this.gatedControls = new GatedGLFWGameControls<>(controls);
@@ -59,7 +59,10 @@ public class GameLoop implements Disposable {
 		disposeOnStart.add(controls.onActivated(EvolutionControls.START_GAME, () -> {
 			disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
 				gatedControls.setEnabled(true);
-				endTurnDisposables.add(scheduler.add(Duration.ofSeconds(8), this::endTurn));
+				var task = scheduler.add(Duration.ofSeconds(8), this::endTurn);
+				startTime = Instant.now();
+				endTime = task.executionTime();
+				endTurnDisposables.add(task);
 				endTurnDisposables.add(controls.onActivated(EvolutionControls.END_TURN, this::endTurn));
 			}));
 			disposeOnStart.dispose();

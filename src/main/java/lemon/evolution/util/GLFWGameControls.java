@@ -5,11 +5,13 @@ import lemon.engine.event.Observable;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
+import lemon.evolution.EvolutionControls;
 import lemon.futility.FSetWithEvents;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -88,5 +90,29 @@ public class GLFWGameControls<T> implements GameControls<T, GLFWInput>, Disposab
 	@Override
 	public void dispose() {
 		disposables.dispose();
+	}
+
+	public static <T extends Enum<T> & DefaultBinder<T>> GLFWGameControls<T> getDefaultControls(GLFWInput input, Class<T> clazz) {
+		var controls = new GLFWGameControls<T>(input);
+		for (var control : clazz.getEnumConstants()) {
+			control.defaultBinder().accept(controls, control);
+		}
+		return controls;
+	}
+
+	public interface DefaultBinder<T> {
+		public BiConsumer<GLFWGameControls<T>, T> defaultBinder();
+
+		public static BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> mouseHold(int key) {
+			return (input, self) -> input.bindMouseHold(key, self);
+		}
+
+		public static BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> keyboardHold(int key) {
+			return (input, self) -> input.bindKeyboardHold(key, self);
+		}
+
+		public static BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> keyboardToggle(int key) {
+			return (input, self) -> input.bindKeyboardToggle(key, self);
+		}
 	}
 }
