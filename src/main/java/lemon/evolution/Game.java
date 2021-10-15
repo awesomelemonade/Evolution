@@ -221,7 +221,7 @@ public enum Game implements Screen {
 									GL11.glEnable(GL11.GL_DEPTH_TEST);
 									CommonPrograms3D.COLOR.use(program -> {
 										try (var translationMatrix = MatrixPool.ofTranslation(player.position());
-											 var rotationMatrix = MatrixPool.ofRotation(player.rotation().add(Vector3D.of(0f, MathUtil.PI, 0f)));
+											 var rotationMatrix = MatrixPool.ofRotationY(player.rotation().y() + MathUtil.PI);
 											 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
 											program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
 										}

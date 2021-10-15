@@ -7,6 +7,7 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.item.ItemType;
+import lemon.evolution.item.MissileShowerItemType;
 import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.AbstractControllableEntity;
 import lemon.evolution.world.Inventory;
@@ -15,6 +16,7 @@ import lemon.evolution.world.Location;
 import java.util.Optional;
 
 public class Player extends AbstractControllableEntity implements Disposable {
+	private static final float VOID_Y_COORDINATE = -100f;
 	private static final float START_HEALTH = 100f;
 	private final Disposables disposables = new Disposables();
 	private final String name;
@@ -29,7 +31,7 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		this.name = name;
 		this.camera = new Camera(mutablePosition(), mutableRotation(), projection);
 		disposables.add(onUpdate().add(() -> {
-			if (position().y() < -250f) {
+			if (position().y() < VOID_Y_COORDINATE) {
 				world().entities().remove(this);
 			}
 		}));
@@ -42,6 +44,8 @@ public class Player extends AbstractControllableEntity implements Disposable {
 				}
 			});
 		}));
+		// TODO: Temporary
+		addAndSetCurrentItem(MissileShowerItemType.INSTANCE);
 	}
 
 	@Override
@@ -69,9 +73,16 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		return inventory;
 	}
 
+	public void addAndSetCurrentItem(ItemType item) {
+		inventory.items().add(item);
+		currentItem.setValue(Optional.of(item));
+	}
+
 	public void setCurrentItem(ItemType item) {
 		if (inventory.items().contains(item)) {
 			currentItem.setValue(Optional.of(item));
+		} else {
+			throw new IllegalStateException();
 		}
 	}
 

@@ -1,6 +1,5 @@
 package lemon.evolution.item;
 
-import lemon.engine.game.Player;
 import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.world.ControllableEntity;
 

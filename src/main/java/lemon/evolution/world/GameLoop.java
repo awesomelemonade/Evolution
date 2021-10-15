@@ -10,9 +10,9 @@ import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.engine.toolbox.Scheduler;
 import lemon.evolution.EvolutionControls;
-import lemon.evolution.util.EntityController;
 import lemon.evolution.util.GLFWGameControls;
 import lemon.evolution.util.GatedGLFWGameControls;
+import lemon.evolution.util.PlayerController;
 import lemon.futility.FSetWithEvents;
 import org.lwjgl.glfw.GLFW;
 
@@ -22,14 +22,17 @@ import java.util.Iterator;
 import java.util.function.Consumer;
 
 public class GameLoop implements Disposable {
+	private static final Duration TURN_TIME = Duration.ofSeconds(8);
+	private static final Duration RESOLVE_TIME = Duration.ofSeconds(2);
 	private final Disposables disposables = new Disposables();
 	private final Disposables endTurnDisposables = disposables.add(new Disposables());
 	private final GatedGLFWGameControls<EvolutionControls> gatedControls;
 	private final ImmutableList<Player> allPlayers;
-	private final EntityController<Player> controller;
+	private final PlayerController controller;
 	private final Iterator<Player> cycler;
 	private final EventWith<Player> onWinner = new EventWith<>();
 	private final Scheduler scheduler = disposables.add(new Scheduler());
+	public boolean usedWeapon = true; // TODO: Temporary
 	public Instant startTime; // TODO: Temporary
 	public Instant endTime; // TODO: Temporary
 
@@ -37,7 +40,7 @@ public class GameLoop implements Disposable {
 		this.gatedControls = new GatedGLFWGameControls<>(controls);
 		this.cycler = Iterators.filter(Iterators.cycle(allPlayers), player -> player.alive().getValue());
 		this.allPlayers = allPlayers;
-		this.controller = disposables.add(new EntityController<>(gatedControls, cycler.next()));
+		this.controller = disposables.add(new PlayerController(this, gatedControls, cycler.next()));
 		var disposeWhenNotAlive = disposables.add(new Disposables());
 		disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
 			disposeWhenNotAlive.add(player.alive().onChange(alive -> {
@@ -59,7 +62,8 @@ public class GameLoop implements Disposable {
 		disposeOnStart.add(controls.onActivated(EvolutionControls.START_GAME, () -> {
 			disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
 				gatedControls.setEnabled(true);
-				var task = scheduler.add(Duration.ofSeconds(8), this::endTurn);
+				var task = scheduler.add(TURN_TIME, this::endTurn);
+				usedWeapon = false;
 				startTime = Instant.now();
 				endTime = task.executionTime();
 				endTurnDisposables.add(task);
@@ -72,8 +76,9 @@ public class GameLoop implements Disposable {
 
 	public void endTurn() {
 		gatedControls.setEnabled(false);
-		scheduler.add(Duration.ofSeconds(2), this::cycleToNextPlayer);
+		scheduler.add(RESOLVE_TIME, this::cycleToNextPlayer);
 		endTurnDisposables.dispose();
+		endTime = Instant.now();
 	}
 
 	public void bindNumberKeys(GLFWInput input) {
@@ -99,7 +104,7 @@ public class GameLoop implements Disposable {
 		scheduler.run();
 	}
 
-	public EntityController<Player> controller() {
+	public PlayerController controller() {
 		return controller;
 	}
 

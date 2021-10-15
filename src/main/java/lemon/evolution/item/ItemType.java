@@ -8,4 +8,7 @@ public interface ItemType {
 		return getName();
 	}
 	public void use(ControllableEntity player);
+	public default boolean isWeapon() {
+		return true;
+	}
 }

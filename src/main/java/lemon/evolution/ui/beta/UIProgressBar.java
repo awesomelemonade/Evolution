@@ -20,6 +20,6 @@ public class UIProgressBar extends AbstractUIComponent {
 	@Override
 	public void render() {
 		CommonRenderables.renderQuad2D(box, Color.WHITE);
-		CommonRenderables.renderQuad2D(new Box2D(box.x(), box.y(), box.width() * MathUtil.clamp(progressGetter.get(), 0f, 1f), box.height()), Color.BLUE);
+		CommonRenderables.renderQuad2D(new Box2D(box.x(), box.y(), box.width() * MathUtil.saturate(progressGetter.get()), box.height()), Color.BLUE);
 	}
 }

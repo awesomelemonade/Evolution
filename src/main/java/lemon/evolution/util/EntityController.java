@@ -7,7 +7,6 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.EvolutionControls;
-import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.world.ControllableEntity;
 
 public class EntityController<T extends ControllableEntity> implements Disposable {
@@ -37,13 +36,6 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 		controls.addCallback(GLFWInput::mouseScrollEvent, event -> {
 			playerSpeed = Math.max(0f, playerSpeed + ((float) (event.yOffset() / 100f)));
 		});
-		disposables.add(controls.onActivated(EvolutionControls.USE_ITEM, () -> {
-			var currentEntity = current.getValue();
-			currentEntity.world().entities().add(new MissileShowerEntity(
-					currentEntity.location().add(currentEntity.vectorDirection().multiply(0.95f)),
-					currentEntity.vectorDirection().multiply(5f)
-			));
-		}));
 		disposables.add(controls.onActivated(EvolutionControls.JUMP, () -> {
 			var currentEntity = current.getValue();
 			currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(JUMP_HEIGHT));
