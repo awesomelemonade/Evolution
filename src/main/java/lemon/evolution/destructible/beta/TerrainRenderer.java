@@ -31,6 +31,7 @@ public class TerrainRenderer {
 	}
 
 	public void render(Vector3D position) {
+		terrain.flushForRendering();
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		CommonPrograms3D.TERRAIN.use(program -> {
 			draw(position, (matrix, drawable) -> {
@@ -46,7 +47,6 @@ public class TerrainRenderer {
 	}
 
 	public void draw(int chunkX, int chunkY, int chunkZ, BiConsumer<Matrix, Drawable> drawer) {
-		terrain.flushForRendering();
 		terrainOffsets.forEach(offset -> terrain.drawOrQueue(chunkX + offset.x, chunkY + offset.y, chunkZ + offset.z, drawer));
 	}
 

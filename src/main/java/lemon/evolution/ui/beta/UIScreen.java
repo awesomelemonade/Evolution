@@ -5,6 +5,9 @@ import lemon.engine.math.Box2D;
 import lemon.engine.math.Vector2D;
 import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Color;
+import lemon.evolution.UIMinimap;
+import lemon.evolution.destructible.beta.TerrainRenderer;
+import lemon.evolution.world.ControllableEntity;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -33,6 +36,10 @@ public class UIScreen extends AbstractUIComponent {
 
 	public UIProgressBar addProgressBar(Box2D box, Supplier<Float> progressGetter) {
 		return addComponent(new UIProgressBar(this, box, progressGetter));
+	}
+
+	public UIMinimap addMinimap(Box2D box, TerrainRenderer renderer, Supplier<ControllableEntity> entitySupplier) {
+		return addComponent(new UIMinimap(this, box, renderer, entitySupplier));
 	}
 
 	@Override

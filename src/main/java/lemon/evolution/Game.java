@@ -27,6 +27,7 @@ import lemon.engine.texture.TextureData;
 import lemon.engine.time.Benchmarker;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
+import lemon.engine.toolbox.GLState;
 import lemon.engine.toolbox.Histogram;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.engine.toolbox.SkyboxLoader;
@@ -264,7 +265,8 @@ public enum Game implements Screen {
 		var windowWidth = window.getWidth();
 		var windowHeight = window.getHeight();
 
-		GL11.glViewport(0, 0, windowWidth, windowHeight);
+		GLState.pushViewport(0, 0, windowWidth, windowHeight);
+		disposables.add(GLState::popViewport);
 
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -302,9 +304,9 @@ public enum Game implements Screen {
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
 		CommonProgramsSetup.setup3D(gameLoop.currentPlayer().camera().getProjectionMatrix());
 
-		updateViewMatrices();
+		updateMatrices();
 
-		frameBuffer = disposables.add(new FrameBuffer());
+		frameBuffer = disposables.add(new FrameBuffer(windowWidth, windowHeight));
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
 			Texture colorTexture = disposables.add(new Texture());
@@ -378,6 +380,9 @@ public enum Game implements Screen {
 				return 0f;
 			}
 		});
+		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f),
+				worldRenderer.terrainRenderer(),
+				() -> gameLoop.currentPlayer());
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(() -> loaded = false);
@@ -419,9 +424,10 @@ public enum Game implements Screen {
 		}
 	}
 
-	public void updateViewMatrices() {
+	public void updateMatrices() {
 		var camera = gameLoop.currentPlayer().camera();
 		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, camera.getTransformationMatrix());
+		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.getProjectionMatrix());
 		CommonPrograms3D.CUBEMAP.use(program -> {
 			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, camera.getInvertedRotationMatrix());
 		});
@@ -429,7 +435,7 @@ public enum Game implements Screen {
 
 	@Override
 	public void render() {
-		updateViewMatrices();
+		updateMatrices();
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			GL11.glDepthMask(false);
