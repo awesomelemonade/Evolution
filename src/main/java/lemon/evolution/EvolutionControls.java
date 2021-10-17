@@ -24,7 +24,8 @@ public enum EvolutionControls implements GLFWGameControls.DefaultBinder<Evolutio
 	END_TURN(keyboardHold(GLFW.GLFW_KEY_BACKSPACE)),
 	START_GAME(keyboardHold(GLFW.GLFW_KEY_ENTER)),
 	USE_ITEM(mouseHold(GLFW.GLFW_MOUSE_BUTTON_7)),
-	MINIMAP(keyboardToggle(GLFW.GLFW_KEY_M));
+	MINIMAP(keyboardToggle(GLFW.GLFW_KEY_M)),
+	TOGGLE_INVENTORY(keyboardHold(GLFW.GLFW_KEY_E));
 
 	private final BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> defaultBinder;
 	private EvolutionControls(BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> defaultBinder) {

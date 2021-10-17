@@ -7,6 +7,7 @@ import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
+import lemon.evolution.item.ItemType;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.world.Inventory;
@@ -21,6 +22,8 @@ public class UIInventory extends AbstractUIComponent {
     private static final int WINDOW_WIDTH = 1600 - 200;
     private static int numRows = 2;
     private static int numColumns = 4;
+    private Inventory inventory;
+    private ItemType[] items;
 
     // draw rectangle
     private Box2D box;
@@ -45,29 +48,35 @@ public class UIInventory extends AbstractUIComponent {
                     100, 100),
                     new Color(i * 100,(i + 1) % numColumns * 100, (i + 2) % numRows * 100),
                     x -> {
-                System.out.println("inventory clicked for button " + num);
+                if (isVisible()) {
+                    System.out.println("inventory clicked for button " + num);
+                }
             }));
         }
+        visible().setValue(false);
     }
 
     @Override
     public void render() {
-        CommonPrograms2D.COLOR.use(program -> {
-            try (var translationMatrix = MatrixPool.ofTranslation(box.x() + box.width() / 2f, box.y() + box.height() / 2f, 0f);
-                 var scalarMatrix = MatrixPool.ofScalar(box.width() / 2f, box.height() / 2f, 1f);
-                 var matrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
-                program.loadColor4f("filterColor", color);
-                program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrix);
-                CommonDrawables.COLORED_QUAD.draw();
-                program.loadColor4f("filterColor", color);
+        if (isVisible()) {
+            CommonPrograms2D.COLOR.use(program -> {
+                try (var translationMatrix = MatrixPool.ofTranslation(box.x() + box.width() / 2f, box.y() + box.height() / 2f, 0f);
+                     var scalarMatrix = MatrixPool.ofScalar(box.width() / 2f, box.height() / 2f, 1f);
+                     var matrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+                    program.loadColor4f("filterColor", color);
+                    program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrix);
+                    CommonDrawables.COLORED_QUAD.draw();
+                    program.loadColor4f("filterColor", color);
+                }
+            });
+            for (UIButton button : buttons) {
+                button.render();
             }
-        });
-        for (UIButton button : buttons) {
-            button.render();
         }
     }
 
-    public void addItem() {
-
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
+        items = inventory.items().toArray(new ItemType[0]);
     }
 }
