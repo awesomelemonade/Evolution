@@ -27,6 +27,7 @@ import lemon.engine.texture.TextureData;
 import lemon.engine.time.Benchmarker;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
+import lemon.engine.toolbox.GLState;
 import lemon.engine.toolbox.Histogram;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.engine.toolbox.SkyboxLoader;
@@ -59,6 +60,8 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import java.nio.ByteBuffer;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -115,7 +118,7 @@ public enum Game implements Screen {
 					return 0f;
 				}
 				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
-				float cylinder = (float) (150.0 - Math.sqrt(distanceSquared));
+				float cylinder = (float) (100.0 - Math.sqrt(distanceSquared));
 				if (cylinder < -100f) {
 					return cylinder;
 				}
@@ -219,7 +222,7 @@ public enum Game implements Screen {
 									GL11.glEnable(GL11.GL_DEPTH_TEST);
 									CommonPrograms3D.COLOR.use(program -> {
 										try (var translationMatrix = MatrixPool.ofTranslation(player.position());
-											 var rotationMatrix = MatrixPool.ofRotation(player.rotation().add(Vector3D.of(0f, MathUtil.PI, 0f)));
+											 var rotationMatrix = MatrixPool.ofRotationY(player.rotation().y() + MathUtil.PI);
 											 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
 											program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
 										}
@@ -262,7 +265,8 @@ public enum Game implements Screen {
 		var windowWidth = window.getWidth();
 		var windowHeight = window.getHeight();
 
-		GL11.glViewport(0, 0, windowWidth, windowHeight);
+		GLState.pushViewport(0, 0, windowWidth, windowHeight);
+		disposables.add(GLState::popViewport);
 
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -274,7 +278,7 @@ public enum Game implements Screen {
 
 		debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
-		this.controls = disposables.add(EvolutionControls.getDefaultControls(window.input()));
+		this.controls = disposables.add(GLFWGameControls.getDefaultControls(window.input(), EvolutionControls.class));
 		var projection = new Projection(MathUtil.toRadians(60f),
 				((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
 		var playersBuilder = new ImmutableList.Builder<Player>();
@@ -300,9 +304,9 @@ public enum Game implements Screen {
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
 		CommonProgramsSetup.setup3D(gameLoop.currentPlayer().camera().getProjectionMatrix());
 
-		updateViewMatrices();
+		updateMatrices();
 
-		frameBuffer = disposables.add(new FrameBuffer());
+		frameBuffer = disposables.add(new FrameBuffer(windowWidth, windowHeight));
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
 			Texture colorTexture = disposables.add(new Texture());
@@ -365,8 +369,21 @@ public enum Game implements Screen {
 		uiScreen = disposables.add(new UIScreen(window.input()));
 		uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
 			System.out.println("Clicked");
+		}).visible().setValue(false);
+		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED).visible().setValue(false);
+		var progressBar = uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
+			if (gameLoop.startTime != null && gameLoop.endTime != null) {
+				float progressedTime = Duration.between(gameLoop.startTime, Instant.now()).toMillis();
+				float totalTime = Duration.between(gameLoop.startTime, gameLoop.endTime).toMillis();
+				return progressedTime / totalTime;
+			} else {
+				return 0f;
+			}
 		});
-		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED);
+		disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
+		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f),
+				world.terrain(),
+				() -> gameLoop.currentPlayer());
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(() -> loaded = false);
@@ -408,9 +425,10 @@ public enum Game implements Screen {
 		}
 	}
 
-	public void updateViewMatrices() {
+	public void updateMatrices() {
 		var camera = gameLoop.currentPlayer().camera();
 		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, camera.getTransformationMatrix());
+		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.getProjectionMatrix());
 		CommonPrograms3D.CUBEMAP.use(program -> {
 			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, camera.getInvertedRotationMatrix());
 		});
@@ -418,7 +436,7 @@ public enum Game implements Screen {
 
 	@Override
 	public void render() {
-		updateViewMatrices();
+		updateMatrices();
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			GL11.glDepthMask(false);
@@ -464,13 +482,14 @@ public enum Game implements Screen {
 				 var scalarMatrixB = MatrixPool.ofScalar(1f, 5f, 1f);
 				 var matrixA = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixA);
 				 var matrixB = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixB)) {
+				program.loadColor4f("filterColor", Color.WHITE);
 				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixA);
 				CommonDrawables.COLORED_QUAD.draw();
 				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixB);
 				CommonDrawables.COLORED_QUAD.draw();
 			}
 		});
-		//uiScreen.render();
+		uiScreen.render();
 		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
 			debugOverlay.render();
 		}

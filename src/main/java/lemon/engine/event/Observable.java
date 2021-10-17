@@ -4,6 +4,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.engine.toolbox.Disposable;
 
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class Observable<T> {
 	private final EventWith<T> onChange = new EventWith<>();
@@ -44,6 +45,15 @@ public class Observable<T> {
 	public Disposable onChangeTo(T value, Runnable runnable) {
 		return onChange.add(to -> {
 			if (to.equals(value)) {
+				runnable.run();
+			}
+		});
+	}
+
+	@CheckReturnValue
+	public Disposable onChange(Predicate<T> predicate, Runnable runnable) {
+		return onChange.add(to -> {
+			if (predicate.test(to)) {
 				runnable.run();
 			}
 		});

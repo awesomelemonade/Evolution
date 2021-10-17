@@ -43,6 +43,10 @@ public class Scheduler implements Disposable {
 			this.cancelled = false;
 		}
 
+		public Instant executionTime() {
+			return executionTime;
+		}
+
 		@Override
 		public void dispose() {
 			this.cancelled = true;

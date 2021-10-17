@@ -12,12 +12,19 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
-public class FSetWithEvents<T> implements Set<T> {
-	private final Set<T> backingSet = new HashSet<>();
+public class FSetWithEvents<T> extends FCollection<T> implements Set<T> {
+	private final Set<T> backingSet;
 	private final EventWith<T> onAdd = new EventWith<>();
 	private final EventWith<T> onRemove = new EventWith<>();
+
+	public FSetWithEvents() {
+		this(new HashSet<>());
+	}
+
+	public FSetWithEvents(Set<T> backingSet) {
+		this.backingSet = backingSet;
+	}
 
 	public Set<T> backingSet() {
 		return Collections.unmodifiableSet(backingSet);
@@ -52,40 +59,7 @@ public class FSetWithEvents<T> implements Set<T> {
 
 	@Override
 	public boolean containsAll(Collection<?> c) {
-		for (var item : c) {
-			if (!contains(item)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	@Override
-	public boolean addAll(Collection<? extends T> c) {
-		boolean result = false;
-		for (var item : c) {
-			if (add(item)) {
-				result = true;
-			}
-		}
-		return result;
-	}
-
-	@Override
-	public boolean retainAll(Collection<?> c) {
-		var set = c.stream().filter(this::contains).collect(Collectors.toSet());
-		return this.removeIf(item -> !set.contains(item));
-	}
-
-	@Override
-	public boolean removeAll(Collection<?> c) {
-		boolean result = false;
-		for (var item : c) {
-			if (remove(item)) {
-				result = true;
-			}
-		}
-		return result;
+		return backingSet.containsAll(c);
 	}
 
 	@Override
