@@ -87,7 +87,7 @@ public enum Menu implements Screen {
 			}
 			if (event.action() == GLFW.GLFW_RELEASE) {
 				event.glfwWindow().pollMouse((rawMouseX, rawMouseY) -> {
-					mouseDown = true;
+					mouseDown = false;
 					float mouseX = (2f * rawMouseX / event.glfwWindow().getWidth()) - 1f;
 					float mouseY = (2f * rawMouseY / event.glfwWindow().getHeight()) - 1f;
 					for (int i = 0; i < buttons.size(); ++i) {
