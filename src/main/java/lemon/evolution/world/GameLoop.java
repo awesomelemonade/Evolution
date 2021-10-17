@@ -115,6 +115,10 @@ public class GameLoop implements Disposable {
 		return controller.current();
 	}
 
+	public Observable<Player> observableCurrentPlayer() {
+		return controller.observableCurrent();
+	}
+
 	public void cycleToNextPlayer() {
 		controller.setCurrent(cycler.next());
 	}
