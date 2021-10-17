@@ -8,6 +8,8 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
+import lemon.evolution.destructible.beta.Terrain;
+import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainRenderer;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.ui.beta.AbstractUIComponent;
@@ -24,17 +26,17 @@ import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 
 public class UIMinimap extends AbstractUIComponent {
-	private static final float ZOOM = 100f;
+	private static final float ZOOM = 80f;
 	private final FrameBuffer frameBuffer;
 	private final Box2D box;
 	private final TerrainRenderer terrainRenderer;
 	private final Supplier<ControllableEntity> entitySupplier;
 
-	public UIMinimap(UIComponent parent, Box2D box, TerrainRenderer terrainRenderer, Supplier<ControllableEntity> entitySupplier) {
+	public UIMinimap(UIComponent parent, Box2D box, Terrain terrain, Supplier<ControllableEntity> entitySupplier) {
 		super(parent);
 		this.frameBuffer = disposables.add(new FrameBuffer(box));
 		this.box = box;
-		this.terrainRenderer = terrainRenderer;
+		this.terrainRenderer = new TerrainRenderer(terrain, ZOOM / terrain.scalar().x() / TerrainChunk.SIZE);
 		this.entitySupplier = entitySupplier;
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);

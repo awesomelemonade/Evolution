@@ -118,7 +118,7 @@ public enum Game implements Screen {
 					return 0f;
 				}
 				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
-				float cylinder = (float) (150.0 - Math.sqrt(distanceSquared));
+				float cylinder = (float) (100.0 - Math.sqrt(distanceSquared));
 				if (cylinder < -100f) {
 					return cylinder;
 				}
@@ -382,7 +382,7 @@ public enum Game implements Screen {
 		});
 		disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
 		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f),
-				worldRenderer.terrainRenderer(),
+				world.terrain(),
 				() -> gameLoop.currentPlayer());
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));

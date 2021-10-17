@@ -6,7 +6,7 @@ import lemon.engine.math.Vector2D;
 import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Color;
 import lemon.evolution.UIMinimap;
-import lemon.evolution.destructible.beta.TerrainRenderer;
+import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.world.ControllableEntity;
 
 import java.util.function.Consumer;
@@ -38,8 +38,8 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIProgressBar(this, box, progressGetter));
 	}
 
-	public UIMinimap addMinimap(Box2D box, TerrainRenderer renderer, Supplier<ControllableEntity> entitySupplier) {
-		return addComponent(new UIMinimap(this, box, renderer, entitySupplier));
+	public UIMinimap addMinimap(Box2D box, Terrain terrain, Supplier<ControllableEntity> entitySupplier) {
+		return addComponent(new UIMinimap(this, box, terrain, entitySupplier));
 	}
 
 	@Override
