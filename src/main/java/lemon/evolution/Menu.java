@@ -33,6 +33,7 @@ public enum Menu implements Screen {
 	private int drawnButtons = 0;
 	private final int NUM_BUTTONS = 3;
 	private Quad2D scrollBar;
+	private boolean mouseDown = false;
 
 
 	@Override
@@ -56,16 +57,39 @@ public enum Menu implements Screen {
 				}
 			}
 		}));
+		disposables.add(window.input().cursorPositionEvent().add(event -> {
+			if (mouseDown) {
+				event.glfwWindow().pollMouse((rawMouseX, rawMouseY) -> {
+					float mouseY = (2f * rawMouseY / event.glfwWindow().getHeight()) - 1f;
+					if (mouseY < -.7f) {
+						mouseY = -.7f;
+					}
+					else if (mouseY > -.2f) {
+						mouseY = -.2f;
+					}
+					drawnButtons = (int) (-((mouseY + .2)) / height);
+				});
+			}
+		}));
 		disposables.add(window.input().mouseButtonEvent().add(event -> {
-			if (event.action() == GLFW.GLFW_RELEASE) {
+			if (event.action() == GLFW.GLFW_PRESS) {
 				event.glfwWindow().pollMouse((rawMouseX, rawMouseY) -> {
 					float mouseX = (2f * rawMouseX / event.glfwWindow().getWidth()) - 1f;
 					float mouseY = (2f * rawMouseY / event.glfwWindow().getHeight()) - 1f;
 					if (0.35f <= mouseX && mouseX <= 0.375f) {
 						if (-.2f >= mouseY && mouseY >= -.7f) {
-							drawnButtons = (int)(-((mouseY + .2))/height);
+							System.out.println((int) (-((mouseY + .2)) / height));
+							drawnButtons = (int) (-((mouseY + .2)) / height);
+							mouseDown = true;
 						}
 					}
+				});
+			}
+			if (event.action() == GLFW.GLFW_RELEASE) {
+				event.glfwWindow().pollMouse((rawMouseX, rawMouseY) -> {
+					mouseDown = true;
+					float mouseX = (2f * rawMouseX / event.glfwWindow().getWidth()) - 1f;
+					float mouseY = (2f * rawMouseY / event.glfwWindow().getHeight()) - 1f;
 					for (int i = 0; i < buttons.size(); ++i) {
 						if (buttons.get(i).getBox2D().intersect(mouseX, mouseY - drawnButtons * .2f)) {
 							switch (i) {
