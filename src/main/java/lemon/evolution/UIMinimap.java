@@ -2,13 +2,15 @@ package lemon.evolution;
 
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.frameBuffer.FrameBuffer;
+import lemon.engine.game.Player;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
+import lemon.engine.render.CommonRenderables;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
-import lemon.evolution.destructible.beta.Terrain;
+import lemon.engine.toolbox.Color;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainRenderer;
 import lemon.evolution.pool.MatrixPool;
@@ -17,26 +19,33 @@ import lemon.evolution.ui.beta.UIComponent;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.world.ControllableEntity;
+import lemon.evolution.world.World;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import java.nio.ByteBuffer;
+import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class UIMinimap extends AbstractUIComponent {
 	private static final float ZOOM = 80f;
 	private final FrameBuffer frameBuffer;
 	private final Box2D box;
+	private final World world;
+	private final Set<Player> players;
 	private final TerrainRenderer terrainRenderer;
 	private final Supplier<ControllableEntity> entitySupplier;
 
-	public UIMinimap(UIComponent parent, Box2D box, Terrain terrain, Supplier<ControllableEntity> entitySupplier) {
+	public UIMinimap(UIComponent parent, Box2D box, World world, Supplier<ControllableEntity> entitySupplier) {
 		super(parent);
 		this.frameBuffer = disposables.add(new FrameBuffer(box));
 		this.box = box;
-		this.terrainRenderer = new TerrainRenderer(terrain, ZOOM / terrain.scalar().x() / TerrainChunk.SIZE);
+		this.world = world;
+		this.terrainRenderer = new TerrainRenderer(world.terrain(), ZOOM / world.terrain().scalar().x() / TerrainChunk.SIZE);
+		this.players = world.entities().ofFiltered(Player.class, disposables::add);
 		this.entitySupplier = entitySupplier;
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
@@ -68,18 +77,30 @@ public class UIMinimap extends AbstractUIComponent {
 		if (isVisible()) {
 			frameBuffer.bind(frameBuffer -> {
 				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+				var projectionMatrix = MathUtil.getOrtho(-ZOOM, ZOOM, ZOOM, -ZOOM, 0f, 1000f);
+				CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 				var entity = entitySupplier.get();
 				var currentPosition = entity.position();
 				var currentRotation = entity.rotation();
-				CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, MathUtil.getOrtho(-ZOOM, ZOOM, ZOOM, -ZOOM, 0f, 1000f));
 				try (var translationMatrix = MatrixPool.ofTranslation(currentPosition.add(Vector3D.of(0f, 100f, 0f)).invert());
 					 var pitchMatrix = MatrixPool.ofRotationX(MathUtil.PI / 2f);
 					 var rollMatrix = MatrixPool.ofRotationZ(currentRotation.y());
 					 var rotationMatrix = MatrixPool.ofMultiplied(rollMatrix, pitchMatrix);
 					 var viewMatrix = MatrixPool.ofMultiplied(rotationMatrix, translationMatrix)) {
 					CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, viewMatrix);
+					terrainRenderer.render(currentPosition);
+
+					for (var player : players) {
+						var projectedCurrentPosition = projectionMatrix.multiply(viewMatrix.multiply(player.position()));
+						var width = 8;
+						var height = 8;
+						var x = projectedCurrentPosition.x() * box.width() / 2f - width / 2f + box.width() / 2f;
+						var y = projectedCurrentPosition.y() * box.height() / 2f - height / 2f + box.height() / 2f;
+						var color = player == entity ? Color.GREEN : Color.RED;
+						CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color);
+						CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color, MathUtil.PI / 4f);
+					}
 				}
-				terrainRenderer.render(currentPosition);
 			});
 			CommonPrograms2D.MINIMAP.use(program -> {
 				try (var translationMatrix = MatrixPool.ofTranslation(box.x() + box.width() / 2f, box.y() + box.height() / 2f, 0f);
