@@ -371,7 +371,7 @@ public enum Game implements Screen {
 			System.out.println("Clicked");
 		}).visible().setValue(false);
 		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED).visible().setValue(false);
-		uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
+		var progressBar = uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
 			if (gameLoop.startTime != null && gameLoop.endTime != null) {
 				float progressedTime = Duration.between(gameLoop.startTime, Instant.now()).toMillis();
 				float totalTime = Duration.between(gameLoop.startTime, gameLoop.endTime).toMillis();
@@ -380,6 +380,7 @@ public enum Game implements Screen {
 				return 0f;
 			}
 		});
+		disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
 		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f),
 				worldRenderer.terrainRenderer(),
 				() -> gameLoop.currentPlayer());

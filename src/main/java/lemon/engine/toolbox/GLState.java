@@ -14,14 +14,18 @@ public class GLState {
 
 	public static void pushViewport(Box2D box) {
 		viewportStack.push(box);
-		GL11.glViewport((int) box.x(), (int) box.y(), (int) box.width(), (int) box.height());
+		setViewport(box);
 	}
 
 	public static void popViewport() {
 		viewportStack.pop();
 		var box = viewportStack.peek();
 		if (box != null) {
-			GL11.glViewport((int) box.x(), (int) box.y(), (int) box.width(), (int) box.height());
+			setViewport(box);
 		}
+	}
+
+	private static void setViewport(Box2D box) {
+		GL11.glViewport((int) box.x(), (int) box.y(), (int) box.width(), (int) box.height());
 	}
 }

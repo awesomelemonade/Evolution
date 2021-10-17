@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 
 public class UIMinimap extends AbstractUIComponent {
+	private static final float ZOOM = 100f;
 	private final FrameBuffer frameBuffer;
 	private final Box2D box;
 	private final TerrainRenderer terrainRenderer;
@@ -64,12 +65,11 @@ public class UIMinimap extends AbstractUIComponent {
 	public void render() {
 		if (isVisible()) {
 			frameBuffer.bind(frameBuffer -> {
-				GL11.glViewport(0, 0, (int) box.width(), (int) box.height());
 				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 				var entity = entitySupplier.get();
 				var currentPosition = entity.position();
 				var currentRotation = entity.rotation();
-				CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, MathUtil.getOrtho(-50f, 50f, 50f, -50f, 0f, 1000f));
+				CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, MathUtil.getOrtho(-ZOOM, ZOOM, ZOOM, -ZOOM, 0f, 1000f));
 				try (var translationMatrix = MatrixPool.ofTranslation(currentPosition.add(Vector3D.of(0f, 100f, 0f)).invert());
 					 var pitchMatrix = MatrixPool.ofRotationX(MathUtil.PI / 2f);
 					 var rollMatrix = MatrixPool.ofRotationZ(currentRotation.y());

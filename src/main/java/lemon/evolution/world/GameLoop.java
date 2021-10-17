@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.engine.event.EventWith;
+import lemon.engine.event.Observable;
 import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
@@ -32,6 +33,7 @@ public class GameLoop implements Disposable {
 	private final Iterator<Player> cycler;
 	private final EventWith<Player> onWinner = new EventWith<>();
 	private final Scheduler scheduler = disposables.add(new Scheduler());
+	private final Observable<Boolean> started = new Observable<>(false);
 	public boolean usedWeapon = true; // TODO: Temporary
 	public Instant startTime; // TODO: Temporary
 	public Instant endTime; // TODO: Temporary
@@ -58,8 +60,10 @@ public class GameLoop implements Disposable {
 			}
 		}));
 		// Time limit for turns
-		var disposeOnStart = disposables.add(new Disposables());
-		disposeOnStart.add(controls.onActivated(EvolutionControls.START_GAME, () -> {
+		disposables.add(controls.onActivated(EvolutionControls.START_GAME, () -> {
+			started.setValue(true);
+		}));
+		disposables.add(started.onChangeTo(true, () -> {
 			disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
 				gatedControls.setEnabled(true);
 				var task = scheduler.add(TURN_TIME, this::endTurn);
@@ -69,7 +73,6 @@ public class GameLoop implements Disposable {
 				endTurnDisposables.add(task);
 				endTurnDisposables.add(controls.onActivated(EvolutionControls.END_TURN, this::endTurn));
 			}));
-			disposeOnStart.dispose();
 		}));
 		disposables.add(() -> gatedControls.setEnabled(true));
 	}
@@ -124,5 +127,9 @@ public class GameLoop implements Disposable {
 	@CheckReturnValue
 	public Disposable onWinner(Consumer<? super Player> listener) {
 		return onWinner.add(listener);
+	}
+
+	public Observable<Boolean> started() {
+		return started;
 	}
 }

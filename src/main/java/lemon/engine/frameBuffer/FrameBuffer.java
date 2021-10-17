@@ -12,12 +12,12 @@ public class FrameBuffer implements Disposable {
 	private final Box2D viewport;
 
 	public FrameBuffer(int width, int height) {
-		this(new Box2D(0, 0, width, height));
+		this.id = GL30.glGenFramebuffers();
+		this.viewport = new Box2D(0, 0, width, height);
 	}
 
 	public FrameBuffer(Box2D viewport) {
-		this.id = GL30.glGenFramebuffers();
-		this.viewport = viewport;
+		this((int) viewport.width(), (int) viewport.height());
 	}
 
 	public int getId() {
