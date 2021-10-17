@@ -119,6 +119,10 @@ public class GameLoop implements Disposable {
 		controller.setCurrent(cycler.next());
 	}
 
+	public GatedGLFWGameControls<EvolutionControls> getGatedControls() {
+		return this.gatedControls;
+	}
+
 	@Override
 	public void dispose() {
 		disposables.dispose();
