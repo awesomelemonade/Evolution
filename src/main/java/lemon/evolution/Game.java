@@ -398,7 +398,7 @@ public enum Game implements Screen {
 				world.terrain(),
 				() -> gameLoop.currentPlayer());
 		uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png");
-		
+
 		uiScreen.addInventory();
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(() -> loaded = false);
