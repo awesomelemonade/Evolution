@@ -419,16 +419,16 @@ public enum Game implements Screen {
 					float deltaX = (float) (-(event.y() - lastMouseY) * MOUSE_SENSITIVITY);
 					freecam.mutableRotation().asXYVector().add(deltaX, deltaY)
 							.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
-					lastMouseX = (float) event.x();
-					lastMouseY = (float) event.y();
 				}
+				lastMouseX = (float) event.x();
+				lastMouseY = (float) event.y();
 			});
 
-			float Speed = .5f;
+			float speed = .5f;
 			float angle = (freecam.rotation().y() + MathUtil.PI / 2f);
 			float sin = (float) Math.sin(angle);
 			float cos = (float) Math.cos(angle);
-			var playerHorizontalVector = Vector2D.of(Speed * sin, Speed * cos);
+			var playerHorizontalVector = Vector2D.of(speed * sin, speed * cos);
 			var mutableForce = MutableVector3D.ofZero();
 			if (controls.isActivated(EvolutionControls.STRAFE_LEFT)) {
 				mutableForce.asXZVector().subtract(playerHorizontalVector);
@@ -436,7 +436,7 @@ public enum Game implements Screen {
 			if (controls.isActivated(EvolutionControls.STRAFE_RIGHT)) {
 				mutableForce.asXZVector().add(playerHorizontalVector);
 			}
-			var playerForwardVector = Vector2D.of(Speed * cos, -Speed * sin);
+			var playerForwardVector = Vector2D.of(speed * cos, -speed * sin);
 			if (controls.isActivated(EvolutionControls.MOVE_FORWARDS)) {
 				mutableForce.asXZVector().add(playerForwardVector);
 			}
@@ -444,10 +444,10 @@ public enum Game implements Screen {
 				mutableForce.asXZVector().subtract(playerForwardVector);
 			}
 			if (controls.isActivated(EvolutionControls.FLY)) {
-				mutableForce.addY(Speed);
+				mutableForce.addY(speed);
 			}
 			if (controls.isActivated(EvolutionControls.FALL)) {
-				mutableForce.subtractY(Speed);
+				mutableForce.subtractY(speed);
 			}
 			freecam.mutablePosition().add(mutableForce.asImmutable());
 		}
@@ -529,6 +529,7 @@ public enum Game implements Screen {
 				//rocketLauncherUnloadedModel.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
+			//xray likely here, loop through players without depth test, maybe not render player themself, maybe also above where players are rendered
 		});
 		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
