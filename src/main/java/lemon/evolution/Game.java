@@ -28,7 +28,6 @@ import lemon.engine.toolbox.GLState;
 import lemon.engine.toolbox.Histogram;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.engine.toolbox.SkyboxLoader;
-import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
@@ -397,6 +396,7 @@ public enum Game implements Screen {
 		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f),
 				world.terrain(),
 				() -> gameLoop.currentPlayer());
+		uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png");
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(() -> loaded = false);
