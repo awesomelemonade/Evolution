@@ -20,6 +20,13 @@ public enum CommonPrograms2D implements ShaderProgramHolder {
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/colorVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/colorFragmentShader").orElseThrow())),
+	TEXTURE(names("position", "textureCoords"), program -> {
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		program.loadInt("textureSampler", TextureBank.REUSE.getId());
+	},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/textureVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/textureFragmentShader").orElseThrow())),
 	LINE(names("id", "value"), program -> {
 		program.loadColor3f(Color.WHITE);
 		program.loadFloat("spacing", 1f);
