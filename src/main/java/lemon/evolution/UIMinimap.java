@@ -28,10 +28,8 @@ import org.lwjgl.opengl.GL32;
 import java.nio.ByteBuffer;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class UIMinimap extends AbstractUIComponent {
-	private static final float ZOOM = 80f;
 	private final FrameBuffer frameBuffer;
 	private final Box2D box;
 	private final World world;
@@ -44,7 +42,7 @@ public class UIMinimap extends AbstractUIComponent {
 		this.frameBuffer = disposables.add(new FrameBuffer(box));
 		this.box = box;
 		this.world = world;
-		this.terrainRenderer = new TerrainRenderer(world.terrain(), ZOOM / world.terrain().scalar().x() / TerrainChunk.SIZE);
+		this.terrainRenderer = new TerrainRenderer(world.terrain(), 80f / world.terrain().scalar().x() / TerrainChunk.SIZE);
 		this.players = world.entities().ofFiltered(Player.class, disposables::add);
 		this.entitySupplier = entitySupplier;
 		frameBuffer.bind(frameBuffer -> {
@@ -77,11 +75,14 @@ public class UIMinimap extends AbstractUIComponent {
 		if (isVisible()) {
 			frameBuffer.bind(frameBuffer -> {
 				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-				var projectionMatrix = MathUtil.getOrtho(-ZOOM, ZOOM, ZOOM, -ZOOM, 0f, 1000f);
-				CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 				var entity = entitySupplier.get();
 				var currentPosition = entity.position();
 				var currentRotation = entity.rotation();
+				var zoom = (float) Math.sqrt(players.stream().mapToDouble(player -> currentPosition.toXZVector().distanceSquared(player.position().toXZVector())).max().orElse(250.0)) + 20f;
+				zoom = MathUtil.clamp(zoom, 20f, 100f);
+				terrainRenderer.setRenderDistance(world.terrain().getChunkDistance(zoom + 1f));
+				var projectionMatrix = MathUtil.getOrtho(-zoom, zoom, zoom, -zoom, 0f, 1000f);
+				CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 				try (var translationMatrix = MatrixPool.ofTranslation(currentPosition.add(Vector3D.of(0f, 100f, 0f)).invert());
 					 var pitchMatrix = MatrixPool.ofRotationX(MathUtil.PI / 2f);
 					 var rollMatrix = MatrixPool.ofRotationZ(currentRotation.y());

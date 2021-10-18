@@ -155,6 +155,10 @@ public class Terrain {
 		return Math.floorDiv((int) Math.floor(z / scalar.z()), TerrainChunk.SIZE);
 	}
 
+	public float getChunkDistance(float distance) {
+		return distance / scalar.x() / TerrainChunk.SIZE;
+	}
+
 	public Vector3D scalar() {
 		return scalar;
 	}
