@@ -18,4 +18,9 @@ public enum MissileShowerItemType implements ItemType {
 				player.vectorDirection().multiply(5f)
 		));
 	}
+
+	@Override
+	public String guiImagePath() {
+		return "/res/inventory_icons/CHICK.png";
+	}
 }

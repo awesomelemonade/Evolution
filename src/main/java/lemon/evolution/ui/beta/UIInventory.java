@@ -29,30 +29,15 @@ public class UIInventory extends AbstractUIComponent {
     private Box2D box;
     private Color color;
 
-    private List<UIButton> buttons;
+    private List<UIImage> images;
 
     public UIInventory(UIComponent parent) {
         super(parent);
         color = Color.WHITE;
-        buttons = new ArrayList<>();
+        images = new ArrayList<>();
         box = new Box2D(100, 100, WINDOW_WIDTH,WINDOW_HEIGHT);
         int xOffset = 50; //(WINDOW_WIDTH - (((numColumns * numRows) % numColumns) * WINDOW_WIDTH / numColumns)) / 2;
         int yOffset = 50;
-        for (int i = 0; i < numColumns * numRows; i++) {
-            int num = i;
-            int xSpacing = 200 + (i % numColumns) * WINDOW_WIDTH / numColumns;
-            int ySpacing = 200 + (i / numColumns) * WINDOW_HEIGHT / numRows;
-            buttons.add(new UIButton(this, new Box2D(
-                    xOffset + xSpacing,
-                    yOffset + ySpacing,
-                    100, 100),
-                    new Color(i * 100,(i + 1) % numColumns * 100, (i + 2) % numRows * 100),
-                    x -> {
-                if (isVisible()) {
-                    System.out.println("inventory clicked for button " + num);
-                }
-            }));
-        }
         visible().setValue(false);
     }
 
@@ -69,8 +54,8 @@ public class UIInventory extends AbstractUIComponent {
                     program.loadColor4f("filterColor", color);
                 }
             });
-            for (UIButton button : buttons) {
-                button.render();
+            for (UIImage image : images) {
+                image.render();
             }
         }
     }
@@ -78,5 +63,17 @@ public class UIInventory extends AbstractUIComponent {
     public void setInventory(Inventory inventory) {
         this.inventory = inventory;
         items = inventory.items().toArray(new ItemType[0]);
+        System.out.println("length of items: " + items.length);
+        for (ItemType item : items) {
+            System.out.println(item == null ? "item is null" : item.getName());
+            images.add(new UIImage(this, new Box2D(
+                    200, 200, 100, 100),
+                    item.guiImagePath(),
+                    x -> {
+                        if (isVisible()) {
+                            System.out.println("Player clicked on " + item.getName());
+                        }
+                    }));
+        }
     }
 }
