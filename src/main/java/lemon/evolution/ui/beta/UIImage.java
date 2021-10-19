@@ -5,7 +5,10 @@ import lemon.engine.render.CommonRenderables;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureData;
 import lemon.engine.toolbox.Toolbox;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+
+import java.util.function.Consumer;
 
 public class UIImage extends AbstractUIComponent {
 	private final Box2D box;
@@ -16,10 +19,45 @@ public class UIImage extends AbstractUIComponent {
 		texture.load(new TextureData(Toolbox.readImage(path).orElseThrow()));
 	}
 
+	// constructor for adding an event on click
+	public UIImage(UIComponent parent, Box2D box, String path, Consumer<UIImage> eventHandler) {
+		this(parent, box, new Texture());
+		texture.load(new TextureData(Toolbox.readImage(path).orElseThrow()));
+		disposables.add(input().mouseButtonEvent().add(event -> {
+			if (isVisible() &&
+					event.button() == GLFW.GLFW_MOUSE_BUTTON_1 &&
+					event.action() == GLFW.GLFW_RELEASE) {
+				event.glfwWindow().pollMouse((mouseX, mouseY) -> {
+					if (box.intersect(mouseX, mouseY)) {
+						eventHandler.accept(this);
+					}
+				});
+			}
+		}));
+	}
+
 	public UIImage(UIComponent parent, Box2D box, Texture texture) {
 		super(parent);
 		this.box = box;
 		this.texture = texture;
+	}
+
+	// constructor for adding an event on click with Texture input
+	public UIImage(UIComponent parent, Box2D box, Texture texture, Consumer<UIImage> eventHandler) {
+		super(parent);
+		this.box = box;
+		this.texture = texture;
+		disposables.add(input().mouseButtonEvent().add(event -> {
+			if (isVisible() &&
+					event.button() == GLFW.GLFW_MOUSE_BUTTON_1 &&
+					event.action() == GLFW.GLFW_RELEASE) {
+				event.glfwWindow().pollMouse((mouseX, mouseY) -> {
+					if (box.intersect(mouseX, mouseY)) {
+						eventHandler.accept(this);
+					}
+				});
+			}
+		}));
 	}
 
 	@Override
