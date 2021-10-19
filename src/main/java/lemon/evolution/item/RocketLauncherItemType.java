@@ -12,8 +12,6 @@ public enum RocketLauncherItemType implements ItemType {
 		return "Rocket Launcher";
 	}
 
-	private final String imagePath2D = "/res/China.png";
-
 	@Override
 	public void use(ControllableEntity player) {
 		player.world().entities().add(new RocketLauncherProjectile(

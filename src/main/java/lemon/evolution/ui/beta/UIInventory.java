@@ -64,16 +64,20 @@ public class UIInventory extends AbstractUIComponent {
         this.inventory = inventory;
         items = inventory.items().toArray(new ItemType[0]);
         System.out.println("length of items: " + items.length);
+        int count = 0;
         for (ItemType item : items) {
             System.out.println(item == null ? "item is null" : item.getName());
             images.add(new UIImage(this, new Box2D(
-                    200, 200, 100, 100),
+                    200 + 300 * count, 200, 100, 100),
                     item.guiImagePath(),
                     x -> {
                         if (isVisible()) {
                             System.out.println("Player clicked on " + item.getName());
+                            this.inventory.setCurrentItem(item);
+                            System.out.println("current item: " + inventory.currentItem());
                         }
                     }));
+            count++;
         }
     }
 }
