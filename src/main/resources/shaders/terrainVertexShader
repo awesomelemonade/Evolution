@@ -1,12 +1,16 @@
 #version 400 core
 
+#define NUM_TEXTURES 12
+
 in vec3 position;
 in vec4 color;
 in vec3 normal;
+in vec4 textureWeights[NUM_TEXTURES];
 
 out vec4 passColor;
 out vec3 passNormal;
 out vec3 passTextureCoords;
+out vec4 passTextureWeights[NUM_TEXTURES];
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
@@ -19,5 +23,6 @@ void main(void) {
 	
 	passColor = mix(color, vec4(1, 0, 0, 1), position.y / 10);
 	passNormal = normal;
-	passTextureCoords = worldPosition.xyz / 30;
+	passTextureCoords = worldPosition.xyz;
+	passTextureWeights = textureWeights;
 }

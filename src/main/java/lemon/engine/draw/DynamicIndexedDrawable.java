@@ -47,6 +47,9 @@ public class DynamicIndexedDrawable implements Drawable {
 				for (int i = 0; i < vertices.length; i++) {
 					if (vertices[i].length > 0) {
 						int dimensions = vertices[i][0].numDimensions();
+						if (dimensions <= 0 || dimensions > 4) {
+							throw new IllegalArgumentException("Dimensions can only be 1, 2, 3, or 4");
+						}
 						GL20.glVertexAttribPointer(i, dimensions, GL11.GL_FLOAT, false,
 								stride * BYTES_PER_FLOAT, offset * BYTES_PER_FLOAT);
 						offset += dimensions;

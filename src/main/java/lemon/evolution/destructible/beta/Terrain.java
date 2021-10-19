@@ -49,6 +49,8 @@ public class Terrain {
 			return new TerrainChunk(this, chunkX, chunkY, chunkZ,
 					getSubTerrain(offsetX, offsetY, offsetZ,
 							subTerrainSize, subTerrainSize, subTerrainSize),
+					getSubTerrainTextureWeights(offsetX, offsetY, offsetZ,
+							subTerrainSize, subTerrainSize, subTerrainSize),
 					generator, poolExecutor, updaters::add);
 		});
 	}
@@ -61,6 +63,10 @@ public class Terrain {
 
 	private BoundedScalarGrid3D getSubTerrain(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
 		return BoundedScalarGrid3D.of((a, b, c) -> this.get(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
+	}
+
+	private BoundedGrid3D<float[]> getSubTerrainTextureWeights(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
+		return BoundedGrid3D.of((a, b, c) -> this.getTextureWeights(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
 	}
 
 	public void forEachChunk(Vector3D point, float radius, Consumer<TerrainChunk> chunk) {
@@ -134,6 +140,23 @@ public class Terrain {
 							chunkX, chunkY, chunkZ, hashed));
 		}
 		return chunk.get(localX, localY, localZ);
+	}
+
+	public float[] getTextureWeights(int x, int y, int z) {
+		int chunkX = Math.floorDiv(x, TerrainChunk.SIZE);
+		int chunkY = Math.floorDiv(y, TerrainChunk.SIZE);
+		int chunkZ = Math.floorDiv(z, TerrainChunk.SIZE);
+		int localX = Math.floorMod(x, TerrainChunk.SIZE);
+		int localY = Math.floorMod(y, TerrainChunk.SIZE);
+		int localZ = Math.floorMod(z, TerrainChunk.SIZE);
+		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
+		TerrainChunk chunk = chunks.get(hashed);
+		if (chunk == null) {
+			throw new IllegalArgumentException(
+					String.format("Chunk [(%d, %d, %d)=%d] has not been queued for generation",
+							chunkX, chunkY, chunkZ, hashed));
+		}
+		return chunk.getTextureWeights(localX, localY, localZ);
 	}
 
 	private static long hashChunkCoordinates(int chunkX, int chunkY, int chunkZ) {

@@ -58,6 +58,7 @@ import org.lwjgl.opengl.GL32;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -310,27 +311,27 @@ public enum Game implements Screen {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
 			Texture colorTexture = disposables.add(new Texture());
 			TextureBank.COLOR.bind(() -> {
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.id());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, windowWidth, windowHeight, 0, GL11.GL_RGB,
 						GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.id(), 0);
 			});
 			Texture depthTexture = disposables.add(new Texture());
 			TextureBank.DEPTH.bind(() -> {
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.id());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, windowWidth, windowHeight, 0,
 						GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.id(), 0);
 			});
 		});
 		TextureBank.SKYBOX.bind(() -> {
 			Texture skyboxTexture = new Texture();
 			skyboxTexture.load(new SkyboxLoader("/res/darkskies", "darkskies.cfg").load());
-			GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.getId());
+			GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.id());
 		});
 		Map.of(
 				TextureBank.GRASS, "/res/grass.png",
@@ -341,8 +342,24 @@ public enum Game implements Screen {
 			textureBank.bind(() -> {
 				var texture = new Texture();
 				texture.load(new TextureData(Toolbox.readImage(path).orElseThrow()));
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getId());
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.id());
 			});
+		});
+
+		var paths = new String[] {
+				"/res/minecraft-coal.png",
+				"/res/minecraft-copper.png",
+				"/res/minecraft-diamond.png",
+				"/res/minecraft-emerald.png",
+				"/res/minecraft-gold.png",
+				"/res/minecraft-lapis.png",
+				"/res/minecraft-netherite.png",
+				"/res/minecraft-redstone.png",
+		};
+		var textureArray = new Texture();
+		textureArray.load(Arrays.stream(paths).map(path -> new TextureData(Toolbox.readImage(path).orElseThrow())).toArray(TextureData[]::new));
+		TextureBank.TERRAIN.bind(() -> {
+			GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, textureArray.id());
 		});
 
 		lightPosition = gameLoop.currentPlayer().position();
@@ -393,7 +410,7 @@ public enum Game implements Screen {
 		});
 		disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
 		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f), world, () -> gameLoop.currentPlayer());
-		uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png");
+		uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png").visible().setValue(false);
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 		disposables.add(() -> loaded = false);
