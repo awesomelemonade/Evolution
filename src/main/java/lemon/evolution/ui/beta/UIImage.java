@@ -14,6 +14,12 @@ public class UIImage extends AbstractUIComponent {
 	private final Box2D box;
 	private final Texture texture;
 
+	public UIImage(UIComponent parent, Box2D box, Texture texture) {
+		super(parent);
+		this.box = box;
+		this.texture = texture;
+	}
+
 	public UIImage(UIComponent parent, Box2D box, String path) {
 		this(parent, box, new Texture());
 		texture.load(new TextureData(Toolbox.readImage(path).orElseThrow()));
@@ -21,8 +27,7 @@ public class UIImage extends AbstractUIComponent {
 
 	// constructor for adding an event on click
 	public UIImage(UIComponent parent, Box2D box, String path, Consumer<UIImage> eventHandler) {
-		this(parent, box, new Texture());
-		texture.load(new TextureData(Toolbox.readImage(path).orElseThrow()));
+		this(parent, box, path);
 		disposables.add(input().mouseButtonEvent().add(event -> {
 			if (isVisible() &&
 					event.button() == GLFW.GLFW_MOUSE_BUTTON_1 &&
@@ -36,17 +41,9 @@ public class UIImage extends AbstractUIComponent {
 		}));
 	}
 
-	public UIImage(UIComponent parent, Box2D box, Texture texture) {
-		super(parent);
-		this.box = box;
-		this.texture = texture;
-	}
-
 	// constructor for adding an event on click with Texture input
 	public UIImage(UIComponent parent, Box2D box, Texture texture, Consumer<UIImage> eventHandler) {
-		super(parent);
-		this.box = box;
-		this.texture = texture;
+		this(parent, box, texture);
 		disposables.add(input().mouseButtonEvent().add(event -> {
 			if (isVisible() &&
 					event.button() == GLFW.GLFW_MOUSE_BUTTON_1 &&
