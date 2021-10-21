@@ -1,6 +1,7 @@
 package lemon.evolution;
 
 import lemon.engine.control.GLFWWindow;
+import lemon.engine.font.Font;
 import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
 import lemon.engine.function.SzudzikIntPair;
@@ -18,8 +19,12 @@ import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
+import lemon.engine.draw.TextModel;
+import lemon.engine.math.MathUtil;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.ToIntFunction;
@@ -28,21 +33,30 @@ public enum Menu implements Screen {
 	INSTANCE;
 	private GLFWWindow window;
 	private List<Quad2D> buttons;
+	private List<TextModel> buttonsText;
+	private Font font;
 	private final Disposables disposables = new Disposables();
 	private Histogram histogram;
 	private int drawnButtons = 0;
 	private final int NUM_BUTTONS = 3;
 	private Quad2D scrollBar;
 	private boolean mouseDown = false;
+	private final ArrayList<Matrix> buttonTextPositions = new ArrayList<>();
 
 
 	@Override
 	public void onLoad(GLFWWindow window) {
+		buttonTextPositions.add(new Matrix(MathUtil.getTranslation(Vector3D.of(0f, 1f, 0f))));
+		buttonTextPositions.add(new Matrix(MathUtil.getTranslation(Vector3D.of(0f, 2f, 0f))));
+		buttonTextPositions.add(new Matrix(MathUtil.getTranslation(Vector3D.of(0f, 3f, 0f))));
 		this.window = window;
+		font = disposables.add(new Font(Paths.get("/res/fonts/FreeSans.fnt")));
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
 		buttons = new ArrayList<>();
+		buttonsText = new ArrayList<>();
 		for (int i = 0; i < 20; ++i) {
 			buttons.add(new Quad2D(new Box2D(-0.3f, -.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
+			buttonsText.add(new TextModel(font, "Button" + (i+1)));
 		}
 		float height = (.5f  / (float)(buttons.size()-2));
 		scrollBar = new Quad2D(new Box2D(0.35f, -.2f - height, .025f, height), new Color(1f, 1f, 1f));
@@ -166,6 +180,15 @@ public enum Menu implements Screen {
 			program.loadFloat("scrollPortion", ((.5f / (float)(buttons.size() - 2)) * drawnButtons));
 			scrollBar.draw();
 		});
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		CommonPrograms2D.MENUTEXT.use(program -> {
+			for (int i = 0; i < NUM_BUTTONS; ++i) {
+				program.loadMatrix(MatrixType.MODEL_MATRIX, buttonTextPositions.get(i));
+				buttonsText.get(drawnButtons + i).draw();
+			}
+		});
+		GL11.glDisable(GL11.GL_BLEND);
 	}
 
 	public void start(Screen screen) {
