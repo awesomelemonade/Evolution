@@ -58,7 +58,13 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/lightVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/lightFragmentShader").orElseThrow())),
-	TERRAIN(names("position", "color", "normal", "textureWeights"), program -> {
+	TERRAIN(names("position", "normal", "textureWeights"), program -> {
+		// Texture weights need to default to 0
+		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Non-array_attribute_values
+		// https://stackoverflow.com/questions/17819034/opengl-default-value-for-unbuffered-vertex-attribute-when-using-layout-qualifier
+		for (int i = 0; i < 16; i++) {
+			GL20.glVertexAttrib4f(i, 0f, 0f, 0f, 0f);
+		}
 		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);

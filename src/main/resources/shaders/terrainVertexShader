@@ -1,16 +1,15 @@
 #version 400 core
 
-#define NUM_TEXTURES 12
+#define NUM_TEXTURES 20
+#define TEXTURE_ARRAY_SIZE NUM_TEXTURES / 4
 
 in vec3 position;
-in vec4 color;
 in vec3 normal;
-in vec4 textureWeights[NUM_TEXTURES];
+in vec4 textureWeights[TEXTURE_ARRAY_SIZE];
 
-out vec4 passColor;
 out vec3 passNormal;
 out vec3 passTextureCoords;
-out vec4 passTextureWeights[NUM_TEXTURES];
+out vec4 passTextureWeights[TEXTURE_ARRAY_SIZE];
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
@@ -21,7 +20,6 @@ void main(void) {
 	
 	gl_Position = projectionMatrix * viewMatrix * worldPosition;
 	
-	passColor = mix(color, vec4(1, 0, 0, 1), position.y / 10);
 	passNormal = normal;
 	passTextureCoords = worldPosition.xyz;
 	passTextureWeights = textureWeights;

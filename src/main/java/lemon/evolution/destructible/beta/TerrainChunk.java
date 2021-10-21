@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -22,14 +23,13 @@ import java.util.stream.Stream;
 public class TerrainChunk {
 	public static final int SIZE = 16;
 	public static final Vector3D MARCHING_CUBE_SIZE = Vector3D.of(SIZE + 1, SIZE + 1, SIZE + 1);
-	private static final int NUM_TEXTURES = 16;
+	public static final int NUM_TEXTURES = 20;
 	private final Terrain terrain;
 	private final int chunkX;
 	private final int chunkY;
 	private final int chunkZ;
 	private final MarchingCube marchingCube;
 	private final Matrix transformationMatrix;
-	private final Color color;
 	private final Computable<float[][][]> data;
 	private final Computable<float[][][][]> textureData;
 	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_X = {1, 0, 0, 1, 0, 1, 1};
@@ -57,7 +57,6 @@ public class TerrainChunk {
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
 		this.chunkZ = chunkZ;
-		this.color = Color.randomOpaque();
 		this.marchingCube = new MarchingCube(scalarGrid, textureWeightsGrid, MARCHING_CUBE_SIZE, 0f);
 		this.transformationMatrix = new Matrix(4);
 		try (var translationMatrix = MatrixPool.ofTranslation(
@@ -72,14 +71,6 @@ public class TerrainChunk {
 		});
 		this.textureData = new Computable<>(computable -> {
 			var data = new float[TerrainChunk.SIZE][TerrainChunk.SIZE][TerrainChunk.SIZE][NUM_TEXTURES];
-			int random = (int) (Math.random() * 8);
-			for (int i = 0; i < TerrainChunk.SIZE; i++) {
-				for (int j = 0; j < TerrainChunk.SIZE; j++) {
-					for (int k = 0; k < TerrainChunk.SIZE; k++) {
-						data[i][j][k][random] = 1;
-					}
-				}
-			}
 			computable.compute(data);
 		});
 		this.mesh = Computable.all(poolExecutor, () -> {
@@ -145,8 +136,6 @@ public class TerrainChunk {
 			var indices = model.indices();
 			var vertices = model.vertices();
 			var textureWeights = model.textureWeights();
-			Color[] colors = new Color[vertices.length];
-			Arrays.fill(colors, color);
 			var numVec4s = NUM_TEXTURES / 4;
 			var weights = new FloatData[numVec4s][];
 			for (int i = 0; i < numVec4s; i++) {
@@ -155,12 +144,11 @@ public class TerrainChunk {
 						.map(array -> FloatData.of(array, 4 * finalI, 4))
 						.toArray(FloatData[]::new);
 			}
-			var vertexData = new FloatData[3 + numVec4s][];
+			var vertexData = new FloatData[2 + numVec4s][];
 			vertexData[0] = vertices;
-			vertexData[1] = colors;
-			vertexData[2] = normals;
+			vertexData[1] = normals;
 			for (int i = 0; i < numVec4s; i++) {
-				vertexData[3 + i] = weights[i];
+				vertexData[2 + i] = weights[i];
 			}
 			mainThreadExecutor.execute(() -> {
 				computable.compute(drawable -> {
@@ -253,6 +241,20 @@ public class TerrainChunk {
 
 	public void updateData(Consumer<float[][][]> updater) {
 		data.compute(updater);
+	}
+
+	public void updateTextureData(Consumer<float[][][][]> updater) {
+		textureData.compute(updater);
+	}
+
+	public void updateAllData(BiConsumer<float[][][], float[][][][]> updater) {
+		var data = this.data.getValue();
+		var textureData = this.textureData.getValue();
+		data.ifPresent(a -> textureData.ifPresent(b -> {
+			updater.accept(a, b);
+			this.data.compute();
+			this.textureData.compute();
+		}));
 	}
 
 	public Computable<DynamicIndexedDrawable> drawable() {

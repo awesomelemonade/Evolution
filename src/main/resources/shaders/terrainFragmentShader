@@ -1,11 +1,11 @@
 #version 400 core
 
-#define NUM_TEXTURES 12
+#define NUM_TEXTURES 20
+#define TEXTURE_ARRAY_SIZE NUM_TEXTURES / 4
 
-in vec4 passColor;
 in vec3 passNormal;
 in vec3 passTextureCoords;
-in vec4 passTextureWeights[NUM_TEXTURES];
+in vec4 passTextureWeights[TEXTURE_ARRAY_SIZE];
 
 out vec4 outColor;
 
@@ -36,7 +36,9 @@ void main(void) {
 	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
 	for (int i = 0; i < NUM_TEXTURES; i++) {
 		float weight = passTextureWeights[i / 4][i % 4];
-		color += weight * getTriplanarTexturingArrays(samplers, passTextureCoords, i, blendWeights);
+		vec4 currentColor = getTriplanarTexturingArrays(samplers, passTextureCoords, i, blendWeights);
+        currentColor += (1.0 - currentColor.a) * vec4(0.0, 1.0, 0.0, 1.0);
+		color += weight * currentColor;
 		sumWeights += weight;
 	}
 	outColor = color / sumWeights;

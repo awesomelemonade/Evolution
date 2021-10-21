@@ -1,5 +1,6 @@
 package lemon.evolution.destructible.beta;
 
+import lemon.engine.math.MutableVector3D;
 import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.draw.Drawable;
 import lemon.engine.function.AbsoluteIntValue;
@@ -33,6 +34,12 @@ public class Terrain {
 	}
 
 	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {
+		var chunk = getChunk(chunkX, chunkY, chunkZ);
+		chunk.data().request();
+		chunk.textureData().request();
+	}
+
+	public void preinitChunk(int chunkX, int chunkY, int chunkZ) {
 		getChunk(chunkX, chunkY, chunkZ).drawable().request();
 	}
 
@@ -92,11 +99,11 @@ public class Terrain {
 	}
 
 	public void generateExplosion(Vector3D point, float radius) {
-		terraform(point, radius, 1f, -100f);
+		terraform(point, radius, 1f, -100f, 0);
 	}
 
-	public void terraform(Vector3D point, float radius, float dt, float brushSpeed) {
-		forEachChunk(point, radius, chunk -> terraform(chunk, point, radius, dt, brushSpeed));
+	public void terraform(Vector3D point, float radius, float dt, float brushSpeed, int texture) {
+		forEachChunk(point, radius, chunk -> terraform(chunk, point, radius, dt, brushSpeed, texture));
 	}
 
 	public float smoothstep(float min, float max, float t) {
@@ -104,20 +111,23 @@ public class Terrain {
 		return t * t * (3 - 2 * t);
 	}
 
-	public void terraform(TerrainChunk chunk, Vector3D origin, float radius, float dt, float brushSpeed) {
-		chunk.updateData(data -> {
+	public void terraform(TerrainChunk chunk, Vector3D origin, float radius, float dt, float brushSpeed, int texture) {
+		chunk.updateAllData((data, textureData) -> {
 			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
 			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
 			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
+			var point = MutableVector3D.ofZero();
 			for (int i = 0; i < TerrainChunk.SIZE; i++) {
 				for (int j = 0; j < TerrainChunk.SIZE; j++) {
 					for (int k = 0; k < TerrainChunk.SIZE; k++) {
-						var point = Vector3D.of(offsetX + i, offsetY + j, offsetZ + k).multiply(scalar);
-						float distanceSquared = origin.distanceSquared(point);
+						point.set(offsetX + i, offsetY + j, offsetZ + k).multiply(scalar);
+						float distanceSquared = origin.distanceSquared(point.asImmutable());
 						if (distanceSquared <= radius * radius) {
 							float distance = (float) Math.sqrt(distanceSquared);
 							float brushWeight = smoothstep(radius, radius * 0.7f, distance);
-							data[i][j][k] += brushSpeed * brushWeight * dt;
+							var amount = brushSpeed * brushWeight * dt;
+							data[i][j][k] += amount;
+							textureData[i][j][k][texture] = Math.max(textureData[i][j][k][texture] + amount, 0);
 						}
 					}
 				}
