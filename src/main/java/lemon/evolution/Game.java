@@ -111,9 +111,8 @@ public enum Game implements Screen {
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			ScalarField<Vector3D> scalarField = vector -> vector.y() < -30f ? 0f : -(vector.y() + noise.apply(vector.divide(100f)) * 5f);
 			histogram = new Histogram(0.1f);
-			scalarField = vector -> {
+			ScalarField<Vector3D> scalarField = vector -> {
 				if (vector.y() < 0f) {
 					return 0f;
 				}
@@ -393,9 +392,7 @@ public enum Game implements Screen {
 			}
 		});
 		disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
-		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f),
-				world.terrain(),
-				() -> gameLoop.currentPlayer());
+		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f), world, () -> gameLoop.currentPlayer());
 		uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png");
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
