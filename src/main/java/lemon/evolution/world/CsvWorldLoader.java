@@ -50,7 +50,7 @@ public class CsvWorldLoader implements Loader {
 						for (int k = 0; k < sizeZ; k++) {
 							vector.set(i + offsetX, j, k + offsetZ);
 							var material = Integer.parseInt(reader.readLine());
-							if (material != 0 && material != 1193) {
+							if (material != 0 && material != 1193 && material != 150 && material != 185) {
 								if (!mapping.containsKey(material)) {
 									System.out.println(material + " - " + MCMaterial.values()[material]);
 								}

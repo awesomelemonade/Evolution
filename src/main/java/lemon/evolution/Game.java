@@ -301,7 +301,7 @@ public enum Game implements Screen {
 			var playersBuilder = new ImmutableList.Builder<Player>();
 			int numPlayers = 2;
 			for (int i = 0; i < numPlayers; i++) {
-				var distance = 25f;
+				var distance = 15f;
 				var angle = MathUtil.TAU * ((float) i) / numPlayers;
 				var cos = (float) Math.cos(angle);
 				var sin = (float) Math.sin(angle);
@@ -372,15 +372,14 @@ public enum Game implements Screen {
 					"/res/block/gravel.png",
 					"/res/block/diorite.png",
 					"/res/block/dirt.png",
-					"/res/block/grass_block_top.png",
-					"/res/block/wet_sponge.png",
+					"/res/block/grass_block_top_colored.png",
+					"/res/block/water_still_noalpha.png",
 					"/res/block/stone.png",
 					"/res/block/spruce_log.png",
 					"/res/block/iron_ore.png",
-					"/res/block/spruce_leaves.png",
-					"/res/block/grass_block_top.png", // grass
-					"/res/block/oak_log.png",
 					"/res/block/spruce_leaves_noalpha.png",
+					"/res/block/oak_log.png",
+					"/res/block/oak_leaves_noalpha.png",
 					"/res/block/diamond_block.png",
 					"/res/block/diamond_block.png",
 					"/res/block/diamond_block.png",
