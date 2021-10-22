@@ -29,16 +29,6 @@ public enum CommonPrograms2D implements ShaderProgramHolder {
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/menuScrollerVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/menuScrollerFragmentShader").orElseThrow())),
-	MENUTEXT(names("position", "textureCoords"), program -> {
-		program.loadFloat("yOffset", -.3f);
-		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
-		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		program.loadColor4f("color", new Color(1f, 0f, 1f));
-		program.loadInt("textureSampler", TextureBank.REUSE.getId());
-	},
-			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/menuTextVertexShader").orElseThrow()),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/menuTextFragmentShader").orElseThrow())),
 	COLOR(names("position", "color"), program -> {
 		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
