@@ -41,22 +41,22 @@ public enum Menu implements Screen {
 	private final int NUM_BUTTONS = 3;
 	private Quad2D scrollBar;
 	private boolean mouseDown = false;
-	private final ArrayList<Matrix> buttonTextPositions = new ArrayList<>();
+	private Matrix buttonSize = new Matrix(MathUtil.getScalar(Vector3D.of(.001f, .0011f, .001f)));
 
 
 	@Override
 	public void onLoad(GLFWWindow window) {
-		buttonTextPositions.add(new Matrix(MathUtil.getTranslation(Vector3D.of(0f, 1f, 0f))));
-		buttonTextPositions.add(new Matrix(MathUtil.getTranslation(Vector3D.of(0f, 2f, 0f))));
-		buttonTextPositions.add(new Matrix(MathUtil.getTranslation(Vector3D.of(0f, 3f, 0f))));
 		this.window = window;
 		font = disposables.add(new Font(Paths.get("/res/fonts/FreeSans.fnt")));
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
 		buttons = new ArrayList<>();
 		buttonsText = new ArrayList<>();
-		for (int i = 0; i < 20; ++i) {
+		buttonsText.add(new TextModel(font, "Field"));
+		buttonsText.add(new TextModel(font, "Flatter Field"));
+		buttonsText.add(new TextModel(font, "Font Test"));
+		for (int i = 0; i < 100; ++i) {
 			buttons.add(new Quad2D(new Box2D(-0.3f, -.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
-			buttonsText.add(new TextModel(font, "Button" + (i+1)));
+			buttonsText.add(new TextModel(font, "Button " + (i+4)));
 		}
 		float height = (.5f  / (float)(buttons.size()-2));
 		scrollBar = new Quad2D(new Box2D(0.35f, -.2f - height, .025f, height), new Color(1f, 1f, 1f));
@@ -182,9 +182,11 @@ public enum Menu implements Screen {
 		});
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-		CommonPrograms2D.MENUTEXT.use(program -> {
+		CommonPrograms2D.TEXT.use(program -> {
+			program.loadVector("color", (Vector3D.of(1f, 0f, 1f)));
 			for (int i = 0; i < NUM_BUTTONS; ++i) {
-				program.loadMatrix(MatrixType.MODEL_MATRIX, buttonTextPositions.get(i));
+				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(0f - (buttonsText.get(drawnButtons + i).getText().length())*.02f,
+						-.3f - (i * .2f), 0f)).multiply(MathUtil.getScalar(Vector3D.of(.001f, .0013f, .001f))));
 				buttonsText.get(drawnButtons + i).draw();
 			}
 		});
