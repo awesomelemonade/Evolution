@@ -1,9 +1,6 @@
 package lemon.evolution;
 
 import com.google.common.collect.ImmutableList;
-import lemon.engine.glfw.GLFWInput;
-import lemon.engine.math.*;
-import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
@@ -14,6 +11,15 @@ import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
 import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.game.Player;
+import lemon.engine.glfw.GLFWInput;
+import lemon.engine.math.Box2D;
+import lemon.engine.math.Camera;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Matrix;
+import lemon.engine.math.MutableVector3D;
+import lemon.engine.math.Projection;
+import lemon.engine.math.Vector2D;
+import lemon.engine.math.Vector3D;
 import lemon.engine.model.LineGraph;
 import lemon.engine.model.Model;
 import lemon.engine.model.SphereModelBuilder;
@@ -28,9 +34,11 @@ import lemon.engine.toolbox.GLState;
 import lemon.engine.toolbox.Histogram;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.engine.toolbox.SkyboxLoader;
+import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
+import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.entity.PuzzleBall;
@@ -65,7 +73,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public enum Game implements Screen {
@@ -238,7 +245,29 @@ public enum Game implements Screen {
 						});
 					});
 
-			var csvLoader = new CsvWorldLoader("/res/blocks.csv", world.terrain());
+			var csvLoader = new CsvWorldLoader("/res/blocks2.csv", world.terrain(), postLoadTasks::add,
+					csvWorldLoader -> {
+						var mapping = csvWorldLoader.blockMapping();
+						var materials = new MCMaterial[mapping.size()];
+						mapping.forEach((material, index) -> materials[index] = material);
+						if (materials.length > TerrainChunk.NUM_TEXTURES) {
+							for (int i = TerrainChunk.NUM_TEXTURES; i < materials.length; i++) {
+								logger.warning("Not enough textures for " + materials[i]);
+							}
+						}
+						var textureArray = new Texture();
+						textureArray.load(Arrays.stream(materials)
+								.map(material -> "/res/block/" + material.textureFile().orElseGet(() -> {
+									logger.warning("No texture for " + material);
+									return "diamond_block.png";
+								}))
+								.map(path -> new TextureData(Toolbox.readImage(path)
+								.orElseThrow(() -> new IllegalStateException("Cannot find " + path))))
+								.toArray(TextureData[]::new));
+						TextureBank.TERRAIN.bind(() -> {
+							GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, textureArray.id());
+						});
+					});
 
 			window.pushScreen(new Loading(window::popScreen,
 					dragonLoader, rocketLauncherUnloadedLoader,
@@ -363,34 +392,6 @@ public enum Game implements Screen {
 				});
 			});
 
-			var paths = new String[] {
-					"/res/block/stone.png",
-					"/res/block/copper_ore.png",
-					"/res/block/granite.png",
-					"/res/block/andesite.png",
-					"/res/block/coal_ore.png",
-					"/res/block/gravel.png",
-					"/res/block/diorite.png",
-					"/res/block/dirt.png",
-					"/res/block/grass_block_top_colored.png",
-					"/res/block/water_still_noalpha.png",
-					"/res/block/stone.png",
-					"/res/block/spruce_log.png",
-					"/res/block/iron_ore.png",
-					"/res/block/spruce_leaves_noalpha.png",
-					"/res/block/oak_log.png",
-					"/res/block/oak_leaves_noalpha.png",
-					"/res/block/diamond_block.png",
-					"/res/block/diamond_block.png",
-					"/res/block/diamond_block.png",
-			};
-			var textureArray = new Texture();
-			textureArray.load(Arrays.stream(paths).map(path -> new TextureData(Toolbox.readImage(path)
-					.orElseThrow(() -> new IllegalStateException("Cannot find " + path))))
-					.toArray(TextureData[]::new));
-			TextureBank.TERRAIN.bind(() -> {
-				GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, textureArray.id());
-			});
 
 			lightPosition = gameLoop.currentPlayer().position();
 

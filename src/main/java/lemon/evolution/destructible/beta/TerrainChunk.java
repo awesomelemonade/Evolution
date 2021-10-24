@@ -7,7 +7,6 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
-import lemon.engine.toolbox.Color;
 import lemon.evolution.pool.MatrixPool;
 
 import java.util.ArrayList;
@@ -23,7 +22,7 @@ import java.util.stream.Stream;
 public class TerrainChunk {
 	public static final int SIZE = 16;
 	public static final Vector3D MARCHING_CUBE_SIZE = Vector3D.of(SIZE + 1, SIZE + 1, SIZE + 1);
-	public static final int NUM_TEXTURES = 20;
+	public static final int NUM_TEXTURES = 8;
 	private final Terrain terrain;
 	private final int chunkX;
 	private final int chunkY;
