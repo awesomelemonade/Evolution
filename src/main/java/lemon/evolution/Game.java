@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
-import lemon.engine.draw.Drawable;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.function.MurmurHash;
@@ -98,8 +97,7 @@ public class Game implements Screen {
 
 	private Vector3D lightPosition;
 
-	private Drawable rocketLauncherUnloadedModel;
-	private Drawable rocketLauncherLoadedModel;
+	private ViewModel viewModel;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
 
@@ -190,9 +188,26 @@ public class Game implements Screen {
 						var drawable = objLoader.toIndexedDrawable();
 					});
 			var rocketLauncherUnloadedLoader = new ObjLoader("/res/rocket-launcher-unloaded.obj", postLoadTasks::add,
-					objLoader -> rocketLauncherUnloadedModel = objLoader.toIndexedDrawable());
+					objLoader -> {
+						var drawable = objLoader.toIndexedDrawable();
+					});
 			var rocketLauncherLoadedLoader = new ObjLoader("/res/rocket-launcher-loaded.obj", postLoadTasks::add,
-					objLoader -> rocketLauncherLoadedModel = objLoader.toIndexedDrawable());
+					objLoader -> {
+						var drawable = objLoader.toIndexedDrawable();
+						viewModel = new ViewModel(window.getWidth(), window.getHeight(), () -> {
+							CommonPrograms3D.LIGHT.use(program -> {
+								try (var translationMatrix = MatrixPool.ofTranslation(Vector3D.of(3.5f, -4f, 1f));
+									 var rotationMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
+									var sunlightDirection = Vector3D.of(-3.5f, 4f, -1f).normalize();
+									program.loadMatrix(MatrixType.MODEL_MATRIX, (rotationMatrix.multiply(translationMatrix)));
+									program.loadVector("sunlightDirection", sunlightDirection);
+									program.loadVector("viewPos", gameLoop.currentPlayer().position());
+									program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
+								}
+								drawable.draw();
+							});
+						});
+					});
 			var rocketLauncherProjectileLoader = new ObjLoader("/res/rocket-launcher-projectile.obj", postLoadTasks::add,
 					objLoader -> {
 						var drawable = objLoader.toIndexedDrawable();
@@ -578,20 +593,8 @@ public class Game implements Screen {
 				}
 				//dragonModel.draw();
 			});
-			CommonPrograms3D.LIGHT.use(program -> {
-				try (var translationMatrix = MatrixPool.ofTranslation(Vector3D.of(3.5f, -4f, 1f));
-					 var rotationMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
-					var sunlightDirection = Vector3D.of(-3.5f, 4f, -1f).normalize();
-					program.loadMatrix(MatrixType.MODEL_MATRIX, (rotationMatrix.multiply(translationMatrix)));
-					program.loadVector("sunlightDirection", sunlightDirection);
-					program.loadVector("viewPos", gameLoop.currentPlayer().position());
-					program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
-				}
-				rocketLauncherLoadedModel.draw();
-				//rocketLauncherUnloadedModel.draw();
-			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
-			//xray likely here, loop through players without depth test, maybe not render player themself, maybe also above where players are rendered
+			viewModel.render();
 		});
 		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
