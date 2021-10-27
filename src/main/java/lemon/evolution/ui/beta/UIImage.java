@@ -8,6 +8,7 @@ import lemon.engine.toolbox.Toolbox;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
+import javax.swing.*;
 import java.util.function.Consumer;
 
 public class UIImage extends AbstractUIComponent {

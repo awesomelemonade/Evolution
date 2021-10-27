@@ -7,6 +7,7 @@ import lemon.evolution.world.ControllableEntity;
 
 public enum RocketLauncherItemType implements ItemType {
 	INSTANCE;
+
 	@Override
 	public String getName() {
 		return "Rocket Launcher";
