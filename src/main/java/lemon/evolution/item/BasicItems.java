@@ -13,14 +13,14 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 public enum BasicItems implements ItemType {
-    ROCKET_LAUNCHER("Rocket Launcher", "/res/inventory_icons/China.png", (player, power) -> {
+    ROCKET_LAUNCHER("Rocket Launcher", "/res/inventory_icons/rocket_launcher.png", (player, power) -> {
         newLaunchedEntity(player, power, (location, velocity) ->
                 new ExplodeOnHitProjectile(location, velocity, ExplodeOnHitProjectile.Type.MISSILE));
     }),
-    MISSILE_SHOWER("Missile Shower", "/res/inventory_icons/CHICK.png", (player, power) -> {
+    MISSILE_SHOWER("Missile Shower", "/res/inventory_icons/missile_launcher.png", (player, power) -> {
         newLaunchedEntity(player, power, MissileShowerEntity::new);
     }),
-    GRENADE_LAUNCHER("Grenade Launcher", "/res/inventory_icons/CHICK.png", (player, power) -> {
+    GRENADE_LAUNCHER("Grenade Launcher", "/res/inventory_icons/rocket_launcher.png", (player, power) -> {
         newLaunchedEntity(player, power, (location, velocity) ->
                 new ExplodeOnTimeProjectile(location, velocity, ExplodeOnTimeProjectile.Type.GRENADE));
     });

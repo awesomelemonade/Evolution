@@ -6,8 +6,12 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
+<<<<<<< HEAD
 import lemon.evolution.item.BasicItems;
 import lemon.evolution.item.ItemType;
+=======
+import lemon.evolution.item.*;
+>>>>>>> 1c4be8f... Added PenguinGun and Drill items and their corresponding images
 import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.AbstractControllableEntity;
 import lemon.evolution.world.Inventory;
@@ -47,6 +51,8 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		// TODO: Temporary
 		inventory.addAndSetCurrentItem(BasicItems.MISSILE_SHOWER);
 		inventory.addItem(BasicItems.ROCKET_LAUNCHER);
+		inventory.addItem(PenguinGunItemType.INSTANCE);
+		inventory.addItem(DrillItemType.INSTANCE);
 	}
 
 	@Override
