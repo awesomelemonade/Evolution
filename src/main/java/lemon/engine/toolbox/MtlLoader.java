@@ -58,7 +58,7 @@ public class MtlLoader implements Loader {
 
     @Override
     public void load() {
-        ThreadManager.INSTANCE.addThread(new Thread(() -> {
+        //ThreadManager.INSTANCE.addThread(new Thread(() -> {
             try {
                 String line;
                 Material m = new Material();
@@ -113,7 +113,7 @@ public class MtlLoader implements Loader {
                 ex.printStackTrace();
             }
             postLoadCallback.accept(this);
-        })).start();
+        //})).start();
     }
 
     public Map<String, Material> getMaterialMap() {

@@ -1,6 +1,6 @@
 # Blender v2.83.4 OBJ File: 'proto chara model.blend'
 # www.blender.org
-mtllib proto chara model.mtl
+# mtllib proto chara model.mtl
 o Body.001_Plane.004
 v 0.501500 -2.091996 0.001036
 v 0.137129 -1.337994 0.002592
