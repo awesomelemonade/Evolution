@@ -1,6 +1,6 @@
 # Blender v2.93.4 OBJ File: ''
 # www.blender.org
-mtllib rocket-launcher.mtl
+mtllib rocket-launcher-unloaded.mtl
 o Cylinder
 v -0.143468 3.484948 -0.281909
 v 0.838763 3.484948 -0.281909
