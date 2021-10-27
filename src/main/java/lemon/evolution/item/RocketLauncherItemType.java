@@ -21,6 +21,6 @@ public enum RocketLauncherItemType implements ItemType {
 	}
 
 	public String guiImagePath() {
-		return "/res/inventory_icons/China.png";
+		return "/res/inventory_icons/rocket_launcher.png";
 	}
 }

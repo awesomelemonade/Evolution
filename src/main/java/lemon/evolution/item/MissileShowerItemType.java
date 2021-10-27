@@ -21,6 +21,6 @@ public enum MissileShowerItemType implements ItemType {
 
 	@Override
 	public String guiImagePath() {
-		return "/res/inventory_icons/CHICK.png";
+		return "/res/inventory_icons/missile_shower.png";
 	}
 }
