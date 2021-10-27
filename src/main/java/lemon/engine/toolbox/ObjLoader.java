@@ -23,9 +23,25 @@ import java.util.function.Consumer;
 
 public class ObjLoader implements Loader {
 	private static final ImmutableMap<String, BiConsumer<ObjLoader, String[]>> processors = ImmutableMap.of(
+
+			"mtllib", (objLoader, split) -> {
+					MtlLoader materialLoader = new MtlLoader("/res/" + split[1], mtlLoader -> {
+					System.out.println("Materials List:");
+					for (var m : mtlLoader.getMaterialMap().keySet()) {
+						System.out.println(mtlLoader.getMaterialMap().get(m));
+					}
+					objLoader.parsedMaterials = mtlLoader.getMaterialMap();
+					var m = new Material();
+					m.setKd(new Color(1f, 0.3f, 0.3f));
+					objLoader.parsedMaterials.put("Wood", m);
+					});
+					materialLoader.load();
+				},
+
 			"v", (objLoader, split) -> objLoader.parsedVertices.add(Vector3D.ofParsed(split[1], split[2], split[3])),
 			"vn", (objLoader, split) -> objLoader.parsedNormals.add(Vector3D.ofParsed(split[1], split[2], split[3])),
-			"vt", (objLoader, split) -> {}, // ignored
+//			"vt", (objLoader, split) -> {}, // ignored
+			"usemtl", (objLoader, split) -> {objLoader.currentVertexColor = split[1];},
 			"f", (objLoader, split) -> {
 				for (int i = 0; i < 3; i++) { // triangles
 					StringTokenizer tokenizer2 = new StringTokenizer(split[i + 1], "/");
@@ -42,6 +58,9 @@ public class ObjLoader implements Loader {
 						objLoader.cache.get(a).put(b, index);
 						objLoader.modelIndices.add(index);
 						objLoader.modelVertices.add(objLoader.parsedVertices.get(a));
+						System.out.println("Current Color:");
+						System.out.println(objLoader.currentVertexColor);
+						objLoader.modelColors.add(objLoader.parsedMaterials.getOrDefault(objLoader.currentVertexColor, objLoader.parsedMaterials.get("Wood")).Kd);
 						objLoader.modelNormals.add(objLoader.parsedNormals.get(b));
 					}
 				}
@@ -59,13 +78,20 @@ public class ObjLoader implements Loader {
 	private final List<Vector3D> modelVertices = new ArrayList<>();
 	private final List<Vector3D> parsedNormals = new ArrayList<>();
 	private final List<Vector3D> modelNormals = new ArrayList<>();
+	private final List<Color> modelColors = new ArrayList<>();
 	private final List<Integer> modelIndices = new ArrayList<>();
 	private final Map<Integer, Map<Integer, Integer>> cache = new HashMap<>();
 	private final Consumer<ObjLoader> postLoadCallback;
+	private Map<String, Material> parsedMaterials = new HashMap<>() {{
+		var m = new Material();
+		m.setKd(new Color(1f, 0.3f, 0.3f));
+		put("Wood", m);
+	}};
+	private String currentVertexColor = "Wood";
 	private final Disposable disposables = Disposable.of(
 			parsedVertices::clear, modelVertices::clear,
 			parsedNormals::clear, modelNormals::clear,
-			modelIndices::clear, cache::clear
+			modelIndices::clear, modelColors::clear, parsedMaterials::clear, cache::clear
 	);
 
 	public ObjLoader(String file, Executor executor, Consumer<ObjLoader> postLoadCallback) {
@@ -100,7 +126,7 @@ public class ObjLoader implements Loader {
 				modelIndices.stream().mapToInt(i -> i).toArray(),
 				new FloatData[][] {
 						modelVertices.toArray(Vector3D.EMPTY_ARRAY),
-						Color.randomOpaque(modelVertices.size()),
+						modelColors.toArray(new Color[0]),
 						modelNormals.toArray(Vector3D.EMPTY_ARRAY)
 				}, GL11.GL_TRIANGLES);
 	}
