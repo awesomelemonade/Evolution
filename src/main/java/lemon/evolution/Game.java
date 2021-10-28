@@ -195,6 +195,7 @@ public class Game implements Screen {
 					objLoader -> {
 						var drawable = objLoader.toIndexedDrawable();
 						viewModel = new ViewModel(window.getWidth(), window.getHeight(), () -> {
+							GL11.glEnable(GL11.GL_DEPTH_TEST);
 							CommonPrograms3D.LIGHT.use(program -> {
 								try (var translationMatrix = MatrixPool.ofTranslation(Vector3D.of(3.5f, -4f, 1f));
 									 var rotationMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
@@ -206,6 +207,7 @@ public class Game implements Screen {
 								}
 								drawable.draw();
 							});
+							GL11.glDisable(GL11.GL_DEPTH_TEST);
 						});
 					});
 			var rocketLauncherProjectileLoader = new ObjLoader("/res/rocket-launcher-projectile.obj", postLoadTasks::add,
@@ -270,7 +272,7 @@ public class Game implements Screen {
 									return "diamond_block.png";
 								}))
 								.map(path -> new TextureData(Toolbox.readImage(path)
-								.orElseThrow(() -> new IllegalStateException("Cannot find " + path))))
+								.orElseThrow(() -> new IllegalStateException("Cannot find " + path)), true))
 								.toArray(TextureData[]::new));
 						TextureBank.TERRAIN.bind(() -> {
 							GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, textureArray.id());
@@ -398,7 +400,7 @@ public class Game implements Screen {
 			).forEach((textureBank, path) -> {
 				textureBank.bind(() -> {
 					var texture = new Texture();
-					texture.load(new TextureData(Toolbox.readImage(path).orElseThrow()));
+					texture.load(new TextureData(Toolbox.readImage(path).orElseThrow(), true));
 					GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.id());
 				});
 			});
@@ -594,11 +596,11 @@ public class Game implements Screen {
 				//dragonModel.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
-			viewModel.render();
 		});
 		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
 		});
+		viewModel.render();
 		CommonPrograms2D.COLOR.use(program -> {
 			// Render crosshair
 			try (var translationMatrix = MatrixPool.ofTranslation(window.getWidth() / 2f, window.getHeight() / 2f, 0f);

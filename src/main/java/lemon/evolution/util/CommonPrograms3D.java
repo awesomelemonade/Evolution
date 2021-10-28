@@ -24,20 +24,20 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		program.loadInt("textureSampler", TextureBank.REUSE.id());
+		program.loadSampler("textureSampler", TextureBank.REUSE);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/textureVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/textureFragmentShader").orElseThrow())),
 	CUBEMAP(names("position"), program -> {
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		program.loadInt("cubemapSampler", TextureBank.SKYBOX.id());
+		program.loadSampler("cubemapSampler", TextureBank.SKYBOX);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/cubemapVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/cubemapFragmentShader").orElseThrow())),
 	POST_PROCESSING(names("position", "textureCoords"), program -> {
-		program.loadInt("colorSampler", TextureBank.COLOR.id());
-		program.loadInt("depthSampler", TextureBank.DEPTH.id());
+		program.loadSampler("colorSampler", TextureBank.COLOR);
+		program.loadSampler("depthSampler", TextureBank.DEPTH);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/postVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/postFragmentShader").orElseThrow())),
@@ -68,11 +68,11 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		program.loadInt("grassSampler", TextureBank.GRASS.id());
-		program.loadInt("slopeSampler", TextureBank.SLOPE.id());
-		program.loadInt("rockSampler", TextureBank.ROCK.id());
-		program.loadInt("baseSampler", TextureBank.BASE.id());
-		program.loadInt("samplers", TextureBank.TERRAIN.id());
+		program.loadSampler("grassSampler", TextureBank.GRASS);
+		program.loadSampler("slopeSampler", TextureBank.SLOPE);
+		program.loadSampler("rockSampler", TextureBank.ROCK);
+		program.loadSampler("baseSampler", TextureBank.BASE);
+		program.loadSampler("samplers", TextureBank.TERRAIN);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/terrainVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/terrainFragmentShader").orElseThrow()));
