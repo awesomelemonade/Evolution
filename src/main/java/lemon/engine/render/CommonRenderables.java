@@ -41,8 +41,7 @@ public class CommonRenderables {
 				 var scalarMatrix = MatrixPool.ofScalar(box.width() / 2f, box.height() / 2f, 1f);
 				 var matrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
 				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrix);
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.getId());
-				CommonDrawables.TEXTURED_QUAD.draw();
+				texture.bind(GL11.GL_TEXTURE_2D, CommonDrawables.TEXTURED_QUAD::draw);
 			}
 		});
 	}

@@ -30,6 +30,14 @@ public class TerrainRenderer {
 		terrainOffsets.forEach(offset -> terrain.preloadChunk(chunkX + offset.x, chunkY + offset.y, chunkZ + offset.z));
 	}
 
+	public void preinit(Vector3D position) {
+		preinit(terrain.getChunkX(position.x()), terrain.getChunkY(position.y()), terrain.getChunkZ(position.z()));
+	}
+
+	public void preinit(int chunkX, int chunkY, int chunkZ) {
+		terrainOffsets.forEach(offset -> terrain.preinitChunk(chunkX + offset.x, chunkY + offset.y, chunkZ + offset.z));
+	}
+
 	public void render(Vector3D position) {
 		terrain.flushForRendering();
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
