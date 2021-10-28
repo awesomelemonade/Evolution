@@ -29,6 +29,7 @@ public class UIInventory extends AbstractUIComponent {
     private static int numColumns = 4;
     private Inventory inventory;
     private ItemType[] items;
+    private final MissileShowerItemType defaultMissile = MissileShowerItemType.INSTANCE;
 
     // draw rectangle
     private Box2D box;
@@ -90,14 +91,19 @@ public class UIInventory extends AbstractUIComponent {
                             System.out.println("Player clicked on " + item.getName());
                             this.inventory.setCurrentItem(item);
                             System.out.println("current item: " + inventory.currentItem().orElse(item).getName());
-                            for (int i = 0; i < highlighters.size(); i++) {
-                                highlighters.get(i).visible().setValue(false);
-                                if (i == finalCount) highlighters.get(finalCount).visible().setValue(true);
-                            }
+                            setHighlighted();
                         }
                     }));
+            setHighlighted();
             count++;
         }
+    }
 
+    // makes all items not highlighted except current item
+    private void setHighlighted() {
+        for (int i = 0; i < highlighters.size(); i++) {
+            highlighters.get(i).visible().setValue(false);
+            if (items[i] == inventory.currentItem().orElse(defaultMissile)) highlighters.get(i).visible().setValue(true);
+        }
     }
 }
