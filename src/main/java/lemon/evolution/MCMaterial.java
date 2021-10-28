@@ -138,7 +138,7 @@ public enum MCMaterial {
     WARPED_HYPHAE,
     OAK_LEAVES("oak_leaves_noalpha.png"),
     SPRUCE_LEAVES("spruce_leaves_noalpha.png"),
-    BIRCH_LEAVES,
+    BIRCH_LEAVES("birch_leaves_noalpha.png"),
     JUNGLE_LEAVES,
     ACACIA_LEAVES,
     DARK_OAK_LEAVES,
@@ -279,7 +279,7 @@ public enum MCMaterial {
     SMOOTH_BASALT,
     SOUL_TORCH,
     GLOWSTONE,
-    INFESTED_STONE,
+    INFESTED_STONE(MCMaterial.STONE),
     INFESTED_COBBLESTONE,
     INFESTED_STONE_BRICKS,
     INFESTED_MOSSY_STONE_BRICKS,
@@ -1195,8 +1195,8 @@ public enum MCMaterial {
     HORN_CORAL_WALL_FAN,
     BAMBOO_SAPLING,
     POTTED_BAMBOO,
-    VOID_AIR,
-    CAVE_AIR,
+    VOID_AIR(MCMaterial.AIR),
+    CAVE_AIR(MCMaterial.AIR),
     BUBBLE_COLUMN,
     SWEET_BERRY_BUSH,
     WEEPING_VINES_PLANT,
@@ -2177,6 +2177,10 @@ public enum MCMaterial {
     private MCMaterial(String textureFile, boolean empty) {
         this.textureFile = textureFile;
         this.empty = empty;
+    }
+
+    private MCMaterial(MCMaterial delegate) {
+        this(delegate.textureFile, delegate.empty);
     }
 
     public Optional<String> textureFile() {

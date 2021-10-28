@@ -80,7 +80,6 @@ public class UIMinimap extends AbstractUIComponent {
 				var currentRotation = entity.rotation();
 				var zoom = (float) Math.sqrt(players.stream().mapToDouble(player -> currentPosition.toXZVector().distanceSquared(player.position().toXZVector())).max().orElse(250.0)) + 20f;
 				zoom = MathUtil.clamp(zoom, 20f, 100f);
-				zoom = 20f;
 				terrainRenderer.setRenderDistance(world.terrain().getChunkDistance(zoom + 1f));
 				var projectionMatrix = MathUtil.getOrtho(-zoom, zoom, zoom, -zoom, 0f, 1000f);
 				CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, projectionMatrix);
