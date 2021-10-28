@@ -1,8 +1,11 @@
 #version 400 core
 
-in vec4 passColor;
+#define NUM_TEXTURES 20
+#define TEXTURE_ARRAY_SIZE NUM_TEXTURES / 4
+
 in vec3 passNormal;
 in vec3 passTextureCoords;
+in vec4 passTextureWeights[TEXTURE_ARRAY_SIZE];
 
 out vec4 outColor;
 
@@ -11,29 +14,32 @@ uniform sampler2D slopeSampler;
 uniform sampler2D rockSampler;
 uniform sampler2D baseSampler;
 
+uniform sampler2DArray samplers;
+
 vec4 getTriplanarTexturing(in sampler2D sampler, in vec3 textureCoords, in vec3 weights) {
 	return texture(sampler, textureCoords.yz) * weights.x +
 			texture(sampler, textureCoords.xz) * weights.y +
 			texture(sampler, textureCoords.xy) * weights.z;
 }
 
+vec4 getTriplanarTexturingArrays(in sampler2DArray sampler, in vec3 textureCoords, in int index, in vec3 weights) {
+	return texture(sampler, vec3(textureCoords.yz, index)) * weights.x +
+			texture(sampler, vec3(textureCoords.xz, index)) * weights.y +
+			texture(sampler, vec3(textureCoords.xy, index)) * weights.z;
+}
+
 void main(void) {
 	vec3 preBlendWeights = abs(passNormal);
 	vec3 blendWeights = preBlendWeights / (preBlendWeights.x + preBlendWeights.y + preBlendWeights.z);
-	vec4 grassColor = getTriplanarTexturing(grassSampler, passTextureCoords, blendWeights);
-	vec4 slopeColor = getTriplanarTexturing(slopeSampler, passTextureCoords, blendWeights);
-	vec4 rockColor = getTriplanarTexturing(rockSampler, passTextureCoords, blendWeights);
-	vec4 baseColor = getTriplanarTexturing(baseSampler, passTextureCoords, blendWeights);
 
-	float slope = 1 - passNormal.y;
-
-	if (slope < 0.2) {
-		outColor = mix(grassColor, slopeColor, slope / 0.2);
-	} else if (slope < 0.7) {
-		outColor = mix(slopeColor, rockColor, (slope - 0.2) / 0.5);
-	} else if (slope < 1.5) {
-		outColor = mix(rockColor, baseColor, (slope - 0.7) / 0.8);
-	} else {
-		outColor = baseColor;
+	float sumWeights = 0;
+	vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
+	for (int i = 0; i < NUM_TEXTURES; i++) {
+		float weight = passTextureWeights[i / 4][i % 4];
+		vec4 currentColor = getTriplanarTexturingArrays(samplers, passTextureCoords, i, blendWeights);
+        currentColor += (1.0 - currentColor.a) * vec4(0.0, 1.0, 0.0, 1.0);
+		color += weight * currentColor;
+		sumWeights += weight;
 	}
+	outColor = color / sumWeights;
 }

@@ -51,21 +51,21 @@ public class UIMinimap extends AbstractUIComponent {
 			var boxWidth = (int) box.width();
 			var boxHeight = (int) box.height();
 			TextureBank.MINIMAP_COLOR.bind(() -> {
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.id());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, boxWidth, boxHeight, 0, GL11.GL_RGB,
 						GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.id(), 0);
 			});
 			Texture depthTexture = disposables.add(new Texture());
 			TextureBank.MINIMAP_DEPTH.bind(() -> {
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.id());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, boxWidth, boxHeight, 0,
 						GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.id(), 0);
 			});
 		});
 	}

@@ -7,13 +7,15 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MarchingCube {
-	private float[] offsets; // [offsetX, offsetY, offsetZ]
-	private float[] strides; // [strideX, strideY, strideZ]
-	private float threshold;
-	private BoundedScalarGrid3D grid;
+	private final float[] offsets; // [offsetX, offsetY, offsetZ]
+	private final float[] strides; // [strideX, strideY, strideZ]
+	private final float threshold;
+	private final BoundedScalarGrid3D grid;
+	private final BoundedGrid3D<float[]> textureWeightsGrid;
 
-	public MarchingCube(BoundedScalarGrid3D grid, Vector3D size, float threshold) {
+	public MarchingCube(BoundedScalarGrid3D grid, BoundedGrid3D<float[]> textureWeightsGrid, Vector3D size, float threshold) {
 		this.grid = grid;
+		this.textureWeightsGrid = textureWeightsGrid;
 		this.threshold = threshold;
 		this.offsets = new float[] {0f, 0f, 0f};
 		this.strides = new float[] {
@@ -23,17 +25,10 @@ public class MarchingCube {
 		};
 	}
 
-	public void setThreshold(float threshold) {
-		this.threshold = threshold;
-	}
-
-	public float getThreshold() {
-		return threshold;
-	}
-
 	public MarchingCubeMesh generateMesh() {
 		List<Integer> indices = new ArrayList<>();
 		List<Vector3D> vertices = new ArrayList<>();
+		List<float[]> textureWeights = new ArrayList<>();
 		List<Integer> hashes = new ArrayList<>();
 		int[][][][] edgeIndices = new int[grid.getSizeX()][grid.getSizeY()][grid.getSizeZ()][3];
 		for (int[][][] a : edgeIndices) {
@@ -58,14 +53,24 @@ public class MarchingCube {
 							int w = cacheOffsets[3];
 							if (edgeIndices[x][y][z][w] == -1) {
 								int[] o = MarchingCubeConstants.INTERPOLATE_OFFSETS[l];
-								var a = Vector3D.of(offsets[0] + strides[0] * (i + o[0]),
+								var vertexA = Vector3D.of(offsets[0] + strides[0] * (i + o[0]),
 										offsets[1] + strides[1] * (j + o[1]), offsets[2] + strides[2] * (k + o[2]));
-								var b = Vector3D.of(offsets[0] + strides[0] * (i + o[3]),
+								var vertexB = Vector3D.of(offsets[0] + strides[0] * (i + o[3]),
 										offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
-								float dataA = grid.get(i + o[0], j + o[1], k + o[2]);
-								float dataB = grid.get(i + o[3], j + o[4], k + o[5]);
+								var aX = i + o[0];
+								var aY = j + o[1];
+								var aZ = k + o[2];
+								var bX = i + o[3];
+								var bY = j + o[4];
+								var bZ = k + o[5];
+								var dataA = grid.get(aX, aY, aZ);
+								var dataB = grid.get(bX, bY, bZ);
+								var weightsA = textureWeightsGrid.get(aX, aY, aZ);
+								var weightsB = textureWeightsGrid.get(bX, bY, bZ);
 								edgeIndices[x][y][z][w] = vertices.size();
-								vertices.add(interpolate(a, b, (threshold - dataA) / (dataB - dataA)));
+								float percentage = (threshold - dataA) / (dataB - dataA);
+								vertices.add(interpolate(vertexA, vertexB, percentage));
+								textureWeights.add(interpolate(weightsA, weightsB, percentage));
 								hashes.add(PreNormals.hash(x, y, z, w));
 							}
 							vectorIndices[l] = edgeIndices[x][y][z][w];
@@ -79,11 +84,21 @@ public class MarchingCube {
 			}
 		}
 		return new MarchingCubeMesh(indices.stream().mapToInt(Integer::intValue).toArray(),
-				vertices.toArray(Vector3D[]::new), hashes.stream().mapToInt(Integer::intValue).toArray());
+				vertices.toArray(Vector3D[]::new), textureWeights.toArray(float[][]::new),
+				hashes.stream().mapToInt(Integer::intValue).toArray());
 	}
 
 	private Vector3D interpolate(Vector3D a, Vector3D b, float percentage) {
 		return b.subtract(a).multiply(percentage).add(a);
+	}
+
+	private float[] interpolate(float[] a, float[] b, float percentage) {
+		int n = a.length;
+		float[] result = new float[n];
+		for (int i = n; --i >= 0;) {
+			result[i] = ((b[i] - a[i]) * percentage) + a[i];
+		}
+		return result;
 	}
 
 	private int getIndex(int i, int j, int k) {
