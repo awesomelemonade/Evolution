@@ -23,6 +23,7 @@ public class TerrainChunk {
 	public static final int SIZE = 16;
 	public static final Vector3D MARCHING_CUBE_SIZE = Vector3D.of(SIZE + 1, SIZE + 1, SIZE + 1);
 	public static final int NUM_TEXTURES = 8;
+	private static final float[] ZERO_TEXTURE_WEIGHTS = new float[NUM_TEXTURES];
 	private final Terrain terrain;
 	private final int chunkX;
 	private final int chunkY;
@@ -30,7 +31,7 @@ public class TerrainChunk {
 	private final MarchingCube marchingCube;
 	private final Matrix transformationMatrix;
 	private final Computable<float[][][]> data;
-	private final Computable<float[][][][]> textureData;
+	private final Computable<SparseGrid3D<float[]>> textureData;
 	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_X = {1, 0, 0, 1, 0, 1, 1};
 	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_Y = {0, 1, 0, 1, 1, 0, 1};
 	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_Z = {0, 0, 1, 0, 1, 1, 1};
@@ -69,8 +70,7 @@ public class TerrainChunk {
 			generator.queueChunk(TerrainChunk.this, computable::compute);
 		});
 		this.textureData = new Computable<>(computable -> {
-			var data = new float[TerrainChunk.SIZE][TerrainChunk.SIZE][TerrainChunk.SIZE][NUM_TEXTURES];
-			computable.compute(data);
+			computable.compute(new SparseGrid3D<>(TerrainChunk.SIZE, TerrainChunk.SIZE, TerrainChunk.SIZE, () -> new float[NUM_TEXTURES]));
 		});
 		this.mesh = Computable.all(poolExecutor, () -> {
 			// this.data computable + 7 additional neighbors
@@ -235,18 +235,18 @@ public class TerrainChunk {
 	}
 
 	public float[] getTextureWeights(int x, int y, int z) {
-		return textureData.getValueOrThrow(() -> new IllegalStateException("TextureData has not been computed for " + this))[x][y][z];
+		return textureData.getValueOrThrow(() -> new IllegalStateException("TextureData has not been computed for " + this)).getOrDefault(x, y, z, ZERO_TEXTURE_WEIGHTS);
 	}
 
 	public void updateData(Consumer<float[][][]> updater) {
 		data.compute(updater);
 	}
 
-	public void updateTextureData(Consumer<float[][][][]> updater) {
+	public void updateTextureData(Consumer<SparseGrid3D<float[]>> updater) {
 		textureData.compute(updater);
 	}
 
-	public void updateAllData(BiConsumer<float[][][], float[][][][]> updater) {
+	public void updateAllData(BiConsumer<float[][][], SparseGrid3D<float[]>> updater) {
 		var data = this.data.getValue();
 		var textureData = this.textureData.getValue();
 		data.ifPresent(a -> textureData.ifPresent(b -> {
@@ -268,7 +268,7 @@ public class TerrainChunk {
 		return data;
 	}
 
-	public Computable<float[][][][]> textureData() {
+	public Computable<SparseGrid3D<float[]>> textureData() {
 		return textureData;
 	}
 

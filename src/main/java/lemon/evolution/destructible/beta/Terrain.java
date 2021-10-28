@@ -127,7 +127,8 @@ public class Terrain {
 							float brushWeight = smoothstep(radius, radius * 0.7f, distance);
 							var amount = brushSpeed * brushWeight * dt;
 							data[i][j][k] += amount;
-							textureData[i][j][k][texture] = Math.max(textureData[i][j][k][texture] + amount, 0);
+							var textureWeights = textureData.compute(i, j, k);
+							textureWeights[texture] = Math.max(textureWeights[texture] + amount, 0);
 						}
 					}
 				}
