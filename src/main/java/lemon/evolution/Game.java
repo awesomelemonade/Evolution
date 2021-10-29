@@ -442,6 +442,11 @@ public enum Game implements Screen {
 			// sets up inventory toggle
 			disposables.add(controls.onActivated(EvolutionControls.TOGGLE_INVENTORY, () -> {
 				uiInventory.visible().setValue(!uiInventory.visible().getValue());
+				if (uiInventory.isVisible()) {
+					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+				} else {
+					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+				}
 			}));
 
 			disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
