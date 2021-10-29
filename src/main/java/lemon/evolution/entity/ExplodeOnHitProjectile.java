@@ -7,24 +7,15 @@ import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.AbstractEntity;
 import lemon.evolution.world.Location;
 
-public class RocketLauncherProjectile extends AbstractEntity implements Disposable {
+public class ExplodeOnHitProjectile extends AbstractEntity implements Disposable {
 	private final Disposables disposables = new Disposables();
 
-	public RocketLauncherProjectile(Location location, Vector3D velocity) {
-		super(location, velocity, Vector3D.of(0.2f, 0.2f, 0.2f));
+	public ExplodeOnHitProjectile(Location location, Vector3D velocity, Type type) {
+		super(location, velocity, type.scalar());
+		this.meta().set("type", type);
 		this.disposables.add(this.onCollide().add(explosionPosition -> {
 			removeFromWorld();
-			world().terrain().generateExplosion(explosionPosition, 3f);
-			world().entities().forEach(entity -> {
-				if (!(entity instanceof RocketLauncherProjectile)) {
-					float strength = Math.min(2f, 10f / entity.position().distanceSquared(explosionPosition));
-					var direction = entity.position().subtract(explosionPosition);
-					if (direction.equals(Vector3D.ZERO)) {
-						direction = Vector3D.ofRandomUnitVector();
-					}
-					entity.mutableVelocity().add(direction.scaleToLength(strength));
-				}
-			});
+			EntityUtil.generateExplosion(world(), explosionPosition);
 		}));
 		this.disposables.add(this.onUpdate().add(() -> {
 			if (position().y() < -200f) {
@@ -41,5 +32,23 @@ public class RocketLauncherProjectile extends AbstractEntity implements Disposab
 	@Override
 	public void dispose() {
 		disposables.dispose();
+	}
+
+	public enum Type {
+		MISSILE(0.2f);
+
+		private final Vector3D scalar;
+
+		private Type(float size) {
+			this(Vector3D.of(size, size, size));
+		}
+
+		private Type(Vector3D scalar) {
+			this.scalar = scalar;
+		}
+
+		public Vector3D scalar() {
+			return scalar;
+		}
 	}
 }

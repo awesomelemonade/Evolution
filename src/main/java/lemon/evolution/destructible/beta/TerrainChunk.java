@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 public class TerrainChunk {
 	public static final int SIZE = 16;
 	public static final Vector3D MARCHING_CUBE_SIZE = Vector3D.of(SIZE + 1, SIZE + 1, SIZE + 1);
-	public static final int NUM_TEXTURES = 20;
+	public static final int NUM_TEXTURES = 40;
 	private static final float[] ZERO_TEXTURE_WEIGHTS = new float[NUM_TEXTURES];
 	private final Terrain terrain;
 	private final int chunkX;

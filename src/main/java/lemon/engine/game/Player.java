@@ -6,8 +6,8 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
+import lemon.evolution.item.BasicItems;
 import lemon.evolution.item.ItemType;
-import lemon.evolution.item.MissileShowerItemType;
 import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.AbstractControllableEntity;
 import lemon.evolution.world.Inventory;
@@ -45,7 +45,7 @@ public class Player extends AbstractControllableEntity implements Disposable {
 			});
 		}));
 		// TODO: Temporary
-		addAndSetCurrentItem(MissileShowerItemType.INSTANCE);
+		addAndSetCurrentItem(BasicItems.ROCKET_LAUNCHER);
 	}
 
 	@Override

@@ -15,6 +15,7 @@ public abstract class AbstractEntity implements Entity {
 	private final MutableVector3D velocity;
 	private final MutableVector3D force;
 	private final Vector3D scalar;
+	private final EntityMeta meta = new EntityMeta();
 
 	public AbstractEntity(Location location, Vector3D velocity) {
 		this(location, velocity, Vector3D.ONE);
@@ -66,5 +67,10 @@ public abstract class AbstractEntity implements Entity {
 	@Override
 	public Vector3D scalar() {
 		return scalar;
+	}
+
+	@Override
+	public EntityMeta meta() {
+		return meta;
 	}
 }

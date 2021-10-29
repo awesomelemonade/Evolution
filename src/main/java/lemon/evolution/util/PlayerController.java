@@ -18,7 +18,7 @@ public class PlayerController extends EntityController<Player> implements Dispos
 			var currentItem = current.currentItem();
 			currentItem.ifPresent(item -> {
 				if (!gameLoop.usedWeapon || !item.isWeapon()) {
-					item.use(current);
+					item.use(current, 1f);
 					gameLoop.usedWeapon = gameLoop.usedWeapon || item.isWeapon();
 				}
 			});
