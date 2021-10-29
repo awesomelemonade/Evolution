@@ -10,6 +10,7 @@ in vec4 textureWeights[TEXTURE_ARRAY_SIZE];
 out vec3 passNormal;
 out vec3 passTextureCoords;
 out vec4 passTextureWeights[TEXTURE_ARRAY_SIZE];
+out vec3 viewDirection;
 
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
@@ -17,10 +18,12 @@ uniform mat4 modelMatrix;
 
 void main(void) {
 	vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+	vec4 relativePosition = viewMatrix * worldPosition;
 	
-	gl_Position = projectionMatrix * viewMatrix * worldPosition;
+	gl_Position = projectionMatrix * relativePosition;
 	
 	passNormal = normal;
 	passTextureCoords = worldPosition.xyz;
 	passTextureWeights = textureWeights;
+	viewDirection = normalize(relativePosition.xyz);
 }
