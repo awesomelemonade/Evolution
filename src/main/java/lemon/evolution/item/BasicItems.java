@@ -1,6 +1,5 @@
 package lemon.evolution.item;
 
-import lemon.engine.game.Player;
 import lemon.engine.math.Vector3D;
 import lemon.evolution.entity.ExplodeOnHitProjectile;
 import lemon.evolution.entity.ExplodeOnTimeProjectile;

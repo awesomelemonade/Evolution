@@ -13,8 +13,6 @@ import lemon.evolution.world.AbstractControllableEntity;
 import lemon.evolution.world.Inventory;
 import lemon.evolution.world.Location;
 
-import java.util.Optional;
-
 public class Player extends AbstractControllableEntity implements Disposable {
 	private static final float VOID_Y_COORDINATE = -100f;
 	private static final float START_HEALTH = 100f;
@@ -24,7 +22,6 @@ public class Player extends AbstractControllableEntity implements Disposable {
 	private final Observable<Float> health = new Observable<>(START_HEALTH);
 	private final Observable<Boolean> alive;
 	private final Inventory inventory = new Inventory();
-	/*private final Observable<Optional<ItemType>> currentItem = new Observable<>(Optional.empty());*/
 
 	public Player(String name, Location location, Projection projection) {
 		super(location, Vector3D.ZERO);
@@ -77,33 +74,6 @@ public class Player extends AbstractControllableEntity implements Disposable {
 	public Inventory inventory() {
 		return inventory;
 	}
-
-	/*public void addAndSetCurrentItem(ItemType item) {
-		inventory.items().add(item);
-		currentItem.setValue(Optional.of(item));
-	}
-
-	public void setCurrentItem(ItemType item) {
-		if (inventory.items().contains(item)) {
-			currentItem.setValue(Optional.of(item));
-		} else {
-			throw new IllegalStateException();
-		}
-	}
-
-	public void clearCurrentItem() {
-		currentItem.setValue(Optional.empty());
-	}
-
-	public Optional<ItemType> currentItem() {
-		return currentItem.getValue();
-	}
-
-	public void useCurrentItem() {
-		this.currentItem.getValue().ifPresent(item -> {
-			inventory.items().remove(item);
-		});
-	}*/
 
 	@Override
 	public void dispose() {

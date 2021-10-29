@@ -1,6 +1,7 @@
 package lemon.evolution.ui.beta;
 
 import lemon.engine.math.Box2D;
+import lemon.evolution.item.BasicItems;
 import lemon.evolution.item.ItemType;
 import lemon.evolution.world.Inventory;
 
@@ -13,11 +14,9 @@ public class UIInventory extends AbstractUIComponent {
     private static final int START_X = 600;
     private static final int START_Y = 100;
     private static final int ITEM_MARGIN = 15;
-    private static int numRows = 2;
-    private static int numColumns = 4;
     private Inventory inventory;
     private ItemType[] items;
-    private final MissileShowerItemType defaultMissile = MissileShowerItemType.INSTANCE;
+    private final ItemType defaultMissile = BasicItems.MISSILE_SHOWER;
 
     // draw rectangle
     private UIImage grid;
@@ -30,24 +29,12 @@ public class UIInventory extends AbstractUIComponent {
         images = new ArrayList<>();
         highlighters = new ArrayList<>();
         grid = new UIImage(this, new Box2D(START_X, START_Y, SIDE_LENGTH, SIDE_LENGTH), "/res/inventory_icons/inventory.png");
-        int xOffset = 50; //(WINDOW_WIDTH - (((numColumns * numRows) % numColumns) * WINDOW_WIDTH / numColumns)) / 2;
-        int yOffset = 50;
         visible().setValue(false);
     }
 
     @Override
     public void render() {
         if (isVisible()) {
-            /*CommonPrograms2D.COLOR.use(program -> {
-                try (var translationMatrix = MatrixPool.ofTranslation(box.x() + box.width() / 2f, box.y() + box.height() / 2f, 0f);
-                     var scalarMatrix = MatrixPool.ofScalar(box.width() / 2f, box.height() / 2f, 1f);
-                     var matrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
-                    program.loadColor4f("filterColor", color);
-                    program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrix);
-                    CommonDrawables.COLORED_QUAD.draw();
-                    program.loadColor4f("filterColor", color);
-                }
-            });*/
             grid.render();
             for (UIImage image : images) {
                 image.render();

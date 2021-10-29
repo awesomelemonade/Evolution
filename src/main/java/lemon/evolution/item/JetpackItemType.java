@@ -11,7 +11,7 @@ public enum JetpackItemType implements ItemType {
     }
 
     @Override
-    public void use(ControllableEntity player) {
+    public void use(ControllableEntity player, float power) {
         System.out.println("Jetpack used");
     }
 

@@ -11,7 +11,7 @@ public enum DrillItemType implements ItemType {
     }
 
     @Override
-    public void use(ControllableEntity player) {
+    public void use(ControllableEntity player, float power) {
         System.out.println("Drill gun used");
     }
 
