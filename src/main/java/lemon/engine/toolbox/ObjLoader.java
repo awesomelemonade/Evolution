@@ -22,50 +22,53 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class ObjLoader implements Loader {
-	private static final ImmutableMap<String, BiConsumer<ObjLoader, String[]>> processors = ImmutableMap.of(
-
-			"mtllib", (objLoader, split) -> {
-					MtlLoader materialLoader = new MtlLoader("/res/" + split[1], mtlLoader -> {
-					System.out.println("Materials List:");
-					for (var m : mtlLoader.getMaterialMap().keySet()) {
-						System.out.println(mtlLoader.getMaterialMap().get(m));
-					}
-					objLoader.parsedMaterials = mtlLoader.getMaterialMap();
-					var m = new Material();
-					m.setKd(new Color(1f, 0.3f, 0.3f));
-					objLoader.parsedMaterials.put("Wood", m);
-					});
-					materialLoader.load();
-				},
-
-			"v", (objLoader, split) -> objLoader.parsedVertices.add(Vector3D.ofParsed(split[1], split[2], split[3])),
-			"vn", (objLoader, split) -> objLoader.parsedNormals.add(Vector3D.ofParsed(split[1], split[2], split[3])),
-//			"vt", (objLoader, split) -> {}, // ignored
-			"usemtl", (objLoader, split) -> {objLoader.currentVertexColor = split[1];},
-			"f", (objLoader, split) -> {
-				for (int i = 0; i < 3; i++) { // triangles
-					StringTokenizer tokenizer2 = new StringTokenizer(split[i + 1], "/");
-					int vertexIndex = Integer.parseInt(tokenizer2.nextToken()) - 1;
-					int textureCoordIndex = Integer.parseInt(tokenizer2.nextToken()) - 1; // unused
-					int normalIndex = Integer.parseInt(tokenizer2.nextToken()) - 1;
-					var a = vertexIndex;
-					var b = normalIndex;
-					if (objLoader.cache.containsKey(a) && objLoader.cache.get(a).containsKey(b)) {
-						objLoader.modelIndices.add(objLoader.cache.get(a).get(b));
-					} else {
-						objLoader.cache.computeIfAbsent(a, key -> new HashMap<>());
-						int index = objLoader.modelVertices.size();
-						objLoader.cache.get(a).put(b, index);
-						objLoader.modelIndices.add(index);
-						objLoader.modelVertices.add(objLoader.parsedVertices.get(a));
-						System.out.println("Current Color:");
-						System.out.println(objLoader.currentVertexColor);
-						objLoader.modelColors.add(objLoader.parsedMaterials.getOrDefault(objLoader.currentVertexColor, objLoader.parsedMaterials.get("Wood")).Kd);
-						objLoader.modelNormals.add(objLoader.parsedNormals.get(b));
-					}
+	private static final ImmutableMap<String, BiConsumer<ObjLoader, String[]>> processors;
+	static {
+		var builder = ImmutableMap.<String, BiConsumer<ObjLoader, String[]>>builder();
+		builder.put("mtllib", (objLoader, split) -> {
+			MtlLoader materialLoader = new MtlLoader("/res/" + split[1], mtlLoader -> {
+				System.out.println("Materials List:");
+				for (var m : mtlLoader.getMaterialMap().keySet()) {
+					System.out.println(mtlLoader.getMaterialMap().get(m));
+				}
+				objLoader.parsedMaterials = mtlLoader.getMaterialMap();
+				System.out.println(objLoader.parsedMaterials);
+				var m = new Material();
+				m.setKd(new Color(1f, 0.3f, 0.3f));
+				objLoader.parsedMaterials.put("Wood", m);
+			});
+			materialLoader.load();
+		});
+		builder.put("v", (objLoader, split) -> objLoader.parsedVertices.add(Vector3D.ofParsed(split[1], split[2], split[3])));
+		builder.put("vn", (objLoader, split) -> objLoader.parsedNormals.add(Vector3D.ofParsed(split[1], split[2], split[3])));
+		builder.put("vt", (objLoader, split) -> {}); // ignored
+		builder.put("usemtl", (objLoader, split) -> {
+			objLoader.currentVertexColor = split[1];
+			System.out.println("Switch to " + split[1]);
+		});
+		builder.put("f", (objLoader, split) -> {
+			for (int i = 0; i < 3; i++) { // triangles
+				StringTokenizer tokenizer2 = new StringTokenizer(split[i + 1], "/");
+				int vertexIndex = Integer.parseInt(tokenizer2.nextToken()) - 1;
+				int textureCoordIndex = Integer.parseInt(tokenizer2.nextToken()) - 1; // unused
+				int normalIndex = Integer.parseInt(tokenizer2.nextToken()) - 1;
+				var a = vertexIndex;
+				var b = normalIndex;
+				if (objLoader.cache.containsKey(a) && objLoader.cache.get(a).containsKey(b)) {
+					objLoader.modelIndices.add(objLoader.cache.get(a).get(b));
+				} else {
+					objLoader.cache.computeIfAbsent(a, key -> new HashMap<>());
+					int index = objLoader.modelVertices.size();
+					objLoader.cache.get(a).put(b, index);
+					objLoader.modelIndices.add(index);
+					objLoader.modelVertices.add(objLoader.parsedVertices.get(a));
+					objLoader.modelColors.add(objLoader.parsedMaterials.getOrDefault(objLoader.currentVertexColor, objLoader.parsedMaterials.get("Wood")).Kd);
+					objLoader.modelNormals.add(objLoader.parsedNormals.get(b));
 				}
 			}
-	);
+		});
+		processors = builder.build();
+	}
 	private static final BiConsumer<ObjLoader, String[]> UNKNOWN_PROCESSOR = (loader, split) -> {
 		System.out.println("Unknown Key: " + Arrays.toString(split));
 	};
