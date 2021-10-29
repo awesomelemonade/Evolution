@@ -40,10 +40,9 @@ import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
-import lemon.evolution.entity.ExplosiveProjectileType;
 import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.entity.PuzzleBall;
-import lemon.evolution.entity.ExplosiveProjectile;
+import lemon.evolution.entity.ExplodeOnHitProjectile;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
@@ -203,9 +202,9 @@ public enum Game implements Screen {
 							});
 							GL11.glDisable(GL11.GL_DEPTH_TEST);
 						};
-						entityRenderer.registerIndividual(ExplosiveProjectile.class, entity -> {
-							return entity.meta().get("type", ExplosiveProjectileType.class)
-									.map(x -> x == ExplosiveProjectileType.MISSILE).orElse(false);
+						entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> {
+							return entity.meta().get("type", ExplodeOnHitProjectile.Type.class)
+									.map(x -> x == ExplodeOnHitProjectile.Type.MISSILE).orElse(false);
 						}, renderer);
 						entityRenderer.registerIndividual(MissileShowerEntity.class, renderer);
 					});
@@ -233,14 +232,14 @@ public enum Game implements Screen {
 						});
 					});
 
-			var csvLoader = new CsvWorldLoader("/res/blocks2.csv", world.terrain(), postLoadTasks::add,
+			var csvLoader = new CsvWorldLoader("/res/SkullIsland.csv", world.terrain(), postLoadTasks::add,
 					csvWorldLoader -> {
 						var mapping = csvWorldLoader.blockMapping();
 						var materials = new MCMaterial[mapping.size()];
 						mapping.forEach((material, index) -> materials[index] = material);
 						if (materials.length > TerrainChunk.NUM_TEXTURES) {
 							for (int i = TerrainChunk.NUM_TEXTURES; i < materials.length; i++) {
-								logger.warning("Not enough textures for " + materials[i]);
+								logger.warning("Not enough textures for " + materials[i] + " (" + (i + 1) + ")");
 							}
 						}
 						var textureArray = new Texture();
@@ -267,7 +266,7 @@ public enum Game implements Screen {
 				public void load() {
 					var currentRenderDistance = worldRenderer.terrainRenderer().getRenderDistance();
 					postLoadTasks.add(() -> worldRenderer.terrainRenderer().setRenderDistance(currentRenderDistance));
-					worldRenderer.terrainRenderer().setRenderDistance(10f);
+					worldRenderer.terrainRenderer().setRenderDistance(12f);
 					worldRenderer.terrainRenderer().preload(Vector3D.ZERO);
 					generatorStartSize = Math.max(1, generator.getQueueSize());
 				}
@@ -389,7 +388,7 @@ public enum Game implements Screen {
 			disposables.add(window.input().keyEvent().add(event -> {
 				if (event.action() == GLFW.GLFW_RELEASE) {
 					if (event.key() == GLFW.GLFW_KEY_C) {
-						world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof ExplosiveProjectile);
+						world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof ExplodeOnHitProjectile);
 					}
 					if (event.key() == GLFW.GLFW_KEY_H) {
 						var ballSize = (float) (Math.random());
@@ -428,7 +427,10 @@ public enum Game implements Screen {
 				}
 			});
 			disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
-			uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f), world, () -> gameLoop.currentPlayer());
+			var minimap = uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f), world, () -> gameLoop.currentPlayer());
+			disposables.add(controls.activated(EvolutionControls.MINIMAP).onChangeAndRun(visible -> {
+				minimap.visible().setValue(visible);
+			}));
 			uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png").visible().setValue(false);
 
 			disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
