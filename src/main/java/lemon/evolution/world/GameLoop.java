@@ -84,25 +84,6 @@ public class GameLoop implements Disposable {
 		endTime = Instant.now();
 	}
 
-	public void bindNumberKeys(GLFWInput input) {
-		for (int i = 0; i < allPlayers.size(); i++) {
-			var player = allPlayers.get(i);
-			var key = GLFW.GLFW_KEY_1 + i;
-			var disposable = input.keyEvent().add(event -> {
-				if (event.action() == GLFW.GLFW_RELEASE) {
-					if (event.key() == key) {
-						controller.setCurrent(player);
-					}
-				}
-			});
-			disposables.add(player.world().entities().onRemove(entity -> {
-				if (entity == player) {
-					disposable.dispose();
-				}
-			}));
-		}
-	}
-
 	public void update() {
 		scheduler.run();
 	}

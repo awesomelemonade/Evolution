@@ -57,7 +57,7 @@ public class CsvWorldLoader implements Loader {
 							var material = MCMaterial.values()[materialOrdinal];
 							if (!material.isEmpty()) {
 								var mapped = blockMapping.computeIfAbsent(material, x -> blockMapping.size());
-								terrain.terraform(vector.asImmutable(), 1f, 1f, 100f, mapped % TerrainChunk.NUM_TEXTURES);
+								terrain.terraform(vector.asImmutable(), 1.4f, 1f, 10f, mapped % TerrainChunk.NUM_TEXTURES);
 							}
 							numLinesRead++;
 						}

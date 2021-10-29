@@ -40,9 +40,10 @@ import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
+import lemon.evolution.entity.ExplosiveProjectileType;
 import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.entity.PuzzleBall;
-import lemon.evolution.entity.RocketLauncherProjectile;
+import lemon.evolution.entity.ExplosiveProjectile;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
@@ -122,23 +123,7 @@ public enum Game implements Screen {
 			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			histogram = new Histogram(0.1f);
-			ScalarField<Vector3D> scalarField = vector -> {
-				if (vector.y() < 0f) {
-					return 0f;
-				}
-				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
-				float cylinder = (float) (100.0 - Math.sqrt(distanceSquared));
-				if (cylinder < -100f) {
-					return cylinder;
-				}
-				float terrain = (float) (-Math.tanh(vector.y() / 100.0) * 100.0 +
-						Math.pow(2f, noise2d.apply(vector.toXZVector().divide(300f))) * 5.0 +
-						Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
-				histogram.add(terrain);
-				return Math.min(cylinder, terrain);
-				//return Math.min(cylinder, -vector.y() + 10f);
-			};
-			scalarField = vector -> -vector.y();
+			ScalarField<Vector3D> scalarField = vector -> Math.max(-Math.abs(vector.y() + 10f) + 2f, -1f);
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 			pool.setRejectedExecutionHandler((runnable, executor) -> {});
@@ -218,7 +203,10 @@ public enum Game implements Screen {
 							});
 							GL11.glDisable(GL11.GL_DEPTH_TEST);
 						};
-						entityRenderer.registerIndividual(RocketLauncherProjectile.class, renderer);
+						entityRenderer.registerIndividual(ExplosiveProjectile.class, entity -> {
+							return entity.meta().get("type", ExplosiveProjectileType.class)
+									.map(x -> x == ExplosiveProjectileType.MISSILE).orElse(false);
+						}, renderer);
 						entityRenderer.registerIndividual(MissileShowerEntity.class, renderer);
 					});
 			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
@@ -277,6 +265,9 @@ public enum Game implements Screen {
 				int generatorStartSize;
 				@Override
 				public void load() {
+					var currentRenderDistance = worldRenderer.terrainRenderer().getRenderDistance();
+					postLoadTasks.add(() -> worldRenderer.terrainRenderer().setRenderDistance(currentRenderDistance));
+					worldRenderer.terrainRenderer().setRenderDistance(10f);
 					worldRenderer.terrainRenderer().preload(Vector3D.ZERO);
 					generatorStartSize = Math.max(1, generator.getQueueSize());
 				}
@@ -398,7 +389,7 @@ public enum Game implements Screen {
 			disposables.add(window.input().keyEvent().add(event -> {
 				if (event.action() == GLFW.GLFW_RELEASE) {
 					if (event.key() == GLFW.GLFW_KEY_C) {
-						world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof RocketLauncherProjectile);
+						world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof ExplosiveProjectile);
 					}
 					if (event.key() == GLFW.GLFW_KEY_H) {
 						var ballSize = (float) (Math.random());
@@ -421,9 +412,6 @@ public enum Game implements Screen {
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(false, () -> {
 				gameLoop.getGatedControls().setEnabled(true);
 			}));
-
-
-			gameLoop.bindNumberKeys(window.input());
 
 			uiScreen = disposables.add(new UIScreen(window.input()));
 			uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
@@ -507,7 +495,7 @@ public enum Game implements Screen {
 		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
 			var player = gameLoop.currentPlayer();
 			debugOverlay.update(
-					"FPS=%d, Player=%s, Position=[%.02f, %.02f, %.02f], Velocity=%f, Chunk=[%d, %d, %d], NumTasks=%d, %d NumEntities=%d, PlayerSpeed=%f, isOnGround=%s",
+					"FPS=%d, Player=%s, Pos=[%.02f, %.02f, %.02f], Vel=%f, Chunk=[%d, %d, %d], NumTasks=%d, %d, ChunkCount=%d, NumEntities=%d, PlayerSpeed=%f, isOnGround=%s",
 					window.timeSync().getFps(),
 					player.name(),
 					player.position().x(),
@@ -519,6 +507,7 @@ public enum Game implements Screen {
 					world.terrain().getChunkZ(player.position().z()),
 					pool.getTaskCount() - pool.getCompletedTaskCount(),
 					pool2.getTaskCount() - pool2.getCompletedTaskCount(),
+					world.terrain().chunkCount(),
 					world.entities().size(),
 					gameLoop.controller().playerSpeed(),
 					player.groundWatcher().isOnGround() ? "true" : "false");

@@ -196,4 +196,8 @@ public class Terrain {
 	public Vector3D scalar() {
 		return scalar;
 	}
+
+	public int chunkCount() {
+		return chunks.size();
+	}
 }

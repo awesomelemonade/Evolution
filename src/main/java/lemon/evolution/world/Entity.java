@@ -39,6 +39,7 @@ public interface Entity {
 		return CollisionResponse.SLIDE;
 	}
 	public GroundWatcher groundWatcher();
+	public EntityMeta meta();
 
 	public default void removeFromWorld() {
 		world().entities().remove(this);

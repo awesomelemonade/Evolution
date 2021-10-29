@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class EntityRenderer implements Renderable, Disposable {
 	private final Disposables disposables = new Disposables();
@@ -17,6 +18,14 @@ public class EntityRenderer implements Renderable, Disposable {
 
 	public EntityRenderer(FSetWithEvents<Entity> entities) {
 		this.entities = entities;
+	}
+
+	public <T extends Entity> void registerIndividual(Class<T> clazz, Predicate<? super T> predicate, Consumer<? super T> renderer) {
+		registerIndividual(clazz, entity -> {
+			if (predicate.test(entity)) {
+				renderer.accept(entity);
+			}
+		});
 	}
 
 	public <T extends Entity> void registerIndividual(Class<T> clazz, Consumer<? super T> renderer) {

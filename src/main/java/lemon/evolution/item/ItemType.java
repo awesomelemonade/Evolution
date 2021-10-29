@@ -7,7 +7,7 @@ public interface ItemType {
 	public default String getDescription() {
 		return getName();
 	}
-	public void use(ControllableEntity player);
+	public void use(ControllableEntity player, float power);
 	public default boolean isWeapon() {
 		return true;
 	}
