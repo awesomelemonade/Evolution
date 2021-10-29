@@ -51,6 +51,8 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		inventory.addItem(RocketLauncherItemType.INSTANCE);
 		inventory.addItem(PenguinGunItemType.INSTANCE);
 		inventory.addItem(DrillItemType.INSTANCE);
+		inventory.addItem(RainmakerItemType.INSTANCE);
+		inventory.addItem(JetpackItemType.INSTANCE);
 	}
 
 	@Override

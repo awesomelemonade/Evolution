@@ -16,6 +16,7 @@ import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.world.Inventory;
 import org.lwjgl.glfw.GLFW;
 import lemon.engine.render.CommonRenderables;
+import org.lwjgl.system.CallbackI;
 
 import javax.swing.*;
 import java.util.ArrayList;
@@ -23,8 +24,10 @@ import java.util.List;
 
 public class UIInventory extends AbstractUIComponent {
 
-    private static final int WINDOW_HEIGHT = 900 - 200;
-    private static final int WINDOW_WIDTH = 1600 - 200;
+    private static final int SIDE_LENGTH = 500;
+    private static final int START_X = 600;
+    private static final int START_Y = 100;
+    private static final int ITEM_MARGIN = 15;
     private static int numRows = 2;
     private static int numColumns = 4;
     private Inventory inventory;
@@ -32,18 +35,16 @@ public class UIInventory extends AbstractUIComponent {
     private final MissileShowerItemType defaultMissile = MissileShowerItemType.INSTANCE;
 
     // draw rectangle
-    private Box2D box;
-    private Color color;
+    private UIImage grid;
 
     private List<UIImage> images;
     private List<UIImage> highlighters;
 
     public UIInventory(UIComponent parent) {
         super(parent);
-        color = Color.WHITE;
         images = new ArrayList<>();
         highlighters = new ArrayList<>();
-        box = new Box2D(100, 100, WINDOW_WIDTH,WINDOW_HEIGHT);
+        grid = new UIImage(this, new Box2D(START_X, START_Y, SIDE_LENGTH, SIDE_LENGTH), "/res/inventory_icons/inventory.png");
         int xOffset = 50; //(WINDOW_WIDTH - (((numColumns * numRows) % numColumns) * WINDOW_WIDTH / numColumns)) / 2;
         int yOffset = 50;
         visible().setValue(false);
@@ -52,7 +53,7 @@ public class UIInventory extends AbstractUIComponent {
     @Override
     public void render() {
         if (isVisible()) {
-            CommonPrograms2D.COLOR.use(program -> {
+            /*CommonPrograms2D.COLOR.use(program -> {
                 try (var translationMatrix = MatrixPool.ofTranslation(box.x() + box.width() / 2f, box.y() + box.height() / 2f, 0f);
                      var scalarMatrix = MatrixPool.ofScalar(box.width() / 2f, box.height() / 2f, 1f);
                      var matrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
@@ -61,7 +62,8 @@ public class UIInventory extends AbstractUIComponent {
                     CommonDrawables.COLORED_QUAD.draw();
                     program.loadColor4f("filterColor", color);
                 }
-            });
+            });*/
+            grid.render();
             for (UIImage image : images) {
                 image.render();
             }
@@ -79,12 +81,14 @@ public class UIInventory extends AbstractUIComponent {
         for (ItemType item : items) {
             System.out.println(item == null ? "item is null" : item.getName());
             int finalCount = count;
-            highlighters.add(new UIImage(this, new Box2D(
-                    190 + 300 * count, 190, 120, 120),
-                    "/res/inventory_icons/rocket_launcher.png"));
+            int xPos = START_X + ITEM_MARGIN + (SIDE_LENGTH - 2 * ITEM_MARGIN) / 4 * (count % 4) + 8;
+            int yPos = START_Y + ITEM_MARGIN + (SIDE_LENGTH - 2 * ITEM_MARGIN) / 4 * (3 - count / 4) + 13;
+            highlighters.add(new UIImage(this,
+                    new Box2D(xPos, yPos, 95, 95),
+                    "/res/inventory_icons/Highlighter.png"));
             highlighters.get(count).visible().setValue(false);
-            images.add(new UIImage(this, new Box2D(
-                    200 + 300 * count, 200, 100, 100),
+            images.add(new UIImage(this,
+                    new Box2D(xPos, yPos, 95, 95),
                     item.guiImagePath(),
                     x -> {
                         if (isVisible()) {
