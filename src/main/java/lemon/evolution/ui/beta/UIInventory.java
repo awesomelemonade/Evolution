@@ -11,8 +11,8 @@ import java.util.List;
 public class UIInventory extends AbstractUIComponent {
 
     private static final int SIDE_LENGTH = 500;
-    private static final int START_X = 600;
-    private static final int START_Y = 100;
+    private static final int START_X = 800;
+    private static final int START_Y = 50;
     private static final int ITEM_MARGIN = 15;
     private Inventory inventory;
     private ItemType[] items;
@@ -49,6 +49,8 @@ public class UIInventory extends AbstractUIComponent {
         this.inventory = inventory;
         items = inventory.items().toArray(new ItemType[0]);
         System.out.println("number of items: " + items.length);
+        highlighters.clear();
+        images.clear();
         int count = 0;
         for (ItemType item : items) {
             System.out.println(item == null ? "item is null" : item.getName());
