@@ -40,9 +40,9 @@ public class Evolution {
 			GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, TARGET_OPENGL_VERSION_MINOR);
 			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_FORWARD_COMPAT, GL11.GL_TRUE);
 			GLFW.glfwWindowHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);
-			//return GLFW.glfwCreateWindow(vidmode.width(), vidmode.height(),
-			//		"Evolution", GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
-			return GLFW.glfwCreateWindow(1600, 900, "Evolution", MemoryUtil.NULL, MemoryUtil.NULL);
+			return GLFW.glfwCreateWindow(vidmode.width(), vidmode.height(),
+					"Evolution", GLFW.glfwGetPrimaryMonitor(), MemoryUtil.NULL);
+			//return GLFW.glfwCreateWindow(1600, 900, "Evolution", MemoryUtil.NULL, MemoryUtil.NULL);
 		}, Menu.INSTANCE)) {
 			var disposable = window.input().keyEvent().add(event -> {
 				if (event.key() == GLFW.GLFW_KEY_ESCAPE) {

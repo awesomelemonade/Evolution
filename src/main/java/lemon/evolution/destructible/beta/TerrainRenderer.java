@@ -41,12 +41,15 @@ public class TerrainRenderer {
 	public void render(Vector3D position) {
 		terrain.flushForRendering();
 		GL11.glEnable(GL11.GL_DEPTH_TEST);
+		GL11.glEnable(GL11.GL_CULL_FACE);
+		GL11.glCullFace(GL11.GL_FRONT);
 		CommonPrograms3D.TERRAIN.use(program -> {
 			draw(position, (matrix, drawable) -> {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, matrix);
 				drawable.draw();
 			});
 		});
+		GL11.glDisable(GL11.GL_CULL_FACE);
 		GL11.glDisable(GL11.GL_DEPTH_TEST);
 	}
 
