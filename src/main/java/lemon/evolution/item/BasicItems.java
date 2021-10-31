@@ -20,7 +20,7 @@ public enum BasicItems implements ItemType {
         newLaunchedEntity(player, power, MissileShowerEntity::new);
     }),
     GRENADE_LAUNCHER("Grenade Launcher", "/res/inventory_icons/rocketLauncher.png", (player, power) -> {
-        newLaunchedEntity(player, power, (location, velocity) ->
+        newLaunchedEntity(player, power / 3f, (location, velocity) ->
                 new ExplodeOnTimeProjectile(location, velocity, ExplodeOnTimeProjectile.Type.GRENADE));
     });
     private final String name;

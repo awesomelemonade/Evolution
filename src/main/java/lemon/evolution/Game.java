@@ -40,6 +40,7 @@ import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
+import lemon.evolution.entity.ExplodeOnTimeProjectile;
 import lemon.evolution.entity.MissileShowerEntity;
 import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.entity.ExplodeOnHitProjectile;
@@ -162,7 +163,7 @@ public enum Game implements Screen {
 						}
 						return new Model(indices, vertices, colors);
 					}).map(IndexedDrawable::new);
-			entityRenderer.registerIndividual(PuzzleBall.class, ball -> {
+			Consumer<Entity> sphereRenderer = ball -> {
 				GL11.glEnable(GL11.GL_BLEND);
 				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 				GL11.glEnable(GL11.GL_DEPTH_TEST);
@@ -176,7 +177,10 @@ public enum Game implements Screen {
 				});
 				GL11.glDisable(GL11.GL_DEPTH_TEST);
 				GL11.glDisable(GL11.GL_BLEND);
-			});
+			};
+			// Render spheres
+			entityRenderer.registerIndividual(PuzzleBall.class, sphereRenderer);
+			entityRenderer.registerIndividual(ExplodeOnTimeProjectile.class, entity -> entity.isType(ExplodeOnTimeProjectile.Type.GRENADE), sphereRenderer);
 			var dragonLoader = new ObjLoader("/res/dragon.obj", postLoadTasks::add,
 					objLoader -> {
 						var drawable = objLoader.toIndexedDrawable();
@@ -203,10 +207,7 @@ public enum Game implements Screen {
 							});
 							GL11.glDisable(GL11.GL_DEPTH_TEST);
 						};
-						entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> {
-							return entity.meta().get("type", ExplodeOnHitProjectile.Type.class)
-									.map(x -> x == ExplodeOnHitProjectile.Type.MISSILE).orElse(false);
-						}, renderer);
+						entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeOnHitProjectile.Type.MISSILE), renderer);
 						entityRenderer.registerIndividual(MissileShowerEntity.class, renderer);
 					});
 			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
@@ -438,6 +439,7 @@ public enum Game implements Screen {
 			disposables.add(gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
 				var inventory = player.inventory();
 				uiInventory.setInventory(inventory);
+				uiInventory.visible().setValue(false);
 			}));
 			// sets up inventory toggle
 			disposables.add(controls.onActivated(EvolutionControls.TOGGLE_INVENTORY, () -> {
