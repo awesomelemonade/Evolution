@@ -51,6 +51,10 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIImage(this, box, texture));
 	}
 
+	public UIInventory addInventory() {
+		return addComponent(new UIInventory(this));
+	}
+
 	@Override
 	public void render() {
 		if (isVisible()) {

@@ -7,13 +7,11 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.item.BasicItems;
-import lemon.evolution.item.ItemType;
+import lemon.evolution.item.*;
 import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.AbstractControllableEntity;
 import lemon.evolution.world.Inventory;
 import lemon.evolution.world.Location;
-
-import java.util.Optional;
 
 public class Player extends AbstractControllableEntity implements Disposable {
 	private static final float VOID_Y_COORDINATE = -100f;
@@ -24,7 +22,6 @@ public class Player extends AbstractControllableEntity implements Disposable {
 	private final Observable<Float> health = new Observable<>(START_HEALTH);
 	private final Observable<Boolean> alive;
 	private final Inventory inventory = new Inventory();
-	private final Observable<Optional<ItemType>> currentItem = new Observable<>(Optional.empty());
 
 	public Player(String name, Location location, Projection projection) {
 		super(location, Vector3D.ZERO);
@@ -38,14 +35,19 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		disposables.add(health.onChange(newHealth -> newHealth <= 0f, () -> world().entities().remove(this)));
 		this.alive = world().entities().observableContains(this, disposables::add);
 		disposables.add(inventory.items().onFallToZero(item -> {
-			currentItem.getValue().ifPresent(current -> {
+			inventory.currentItem().ifPresent(current -> {
 				if (current.equals(item)) {
-					clearCurrentItem();
+					inventory.clearCurrentItem();
 				}
 			});
 		}));
 		// TODO: Temporary
-		addAndSetCurrentItem(BasicItems.ROCKET_LAUNCHER);
+		inventory.addAndSetCurrentItem(BasicItems.MISSILE_SHOWER);
+		inventory.addItem(BasicItems.ROCKET_LAUNCHER);
+		inventory.addItem(PenguinGunItemType.INSTANCE);
+		inventory.addItem(DrillItemType.INSTANCE);
+		inventory.addItem(RainmakerItemType.INSTANCE);
+		inventory.addItem(JetpackItemType.INSTANCE);
 	}
 
 	@Override
@@ -71,33 +73,6 @@ public class Player extends AbstractControllableEntity implements Disposable {
 
 	public Inventory inventory() {
 		return inventory;
-	}
-
-	public void addAndSetCurrentItem(ItemType item) {
-		inventory.items().add(item);
-		currentItem.setValue(Optional.of(item));
-	}
-
-	public void setCurrentItem(ItemType item) {
-		if (inventory.items().contains(item)) {
-			currentItem.setValue(Optional.of(item));
-		} else {
-			throw new IllegalStateException();
-		}
-	}
-
-	public void clearCurrentItem() {
-		currentItem.setValue(Optional.empty());
-	}
-
-	public Optional<ItemType> currentItem() {
-		return currentItem.getValue();
-	}
-
-	public void useCurrentItem() {
-		this.currentItem.getValue().ifPresent(item -> {
-			inventory.items().remove(item);
-		});
 	}
 
 	@Override

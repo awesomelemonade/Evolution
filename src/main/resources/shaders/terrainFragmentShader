@@ -50,7 +50,7 @@ void main(void) {
 	vec3 ambient = ambientStrength * lightColor;
 	float diffuseStrength = max(dot(passNormal, sunlightDirection), 0);
 	vec3 diffuse = diffuseStrength * lightColor;
-	float specularStrength = 5;
+	float specularStrength = 2;
 	vec3 reflectDirection = reflect(-sunlightDirection, passNormal);
 	vec3 specular = specularStrength * pow(max(dot(viewDirection, reflectDirection), 0), 32) * lightColor;
 	vec3 result = (ambient + diffuse + specular) * color.rgb;

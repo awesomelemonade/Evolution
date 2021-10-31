@@ -1,5 +1,6 @@
 package lemon.evolution.item;
 
+import lemon.engine.texture.Texture;
 import lemon.evolution.world.ControllableEntity;
 
 public interface ItemType {
@@ -11,4 +12,5 @@ public interface ItemType {
 	public default boolean isWeapon() {
 		return true;
 	}
+	public String guiImagePath();
 }

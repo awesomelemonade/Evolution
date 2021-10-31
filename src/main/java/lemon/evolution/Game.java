@@ -47,6 +47,7 @@ import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
+import lemon.evolution.ui.beta.UIInventory;
 import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
@@ -432,6 +433,21 @@ public enum Game implements Screen {
 				minimap.visible().setValue(visible);
 			}));
 			uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png").visible().setValue(false);
+
+			UIInventory uiInventory = uiScreen.addInventory();
+			gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
+				var inventory = player.inventory();
+				uiInventory.setInventory(inventory);
+			});
+			// sets up inventory toggle
+			disposables.add(controls.onActivated(EvolutionControls.TOGGLE_INVENTORY, () -> {
+				uiInventory.visible().setValue(!uiInventory.visible().getValue());
+				if (uiInventory.isVisible()) {
+					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+				} else {
+					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+				}
+			}));
 
 			disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 			disposables.add(() -> loaded = false);
