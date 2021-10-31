@@ -40,10 +40,7 @@ import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
-import lemon.evolution.entity.ExplodeOnTimeProjectile;
-import lemon.evolution.entity.MissileShowerEntity;
-import lemon.evolution.entity.PuzzleBall;
-import lemon.evolution.entity.ExplodeOnHitProjectile;
+import lemon.evolution.entity.*;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
@@ -181,6 +178,11 @@ public enum Game implements Screen {
 			// Render spheres
 			entityRenderer.registerIndividual(PuzzleBall.class, sphereRenderer);
 			entityRenderer.registerIndividual(ExplodeOnTimeProjectile.class, entity -> entity.isType(ExplodeOnTimeProjectile.Type.GRENADE), sphereRenderer);
+
+			// Where we're handling how to render spheres
+			entityRenderer.registerIndividual(RainmakerEntity.class, sphereRenderer);
+			entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeOnHitProjectile.Type.RAIN_DROPLET), sphereRenderer);
+
 			var dragonLoader = new ObjLoader("/res/dragon.obj", postLoadTasks::add,
 					objLoader -> {
 						var drawable = objLoader.toIndexedDrawable();

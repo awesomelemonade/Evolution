@@ -35,7 +35,7 @@ public class ExplodeOnHitProjectile extends AbstractEntity implements Disposable
 	}
 
 	public enum Type {
-		MISSILE(0.2f);
+		MISSILE(0.2f), RAIN_DROPLET(0.05f);
 
 		private final Vector3D scalar;
 
