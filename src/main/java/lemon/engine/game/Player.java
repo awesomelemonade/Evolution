@@ -42,12 +42,13 @@ public class Player extends AbstractControllableEntity implements Disposable {
 			});
 		}));
 		// TODO: Temporary
-		inventory.addAndSetCurrentItem(BasicItems.MISSILE_SHOWER);
-		inventory.addItem(BasicItems.ROCKET_LAUNCHER);
+		inventory.addAndSetCurrentItem(BasicItems.ROCKET_LAUNCHER);
+		inventory.addItem(BasicItems.MISSILE_SHOWER);
 		inventory.addItem(PenguinGunItemType.INSTANCE);
 		inventory.addItem(DrillItemType.INSTANCE);
 		inventory.addItem(RainmakerItemType.INSTANCE);
 		inventory.addItem(JetpackItemType.INSTANCE);
+		inventory.addItem(BasicItems.GRENADE_LAUNCHER);
 	}
 
 	@Override

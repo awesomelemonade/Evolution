@@ -40,6 +40,12 @@ public interface Entity {
 	}
 	public GroundWatcher groundWatcher();
 	public EntityMeta meta();
+	public default void setType(Object o) {
+		meta().set("type", o);
+	}
+	public default <T> boolean isType(T type) {
+		return meta().get("type", type.getClass()).map(type::equals).orElse(false);
+	}
 
 	public default void removeFromWorld() {
 		world().entities().remove(this);

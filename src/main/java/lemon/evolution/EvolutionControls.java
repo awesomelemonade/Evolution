@@ -23,7 +23,7 @@ public enum EvolutionControls implements GLFWGameControls.DefaultBinder<Evolutio
 	REMOVE_TERRAIN(keyboardHold(GLFW.GLFW_KEY_Y)),
 	END_TURN(keyboardHold(GLFW.GLFW_KEY_BACKSPACE)),
 	START_GAME(keyboardHold(GLFW.GLFW_KEY_ENTER)),
-	USE_ITEM(mouseHold(GLFW.GLFW_MOUSE_BUTTON_7)),
+	USE_ITEM(mouseHold(GLFW.GLFW_MOUSE_BUTTON_1)),
 	MINIMAP(keyboardToggle(GLFW.GLFW_KEY_M)),
 	TOGGLE_INVENTORY(keyboardHold(GLFW.GLFW_KEY_E));
 
