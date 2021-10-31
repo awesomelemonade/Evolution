@@ -435,17 +435,19 @@ public enum Game implements Screen {
 			uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png").visible().setValue(false);
 
 			UIInventory uiInventory = uiScreen.addInventory();
-			gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
+			disposables.add(gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
 				var inventory = player.inventory();
 				uiInventory.setInventory(inventory);
-			});
+			}));
 			// sets up inventory toggle
 			disposables.add(controls.onActivated(EvolutionControls.TOGGLE_INVENTORY, () -> {
 				uiInventory.visible().setValue(!uiInventory.visible().getValue());
 				if (uiInventory.isVisible()) {
 					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
+					gameLoop.getGatedControls().setEnabled(false);
 				} else {
 					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
+					gameLoop.getGatedControls().setEnabled(true);
 				}
 			}));
 
