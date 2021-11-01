@@ -20,22 +20,23 @@ public class RainmakerEntity extends AbstractEntity {
         this.onUpdate().add(() -> {
             // every time the world updates, this gets called
             // check if it's time to "explode" and start generating rain droplets
-            if (Instant.now().isAfter(creationTime.plus(3, ChronoUnit.SECONDS))) {
+            if (Instant.now().isAfter(creationTime.plus(1, ChronoUnit.SECONDS))) {
                 makeRaindroplets = true;
+                mutableVelocity().set(Vector3D.ZERO);
             }
             // We're only going to make rain for 5 seconds
-            if (Instant.now().isAfter(creationTime.plus(8, ChronoUnit.SECONDS))) {
+            if (Instant.now().isAfter(creationTime.plus(6, ChronoUnit.SECONDS))) {
                 removeFromWorld();
             }
             if (makeRaindroplets) {
                 // launch some "ExplodeOnHitProjectile"
                 if (Duration.between(lastRainTime, Instant.now()).compareTo(Duration.of(1, ChronoUnit.SECONDS)) > 0) {
-                    var numRockets = 256;
+                    var numRockets = 32;
                     var upwardVelocity = Vector3D.of(0f, 1f, 0f);
                     for (int i = 0; i < numRockets; i++) {
                         var angle = (float) (Math.random() * MathUtil.TAU);
                         var horizontalVelocity = Vector3D.of(MathUtil.cos(angle), 0, MathUtil.sin(angle)).multiply((float) (Math.random() * 1f));
-                        world().entities().add(new ExplodeOnHitProjectile(location, upwardVelocity.add(horizontalVelocity), ExplodeOnHitProjectile.Type.RAIN_DROPLET));
+                        world().entities().add(new ExplodeOnHitProjectile(location(), upwardVelocity.add(horizontalVelocity), ExplodeOnHitProjectile.Type.RAIN_DROPLET));
                     }
                     lastRainTime = Instant.now();
                 }
