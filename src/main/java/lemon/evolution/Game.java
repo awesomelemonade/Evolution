@@ -177,11 +177,11 @@ public enum Game implements Screen {
 			};
 			// Render spheres
 			entityRenderer.registerIndividual(PuzzleBall.class, sphereRenderer);
-			entityRenderer.registerIndividual(ExplodeOnTimeProjectile.class, entity -> entity.isType(ExplodeOnTimeProjectile.Type.GRENADE), sphereRenderer);
+			entityRenderer.registerIndividual(ExplodeOnTimeProjectile.class, entity -> entity.isType(ExplodeType.GRENADE), sphereRenderer);
 
 			// Where we're handling how to render spheres
 			entityRenderer.registerIndividual(RainmakerEntity.class, sphereRenderer);
-			entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeOnHitProjectile.Type.RAIN_DROPLET), sphereRenderer);
+			entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.RAIN_DROPLET), sphereRenderer);
 
 			var dragonLoader = new ObjLoader("/res/dragon.obj", postLoadTasks::add,
 					objLoader -> {
@@ -209,7 +209,7 @@ public enum Game implements Screen {
 							});
 							GL11.glDisable(GL11.GL_DEPTH_TEST);
 						};
-						entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeOnHitProjectile.Type.MISSILE), renderer);
+						entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.MISSILE), renderer);
 						entityRenderer.registerIndividual(MissileShowerEntity.class, renderer);
 					});
 			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
