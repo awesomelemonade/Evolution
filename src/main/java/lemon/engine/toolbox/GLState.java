@@ -1,6 +1,10 @@
 package lemon.engine.toolbox;
 
 import lemon.engine.math.Box2D;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Matrix;
+import lemon.engine.render.MatrixType;
+import lemon.evolution.util.CommonPrograms2D;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayDeque;
@@ -27,5 +31,7 @@ public class GLState {
 
 	private static void setViewport(Box2D box) {
 		GL11.glViewport((int) box.x(), (int) box.y(), (int) box.width(), (int) box.height());
+		var orthoProjectionMatrix = MathUtil.getOrtho(box.width(), box.height(), -1, 1);
+		CommonPrograms2D.setMatrices(MatrixType.PROJECTION_MATRIX, orthoProjectionMatrix);
 	}
 }

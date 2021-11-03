@@ -35,6 +35,10 @@ public class Computable<T> {
 		}
 	}
 
+	public void addDepender(Computable<?> depender) {
+		this.dependers.add(depender);
+	}
+
 	public synchronized void compute() {
 		propagateNeedsUpdate();
 		whenCalculated.callListeners(value);
@@ -144,19 +148,19 @@ public class Computable<T> {
 		return ret;
 	}
 
-	public static <T, U> Computable<U> all(Executor executor, Supplier<List<Computable<T>>> lazyComputables, Consumer<Computable<U>> consumer) {
+	public static <T> Computable<T> all(Executor executor, Supplier<List<? extends Computable<?>>> lazyComputables, Consumer<Computable<T>> consumer) {
 		return all(lazyComputables, computable -> executor.execute(() -> consumer.accept(computable)));
 	}
 
-	public static <T, U> Computable<U> all(Supplier<List<Computable<T>>> lazyComputables, Consumer<Computable<U>> computer) {
+	public static <T> Computable<T> all(Supplier<List<? extends Computable<?>>> lazyComputables, Consumer<Computable<T>> computer) {
 		return all(new Lazy<>(lazyComputables), computer);
 	}
 
-	public static <T, U> Computable<U> all(Lazy<List<Computable<T>>> lazyComputables, Consumer<Computable<U>> computer) {
-		Computable<U> ret = new Computable<>(resultComputable -> {
+	public static <T> Computable<T> all(Lazy<List<? extends Computable<?>>> lazyComputables, Consumer<Computable<T>> computer) {
+		Computable<T> ret = new Computable<>(resultComputable -> {
 			AtomicInteger counter = new AtomicInteger();
 			var computables = lazyComputables.get();
-			for (Computable<T> computable : computables) {
+			for (var computable : computables) {
 				AtomicBoolean incremented = new AtomicBoolean(false);
 				computable.request(value -> {
 					int current = incremented.getAndSet(true) ? counter.get() : counter.incrementAndGet();
@@ -166,7 +170,7 @@ public class Computable<T> {
 				});
 			}
 		});
-		lazyComputables.onComputed().add(computables -> computables.forEach(computable -> computable.dependers.add(ret)));
+		lazyComputables.onComputed().add(computables -> computables.forEach(computable -> computable.addDepender(ret)));
 		return ret;
 	}
 }

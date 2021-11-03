@@ -12,7 +12,7 @@ import lemon.evolution.world.ControllableEntity;
 public class EntityController<T extends ControllableEntity> implements Disposable {
 	private static final boolean USE_SURF = false;
 	private static final float MOUSE_SENSITIVITY = 0.001f;
-	private static final float JUMP_HEIGHT = 2f;
+	private static final float JUMP_HEIGHT = 1f;
 	private static float playerSpeed = 0.08f;
 	private final Disposables disposables = new Disposables();
 	private final GameControls<EvolutionControls, GLFWInput> controls;
@@ -38,7 +38,7 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 		});
 		disposables.add(controls.onActivated(EvolutionControls.JUMP, () -> {
 			var currentEntity = current.getValue();
-			currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableForce().add(normal).multiply(JUMP_HEIGHT));
+			currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableVelocity().add(normal.multiply(JUMP_HEIGHT)));
 		}));
 		var currentCleanup = disposables.add(new Disposables());
 		disposables.add(current.onChangeAndRun(newEntity -> {

@@ -35,7 +35,7 @@ public class TextModel implements Drawable, Disposable {
 		vertexArray.bind(vao -> {
 			vertexBuffer = new VertexBuffer();
 			vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
-				FloatBuffer buffer = this.getFloatBuffer(text);
+				this.calculateData(text);
 				bufferSize = buffer.capacity();
 				GL15.glBufferData(target, buffer, hint);
 				GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 4 * 4, 0);
@@ -47,8 +47,9 @@ public class TextModel implements Drawable, Disposable {
 	}
 
 	private FloatBuffer buffer;
+	private int width;
 
-	private FloatBuffer getFloatBuffer(CharSequence text) {
+	private void calculateData(CharSequence text) {
 		int newCapacity = text.length() * 4 * 6;
 		if (buffer == null || buffer.capacity() < newCapacity) {
 			buffer = BufferUtils.createFloatBuffer(newCapacity);
@@ -57,16 +58,17 @@ public class TextModel implements Drawable, Disposable {
 		}
 		char prevChar = '\0';
 		int cursor = 0;
+		CharData currentData = null;
 		for (int i = 0; i < text.length(); ++i) {
 			char currentChar = text.charAt(i);
-			CharData data = font.getCharData(currentChar);
+			currentData = font.getCharData(currentChar);
 			int kerning = font.getKerning(prevChar, currentChar);
-			putChar(buffer, data, cursor + kerning);
-			cursor += (data.xAdvance() + kerning);
+			putChar(buffer, currentData, cursor + kerning);
+			cursor += (currentData.xAdvance() + kerning);
 			prevChar = currentChar;
 		}
+		width = currentData == null ? 0 : cursor - currentData.xAdvance() + currentData.width();
 		buffer.flip();
-		return buffer;
 	}
 
 	private void putChar(FloatBuffer buffer, CharData data, int cursor) {
@@ -108,19 +110,27 @@ public class TextModel implements Drawable, Disposable {
 	public void setText(CharSequence text) {
 		this.text = text;
 		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
-			FloatBuffer newBuffer = this.getFloatBuffer(text);
-			int newBufferSize = newBuffer.capacity();
+			this.calculateData(text);
+			int newBufferSize = buffer.capacity();
 			if (newBufferSize > bufferSize) {
 				bufferSize = newBufferSize;
-				GL15.glBufferData(target, newBuffer, hint);
+				GL15.glBufferData(target, buffer, hint);
 			} else {
-				GL15.glBufferSubData(target, 0, newBuffer);
+				GL15.glBufferSubData(target, 0, buffer);
 			}
 		});
 	}
 
 	public CharSequence getText() {
 		return text;
+	}
+
+	public int width() {
+		return width;
+	}
+
+	public int height() {
+		return font.getLineHeight();
 	}
 
 	@Override

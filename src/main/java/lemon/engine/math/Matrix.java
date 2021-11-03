@@ -88,6 +88,13 @@ public class Matrix {
 		return product;
 	}
 
+	public Vector3D multiply(Vector3D vector) {
+		return Vector3D.of(
+				data[0][0] * vector.x() + data[0][1] * vector.y() + data[0][2] * vector.z() + data[0][3],
+				data[1][0] * vector.x() + data[1][1] * vector.y() + data[1][2] * vector.z() + data[1][3],
+				data[2][0] * vector.x() + data[2][1] * vector.y() + data[2][2] * vector.z() + data[2][3]);
+	}
+
 	public static void multiply(Matrix result, Matrix left, Matrix right) {
 		for (int i = 0; i < left.getRows(); ++i) {
 			for (int j = 0; j < right.getColumns(); ++j) {

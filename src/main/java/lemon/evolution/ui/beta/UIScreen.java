@@ -4,10 +4,11 @@ import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.Vector2D;
 import lemon.engine.render.Renderable;
+import lemon.engine.texture.Texture;
 import lemon.engine.toolbox.Color;
 import lemon.evolution.UIMinimap;
-import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.world.ControllableEntity;
+import lemon.evolution.world.World;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -38,8 +39,20 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIProgressBar(this, box, progressGetter));
 	}
 
-	public UIMinimap addMinimap(Box2D box, Terrain terrain, Supplier<ControllableEntity> entitySupplier) {
-		return addComponent(new UIMinimap(this, box, terrain, entitySupplier));
+	public UIMinimap addMinimap(Box2D box, World world, Supplier<ControllableEntity> entitySupplier) {
+		return addComponent(new UIMinimap(this, box, world, entitySupplier));
+	}
+
+	public UIImage addImage(Box2D box, String path) {
+		return addComponent(new UIImage(this, box, path));
+	}
+
+	public UIImage addImage(Box2D box, Texture texture) {
+		return addComponent(new UIImage(this, box, texture));
+	}
+
+	public UIInventory addInventory() {
+		return addComponent(new UIInventory(this));
 	}
 
 	@Override

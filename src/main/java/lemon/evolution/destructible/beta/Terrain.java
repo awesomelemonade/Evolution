@@ -1,5 +1,6 @@
 package lemon.evolution.destructible.beta;
 
+import lemon.engine.math.MutableVector3D;
 import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.draw.Drawable;
 import lemon.engine.function.AbsoluteIntValue;
@@ -33,6 +34,12 @@ public class Terrain {
 	}
 
 	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {
+		var chunk = getChunk(chunkX, chunkY, chunkZ);
+		chunk.data().request();
+		chunk.textureData().request();
+	}
+
+	public void preinitChunk(int chunkX, int chunkY, int chunkZ) {
 		getChunk(chunkX, chunkY, chunkZ).drawable().request();
 	}
 
@@ -49,6 +56,8 @@ public class Terrain {
 			return new TerrainChunk(this, chunkX, chunkY, chunkZ,
 					getSubTerrain(offsetX, offsetY, offsetZ,
 							subTerrainSize, subTerrainSize, subTerrainSize),
+					getSubTerrainTextureWeights(offsetX, offsetY, offsetZ,
+							subTerrainSize, subTerrainSize, subTerrainSize),
 					generator, poolExecutor, updaters::add);
 		});
 	}
@@ -61,6 +70,10 @@ public class Terrain {
 
 	private BoundedScalarGrid3D getSubTerrain(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
 		return BoundedScalarGrid3D.of((a, b, c) -> this.get(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
+	}
+
+	private BoundedGrid3D<float[]> getSubTerrainTextureWeights(int x, int y, int z, int sizeX, int sizeY, int sizeZ) {
+		return BoundedGrid3D.of((a, b, c) -> this.getTextureWeights(a + x, b + y, c + z), sizeX, sizeY, sizeZ);
 	}
 
 	public void forEachChunk(Vector3D point, float radius, Consumer<TerrainChunk> chunk) {
@@ -86,11 +99,11 @@ public class Terrain {
 	}
 
 	public void generateExplosion(Vector3D point, float radius) {
-		terraform(point, radius, 1f, -100f);
+		terraform(point, radius, 1f, -100f, 0);
 	}
 
-	public void terraform(Vector3D point, float radius, float dt, float brushSpeed) {
-		forEachChunk(point, radius, chunk -> terraform(chunk, point, radius, dt, brushSpeed));
+	public void terraform(Vector3D point, float radius, float dt, float brushSpeed, int texture) {
+		forEachChunk(point, radius, chunk -> terraform(chunk, point, radius, dt, brushSpeed, texture));
 	}
 
 	public float smoothstep(float min, float max, float t) {
@@ -98,20 +111,24 @@ public class Terrain {
 		return t * t * (3 - 2 * t);
 	}
 
-	public void terraform(TerrainChunk chunk, Vector3D origin, float radius, float dt, float brushSpeed) {
-		chunk.updateData(data -> {
+	public void terraform(TerrainChunk chunk, Vector3D origin, float radius, float dt, float brushSpeed, int texture) {
+		chunk.updateAllData((data, textureData) -> {
 			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
 			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
 			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
+			var point = MutableVector3D.ofZero();
 			for (int i = 0; i < TerrainChunk.SIZE; i++) {
 				for (int j = 0; j < TerrainChunk.SIZE; j++) {
 					for (int k = 0; k < TerrainChunk.SIZE; k++) {
-						var point = Vector3D.of(offsetX + i, offsetY + j, offsetZ + k).multiply(scalar);
-						float distanceSquared = origin.distanceSquared(point);
+						point.set(offsetX + i, offsetY + j, offsetZ + k).multiply(scalar);
+						float distanceSquared = origin.distanceSquared(point.asImmutable());
 						if (distanceSquared <= radius * radius) {
 							float distance = (float) Math.sqrt(distanceSquared);
 							float brushWeight = smoothstep(radius, radius * 0.7f, distance);
-							data[i][j][k] += brushSpeed * brushWeight * dt;
+							var amount = brushSpeed * brushWeight * dt;
+							data[i][j][k] += amount;
+							var textureWeights = textureData.compute(i, j, k);
+							textureWeights[texture] = Math.max(textureWeights[texture] + amount, 0);
 						}
 					}
 				}
@@ -136,6 +153,23 @@ public class Terrain {
 		return chunk.get(localX, localY, localZ);
 	}
 
+	public float[] getTextureWeights(int x, int y, int z) {
+		int chunkX = Math.floorDiv(x, TerrainChunk.SIZE);
+		int chunkY = Math.floorDiv(y, TerrainChunk.SIZE);
+		int chunkZ = Math.floorDiv(z, TerrainChunk.SIZE);
+		int localX = Math.floorMod(x, TerrainChunk.SIZE);
+		int localY = Math.floorMod(y, TerrainChunk.SIZE);
+		int localZ = Math.floorMod(z, TerrainChunk.SIZE);
+		long hashed = hashChunkCoordinates(chunkX, chunkY, chunkZ);
+		TerrainChunk chunk = chunks.get(hashed);
+		if (chunk == null) {
+			throw new IllegalArgumentException(
+					String.format("Chunk [(%d, %d, %d)=%d] has not been queued for generation",
+							chunkX, chunkY, chunkZ, hashed));
+		}
+		return chunk.getTextureWeights(localX, localY, localZ);
+	}
+
 	private static long hashChunkCoordinates(int chunkX, int chunkY, int chunkZ) {
 		chunkX = AbsoluteIntValue.HASHED.applyAsInt(chunkX);
 		chunkY = AbsoluteIntValue.HASHED.applyAsInt(chunkY);
@@ -155,7 +189,15 @@ public class Terrain {
 		return Math.floorDiv((int) Math.floor(z / scalar.z()), TerrainChunk.SIZE);
 	}
 
+	public float getChunkDistance(float distance) {
+		return distance / scalar.x() / TerrainChunk.SIZE;
+	}
+
 	public Vector3D scalar() {
 		return scalar;
+	}
+
+	public int chunkCount() {
+		return chunks.size();
 	}
 }

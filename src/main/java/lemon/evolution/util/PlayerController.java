@@ -15,10 +15,10 @@ public class PlayerController extends EntityController<Player> implements Dispos
 		this.gameLoop = gameLoop;
 		disposables.add(controls.onActivated(EvolutionControls.USE_ITEM, () -> {
 			var current = current();
-			var currentItem = current.currentItem();
+			var currentItem = current.inventory().currentItem();
 			currentItem.ifPresent(item -> {
 				if (!gameLoop.usedWeapon || !item.isWeapon()) {
-					item.use(current);
+					item.use(current, 1f);
 					gameLoop.usedWeapon = gameLoop.usedWeapon || item.isWeapon();
 				}
 			});
