@@ -16,12 +16,12 @@ public class GroundWatcher implements Disposable {
 				entity.onUpdate().add(() -> {
 					onGround = false;
 				}),
-				entity.onCollide().add(collision -> {
-					if (collision.negSlidePlaneNormal().dotProduct(Vector3D.of(0f, -1f, 0f)) > 0) {
+				entity.onCollide().add((intersection, negSlidePlaneNormal) -> {
+					if (negSlidePlaneNormal.dotProduct(Vector3D.of(0f, -1f, 0f)) > 0) {
 						onGround = true;
-						groundNormal = collision.negSlidePlaneNormal().invert();
-						groundParallel = collision.negSlidePlaneNormal()
-								.crossProduct(entity.vectorDirection()).crossProduct(collision.negSlidePlaneNormal());
+						groundNormal = negSlidePlaneNormal.invert();
+						groundParallel = negSlidePlaneNormal
+								.crossProduct(entity.vectorDirection()).crossProduct(negSlidePlaneNormal);
 					}
 				})
 		);

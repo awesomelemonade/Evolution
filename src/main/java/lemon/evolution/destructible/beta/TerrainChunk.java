@@ -7,7 +7,6 @@ import lemon.engine.math.Matrix;
 import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
-import lemon.engine.toolbox.Color;
 import lemon.evolution.pool.MatrixPool;
 
 import java.util.ArrayList;
@@ -15,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -22,14 +22,16 @@ import java.util.stream.Stream;
 public class TerrainChunk {
 	public static final int SIZE = 16;
 	public static final Vector3D MARCHING_CUBE_SIZE = Vector3D.of(SIZE + 1, SIZE + 1, SIZE + 1);
+	public static final int NUM_TEXTURES = 40;
+	private static final float[] ZERO_TEXTURE_WEIGHTS = new float[NUM_TEXTURES];
 	private final Terrain terrain;
 	private final int chunkX;
 	private final int chunkY;
 	private final int chunkZ;
 	private final MarchingCube marchingCube;
 	private final Matrix transformationMatrix;
-	private final Color color;
 	private final Computable<float[][][]> data;
+	private final Computable<SparseGrid3D<float[]>> textureData;
 	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_X = {1, 0, 0, 1, 0, 1, 1};
 	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_Y = {0, 1, 0, 1, 1, 0, 1};
 	private static final int[] MESH_PREREQUISITE_CHUNK_OFFSET_Z = {0, 0, 1, 0, 1, 1, 1};
@@ -41,15 +43,21 @@ public class TerrainChunk {
 	private final Computable<Vector3D[]> normals;
 	private final Computable<DynamicIndexedDrawable> drawable;
 
-	public TerrainChunk(Terrain terrain, int chunkX, int chunkY, int chunkZ, BoundedScalarGrid3D scalarGrid,
-						TerrainGenerator generator, Executor poolExecutor, Executor mainThreadExecutor) {
+	public TerrainChunk(Terrain terrain,
+						int chunkX,
+						int chunkY,
+						int chunkZ,
+						BoundedScalarGrid3D scalarGrid,
+						BoundedGrid3D<float[]> textureWeightsGrid,
+						TerrainGenerator generator,
+						Executor poolExecutor,
+						Executor mainThreadExecutor) {
 		var scalar = terrain.scalar();
 		this.terrain = terrain;
 		this.chunkX = chunkX;
 		this.chunkY = chunkY;
 		this.chunkZ = chunkZ;
-		this.color = Color.randomOpaque();
-		this.marchingCube = new MarchingCube(scalarGrid, MARCHING_CUBE_SIZE, 0f);
+		this.marchingCube = new MarchingCube(scalarGrid, textureWeightsGrid, MARCHING_CUBE_SIZE, 0f);
 		this.transformationMatrix = new Matrix(4);
 		try (var translationMatrix = MatrixPool.ofTranslation(
 				scalar.x() * chunkX * TerrainChunk.SIZE,
@@ -61,21 +69,28 @@ public class TerrainChunk {
 		this.data = new Computable<>(computable -> {
 			generator.queueChunk(TerrainChunk.this, computable::compute);
 		});
+		this.textureData = new Computable<>(computable -> {
+			computable.compute(new SparseGrid3D<>(TerrainChunk.SIZE, TerrainChunk.SIZE, TerrainChunk.SIZE, () -> new float[NUM_TEXTURES]));
+		});
 		this.mesh = Computable.all(poolExecutor, () -> {
 			// this.data computable + 7 additional neighbors
 			return Stream.concat(Stream.of(this),
 					IntStream.range(0, MESH_PREREQUISITE_CHUNK_OFFSET_X.length)
-					.mapToObj(i -> getNeighboringChunk(MESH_PREREQUISITE_CHUNK_OFFSET_X[i],
-							MESH_PREREQUISITE_CHUNK_OFFSET_Y[i], MESH_PREREQUISITE_CHUNK_OFFSET_Z[i])))
-					.map(TerrainChunk::data).toList();
+							.mapToObj(i -> getNeighboringChunk(MESH_PREREQUISITE_CHUNK_OFFSET_X[i],
+									MESH_PREREQUISITE_CHUNK_OFFSET_Y[i], MESH_PREREQUISITE_CHUNK_OFFSET_Z[i])))
+					.<Computable<?>>mapMulti((chunk, consumer) -> {
+						consumer.accept(chunk.textureData());
+						consumer.accept(chunk.data());
+					}).toList();
 		}, computable -> {
 			computable.compute(marchingCube.generateMesh());
 		});
 		this.model = this.mesh.then(poolExecutor, (computable, mesh) -> {
-			Vector3D[] vertices = mesh.getVertices();
-			int[] indices = mesh.getIndices();
-			int[] hashes = mesh.getHashes();
-			PreNormals preNormals = new PreNormals();
+			var vertices = mesh.vertices();
+			var textureWeights = mesh.textureWeights();
+			var indices = mesh.indices();
+			var hashes = mesh.hashes();
+			var preNormals = new PreNormals();
 			List<Triangle> triangles = new ArrayList<>();
 			Vector3D[] transformed = new Vector3D[vertices.length];
 			var x = Vector3D.of(chunkX * TerrainChunk.SIZE, chunkY * TerrainChunk.SIZE, chunkZ * TerrainChunk.SIZE);
@@ -86,7 +101,7 @@ public class TerrainChunk {
 				Vector3D a = transformed[indices[i]];
 				Vector3D b = transformed[indices[i + 2]];
 				Vector3D c = transformed[indices[i + 1]];
-				Triangle triangle = new Triangle(a, b, c);
+				Triangle triangle = Triangle.of(a, b, c);
 				float area = triangle.area();
 				if (area > 0f) {
 					float weight = 1f / area;
@@ -97,7 +112,7 @@ public class TerrainChunk {
 					triangles.add(triangle);
 				}
 			}
-			computable.compute(new MarchingCubeModel(vertices, indices, hashes, preNormals, triangles));
+			computable.compute(new MarchingCubeModel(indices, vertices, textureWeights, hashes, preNormals, triangles));
 		});
 		this.normals = Computable.all(() -> {
 			// this.model computable + 18 additional neighbors
@@ -116,12 +131,24 @@ public class TerrainChunk {
 			computable.compute(normals);
 		});
 		this.drawable = this.normals.then((computable, normals) -> {
-			MarchingCubeModel model = this.model.getValueOrThrow();
-			int[] indices = model.indices();
-			Vector3D[] vertices = model.vertices();
-			Color[] colors = new Color[vertices.length];
-			Arrays.fill(colors, color);
-			var vertexData = new FloatData[][] {vertices, colors, normals};
+			var model = this.model.getValueOrThrow();
+			var indices = model.indices();
+			var vertices = model.vertices();
+			var textureWeights = model.textureWeights();
+			var numVec4s = NUM_TEXTURES / 4;
+			var weights = new FloatData[numVec4s][];
+			for (int i = 0; i < numVec4s; i++) {
+				int finalI = i;
+				weights[i] = Arrays.stream(textureWeights)
+						.map(array -> FloatData.of(array, 4 * finalI, 4))
+						.toArray(FloatData[]::new);
+			}
+			var vertexData = new FloatData[2 + numVec4s][];
+			vertexData[0] = vertices;
+			vertexData[1] = normals;
+			for (int i = 0; i < numVec4s; i++) {
+				vertexData[2 + i] = weights[i];
+			}
 			mainThreadExecutor.execute(() -> {
 				computable.compute(drawable -> {
 					drawable.setData(indices, vertexData);
@@ -207,8 +234,26 @@ public class TerrainChunk {
 		return data.getValueOrThrow(() -> new IllegalStateException("Data has not been computed for " + this))[x][y][z];
 	}
 
+	public float[] getTextureWeights(int x, int y, int z) {
+		return textureData.getValueOrThrow(() -> new IllegalStateException("TextureData has not been computed for " + this)).getOrDefault(x, y, z, ZERO_TEXTURE_WEIGHTS);
+	}
+
 	public void updateData(Consumer<float[][][]> updater) {
 		data.compute(updater);
+	}
+
+	public void updateTextureData(Consumer<SparseGrid3D<float[]>> updater) {
+		textureData.compute(updater);
+	}
+
+	public void updateAllData(BiConsumer<float[][][], SparseGrid3D<float[]>> updater) {
+		var data = this.data.getValue();
+		var textureData = this.textureData.getValue();
+		data.ifPresent(a -> textureData.ifPresent(b -> {
+			updater.accept(a, b);
+			this.data.compute();
+			this.textureData.compute();
+		}));
 	}
 
 	public Computable<DynamicIndexedDrawable> drawable() {
@@ -221,6 +266,10 @@ public class TerrainChunk {
 
 	public Computable<float[][][]> data() {
 		return data;
+	}
+
+	public Computable<SparseGrid3D<float[]>> textureData() {
+		return textureData;
 	}
 
 	public Matrix getTransformationMatrix() {

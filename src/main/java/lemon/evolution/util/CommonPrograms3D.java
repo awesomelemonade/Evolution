@@ -38,20 +38,20 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		program.loadInt("textureSampler", TextureBank.REUSE.getId());
+		program.loadInt("textureSampler", TextureBank.REUSE.id());
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/textureVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/textureFragmentShader").orElseThrow())),
 	CUBEMAP(names("position"), program -> {
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		program.loadInt("cubemapSampler", TextureBank.SKYBOX.getId());
+		program.loadInt("cubemapSampler", TextureBank.SKYBOX.id());
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/cubemapVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/cubemapFragmentShader").orElseThrow())),
 	POST_PROCESSING(names("position", "textureCoords"), program -> {
-		program.loadInt("colorSampler", TextureBank.COLOR.getId());
-		program.loadInt("depthSampler", TextureBank.DEPTH.getId());
+		program.loadInt("colorSampler", TextureBank.COLOR.id());
+		program.loadInt("depthSampler", TextureBank.DEPTH.id());
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/postVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/postFragmentShader").orElseThrow())),
@@ -72,14 +72,21 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/lightVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/lightFragmentShader").orElseThrow())),
-	TERRAIN(names("position", "color", "normal"), program -> {
+	TERRAIN(names("position", "normal", "textureWeights"), program -> {
+		// Texture weights need to default to 0
+		// https://www.khronos.org/opengl/wiki/Vertex_Specification#Non-array_attribute_values
+		// https://stackoverflow.com/questions/17819034/opengl-default-value-for-unbuffered-vertex-attribute-when-using-layout-qualifier
+		for (int i = 0; i < 16; i++) {
+			GL20.glVertexAttrib4f(i, 0f, 0f, 0f, 0f);
+		}
 		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		program.loadInt("grassSampler", TextureBank.GRASS.getId());
-		program.loadInt("slopeSampler", TextureBank.SLOPE.getId());
-		program.loadInt("rockSampler", TextureBank.ROCK.getId());
-		program.loadInt("baseSampler", TextureBank.BASE.getId());
+		program.loadInt("grassSampler", TextureBank.GRASS.id());
+		program.loadInt("slopeSampler", TextureBank.SLOPE.id());
+		program.loadInt("rockSampler", TextureBank.ROCK.id());
+		program.loadInt("baseSampler", TextureBank.BASE.id());
+		program.loadInt("samplers", TextureBank.TERRAIN.id());
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/terrainVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/terrainFragmentShader").orElseThrow()));

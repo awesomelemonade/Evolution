@@ -20,6 +20,13 @@ public enum CommonPrograms2D implements ShaderProgramHolder {
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/colorVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/colorFragmentShader").orElseThrow())),
+	TEXTURE(names("position", "textureCoords"), program -> {
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		program.loadInt("textureSampler", TextureBank.REUSE.id());
+	},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/textureVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/textureFragmentShader").orElseThrow())),
 	LINE(names("id", "value"), program -> {
 		program.loadColor3f(Color.WHITE);
 		program.loadFloat("spacing", 1f);
@@ -34,10 +41,18 @@ public enum CommonPrograms2D implements ShaderProgramHolder {
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
 		program.loadVector("color", Vector3D.ZERO);
-		program.loadInt("textureSampler", TextureBank.REUSE.getId());
+		program.loadInt("textureSampler", TextureBank.REUSE.id());
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/textVertexShader").orElseThrow()),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/textFragmentShader").orElseThrow()));
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/textFragmentShader").orElseThrow())),
+	MINIMAP(names("position", "textureCoords"), program -> {
+		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadInt("colorSampler", TextureBank.MINIMAP_COLOR.id());
+		program.loadInt("depthSampler", TextureBank.MINIMAP_DEPTH.id());
+	},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/minimapVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/minimapFragmentShader").orElseThrow()));
 	private ShaderProgram shaderProgram;
 	private final String[] names;
 	private final Consumer<ShaderProgram> setDefaultUniformVariables;
