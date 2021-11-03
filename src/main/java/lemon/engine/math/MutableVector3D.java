@@ -234,10 +234,24 @@ public interface MutableVector3D {
 		return this;
 	}
 
+	public default MutableVector3D multiply(Vector3D scale) {
+		setX(x() * scale.x());
+		setY(y() * scale.y());
+		setZ(z() * scale.z());
+		return this;
+	}
+
 	public default MutableVector3D divide(float scale) {
 		setX(x() / scale);
 		setY(y() / scale);
 		setZ(z() / scale);
+		return this;
+	}
+
+	public default MutableVector3D divide(Vector3D scale) {
+		setX(x() / scale.x());
+		setY(y() / scale.y());
+		setZ(z() / scale.z());
 		return this;
 	}
 

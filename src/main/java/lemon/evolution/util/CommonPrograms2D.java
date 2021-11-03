@@ -37,7 +37,15 @@ public enum CommonPrograms2D implements ShaderProgramHolder {
 		program.loadInt("textureSampler", TextureBank.REUSE.getId());
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/textVertexShader").orElseThrow()),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/textFragmentShader").orElseThrow()));
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/textFragmentShader").orElseThrow())),
+	MINIMAP(names("position", "textureCoords"), program -> {
+		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
+		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
+		program.loadInt("colorSampler", TextureBank.MINIMAP_COLOR.getId());
+		program.loadInt("depthSampler", TextureBank.MINIMAP_DEPTH.getId());
+	},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/minimapVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/minimapFragmentShader").orElseThrow()));
 	private ShaderProgram shaderProgram;
 	private final String[] names;
 	private final Consumer<ShaderProgram> setDefaultUniformVariables;

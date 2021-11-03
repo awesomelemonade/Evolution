@@ -1,11 +1,11 @@
 package lemon.evolution;
 
 import com.google.common.collect.ImmutableList;
-import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.Drawable;
+import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
@@ -18,6 +18,8 @@ import lemon.engine.math.Projection;
 import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.model.LineGraph;
+import lemon.engine.model.Model;
+import lemon.engine.model.SphereModelBuilder;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
@@ -25,23 +27,27 @@ import lemon.engine.texture.TextureData;
 import lemon.engine.time.Benchmarker;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
+import lemon.engine.toolbox.GLState;
 import lemon.engine.toolbox.Histogram;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.engine.toolbox.SkyboxLoader;
+import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainGenerator;
+import lemon.evolution.entity.MissileShowerEntity;
+import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.entity.RocketLauncherProjectile;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
-import lemon.evolution.entity.PuzzleBall;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.util.GLFWGameControls;
+import lemon.evolution.world.Entity;
 import lemon.evolution.world.GameLoop;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
@@ -54,11 +60,12 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,18 +88,12 @@ public enum Game implements Screen {
 	private World world;
 	private WorldRenderer worldRenderer;
 
-	private Drawable dragonModel;
 	private Vector3D lightPosition;
 
 	private Drawable rocketLauncherUnloadedModel;
 	private Drawable rocketLauncherLoadedModel;
-	public Drawable rocketLauncherProjectileModel; // TODO: Temporary
-
-	private Drawable foxModel;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
-
-	public List<Vector3D> debug;
 
 	private UIScreen uiScreen;
 
@@ -117,7 +118,7 @@ public enum Game implements Screen {
 					return 0f;
 				}
 				float distanceSquared = vector.x() * vector.x() + vector.z() * vector.z();
-				float cylinder = (float) (50.0 - Math.sqrt(distanceSquared));
+				float cylinder = (float) (100.0 - Math.sqrt(distanceSquared));
 				if (cylinder < -100f) {
 					return cylinder;
 				}
@@ -155,18 +156,84 @@ public enum Game implements Screen {
 				}
 			};
 			world = disposables.add(new World(terrain, collisionContext));
-			worldRenderer = new WorldRenderer(world);
+			worldRenderer = disposables.add(new WorldRenderer(world));
 
+			var entityRenderer = worldRenderer.entityRenderer();
+			var sphereDrawable = SphereModelBuilder.of(1, 5)
+					.build((indices, vertices) -> {
+						Color[] colors = new Color[vertices.length];
+						for (int i = 0; i < colors.length; i++) {
+							colors[i] = Color.randomOpaque();
+						}
+						return new Model(indices, vertices, colors);
+					}).map(IndexedDrawable::new);
+			entityRenderer.registerIndividual(PuzzleBall.class, ball -> {
+				GL11.glEnable(GL11.GL_BLEND);
+				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+				GL11.glEnable(GL11.GL_DEPTH_TEST);
+				CommonPrograms3D.COLOR.use(program -> {
+					try (var translationMatrix = MatrixPool.ofTranslation(ball.position());
+						 var scalarMatrix = MatrixPool.ofScalar(ball.scalar());
+						 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+						program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
+					}
+					sphereDrawable.draw();
+				});
+				GL11.glDisable(GL11.GL_DEPTH_TEST);
+				GL11.glDisable(GL11.GL_BLEND);
+			});
 			var dragonLoader = new ObjLoader("/res/dragon.obj", postLoadTasks::add,
-					objLoader -> dragonModel = objLoader.toIndexedDrawable());
+					objLoader -> {
+						var drawable = objLoader.toIndexedDrawable();
+					});
 			var rocketLauncherUnloadedLoader = new ObjLoader("/res/rocket-launcher-unloaded.obj", postLoadTasks::add,
 					objLoader -> rocketLauncherUnloadedModel = objLoader.toIndexedDrawable());
 			var rocketLauncherLoadedLoader = new ObjLoader("/res/rocket-launcher-loaded.obj", postLoadTasks::add,
 					objLoader -> rocketLauncherLoadedModel = objLoader.toIndexedDrawable());
 			var rocketLauncherProjectileLoader = new ObjLoader("/res/rocket-launcher-projectile.obj", postLoadTasks::add,
-					objLoader -> rocketLauncherProjectileModel = objLoader.toIndexedDrawable());
+					objLoader -> {
+						var drawable = objLoader.toIndexedDrawable();
+						Consumer<Entity> renderer = entity -> {
+							GL11.glEnable(GL11.GL_DEPTH_TEST);
+							CommonPrograms3D.LIGHT.use(program -> {
+								var sunlightDirection = Vector3D.of(0f, 1f, 0f);
+								try (var translationMatrix = MatrixPool.ofTranslation(entity.position());
+									 var rotationMatrix = MatrixPool.ofLookAt(entity.velocity());
+									 var adjustedMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f);
+									 var scalarMatrix = MatrixPool.ofScalar(entity.scalar())) {
+									program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(adjustedMatrix).multiply(scalarMatrix));
+									program.loadVector("sunlightDirection", sunlightDirection);
+									drawable.draw();
+								}
+							});
+							GL11.glDisable(GL11.GL_DEPTH_TEST);
+						};
+						entityRenderer.registerIndividual(RocketLauncherProjectile.class, renderer);
+						entityRenderer.registerIndividual(MissileShowerEntity.class, renderer);
+					});
 			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
-					objLoader -> foxModel = objLoader.toIndexedDrawable());
+					objLoader -> {
+						var drawable = objLoader.toIndexedDrawable();
+						entityRenderer.registerCollection(Player.class, players -> {
+							for (var player : players) {
+								if (player != gameLoop.currentPlayer()) {
+									GL11.glEnable(GL11.GL_BLEND);
+									GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+									GL11.glEnable(GL11.GL_DEPTH_TEST);
+									CommonPrograms3D.COLOR.use(program -> {
+										try (var translationMatrix = MatrixPool.ofTranslation(player.position());
+											 var rotationMatrix = MatrixPool.ofRotationY(player.rotation().y() + MathUtil.PI);
+											 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
+											program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
+										}
+										drawable.draw();
+									});
+									GL11.glDisable(GL11.GL_DEPTH_TEST);
+									GL11.glDisable(GL11.GL_BLEND);
+								}
+							}
+						});
+					});
 
 			window.pushScreen(new Loading(window::popScreen,
 					dragonLoader, rocketLauncherUnloadedLoader,
@@ -198,7 +265,8 @@ public enum Game implements Screen {
 		var windowWidth = window.getWidth();
 		var windowHeight = window.getHeight();
 
-		GL11.glViewport(0, 0, windowWidth, windowHeight);
+		GLState.pushViewport(0, 0, windowWidth, windowHeight);
+		disposables.add(GLState::popViewport);
 
 		benchmarker = new Benchmarker();
 		benchmarker.put("updateData", new LineGraph(1000, 100000000));
@@ -210,7 +278,7 @@ public enum Game implements Screen {
 
 		debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
-		this.controls = disposables.add(EvolutionControls.getDefaultControls(window.input()));
+		this.controls = disposables.add(GLFWGameControls.getDefaultControls(window.input(), EvolutionControls.class));
 		var projection = new Projection(MathUtil.toRadians(60f),
 				((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
 		var playersBuilder = new ImmutableList.Builder<Player>();
@@ -220,7 +288,7 @@ public enum Game implements Screen {
 			var angle = MathUtil.TAU * ((float) i) / numPlayers;
 			var cos = (float) Math.cos(angle);
 			var sin = (float) Math.sin(angle);
-			var player = new Player("Player " + (i + 1), new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection);
+			var player = disposables.add(new Player("Player " + (i + 1), new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
 			player.mutableRotation().setY((float) Math.atan2(player.position().y(), player.position().x()));
 			playersBuilder.add(player);
 		}
@@ -228,17 +296,17 @@ public enum Game implements Screen {
 		world.entities().addAll(players);
 		world.entities().flush();
 		gameLoop = disposables.add(new GameLoop(players, controls));
-		gameLoop.onWinner(player -> {
+		disposables.add(gameLoop.onWinner(player -> {
 			window.popAndPushScreen(Menu.INSTANCE);
-		});
+		}));
 
 		Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
 		CommonProgramsSetup.setup3D(gameLoop.currentPlayer().camera().getProjectionMatrix());
 
-		updateViewMatrices();
+		updateMatrices();
 
-		frameBuffer = disposables.add(new FrameBuffer());
+		frameBuffer = disposables.add(new FrameBuffer(windowWidth, windowHeight));
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
 			Texture colorTexture = disposables.add(new Texture());
@@ -278,21 +346,19 @@ public enum Game implements Screen {
 			});
 		});
 
-		debug = new ArrayList<>();
-
 		lightPosition = gameLoop.currentPlayer().position();
 
 		disposables.add(window.input().keyEvent().add(event -> {
 			if (event.action() == GLFW.GLFW_RELEASE) {
 				if (event.key() == GLFW.GLFW_KEY_C) {
 					world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof RocketLauncherProjectile);
-					debug.clear();
 				}
 				if (event.key() == GLFW.GLFW_KEY_H) {
+					var ballSize = (float) (Math.random());
 					int size = 20;
 					for (int i = -size; i <= size; i += 5) {
 						for (int j = -size; j <= size; j += 5) {
-							world.entities().add(new PuzzleBall(new Location(world, Vector3D.of(i, 100, j)), Vector3D.ZERO));
+							world.entities().add(new PuzzleBall(new Location(world, Vector3D.of(i, 100, j)), Vector3D.ZERO, Vector3D.of(ballSize, ballSize, ballSize)));
 						}
 					}
 				}
@@ -303,10 +369,24 @@ public enum Game implements Screen {
 		uiScreen = disposables.add(new UIScreen(window.input()));
 		uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
 			System.out.println("Clicked");
+		}).visible().setValue(false);
+		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED).visible().setValue(false);
+		var progressBar = uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
+			if (gameLoop.startTime != null && gameLoop.endTime != null) {
+				float progressedTime = Duration.between(gameLoop.startTime, Instant.now()).toMillis();
+				float totalTime = Duration.between(gameLoop.startTime, gameLoop.endTime).toMillis();
+				return progressedTime / totalTime;
+			} else {
+				return 0f;
+			}
 		});
-		uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED);
+		disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
+		uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f),
+				world.terrain(),
+				() -> gameLoop.currentPlayer());
 
 		disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
+		disposables.add(() -> loaded = false);
 	}
 
 	@Override
@@ -316,6 +396,8 @@ public enum Game implements Screen {
 		var totalLength = world.entities().stream().map(entity -> entity instanceof PuzzleBall ball ? ball.velocity().length() : 0f).reduce(0f, Float::sum);
 		world.entities().removeIf(entity -> entity instanceof PuzzleBall ball && ball.position().y() <= -300f);
 		world.update(dt);
+
+		gameLoop.update();
 
 		benchmarker.getLineGraph("debugData").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();
@@ -343,9 +425,10 @@ public enum Game implements Screen {
 		}
 	}
 
-	public void updateViewMatrices() {
+	public void updateMatrices() {
 		var camera = gameLoop.currentPlayer().camera();
 		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, camera.getTransformationMatrix());
+		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.getProjectionMatrix());
 		CommonPrograms3D.CUBEMAP.use(program -> {
 			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, camera.getInvertedRotationMatrix());
 		});
@@ -353,7 +436,7 @@ public enum Game implements Screen {
 
 	@Override
 	public void render() {
-		updateViewMatrices();
+		updateMatrices();
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 			GL11.glDepthMask(false);
@@ -362,27 +445,6 @@ public enum Game implements Screen {
 				CommonDrawables.SKYBOX.draw();
 			});
 			GL11.glDepthMask(true);
-			for (Vector3D x : debug) {
-				PuzzleBall.render(x, Vector3D.of(0.2f, 0.2f, 0.2f));
-			}
-			world.entities().forEach(entity -> {
-				if (entity instanceof Player && gameLoop.currentPlayer() != entity) {
-					//PuzzleBall.render(entity.position());
-					GL11.glEnable(GL11.GL_BLEND);
-					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-					GL11.glEnable(GL11.GL_DEPTH_TEST);
-					CommonPrograms3D.COLOR.use(program -> {
-						try (var translationMatrix = MatrixPool.ofTranslation(entity.position());
-							 var rotationMatrix = MatrixPool.ofRotation(entity.rotation());
-							 var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
-							program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
-						}
-						foxModel.draw();
-					});
-					GL11.glDisable(GL11.GL_DEPTH_TEST);
-					GL11.glDisable(GL11.GL_BLEND);
-				}
-			});
 			worldRenderer.render(gameLoop.currentPlayer().position());
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			CommonPrograms3D.LIGHT.use(program -> {
@@ -420,13 +482,14 @@ public enum Game implements Screen {
 				 var scalarMatrixB = MatrixPool.ofScalar(1f, 5f, 1f);
 				 var matrixA = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixA);
 				 var matrixB = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixB)) {
+				program.loadColor4f("filterColor", Color.WHITE);
 				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixA);
 				CommonDrawables.COLORED_QUAD.draw();
 				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixB);
 				CommonDrawables.COLORED_QUAD.draw();
 			}
 		});
-		//uiScreen.render();
+		uiScreen.render();
 		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
 			debugOverlay.render();
 		}

@@ -84,6 +84,18 @@ public class MathUtil {
 		return matrix;
 	}
 
+	public static Matrix getOrtho(float left, float right, float top, float bottom, float near, float far) {
+		Matrix matrix = new Matrix(4);
+		matrix.set(0, 0, 2f / (right - left));
+		matrix.set(1, 1, 2f / (top - bottom));
+		matrix.set(2, 2, -2f / (far - near));
+		matrix.set(0, 3, -(right + left) / (right - left));
+		matrix.set(1, 3, -(top + bottom) / (top - bottom));
+		matrix.set(2, 3, -(far + near) / (far - near));
+		matrix.set(3, 3, 1);
+		return matrix;
+	}
+
 	public static Supplier<Matrix> getTransformationSupplier(Supplier<Vector3D> translationSupplier, Supplier<Vector3D> rotationSupplier) {
 		Matrix a = new Matrix(4);
 		Matrix b = new Matrix(4);

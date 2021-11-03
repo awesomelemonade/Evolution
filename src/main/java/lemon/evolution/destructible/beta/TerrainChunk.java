@@ -86,7 +86,7 @@ public class TerrainChunk {
 				Vector3D a = transformed[indices[i]];
 				Vector3D b = transformed[indices[i + 2]];
 				Vector3D c = transformed[indices[i + 1]];
-				Triangle triangle = new Triangle(a, b, c);
+				Triangle triangle = Triangle.of(a, b, c);
 				float area = triangle.area();
 				if (area > 0f) {
 					float weight = 1f / area;

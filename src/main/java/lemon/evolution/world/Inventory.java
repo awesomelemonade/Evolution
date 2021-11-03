@@ -1,9 +1,12 @@
 package lemon.evolution.world;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset;
 import lemon.evolution.item.ItemType;
+import lemon.futility.FMultisetWithEvents;
 
 public class Inventory {
-	private Multiset<ItemType> items = HashMultiset.create();
+	private final FMultisetWithEvents<ItemType> items = new FMultisetWithEvents<>();
+
+	public FMultisetWithEvents<ItemType> items() {
+		return items;
+	}
 }

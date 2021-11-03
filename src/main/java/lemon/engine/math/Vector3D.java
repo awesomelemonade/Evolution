@@ -5,7 +5,8 @@ import java.util.function.UnaryOperator;
 
 public interface Vector3D extends Vector<Vector3D> {
 	public static final int NUM_DIMENSIONS = 3;
-	public static final Vector3D ZERO = Vector3D.of(0, 0, 0);
+	public static final Vector3D ZERO = Vector3D.of(0f, 0f, 0f);
+	public static final Vector3D ONE = Vector3D.of(1f, 1f, 1f);
 	public static final Vector3D[] EMPTY_ARRAY = new Vector3D[] {};
 
 	public float x();
