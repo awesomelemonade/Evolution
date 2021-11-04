@@ -36,12 +36,11 @@ public enum Menu implements Screen {
 	private List<TextModel> buttonsText;
 	private Font font;
 	private final Disposables disposables = new Disposables();
-	private Histogram histogram;
 	private int drawnButtons = 0;
 	private final int NUM_BUTTONS = 3;
 	private Quad2D scrollBar;
 	private boolean mouseDown = false;
-	private Matrix buttonSize = new Matrix(MathUtil.getScalar(Vector3D.of(.001f, .0011f, .001f)));
+	private final Matrix buttonSize = new Matrix(MathUtil.getScalar(Vector3D.of(.001f, .0013f, .001f)));
 
 
 	@Override
@@ -106,13 +105,12 @@ public enum Menu implements Screen {
 					float mouseY = (2f * rawMouseY / event.glfwWindow().getHeight()) - 1f;
 					for (int i = 0; i < buttons.size(); ++i) {
 						if (buttons.get(i).getBox2D().intersect(mouseX, mouseY - drawnButtons * .2f)) {
+							ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 							switch (i) {
 								case 0 -> {
-									ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 									var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 									PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 									ScalarField<Vector3D> scalarField;
-									histogram = new Histogram(0.1f);
 									scalarField = vector -> {
 										if (vector.y() < 0f) {
 											return 0f;
@@ -125,17 +123,14 @@ public enum Menu implements Screen {
 										float terrain = (float) (-Math.tanh(vector.y() / 100.0) * 100.0 +
 												Math.pow(2f, noise2d.apply(vector.toXZVector().divide(300f))) * 5.0 +
 												Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
-										histogram.add(terrain);
 										return Math.min(cylinder, terrain);
 									};
 									start(new Game(scalarField));
 								}
 								case 1 -> {
-									ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 									var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 4);
 									PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 7);
 									ScalarField<Vector3D> scalarField;
-									histogram = new Histogram(0.1f);
 									scalarField = vector -> {
 										if (vector.y() < 0f) {
 											return 0f;
@@ -148,7 +143,6 @@ public enum Menu implements Screen {
 										float terrain = (float) (-Math.tanh(vector.y() / 100.0) * 20.0 +
 												Math.pow(2.75f, noise2d.apply(vector.toXZVector().divide(300f))) * 3.0 +
 												Math.pow(5.75f, noise.apply(vector.divide(500f))) * 3.5);
-										histogram.add(terrain);
 										return Math.min(cylinder, terrain);
 									};
 									start(new Game(scalarField));
@@ -186,7 +180,7 @@ public enum Menu implements Screen {
 			program.loadVector("color", (Vector3D.of(1f, 0f, 1f)));
 			for (int i = 0; i < NUM_BUTTONS; ++i) {
 				program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(0f - (buttonsText.get(drawnButtons + i).getText().length())*.02f,
-						-.3f - (i * .2f), 0f)).multiply(MathUtil.getScalar(Vector3D.of(.001f, .0013f, .001f))));
+						-.3f - (i * .2f), 0f)).multiply(buttonSize));
 				buttonsText.get(drawnButtons + i).draw();
 			}
 		});
