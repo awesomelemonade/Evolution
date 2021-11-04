@@ -21,11 +21,13 @@ import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
-public class ParticleSystem implements Renderable {
-	private static final float[] VERTICES = {-1f, -1f, -1f, -1f, -1f, 1f, -1f, 1f, -1f, -1f,
-			1f, 1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f, 1f};
-	private static final int[] INDICES = {2, 0, 4, 4, 6, 2, 1, 0, 2, 2, 3, 1, 4, 5, 7, 7, 6, 4,
-			1, 3, 7, 7, 5, 1, 2, 6, 7, 7, 3, 2, 0, 1, 4, 4, 1, 5};
+public class ParticleSystem {
+	private static final float[] VERTICES = {
+			-0.5f, -0.5f,
+			0.5f, -0.5f,
+			-0.5f, 0.5f,
+			0.5f, 0.5f
+	};
 	private final VertexArray vertexArray;
 	private VertexBuffer vertexBuffer;
 	private final int maxParticles;
@@ -36,30 +38,19 @@ public class ParticleSystem implements Renderable {
 		this.particles = new ArrayDeque<>();
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
-			new VertexBuffer().bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
-				GL15.glBufferData(target, INDICES, GL15.GL_STATIC_DRAW);
-			}, false);
-			new VertexBuffer().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			new VertexBuffer().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> { // Quad Vertices
 				GL15.glBufferData(target, VERTICES, GL15.GL_STATIC_DRAW);
-				GL20.glVertexAttribPointer(0, 3, GL11.GL_FLOAT, false, 3 * 4, 0);
+				GL20.glVertexAttribPointer(0, 2, GL11.GL_FLOAT, false, 2 * 4, 0);
 			});
 			vertexBuffer = new VertexBuffer();
-			vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+			vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> { // Particle Center [x, y, z] + Size [w]
 				GL15.glBufferData(target, getInitialFloatBuffer(), GL15.GL_STREAM_DRAW);
-				GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 16 * 4, 0);
-				GL20.glVertexAttribPointer(2, 4, GL11.GL_FLOAT, false, 16 * 4, 4 * 4);
-				GL20.glVertexAttribPointer(3, 4, GL11.GL_FLOAT, false, 16 * 4, 8 * 4);
-				GL20.glVertexAttribPointer(4, 4, GL11.GL_FLOAT, false, 16 * 4, 12 * 4);
-				GL33.glVertexAttribDivisor(1, 1);
-				GL33.glVertexAttribDivisor(2, 1);
-				GL33.glVertexAttribDivisor(3, 1);
-				GL33.glVertexAttribDivisor(4, 1);
+				GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 4 * 4, 0);
 			});
+			GL33.glVertexAttribDivisor(0, 0);
+			GL33.glVertexAttribDivisor(1, 1);
 			GL20.glEnableVertexAttribArray(0);
 			GL20.glEnableVertexAttribArray(1);
-			GL20.glEnableVertexAttribArray(2);
-			GL20.glEnableVertexAttribArray(3);
-			GL20.glEnableVertexAttribArray(4);
 		});
 	}
 
@@ -70,19 +61,20 @@ public class ParticleSystem implements Renderable {
 	}
 
 	public FloatBuffer getInitialFloatBuffer() {
-		FloatBuffer buffer = BufferUtils.createFloatBuffer(16 * maxParticles);
+		var buffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		for (int i = 0; i < maxParticles; i++) {
-			Matrix.ZERO_4.addToFloatBuffer(buffer);
+			Vector3D.ZERO.putInBuffer(buffer); // center
+			buffer.put(1f); // size
 		}
 		buffer.flip();
 		return buffer;
 	}
 
 	public FloatBuffer getFloatBuffer() {
-		FloatBuffer buffer = BufferUtils.createFloatBuffer(16 * particles.size());
+		var buffer = BufferUtils.createFloatBuffer(4 * particles.size());
 		for (Particle particle : particles) {
-			particle.getTransformationMatrix()
-					.multiply(MathUtil.getScalar(Vector3D.of(0.8f, 0.8f, 0.8f))).addToFloatBuffer(buffer);
+			particle.position().putInBuffer(buffer);
+			buffer.put(1f); // size
 		}
 		buffer.flip();
 		return buffer;
@@ -98,7 +90,7 @@ public class ParticleSystem implements Renderable {
 
 	private static final Vector3D GRAVITY = Vector3D.of(0f, -0.01f, 0f);
 
-	public void render() {
+	public void render(Vector3D position) {
 		while ((!particles.isEmpty()) && particles.peekFirst().getAge().compareTo(Duration.ofSeconds(5)) >= 0) {
 			particles.poll();
 		}
@@ -107,22 +99,26 @@ public class ParticleSystem implements Renderable {
 				particles.add(new Particle(Vector3D.ZERO,
 						Vector3D.of((float) (-Math.random() * 3 - 2),
 								(float) ((Math.random() - 0.5) * 1.4),
-								(float) ((Math.random() - 0.5) * 1.4)),
-						randomVector(), randomVector().multiply(0.05f)));
+								(float) ((Math.random() - 0.5) * 1.4))));
 			}
 		}
 		for (Particle particle : particles) {
-			particle.getTranslationalVelocity().add(GRAVITY);
-			particle.getTranslationalVelocity().multiply(0.95f);
+			particle.mutableVelocity().add(GRAVITY);
+			particle.mutableVelocity().multiply(0.95f);
 			particle.update();
 		}
 		updateVbo();
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glEnable(GL11.GL_DEPTH_TEST);
 		CommonPrograms3D.PARTICLE.use(program -> {
 			program.loadColor4f(Color.RED);
-			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(65f, 98f, 0f)));
+			program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(position));
 			vertexArray.bind(vao -> {
-				GL31.glDrawElementsInstanced(GL11.GL_TRIANGLES, INDICES.length, GL11.GL_UNSIGNED_INT, 0, particles.size());
+				GL31.glDrawArraysInstanced(GL11.GL_TRIANGLE_STRIP, 0, 4, particles.size());
 			});
 		});
+		GL11.glDisable(GL11.GL_DEPTH_TEST);
+		GL11.glDisable(GL11.GL_BLEND);
 	}
 }

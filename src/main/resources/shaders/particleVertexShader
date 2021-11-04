@@ -1,7 +1,7 @@
 #version 400 core
 
-in vec3 position;
-in mat4 transformationMatrix;
+in vec2 position;
+in vec4 particleCenter;
 
 out vec4 passColor;
 
@@ -11,7 +11,11 @@ uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
 void main(void) {
-	gl_Position = projectionMatrix * viewMatrix * modelMatrix * transformationMatrix * vec4(position, 1.0);
+    vec3 cameraPositiveX = viewMatrix[0].xyz;
+    vec3 cameraPositiveY = viewMatrix[1].xyz;
 
+    vec3 vertexPosition = particleCenter.a * (cameraPositiveX * position.x + cameraPositiveY * position.y);
+
+	gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition + particleCenter.xyz, 1.0);
 	passColor = color;
 }

@@ -40,6 +40,7 @@ import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.entity.*;
+import lemon.evolution.particle.beta.ParticleSystem;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
@@ -233,6 +234,7 @@ public class Game implements Screen {
 					});
 			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
 					objLoader -> {
+						var particleSystem = new ParticleSystem(1000);
 						var drawable = objLoader.toIndexedDrawable();
 						entityRenderer.registerCollection(Player.class, players -> {
 							for (var player : players) {
@@ -250,6 +252,9 @@ public class Game implements Screen {
 									});
 									GL11.glDisable(GL11.GL_DEPTH_TEST);
 									GL11.glDisable(GL11.GL_BLEND);
+
+									// render particles
+									particleSystem.render(player.position());
 								}
 							}
 						});
