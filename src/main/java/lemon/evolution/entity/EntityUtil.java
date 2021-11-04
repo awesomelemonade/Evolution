@@ -10,11 +10,11 @@ import lemon.evolution.world.World;
 import java.util.function.BiFunction;
 
 public class EntityUtil {
-    public static void generateExplosion(World world, Vector3D position) {
-        world.terrain().generateExplosion(position, 3f);
+    public static void generateExplosion(World world, Vector3D position, float radius) {
+        world.terrain().generateExplosion(position, radius);
         world.entities().forEach(entity -> {
             if (entity instanceof Player) {
-                float strength = Math.min(2f, 10f / entity.position().distanceSquared(position));
+                float strength = Math.min(1f, 3f * radius / entity.position().distanceSquared(position));
                 var direction = entity.position().subtract(position);
                 if (direction.equals(Vector3D.ZERO)) {
                     direction = Vector3D.ofRandomUnitVector();
