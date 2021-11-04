@@ -74,8 +74,7 @@ import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 import java.util.logging.Logger;
 
-public enum Game implements Screen {
-	INSTANCE;
+public class Game implements Screen {
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
 
 	private GLFWWindow window;
@@ -109,9 +108,13 @@ public enum Game implements Screen {
 	private ThreadPoolExecutor pool;
 	private ThreadPoolExecutor pool2;
 
-	private Histogram histogram;
-
 	private final Disposables disposables = new Disposables();
+
+	private ScalarField<Vector3D> scalarfield;
+
+	public Game(ScalarField<Vector3D> scalarfield) {
+		this.scalarfield = scalarfield;
+	}
 
 	@Override
 	public void onLoad(GLFWWindow window) {
@@ -120,7 +123,6 @@ public enum Game implements Screen {
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			histogram = new Histogram(0.1f);
 			ScalarField<Vector3D> scalarField = vector -> Math.max(-Math.abs(vector.y() + 10f) + 2f, -1f);
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
