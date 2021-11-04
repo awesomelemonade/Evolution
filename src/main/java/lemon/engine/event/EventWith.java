@@ -8,12 +8,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class EventWith<T> {
-	private Map<Object, Consumer<? super T>> listeners;
+	private final Map<Object, Consumer<? super T>> listeners = new LinkedHashMap<>();
 	private Consumer<? super T>[] cachedListeners;
-
-	public EventWith() {
-		listeners = new LinkedHashMap<>(); // Map is used so we allow duplicates
-	}
 
 	/**
 	 * @param listener Listener

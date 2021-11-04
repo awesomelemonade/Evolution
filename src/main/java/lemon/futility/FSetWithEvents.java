@@ -11,20 +11,19 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
-public class FSetWithEvents<T> implements Set<T> {
+public class FSetWithEvents<T> extends FCollection<T> implements Set<T> {
 	private final Set<T> backingSet;
-	private final EventWith<T> onAdd;
-	private final EventWith<T> onRemove;
+	private final EventWith<T> onAdd = new EventWith<>();
+	private final EventWith<T> onRemove = new EventWith<>();
+
 	public FSetWithEvents() {
-		this(new HashSet<>(), new EventWith<>(), new EventWith<>());
+		this(new HashSet<>());
 	}
 
-	public FSetWithEvents(Set<T> backingSet, EventWith<T> onAdd, EventWith<T> onRemove) {
+	public FSetWithEvents(Set<T> backingSet) {
 		this.backingSet = backingSet;
-		this.onAdd = onAdd;
-		this.onRemove = onRemove;
 	}
 
 	public Set<T> backingSet() {
@@ -60,40 +59,7 @@ public class FSetWithEvents<T> implements Set<T> {
 
 	@Override
 	public boolean containsAll(Collection<?> c) {
-		for (var item : c) {
-			if (!contains(item)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	@Override
-	public boolean addAll(Collection<? extends T> c) {
-		boolean result = false;
-		for (var item : c) {
-			if (add(item)) {
-				result = true;
-			}
-		}
-		return result;
-	}
-
-	@Override
-	public boolean retainAll(Collection<?> c) {
-		var set = c.stream().filter(this::contains).collect(Collectors.toSet());
-		return this.removeIf(item -> !set.contains(item));
-	}
-
-	@Override
-	public boolean removeAll(Collection<?> c) {
-		boolean result = false;
-		for (var item : c) {
-			if (remove(item)) {
-				result = true;
-			}
-		}
-		return result;
+		return backingSet.containsAll(c);
 	}
 
 	@Override
@@ -123,6 +89,7 @@ public class FSetWithEvents<T> implements Set<T> {
 		var backingIterator = backingSet.iterator();
 		return new Iterator<>() {
 			T item = null;
+
 			@Override
 			public boolean hasNext() {
 				return backingIterator.hasNext();
@@ -200,5 +167,22 @@ public class FSetWithEvents<T> implements Set<T> {
 			}
 		}));
 		return observable;
+	}
+
+	public static <T> FSetWithEvents<T> ofFiltered(Collection<T> collection,
+												   Function<T, Observable<Boolean>> mapper,
+												   Consumer<Disposable> disposer) {
+		var set = new FSetWithEvents<T>();
+		for (var item : collection) {
+			var observable = mapper.apply(item);
+			disposer.accept(observable.onChangeAndRun(inSet -> {
+				if (inSet) {
+					set.add(item);
+				} else {
+					set.remove(item);
+				}
+			}));
+		}
+		return set;
 	}
 }

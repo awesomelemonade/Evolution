@@ -1,12 +1,10 @@
 package lemon.engine.toolbox;
 
-import lemon.evolution.Game;
 import org.lwjgl.BufferUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
@@ -44,6 +42,21 @@ public class Toolbox {
 			e.printStackTrace();
 		}
 		return Optional.empty();
+	}
+
+	public static int getNumLines(String path) {
+		try {
+			BufferedReader lineCountReader = new BufferedReader(new InputStreamReader(
+					Toolbox.class.getResourceAsStream(path)));
+			int lines = 0;
+			while (lineCountReader.readLine() != null) {
+				lines++;
+			}
+			return lines;
+		} catch (IOException ex) {
+			ex.printStackTrace();
+			throw new IllegalStateException(ex);
+		}
 	}
 
 	public static ByteBuffer toByteBuffer(BufferedImage image) {

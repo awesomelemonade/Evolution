@@ -4,44 +4,61 @@ import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.Vector2D;
 import lemon.engine.render.Renderable;
+import lemon.engine.texture.Texture;
 import lemon.engine.toolbox.Color;
-import lemon.engine.toolbox.Disposable;
-import lemon.engine.toolbox.Disposables;
+import lemon.evolution.UIMinimap;
+import lemon.evolution.world.ControllableEntity;
+import lemon.evolution.world.World;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-public class UIScreen implements Renderable, Disposable {
-	private final List<UIComponent> components = new ArrayList<>();
-	private final Disposables disposables = new Disposables();
-	private final GLFWInput input;
-
+public class UIScreen extends AbstractUIComponent {
 	public UIScreen(GLFWInput input) {
-		this.input = input;
+		super(input);
+	}
+
+	private <T extends UIComponent> T addComponent(T component) {
+		children().add(component);
+		return component;
 	}
 
 	public UIButton addButton(Box2D box, Color color, Consumer<UIButton> eventHandler) {
-		UIButton button = new UIButton(box, color, eventHandler);
-		disposables.add(button.registerInputEvents(input));
-		components.add(button);
-		return button;
+		return addComponent(new UIButton(this, box, color, eventHandler));
 	}
 
 	public UIWheel addWheel(Vector2D position, float radius, float value, Color color) {
-		UIWheel wheel = new UIWheel(position, radius, value, color);
-		disposables.add(wheel.registerInputEvents(input));
-		components.add(wheel);
-		return wheel;
+		return addComponent(new UIWheel(this, position, radius, value, color));
+	}
+
+	public UICheckbox addCheckbox(Box2D box) {
+		return addComponent(new UICheckbox(this, box));
+	}
+
+	public UIProgressBar addProgressBar(Box2D box, Supplier<Float> progressGetter) {
+		return addComponent(new UIProgressBar(this, box, progressGetter));
+	}
+
+	public UIMinimap addMinimap(Box2D box, World world, Supplier<ControllableEntity> entitySupplier) {
+		return addComponent(new UIMinimap(this, box, world, entitySupplier));
+	}
+
+	public UIImage addImage(Box2D box, String path) {
+		return addComponent(new UIImage(this, box, path));
+	}
+
+	public UIImage addImage(Box2D box, Texture texture) {
+		return addComponent(new UIImage(this, box, texture));
+	}
+
+	public UIInventory addInventory() {
+		return addComponent(new UIInventory(this));
 	}
 
 	@Override
 	public void render() {
-		components.forEach(Renderable::render);
-	}
-
-	@Override
-	public void dispose() {
-		disposables.dispose();
+		if (isVisible()) {
+			children().forEach(Renderable::render);
+		}
 	}
 }

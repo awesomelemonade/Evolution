@@ -62,7 +62,7 @@ public class ObjLoader implements Loader {
 	private final List<Integer> modelIndices = new ArrayList<>();
 	private final Map<Integer, Map<Integer, Integer>> cache = new HashMap<>();
 	private final Consumer<ObjLoader> postLoadCallback;
-	private final Disposable disposables = Disposable.of(
+	private final Disposables disposables = new Disposables(
 			parsedVertices::clear, modelVertices::clear,
 			parsedNormals::clear, modelNormals::clear,
 			modelIndices::clear, cache::clear
@@ -79,18 +79,8 @@ public class ObjLoader implements Loader {
 		this.file = file;
 		this.reader = new BufferedReader(new InputStreamReader(
 				ObjLoader.class.getResourceAsStream(file)));
-		try {
-			BufferedReader lineCountReader = new BufferedReader(new InputStreamReader(
-					ObjLoader.class.getResourceAsStream(file)));
-			int lines = 0;
-			while (lineCountReader.readLine() != null) {
-				lines++;
-			}
-			this.totalLines = lines;
-		} catch (IOException ex) {
-			ex.printStackTrace();
-			throw new IllegalStateException(ex);
-		}
+		disposables.add(Disposable.ofBufferedReader(reader));
+		this.totalLines = Toolbox.getNumLines(file);
 		this.postLoadCallback = postLoadCallback;
 	}
 
