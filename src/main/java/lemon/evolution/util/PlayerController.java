@@ -1,5 +1,6 @@
 package lemon.evolution.util;
 
+import lemon.engine.event.Observable;
 import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
@@ -10,6 +11,8 @@ import lemon.evolution.world.GameLoop;
 public class PlayerController extends EntityController<Player> implements Disposable {
 	private final Disposables disposables = new Disposables();
 	private final GameLoop gameLoop;
+	private final Observable<Float> powerMeter = new Observable<>(0f);
+
 	public PlayerController(GameLoop gameLoop, GameControls<EvolutionControls, GLFWInput> controls, Player player) {
 		super(controls, player);
 		this.gameLoop = gameLoop;
@@ -20,6 +23,7 @@ public class PlayerController extends EntityController<Player> implements Dispos
 				if (!gameLoop.usedWeapon || !item.isWeapon()) {
 					item.use(current, 1f);
 					gameLoop.usedWeapon = gameLoop.usedWeapon || item.isWeapon();
+					current.inventory().removeOneOfCurrentItem();
 				}
 			});
 		}));

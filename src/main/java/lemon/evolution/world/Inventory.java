@@ -1,17 +1,36 @@
 package lemon.evolution.world;
 
 import lemon.engine.event.Observable;
+import lemon.engine.toolbox.Disposable;
+import lemon.engine.toolbox.Disposables;
 import lemon.evolution.item.ItemType;
+import lemon.futility.FListWithEvents;
 import lemon.futility.FMultisetWithEvents;
 
 import java.util.Optional;
 
-public class Inventory {
+public class Inventory implements Disposable {
+	private final Disposables disposables = new Disposables();
 	private final FMultisetWithEvents<ItemType> items = new FMultisetWithEvents<>();
+	private final FListWithEvents<ItemType> itemsList = FListWithEvents.fromMultiset(items, disposables::add);
 	private final Observable<Optional<ItemType>> currentItem = new Observable<>(Optional.empty());
+
+	public Inventory() {
+		disposables.add(items.onFallToZero(item -> {
+			currentItem.getValue().ifPresent(current -> {
+				if (current.equals(item)) {
+					clearCurrentItem();
+				}
+			});
+		}));
+	}
 
 	public FMultisetWithEvents<ItemType> items() {
 		return items;
+	}
+
+	public FListWithEvents<ItemType> itemsList() {
+		return itemsList;
 	}
 
 	public void addItem(ItemType item) {
@@ -35,13 +54,20 @@ public class Inventory {
 		currentItem.setValue(Optional.empty());
 	}
 
+	public Observable<Optional<ItemType>> observableCurrentItem() {
+		return currentItem;
+	}
+
 	public Optional<ItemType> currentItem() {
 		return currentItem.getValue();
 	}
 
-	public void useCurrentItem() {
-		this.currentItem.getValue().ifPresent(item -> {
-			items.remove(item);
-		});
+	public void removeOneOfCurrentItem() {
+		this.currentItem.getValue().ifPresent(items::remove);
+	}
+
+	@Override
+	public void dispose() {
+		disposables.dispose();
 	}
 }

@@ -121,7 +121,7 @@ public class Game implements Screen {
 			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
-			ScalarField<Vector3D> scalarField = vector -> Math.max(-Math.abs(vector.y() + 10f) + 2f, -1f);
+			ScalarField<Vector3D> scalarField = vector -> -1f;
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 			pool.setRejectedExecutionHandler((runnable, executor) -> {});
@@ -289,7 +289,7 @@ public class Game implements Screen {
 				public void load() {
 					var currentRenderDistance = worldRenderer.terrainRenderer().getRenderDistance();
 					postLoadTasks.add(() -> worldRenderer.terrainRenderer().setRenderDistance(currentRenderDistance));
-					worldRenderer.terrainRenderer().setRenderDistance(12f);
+					worldRenderer.terrainRenderer().setRenderDistance(8f);
 					worldRenderer.terrainRenderer().preload(Vector3D.ZERO);
 					generatorStartSize = Math.max(1, generator.getQueueSize());
 				}
@@ -458,11 +458,12 @@ public class Game implements Screen {
 			}));
 			uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png").visible().setValue(false);
 
-			UIInventory uiInventory = uiScreen.addInventory();
-			disposables.add(gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
+			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());
+			uiInventory.visible().setValue(false);	
+			disposables.add(gameLoop.observableCurrentPlayer().onChange(player -> {
 				var inventory = player.inventory();
-				uiInventory.setInventory(inventory);
 				uiInventory.visible().setValue(false);
+				uiInventory.setInventory(inventory);
 			}));
 			// sets up inventory toggle
 			disposables.add(controls.onActivated(EvolutionControls.TOGGLE_INVENTORY, () -> {

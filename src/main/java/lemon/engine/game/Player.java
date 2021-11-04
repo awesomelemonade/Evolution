@@ -21,7 +21,7 @@ public class Player extends AbstractControllableEntity implements Disposable {
 	private final Camera camera;
 	private final Observable<Float> health = new Observable<>(START_HEALTH);
 	private final Observable<Boolean> alive;
-	private final Inventory inventory = new Inventory();
+	private final Inventory inventory = disposables.add(new Inventory());
 
 	public Player(String name, Location location, Projection projection) {
 		super(location, Vector3D.ZERO);
@@ -29,18 +29,11 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		this.camera = new Camera(mutablePosition(), mutableRotation(), projection);
 		disposables.add(onUpdate().add(() -> {
 			if (position().y() < VOID_Y_COORDINATE) {
-				world().entities().remove(this);
+				health.setValue(0f);
 			}
 		}));
 		disposables.add(health.onChange(newHealth -> newHealth <= 0f, () -> world().entities().remove(this)));
 		this.alive = world().entities().observableContains(this, disposables::add);
-		disposables.add(inventory.items().onFallToZero(item -> {
-			inventory.currentItem().ifPresent(current -> {
-				if (current.equals(item)) {
-					inventory.clearCurrentItem();
-				}
-			});
-		}));
 		// TODO: Temporary
 		inventory.addAndSetCurrentItem(BasicItems.ROCKET_LAUNCHER);
 		inventory.addItem(BasicItems.MISSILE_SHOWER);
