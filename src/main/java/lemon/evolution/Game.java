@@ -412,7 +412,7 @@ public class Game implements Screen {
 			lightPosition = gameLoop.currentPlayer().position();
 
 			var texture = new Texture();
-			texture.load(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow()));
+			texture.load(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow(), true));
 			particleSystem = disposables.add(new ParticleSystem(100000, texture));
 			disposables.add(world.onExplosion((position, radius) -> particleSystem.addExplosionParticles(position, radius)));
 
