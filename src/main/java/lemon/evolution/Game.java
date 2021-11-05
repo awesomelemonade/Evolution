@@ -430,9 +430,11 @@ public class Game implements Screen {
 				MutableVector3D pos = MutableVector3D.of(gameLoop.currentPlayer().mutablePosition().asImmutable());
 				MutableVector3D rot = MutableVector3D.of(gameLoop.currentPlayer().mutableRotation().asImmutable());
 				freecam = new Camera(pos, rot, gameLoop.currentPlayer().camera().getProjection());
+				viewModel.setVisible(false);
 			}));
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(false, () -> {
 				gameLoop.getGatedControls().setEnabled(true);
+				viewModel.setVisible(true);
 			}));
 
 			uiScreen = disposables.add(new UIScreen(window.input()));
