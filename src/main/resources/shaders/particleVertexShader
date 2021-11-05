@@ -3,8 +3,10 @@
 in vec2 position;
 in vec2 textureCoords;
 in vec4 particleCenter;
+in vec4 particleColor;
 
 out vec2 passTextureCoords;
+out vec4 passColor;
 
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
@@ -19,4 +21,5 @@ void main(void) {
 
 	gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition + particleCenter.xyz, 1.0);
 	passTextureCoords = textureCoords;
+	passColor = particleColor;
 }

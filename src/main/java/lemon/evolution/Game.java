@@ -101,7 +101,8 @@ public class Game implements Screen {
 	private ViewModel viewModel;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
-	private TaskQueue translucentRenderer = TaskQueue.ofSingleThreaded();
+
+	private ParticleSystem particleSystem;
 
 	private UIScreen uiScreen;
 
@@ -235,9 +236,6 @@ public class Game implements Screen {
 					});
 			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
 					objLoader -> {
-						var texture = new Texture();
-						texture.load(new TextureData(Toolbox.readImage("/res/particles/smoke_01.png").orElseThrow()));
-						var particleSystem = new ParticleSystem(100000, texture);
 						var drawable = objLoader.toIndexedDrawable();
 						entityRenderer.registerCollection(Player.class, players -> {
 							for (var player : players) {
@@ -255,11 +253,6 @@ public class Game implements Screen {
 									});
 									GL11.glDisable(GL11.GL_DEPTH_TEST);
 									GL11.glDisable(GL11.GL_BLEND);
-
-									// render particles
-									translucentRenderer.add(() -> {
-										particleSystem.render(gameLoop.currentPlayer().position(), player.position());
-									});
 								}
 							}
 						});
@@ -417,6 +410,11 @@ public class Game implements Screen {
 
 
 			lightPosition = gameLoop.currentPlayer().position();
+
+			var texture = new Texture();
+			texture.load(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow()));
+			particleSystem = disposables.add(new ParticleSystem(100000, texture));
+			disposables.add(world.onExplosion((position, radius) -> particleSystem.addExplosionParticles(position, radius)));
 
 			disposables.add(window.input().keyEvent().add(event -> {
 				if (event.action() == GLFW.GLFW_RELEASE) {
@@ -609,7 +607,7 @@ public class Game implements Screen {
 				//dragonModel.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
-			translucentRenderer.run();
+			particleSystem.render(gameLoop.currentPlayer().position());
 		});
 		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();

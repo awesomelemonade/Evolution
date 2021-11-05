@@ -1,12 +1,9 @@
 package lemon.engine.toolbox;
 
-import lemon.engine.math.FloatData;
 import lemon.engine.math.Vector3D;
+import lemon.engine.math.Vector4D;
 
-import java.nio.FloatBuffer;
-
-public record Color(float red, float green, float blue, float alpha) implements FloatData {
-	public static final int NUM_DIMENSIONS = 4;
+public record Color(float red, float green, float blue, float alpha) implements Vector4D {
 	public static final Color WHITE = new Color(1f, 1f, 1f);
 	public static final Color RED = new Color(1f, 0f, 0f);
 	public static final Color GREEN = new Color(0f, 1f, 0f);
@@ -62,23 +59,22 @@ public record Color(float red, float green, float blue, float alpha) implements 
 	}
 
 	@Override
-	public int numDimensions() {
-		return NUM_DIMENSIONS;
+	public float x() {
+		return red;
 	}
 
 	@Override
-	public void putInBuffer(FloatBuffer buffer) {
-		buffer.put(red);
-		buffer.put(green);
-		buffer.put(blue);
-		buffer.put(alpha);
+	public float y() {
+		return green;
 	}
 
 	@Override
-	public void putInArray(float[] array) {
-		array[0] = red;
-		array[1] = green;
-		array[2] = blue;
-		array[3] = alpha;
+	public float z() {
+		return blue;
+	}
+
+	@Override
+	public float w() {
+		return alpha;
 	}
 }
