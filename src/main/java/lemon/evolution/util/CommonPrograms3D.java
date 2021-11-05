@@ -41,11 +41,12 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/postVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/postFragmentShader").orElseThrow())),
-	PARTICLE(names("position", "transformationMatrix"), program -> {
+	PARTICLE(names("position", "textureCoords", "particleCenter"), program -> {
 		program.loadMatrix(MatrixType.MODEL_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
 		program.loadColor4f(Color.WHITE);
+		program.loadInt("textureSampler", TextureBank.REUSE.id());
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/particleVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/particleFragmentShader").orElseThrow())),

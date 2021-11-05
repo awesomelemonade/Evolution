@@ -1,21 +1,22 @@
 #version 400 core
 
 in vec2 position;
+in vec2 textureCoords;
 in vec4 particleCenter;
 
-out vec4 passColor;
+out vec2 passTextureCoords;
 
-uniform vec4 color;
 uniform mat4 modelMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 projectionMatrix;
 
 void main(void) {
-    vec3 cameraPositiveX = viewMatrix[0].xyz;
-    vec3 cameraPositiveY = viewMatrix[1].xyz;
+    mat4 inverted = inverse(viewMatrix);
+    vec3 cameraPositiveX = inverted[0].xyz;
+    vec3 cameraPositiveY = inverted[1].xyz;
 
     vec3 vertexPosition = particleCenter.a * (cameraPositiveX * position.x + cameraPositiveY * position.y);
 
 	gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition + particleCenter.xyz, 1.0);
-	passColor = color;
+	passTextureCoords = textureCoords;
 }
