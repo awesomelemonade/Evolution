@@ -59,17 +59,29 @@ public class Toolbox {
 		}
 	}
 
-	public static ByteBuffer toByteBuffer(BufferedImage image) {
+	public static ByteBuffer toByteBuffer(BufferedImage image, boolean inverted) {
 		int[] pixels = new int[image.getWidth() * image.getHeight()];
 		image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());
 		ByteBuffer buffer = BufferUtils.createByteBuffer(image.getWidth() * image.getHeight() * 4); // 4=RGBA 3=RGB
-		for (int y = 0; y < image.getHeight(); ++y) {
-			for (int x = 0; x < image.getWidth(); ++x) {
-				int pixel = pixels[y * image.getWidth() + x];
-				buffer.put((byte) ((pixel >> 16) & 0xFF)); // Red
-				buffer.put((byte) ((pixel >> 8) & 0xFF)); // Green
-				buffer.put((byte) (pixel & 0xFF)); // Blue
-				buffer.put((byte) ((pixel >> 24) & 0xFF)); // Alpha
+		if (inverted) {
+			for (int y = image.getHeight() - 1; y >= 0; y--) {
+				for (int x = 0; x < image.getWidth(); x++) {
+					int pixel = pixels[y * image.getWidth() + x];
+					buffer.put((byte) ((pixel >> 16) & 0xFF)); // Red
+					buffer.put((byte) ((pixel >> 8) & 0xFF)); // Green
+					buffer.put((byte) (pixel & 0xFF)); // Blue
+					buffer.put((byte) ((pixel >> 24) & 0xFF)); // Alpha
+				}
+			}
+		} else {
+			for (int y = 0; y < image.getHeight(); y++) {
+				for (int x = 0; x < image.getWidth(); x++) {
+					int pixel = pixels[y * image.getWidth() + x];
+					buffer.put((byte) ((pixel >> 16) & 0xFF)); // Red
+					buffer.put((byte) ((pixel >> 8) & 0xFF)); // Green
+					buffer.put((byte) (pixel & 0xFF)); // Blue
+					buffer.put((byte) ((pixel >> 24) & 0xFF)); // Alpha
+				}
 			}
 		}
 		buffer.flip();
