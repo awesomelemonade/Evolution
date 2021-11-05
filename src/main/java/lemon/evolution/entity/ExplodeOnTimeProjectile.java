@@ -21,7 +21,7 @@ public class ExplodeOnTimeProjectile extends AbstractEntity implements Disposabl
 		disposables.add(this.onUpdate().add(() -> {
 			if (Instant.now().isAfter(creationTime.plus(2, ChronoUnit.SECONDS))) {
 				removeFromWorld();
-				EntityUtil.generateExplosion(world(), position(), type.explosionRadius());
+				world().generateExplosion(position(), type.explosionRadius());
 			}
 		}));
 	}

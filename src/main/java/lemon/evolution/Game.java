@@ -40,6 +40,7 @@ import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.entity.*;
+import lemon.evolution.particle.beta.ParticleSystem;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
@@ -100,6 +101,8 @@ public class Game implements Screen {
 	private ViewModel viewModel;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
+
+	private ParticleSystem particleSystem;
 
 	private UIScreen uiScreen;
 
@@ -408,6 +411,11 @@ public class Game implements Screen {
 
 			lightPosition = gameLoop.currentPlayer().position();
 
+			var texture = new Texture();
+			texture.load(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow(), true));
+			particleSystem = disposables.add(new ParticleSystem(100000, texture));
+			disposables.add(world.onExplosion((position, radius) -> particleSystem.addExplosionParticles(position, radius)));
+
 			disposables.add(window.input().keyEvent().add(event -> {
 				if (event.action() == GLFW.GLFW_RELEASE) {
 					if (event.key() == GLFW.GLFW_KEY_C) {
@@ -599,6 +607,7 @@ public class Game implements Screen {
 				//dragonModel.draw();
 			});
 			GL11.glDisable(GL11.GL_DEPTH_TEST);
+			particleSystem.render(gameLoop.currentPlayer().position());
 		});
 		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
