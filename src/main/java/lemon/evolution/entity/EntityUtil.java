@@ -13,13 +13,14 @@ public class EntityUtil {
     public static void generateExplosion(World world, Vector3D position, float radius) {
         world.terrain().generateExplosion(position, radius);
         world.entities().forEach(entity -> {
-            if (entity instanceof Player) {
+            if (entity instanceof Player player) {
                 float strength = Math.min(1f, 3f * radius / entity.position().distanceSquared(position));
                 var direction = entity.position().subtract(position);
                 if (direction.equals(Vector3D.ZERO)) {
                     direction = Vector3D.ofRandomUnitVector();
                 }
                 entity.mutableVelocity().add(direction.scaleToLength(strength));
+                player.health().setValue(player.health().getValue() - strength * 20f);
             }
         });
     }

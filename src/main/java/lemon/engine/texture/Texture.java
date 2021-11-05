@@ -1,6 +1,7 @@
 package lemon.engine.texture;
 
 import lemon.engine.toolbox.Disposable;
+import lemon.engine.toolbox.Toolbox;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
@@ -15,6 +16,11 @@ public class Texture implements Disposable {
 
 	public Texture() {
 		id = GL11.glGenTextures();
+	}
+
+	public Texture(String path, boolean inverted) {
+		this();
+		this.load(new TextureData(Toolbox.readImage(path).orElseThrow(), inverted));
 	}
 
 	public void load(TextureData data) {
