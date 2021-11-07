@@ -9,12 +9,13 @@ public class SparseGrid3D<T> {
     private final long sizeA;
     private final long sizeB;
     private final long sizeC;
+    private final int capacity;
     private final Supplier<T> defaultSupplier;
 
     public SparseGrid3D(long sizeA, long sizeB, long sizeC, Supplier<T> defaultSupplier) {
         // Check out of bounds
         try {
-            var ignored = Math.multiplyExact(Math.multiplyExact(sizeA, sizeB), sizeC);
+            this.capacity = Math.toIntExact(Math.multiplyExact(Math.multiplyExact(sizeA, sizeB), sizeC));
         } catch (ArithmeticException e) {
             throw new IllegalStateException("Dimensions too large - overflow");
         }
@@ -22,10 +23,6 @@ public class SparseGrid3D<T> {
         this.sizeB = sizeB;
         this.sizeC = sizeC;
         this.defaultSupplier = defaultSupplier;
-    }
-
-    public void set(int a, int b, int c, T value) {
-        map.put(hash(a, b, c), value);
     }
 
     public T getOrDefault(int a, int b, int c, T defaultValue) {
@@ -38,5 +35,32 @@ public class SparseGrid3D<T> {
 
     public long hash(int a, int b, int c) {
         return (a * sizeB + b) * sizeC + c;
+    }
+
+    public void forEach(DataConsumer<T> consumer) {
+        for (var entry : map.entrySet()) {
+            long hashed = entry.getKey();
+            int c = (int) (hashed % sizeC);
+            hashed /= sizeC;
+            int b = (int) (hashed % sizeB);
+            int a = (int) (hashed / sizeB);
+            consumer.accept(a, b, c, entry.getValue());
+        }
+    }
+
+    public void clear() {
+        map.clear();
+    }
+
+    public int size() {
+        return map.size();
+    }
+
+    public long capacity() {
+        return capacity;
+    }
+
+    public interface DataConsumer<T> {
+        public void accept(int a, int b, int c, T value);
     }
 }

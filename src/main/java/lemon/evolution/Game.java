@@ -125,8 +125,8 @@ public class Game implements Screen {
 			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> -1f;
-			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
-			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool.setRejectedExecutionHandler((runnable, executor) -> {});
 			pool2.setRejectedExecutionHandler((runnable, executor) -> {});
 			disposables.add(() -> pool.shutdown());
@@ -331,12 +331,15 @@ public class Game implements Screen {
 			disposables.add(GLState::popViewport);
 
 			benchmarker = new Benchmarker();
-			benchmarker.put("updateData", new LineGraph(1000, 100000000));
-			benchmarker.put("renderData", new LineGraph(1000, 100000000));
-			benchmarker.put("fpsData", new LineGraph(1000, 100));
-			benchmarker.put("debugData", new LineGraph(1000, 100));
+			benchmarker.put("update", new LineGraph(1000, 100000000));
+			benchmarker.put("render", new LineGraph(1000, 100000000));
+			benchmarker.put("swapBuffers", new LineGraph(1000, 100000000));
+			benchmarker.put("pollEvents", new LineGraph(1000, 100000000));
+			benchmarker.put("fps", new LineGraph(1000, 100));
+			benchmarker.put("debug", new LineGraph(1000, 100));
 			benchmarker.put("freeMemory", new LineGraph(1000, 5000000000f));
 			benchmarker.put("totalMemory", new LineGraph(1000, 5000000000f));
+			benchmarker.put("debugTime", new LineGraph(1000, 100000000));
 
 			debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
@@ -446,10 +449,6 @@ public class Game implements Screen {
 			}));
 
 			uiScreen = disposables.add(new UIScreen(window.input()));
-			uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
-				System.out.println("Clicked");
-			}).visible().setValue(false);
-			uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED).visible().setValue(false);
 			var progressBar = uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
 				if (gameLoop.startTime != null && gameLoop.endTime != null) {
 					float progressedTime = Duration.between(gameLoop.startTime, Instant.now()).toMillis();
@@ -467,7 +466,7 @@ public class Game implements Screen {
 			uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png").visible().setValue(false);
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());
-			uiInventory.visible().setValue(false);	
+			uiInventory.visible().setValue(false);
 			disposables.add(gameLoop.observableCurrentPlayer().onChange(player -> {
 				var inventory = player.inventory();
 				uiInventory.visible().setValue(false);
@@ -497,7 +496,10 @@ public class Game implements Screen {
 
 		var totalLength = world.entities().stream().map(entity -> entity instanceof PuzzleBall ball ? ball.velocity().length() : 0f).reduce(0f, Float::sum);
 		world.entities().removeIf(entity -> entity instanceof PuzzleBall ball && ball.position().y() <= -300f);
+		var time = System.nanoTime();
 		world.update(dt);
+		time = System.nanoTime() - time;
+		benchmarker.getLineGraph("debugTime").add(time);
 
 		gameLoop.update();
 		if (controls.isActivated(EvolutionControls.FREECAM)) {
@@ -541,7 +543,7 @@ public class Game implements Screen {
 			freecam.mutablePosition().add(mutableForce.asImmutable());
 		}
 
-		benchmarker.getLineGraph("debugData").add(totalLength);
+		benchmarker.getLineGraph("debug").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();
 		float available = Runtime.getRuntime().totalMemory();
 		benchmarker.getLineGraph("freeMemory").add(current);

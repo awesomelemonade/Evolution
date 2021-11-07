@@ -89,7 +89,7 @@ public class TerrainChunk {
 			var vertices = mesh.vertices();
 			var textureWeights = mesh.textureWeights();
 			var indices = mesh.indices();
-			var hashes = mesh.hashes();
+			var hashes = mesh.prenormalHashes();
 			var preNormals = new PreNormals();
 			List<Triangle> triangles = new ArrayList<>();
 			Vector3D[] transformed = new Vector3D[vertices.length];
