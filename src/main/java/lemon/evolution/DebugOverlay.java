@@ -30,7 +30,7 @@ public class DebugOverlay implements Disposable {
 	private final Disposables disposables = new Disposables();
 
 	private static final Color[] DEBUG_GRAPH_COLORS = {
-			Color.RED, Color.GREEN, Color.ORANGE, Color.PURPLE, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN, Color.WHITE
+			Color.RED, Color.GREEN, Color.PURPLE, Color.YELLOW, Color.BLUE, Color.MAGENTA, Color.CYAN, Color.ORANGE, Color.WHITE
 	};
 
 	public DebugOverlay(GLFWWindow window, Benchmarker benchmarker) {

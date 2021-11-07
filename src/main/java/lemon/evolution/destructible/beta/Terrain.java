@@ -1,15 +1,18 @@
 package lemon.evolution.destructible.beta;
 
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Matrix;
 import lemon.engine.math.MutableVector3D;
+import lemon.engine.math.Triangle;
+import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.draw.Drawable;
 import lemon.engine.function.AbsoluteIntValue;
 import lemon.engine.function.SzudzikIntPair;
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Matrix;
-import lemon.engine.math.Vector3D;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
@@ -187,6 +190,28 @@ public class Terrain {
 
 	public int getChunkZ(float z) {
 		return Math.floorDiv((int) Math.floor(z / scalar.z()), TerrainChunk.SIZE);
+	}
+
+	public int getCollideX(float x) {
+		return Math.floorDiv((int) Math.floor(x / scalar.x()), TerrainChunk.TRIANGLE_COORDS_TO_SUBDIVISION_COORDS);
+	}
+
+	public int getCollideY(float y) {
+		return Math.floorDiv((int) Math.floor(y / scalar.y()), TerrainChunk.TRIANGLE_COORDS_TO_SUBDIVISION_COORDS);
+	}
+
+	public int getCollideZ(float z) {
+		return Math.floorDiv((int) Math.floor(z / scalar.z()), TerrainChunk.TRIANGLE_COORDS_TO_SUBDIVISION_COORDS);
+	}
+
+	public List<Triangle> getTriangles(int collideX, int collideY, int collideZ) {
+		var chunkX = Math.floorDiv(collideX, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var chunkY = Math.floorDiv(collideY, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var chunkZ = Math.floorDiv(collideZ, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var collideXPart = Math.floorMod(collideX, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var collideYPart = Math.floorMod(collideY, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var collideZPart = Math.floorMod(collideZ, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		return getChunk(chunkX, chunkY, chunkZ).getTriangles(collideXPart, collideYPart, collideZPart);
 	}
 
 	public float getChunkDistance(float distance) {

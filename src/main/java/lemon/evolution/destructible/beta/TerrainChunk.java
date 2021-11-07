@@ -1,5 +1,6 @@
 package lemon.evolution.destructible.beta;
 
+import com.google.common.collect.ImmutableList;
 import lemon.engine.draw.DynamicIndexedDrawable;
 import lemon.engine.event.Computable;
 import lemon.engine.math.FloatData;
@@ -21,6 +22,8 @@ import java.util.stream.Stream;
 
 public class TerrainChunk {
 	public static final int SIZE = 32;
+	public static final int TRIANGLES_SUBDIVISION_SIZE = 8;
+	public static final int TRIANGLE_COORDS_TO_SUBDIVISION_COORDS = SIZE / TRIANGLES_SUBDIVISION_SIZE;
 	public static final Vector3D MARCHING_CUBE_SIZE = Vector3D.of(SIZE + 1, SIZE + 1, SIZE + 1);
 	public static final int NUM_TEXTURES = 40;
 	private static final float[] ZERO_TEXTURE_WEIGHTS = new float[NUM_TEXTURES];
@@ -90,8 +93,9 @@ public class TerrainChunk {
 			var textureWeights = mesh.textureWeights();
 			var indices = mesh.indices();
 			var hashes = mesh.prenormalHashes();
+			var triangleCoords = mesh.triangleCoords();
 			var preNormals = new PreNormals();
-			List<Triangle> triangles = new ArrayList<>();
+			SparseGrid3D<List<Triangle>> triangles = new SparseGrid3D<>(TRIANGLES_SUBDIVISION_SIZE, TRIANGLES_SUBDIVISION_SIZE, TRIANGLES_SUBDIVISION_SIZE, ArrayList::new);
 			Vector3D[] transformed = new Vector3D[vertices.length];
 			var x = Vector3D.of(chunkX * TerrainChunk.SIZE, chunkY * TerrainChunk.SIZE, chunkZ * TerrainChunk.SIZE);
 			for (int i = 0; i < vertices.length; i++) {
@@ -109,7 +113,10 @@ public class TerrainChunk {
 					preNormals.addNormal(hashes[indices[i]], scaledNormal);
 					preNormals.addNormal(hashes[indices[i + 1]], scaledNormal);
 					preNormals.addNormal(hashes[indices[i + 2]], scaledNormal);
-					triangles.add(triangle);
+					var coords = triangleCoords[i / 3];
+					triangles.compute(coords.x() / TRIANGLE_COORDS_TO_SUBDIVISION_COORDS,
+							coords.y() / TRIANGLE_COORDS_TO_SUBDIVISION_COORDS,
+							coords.z() / TRIANGLE_COORDS_TO_SUBDIVISION_COORDS).add(triangle);
 				}
 			}
 			computable.compute(new MarchingCubeModel(indices, vertices, textureWeights, hashes, preNormals, triangles));
@@ -276,8 +283,8 @@ public class TerrainChunk {
 		return transformationMatrix;
 	}
 
-	public Optional<List<Triangle>> getTriangles() {
-		return model.getValue().map(MarchingCubeModel::triangles);
+	public List<Triangle> getTriangles(int x, int y, int z) {
+		return model.getValue().map(model -> model.triangles().getOrDefault(x, y, z, ImmutableList.of())).orElse(ImmutableList.of());
 	}
 
 	public TerrainChunk getNeighboringChunk(int offsetX, int offsetY, int offsetZ) {

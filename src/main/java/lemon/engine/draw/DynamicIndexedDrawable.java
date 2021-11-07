@@ -106,8 +106,10 @@ public class DynamicIndexedDrawable implements Drawable {
 
 	@Override
 	public void draw() {
-		vertexArray.bind(vao -> {
-			GL11.glDrawElements(drawMode, indices.length, GL11.GL_UNSIGNED_INT, 0);
-		});
+		if (indices.length > 0) {
+			vertexArray.bind(vao -> {
+				GL11.glDrawElements(drawMode, indices.length, GL11.GL_UNSIGNED_INT, 0);
+			});
+		}
 	}
 }

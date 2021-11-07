@@ -32,6 +32,7 @@ public class MarchingCube {
 		List<float[]> textureWeights = new ArrayList<>();
 		List<Integer> prenormalHashes = new ArrayList<>();
 		Map<Long, Integer> edgeIndices = new HashMap<>();
+		List<TripleIndex> triangleCoords = new ArrayList<>();
 		int[] vectorIndices = new int[12];
 		for (int i = 0; i < grid.getSizeX() - 1; i++) {
 			for (int j = 0; j < grid.getSizeY() - 1; j++) {
@@ -75,15 +76,19 @@ public class MarchingCube {
 						}
 					}
 					int[] triangles = MarchingCubeConstants.TRIANGLE_TABLE[index];
-					for (int l = 0; l < triangles.length; l++) {
+					for (int l = 0; l < triangles.length; l += 3) {
 						indices.add(vectorIndices[triangles[l]]);
+						indices.add(vectorIndices[triangles[l + 1]]);
+						indices.add(vectorIndices[triangles[l + 2]]);
+						triangleCoords.add(new TripleIndex(i, j, k));
 					}
 				}
 			}
 		}
 		return new MarchingCubeMesh(indices.stream().mapToInt(Integer::intValue).toArray(),
 				vertices.toArray(Vector3D[]::new), textureWeights.toArray(float[][]::new),
-				prenormalHashes.stream().mapToInt(Integer::intValue).toArray());
+				prenormalHashes.stream().mapToInt(Integer::intValue).toArray(),
+				triangleCoords.toArray(TripleIndex[]::new));
 	}
 
 	private long hashEdgeIndex(long x, long y, long z, long w) {

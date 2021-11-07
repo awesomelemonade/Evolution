@@ -3,10 +3,11 @@ package lemon.evolution.world;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
+import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainRenderer;
 
 public class WorldRenderer implements Disposable {
-	private static final float RENDER_DISTANCE = 5f;
+	private static final float RENDER_DISTANCE = 160f / TerrainChunk.SIZE;
 	private final Disposables disposables = new Disposables();
 	private final TerrainRenderer terrainRenderer;
 	private final EntityRenderer entityRenderer;
