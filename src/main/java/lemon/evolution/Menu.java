@@ -45,6 +45,7 @@ public enum Menu implements Screen {
 
 	@Override
 	public void onLoad(GLFWWindow window) {
+		System.gc(); // Manual Garbage Collection
 		this.window = window;
 		font = disposables.add(new Font(Paths.get("/res/fonts/FreeSans.fnt")));
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);

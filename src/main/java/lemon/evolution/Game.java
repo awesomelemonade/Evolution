@@ -30,7 +30,6 @@ import lemon.engine.time.Benchmarker;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
 import lemon.engine.toolbox.GLState;
-import lemon.engine.toolbox.Histogram;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.engine.toolbox.SkyboxLoader;
 import lemon.engine.toolbox.TaskQueue;
@@ -45,7 +44,6 @@ import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
-import lemon.evolution.ui.beta.UIInventory;
 import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
@@ -125,8 +123,8 @@ public class Game implements Screen {
 			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> -1f;
-			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
-			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 			pool.setRejectedExecutionHandler((runnable, executor) -> {});
 			pool2.setRejectedExecutionHandler((runnable, executor) -> {});
 			disposables.add(() -> pool.shutdown());
@@ -135,18 +133,16 @@ public class Game implements Screen {
 			var terrain = new Terrain(generator, pool2, Vector3D.of(0.5f, 0.5f, 0.5f));
 			CollisionContext collisionContext = (position, velocity, checker) -> {
 				var after = position.add(velocity);
-				int minChunkX = terrain.getChunkX(Math.min(position.x(), after.x()) - 1f);
-				int maxChunkX = terrain.getChunkX(Math.max(position.x(), after.x()) + 1f);
-				int minChunkY = terrain.getChunkY(Math.min(position.y(), after.y()) - 1f);
-				int maxChunkY = terrain.getChunkY(Math.max(position.y(), after.y()) + 1f);
-				int minChunkZ = terrain.getChunkZ(Math.min(position.z(), after.z()) - 1f);
-				int maxChunkZ = terrain.getChunkZ(Math.max(position.z(), after.z()) + 1f);
-				for (int i = minChunkX; i <= maxChunkX; i++) {
-					for (int j = minChunkY; j <= maxChunkY; j++) {
-						for (int k = minChunkZ; k <= maxChunkZ; k++) {
-							// TODO: something similar to i * i + j * j + k * k <= indexRadius * indexRadius
-							terrain.getChunk(i, j, k).getTriangles()
-									.ifPresent(triangles -> triangles.forEach(checker));
+				int minCollideX = terrain.getCollideX(Math.min(position.x(), after.x()) - 1f);
+				int maxCollideX = terrain.getCollideX(Math.max(position.x(), after.x()) + 1f);
+				int minCollideY = terrain.getCollideY(Math.min(position.y(), after.y()) - 1f);
+				int maxCollideY = terrain.getCollideY(Math.max(position.y(), after.y()) + 1f);
+				int minCollideZ = terrain.getCollideZ(Math.min(position.z(), after.z()) - 1f);
+				int maxCollideZ = terrain.getCollideZ(Math.max(position.z(), after.z()) + 1f);
+				for (int i = minCollideX; i <= maxCollideX; i++) {
+					for (int j = minCollideY; j <= maxCollideY; j++) {
+						for (int k = minCollideZ; k <= maxCollideZ; k++) {
+							terrain.getTriangles(i, j, k).forEach(checker);
 						}
 					}
 				}
@@ -292,7 +288,7 @@ public class Game implements Screen {
 				public void load() {
 					var currentRenderDistance = worldRenderer.terrainRenderer().getRenderDistance();
 					postLoadTasks.add(() -> worldRenderer.terrainRenderer().setRenderDistance(currentRenderDistance));
-					worldRenderer.terrainRenderer().setRenderDistance(8f);
+					worldRenderer.terrainRenderer().setRenderDistance(256f / TerrainChunk.SIZE);
 					worldRenderer.terrainRenderer().preload(Vector3D.ZERO);
 					generatorStartSize = Math.max(1, generator.getQueueSize());
 				}
@@ -331,12 +327,15 @@ public class Game implements Screen {
 			disposables.add(GLState::popViewport);
 
 			benchmarker = new Benchmarker();
-			benchmarker.put("updateData", new LineGraph(1000, 100000000));
-			benchmarker.put("renderData", new LineGraph(1000, 100000000));
-			benchmarker.put("fpsData", new LineGraph(1000, 100));
-			benchmarker.put("debugData", new LineGraph(1000, 100));
+			benchmarker.put("update", new LineGraph(1000, 100000000));
+			benchmarker.put("render", new LineGraph(1000, 100000000));
+			benchmarker.put("pollEvents", new LineGraph(1000, 100000000));
+			benchmarker.put("fps", new LineGraph(1000, 100));
+			benchmarker.put("debug", new LineGraph(1000, 100));
 			benchmarker.put("freeMemory", new LineGraph(1000, 5000000000f));
 			benchmarker.put("totalMemory", new LineGraph(1000, 5000000000f));
+			benchmarker.put("worldRenderTime", new LineGraph(1000, 100000000));
+			benchmarker.put("particleTime", new LineGraph(1000, 100000000));
 
 			debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
@@ -446,10 +445,6 @@ public class Game implements Screen {
 			}));
 
 			uiScreen = disposables.add(new UIScreen(window.input()));
-			uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
-				System.out.println("Clicked");
-			}).visible().setValue(false);
-			uiScreen.addWheel(Vector2D.of(200f, 200f), 50f, 0f, Color.RED).visible().setValue(false);
 			var progressBar = uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
 				if (gameLoop.startTime != null && gameLoop.endTime != null) {
 					float progressedTime = Duration.between(gameLoop.startTime, Instant.now()).toMillis();
@@ -467,7 +462,7 @@ public class Game implements Screen {
 			uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png").visible().setValue(false);
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());
-			uiInventory.visible().setValue(false);	
+			uiInventory.visible().setValue(false);
 			disposables.add(gameLoop.observableCurrentPlayer().onChange(player -> {
 				var inventory = player.inventory();
 				uiInventory.visible().setValue(false);
@@ -541,7 +536,7 @@ public class Game implements Screen {
 			freecam.mutablePosition().add(mutableForce.asImmutable());
 		}
 
-		benchmarker.getLineGraph("debugData").add(totalLength);
+		benchmarker.getLineGraph("debug").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();
 		float available = Runtime.getRuntime().totalMemory();
 		benchmarker.getLineGraph("freeMemory").add(current);
@@ -593,21 +588,14 @@ public class Game implements Screen {
 				CommonDrawables.SKYBOX.draw();
 			});
 			GL11.glDepthMask(true);
+			var worldRenderTime = System.nanoTime();
 			worldRenderer.render(gameLoop.currentPlayer().position());
-			GL11.glEnable(GL11.GL_DEPTH_TEST);
-			CommonPrograms3D.LIGHT.use(program -> {
-				var position = Vector3D.of(96f, 40f, 0f);
-				try (var translationMatrix = MatrixPool.ofTranslation(position);
-					 var scalarMatrix = MatrixPool.ofScalar(8f, 8f, 8f)) {
-					var sunlightDirection = lightPosition.subtract(position).normalize();
-					program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(scalarMatrix));
-					program.loadVector("sunlightDirection", sunlightDirection);
-					program.loadVector("viewPos", gameLoop.currentPlayer().position());
-				}
-				//dragonModel.draw();
-			});
-			GL11.glDisable(GL11.GL_DEPTH_TEST);
+			worldRenderTime = System.nanoTime() - worldRenderTime;
+			benchmarker.getLineGraph("worldRenderTime").add(worldRenderTime);
+			var particleTime = System.nanoTime();
 			particleSystem.render(gameLoop.currentPlayer().position());
+			particleTime = System.nanoTime() - particleTime;
+			benchmarker.getLineGraph("particleTime").add(particleTime);
 		});
 		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
