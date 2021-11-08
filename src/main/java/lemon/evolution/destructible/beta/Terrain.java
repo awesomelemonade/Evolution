@@ -31,7 +31,8 @@ public class Terrain {
 	}
 
 	public void flushForRendering() {
-		updaters.run();
+		var time = System.nanoTime();
+		updaters.run(() -> System.nanoTime() - time <= 10_000_000L);
 	}
 
 	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {
