@@ -20,6 +20,7 @@ import org.lwjgl.glfw.GLFW;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class GameLoop implements Disposable {
@@ -120,5 +121,9 @@ public class GameLoop implements Disposable {
 
 	public Observable<Boolean> started() {
 		return started;
+	}
+
+	public List<Player> players() {
+		return allPlayers;
 	}
 }

@@ -45,6 +45,7 @@ public class TerrainChunk {
 	private static final int[] NORMALS_PREREQUISITE_CHUNK_OFFSET_Z = {-1, -1, -1, -1, -1,  0,  0,  0,  0, 0,  0, 0, 0,  1,  1, 1, 1, 1};
 	private final Computable<Vector3D[]> normals;
 	private final Computable<DynamicIndexedDrawable> drawable;
+	private final Executor poolExecutor;
 
 	public TerrainChunk(Terrain terrain,
 						int chunkX,
@@ -55,6 +56,7 @@ public class TerrainChunk {
 						TerrainGenerator generator,
 						Executor poolExecutor,
 						Executor mainThreadExecutor) {
+		this.poolExecutor = poolExecutor;
 		var scalar = terrain.scalar();
 		this.terrain = terrain;
 		this.chunkX = chunkX;
@@ -254,13 +256,13 @@ public class TerrainChunk {
 	}
 
 	public void updateAllData(BiConsumer<float[][][], SparseGrid3D<float[]>> updater) {
-		var data = this.data.getValue();
-		var textureData = this.textureData.getValue();
-		data.ifPresent(a -> textureData.ifPresent(b -> {
-			updater.accept(a, b);
-			this.data.compute();
-			this.textureData.compute();
-		}));
+		poolExecutor.execute(() -> {
+			this.data.compute(c -> {
+				this.textureData.compute(d -> {
+					updater.accept(c, d);
+				});
+			});
+		});
 	}
 
 	public Computable<DynamicIndexedDrawable> drawable() {

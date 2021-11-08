@@ -14,8 +14,8 @@ import lemon.evolution.world.Inventory;
 import lemon.evolution.world.Location;
 
 public class Player extends AbstractControllableEntity implements Disposable {
+	public static final float START_HEALTH = 100f;
 	private static final float VOID_Y_COORDINATE = -100f;
-	private static final float START_HEALTH = 100f;
 	private final Disposables disposables = new Disposables();
 	private final String name;
 	private final Camera camera;

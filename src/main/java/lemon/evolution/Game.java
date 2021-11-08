@@ -6,9 +6,6 @@ import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.frameBuffer.FrameBuffer;
-import lemon.engine.function.MurmurHash;
-import lemon.engine.function.PerlinNoise;
-import lemon.engine.function.SzudzikIntPair;
 import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
@@ -54,13 +51,19 @@ import lemon.evolution.world.GameLoop;
 import lemon.evolution.world.Location;
 import lemon.evolution.world.World;
 import lemon.evolution.world.WorldRenderer;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL32;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
@@ -69,7 +72,6 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
-import java.util.function.ToIntFunction;
 import java.util.logging.Logger;
 
 public class Game implements Screen {
@@ -119,9 +121,6 @@ public class Game implements Screen {
 	public void onLoad(GLFWWindow window) {
 		if (!loaded) {
 			// Prepare loaders
-			ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
-			var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
-			PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 			ScalarField<Vector3D> scalarField = vector -> -1f;
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 			pool2 = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
@@ -228,6 +227,7 @@ public class Game implements Screen {
 							GL11.glDisable(GL11.GL_DEPTH_TEST);
 						};
 						entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.MISSILE), renderer);
+						entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.MINI_MISSILE), renderer);
 						entityRenderer.registerIndividual(MissileShowerEntity.class, renderer);
 					});
 			var foxLoader = new ObjLoader("/res/fox.obj", postLoadTasks::add,
@@ -301,6 +301,17 @@ public class Game implements Screen {
 				int poolStartSize;
 				@Override
 				public void load() {
+					poolStartSize = Math.max(1, pool2.getQueue().size());
+				}
+
+				@Override
+				public float getProgress() {
+					return 1f - ((float) pool2.getQueue().size()) / ((float) poolStartSize);
+				}
+			}, new Loader() {
+				int poolStartSize;
+				@Override
+				public void load() {
 					worldRenderer.terrainRenderer().preinit(Vector3D.ZERO);
 					poolStartSize = Math.max(1, pool2.getQueue().size());
 				}
@@ -343,7 +354,7 @@ public class Game implements Screen {
 			var projection = new Projection(MathUtil.toRadians(60f),
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
 			var playersBuilder = new ImmutableList.Builder<Player>();
-			int numPlayers = 2;
+			int numPlayers = 8;
 			for (int i = 0; i < numPlayers; i++) {
 				var distance = 15f;
 				var angle = MathUtil.TAU * ((float) i) / numPlayers;
@@ -459,7 +470,12 @@ public class Game implements Screen {
 			disposables.add(controls.activated(EvolutionControls.MINIMAP).onChangeAndRun(visible -> {
 				minimap.visible().setValue(visible);
 			}));
-			uiScreen.addImage(new Box2D(100, 100, 100, 100), "/res/transparency-test.png").visible().setValue(false);
+
+			for (int i = 0; i < gameLoop.players().size(); i++) {
+				var player = gameLoop.players().get(i);
+				uiScreen.addProgressBar(new Box2D(50f, windowHeight - 280f - i * 30f, 100f, 15f),
+						() -> player.health().getValue() / Player.START_HEALTH);
+			}
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());
 			uiInventory.visible().setValue(false);
@@ -479,6 +495,20 @@ public class Game implements Screen {
 					gameLoop.getGatedControls().setEnabled(true);
 				}
 			}));
+
+			controls.onActivated(EvolutionControls.SCREENSHOT, () -> {
+				try {
+					var buffer = BufferUtils.createIntBuffer(windowWidth * windowHeight);
+					GL11.glReadPixels(0, 0, windowWidth, windowHeight, GL12.GL_BGRA, GL12.GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
+					int[] array = new int[buffer.remaining()];
+					buffer.get(array);
+					var image = new BufferedImage(windowWidth, windowHeight, BufferedImage.TYPE_INT_ARGB);
+					image.setRGB(0, 0, windowWidth, windowHeight, array, 0, windowWidth);
+					ImageIO.write(image, "png", new File("evolution-screenshot.png"));
+				} catch (IOException e) {
+					logger.warning(e.getMessage());
+				}
+			});
 
 			disposables.add(window.onBenchmark().add(benchmark -> benchmarker.benchmark(benchmark)));
 			disposables.add(() -> loaded = false);

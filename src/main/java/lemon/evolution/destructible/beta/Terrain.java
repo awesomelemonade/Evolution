@@ -2,7 +2,6 @@ package lemon.evolution.destructible.beta;
 
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
-import lemon.engine.math.MutableVector3D;
 import lemon.engine.math.Triangle;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.TaskQueue;
@@ -12,7 +11,6 @@ import lemon.engine.function.SzudzikIntPair;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
@@ -115,17 +113,26 @@ public class Terrain {
 	}
 
 	public void terraform(TerrainChunk chunk, Vector3D origin, float radius, float dt, float brushSpeed, int texture) {
+		// Avoid making a copy of origin and using Vector for memory optimization
+		var originX = origin.x();
+		var originY = origin.y();
+		var originZ = origin.z();
+		var radiusSquared = radius * radius;
+		int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
+		int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
+		int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
 		chunk.updateAllData((data, textureData) -> {
-			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
-			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
-			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
-			var point = MutableVector3D.ofZero();
 			for (int i = 0; i < TerrainChunk.SIZE; i++) {
 				for (int j = 0; j < TerrainChunk.SIZE; j++) {
 					for (int k = 0; k < TerrainChunk.SIZE; k++) {
-						point.set(offsetX + i, offsetY + j, offsetZ + k).multiply(scalar);
-						float distanceSquared = origin.distanceSquared(point.asImmutable());
-						if (distanceSquared <= radius * radius) {
+						var pointX = scalar.x() * (offsetX + i);
+						var pointY = scalar.y() * (offsetY + j);
+						var pointZ = scalar.z() * (offsetZ + k);
+						var deltaX = originX - pointX;
+						var deltaY = originY - pointY;
+						var deltaZ = originZ - pointZ;
+						var distanceSquared = deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;
+						if (distanceSquared <= radiusSquared) {
 							float distance = (float) Math.sqrt(distanceSquared);
 							float brushWeight = smoothstep(radius, radius * 0.7f, distance);
 							var amount = brushSpeed * brushWeight * dt;
