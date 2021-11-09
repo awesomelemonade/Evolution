@@ -474,7 +474,7 @@ public class Game implements Screen {
 			for (int i = 0; i < gameLoop.players().size(); i++) {
 				var player = gameLoop.players().get(i);
 				uiScreen.addProgressBar(new Box2D(50f, windowHeight - 280f - i * 30f, 100f, 15f),
-						() -> player.health().getValue() / Player.START_HEALTH);
+						() -> player.health().getValue() / Player.START_HEALTH).visible().setValue(false);
 			}
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());

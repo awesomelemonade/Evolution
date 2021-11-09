@@ -49,7 +49,7 @@ public class GameLoop implements Disposable {
 			disposeWhenNotAlive.add(player.alive().onChange(alive -> {
 				if (!alive) {
 					disposeWhenNotAlive.dispose();
-					controller.setCurrent(cycler.next());
+					endTurn();
 				}
 			}));
 		}));

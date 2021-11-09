@@ -43,7 +43,7 @@ public class TerrainChunk {
 	private static final int[] NORMALS_PREREQUISITE_CHUNK_OFFSET_X = {-1,  0,  0,  0,  1, -1, -1, -1,  0, 0,  1, 1, 1, -1,  0, 0, 0, 1};
 	private static final int[] NORMALS_PREREQUISITE_CHUNK_OFFSET_Y = { 0, -1,  0,  1,  0, -1,  0,  1, -1, 1, -1, 0, 1,  0, -1, 0, 1, 0};
 	private static final int[] NORMALS_PREREQUISITE_CHUNK_OFFSET_Z = {-1, -1, -1, -1, -1,  0,  0,  0,  0, 0,  0, 0, 0,  1,  1, 1, 1, 1};
-	private final Computable<Vector3D[]> normals;
+	private final Computable<MarchingCubeNormals> normals;
 	private final Computable<DynamicIndexedDrawable> drawable;
 	private final Executor poolExecutor;
 
@@ -137,10 +137,11 @@ public class TerrainChunk {
 				var preNormal = preNormals.getNormal(hash);
 				return getBorderingPreNormal(hash).map(preNormal::add).orElse(preNormal);
 			}).map(Vector3D::normalize).toArray(Vector3D[]::new);
-			computable.compute(normals);
+			computable.compute(new MarchingCubeNormals(model, normals));
 		});
 		this.drawable = this.normals.then((computable, normals) -> {
-			var model = this.model.getValueOrThrow();
+			var model = normals.model(); // Normals MUST be the same as the model
+			// (cannot use this.model.getValueOrThrow() because model could have changed already and desync with normals)
 			var indices = model.indices();
 			var vertices = model.vertices();
 			var textureWeights = model.textureWeights();
@@ -154,7 +155,7 @@ public class TerrainChunk {
 			}
 			var vertexData = new FloatData[2 + numVec4s][];
 			vertexData[0] = vertices;
-			vertexData[1] = normals;
+			vertexData[1] = normals.normals();
 			for (int i = 0; i < numVec4s; i++) {
 				vertexData[2 + i] = weights[i];
 			}
