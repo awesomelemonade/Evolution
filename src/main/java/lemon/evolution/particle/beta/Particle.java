@@ -9,6 +9,7 @@ import java.time.Instant;
 public class Particle {
 	private final Duration fadeDuration = Duration.ofSeconds(1);
 	private final Duration expandDuration = Duration.ofMillis(500);
+	private final Duration changeColorDuration = Duration.ofSeconds(1);
 	private final ParticleType type;
 	private final MutableVector3D position;
 	private final MutableVector3D velocity;
@@ -18,7 +19,6 @@ public class Particle {
 	private final MutableVector4D color;
 	private final float maxSize;
 	private float size;
-	private float rotation;
 
 	public Particle(ParticleType type, Vector3D position, Vector3D velocity, Vector3D force, Duration duration, Color color, float size) {
 		this.type = type;
@@ -36,8 +36,10 @@ public class Particle {
 		var now = Instant.now();
 		var timeFromCreation = Duration.between(creationTime, now);
 		var timeToExpiry = Duration.between(now, expiryTime);
+		color.set(Color.RED.subtract(Color.YELLOW).multiply(MathUtil.clamp(((float) timeFromCreation.toMillis()) / ((float) changeColorDuration.toMillis()), 0f, 1f)).add(Color.YELLOW));
 		color.setW(MathUtil.clamp(((float) timeToExpiry.toMillis()) / ((float) fadeDuration.toMillis()), 0f, 1f));
 		size = MathUtil.clamp(((float) timeFromCreation.toMillis()) / ((float) expandDuration.toMillis()), 0f, 1f) * maxSize;
+		velocity.multiply(0.85f);
 		velocity.add(force);
 		position.add(velocity.asImmutable());
 	}
