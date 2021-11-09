@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class UIInventory extends AbstractUIComponent implements Disposable {
     private static final int SIDE_LENGTH = 500;
-    private static final int START_X = 800;
+    private static final int START_X = 50;
     private static final int START_Y = 50;
     private static final int ITEM_MARGIN = 15;
     private static final int IMAGE_WIDTH = 95;

@@ -3,15 +3,16 @@ package lemon.engine.toolbox;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.BooleanSupplier;
 
 public interface TaskQueue {
 	public static TaskQueue ofSingleThreaded() {
 		return new TaskQueue() {
 			private final Deque<Runnable> queue = new ArrayDeque<>();
 			@Override
-			public void run() {
+			public void run(BooleanSupplier shouldContinue) {
 				Runnable current;
-				while ((current = queue.poll()) != null) {
+				while (shouldContinue.getAsBoolean() && (current = queue.poll()) != null) {
 					current.run();
 				}
 			}
@@ -32,9 +33,9 @@ public interface TaskQueue {
 		return new TaskQueue() {
 			private final ConcurrentLinkedQueue<Runnable> queue = new ConcurrentLinkedQueue<>();
 			@Override
-			public void run() {
+			public void run(BooleanSupplier shouldContinue) {
 				Runnable current;
-				while ((current = queue.poll()) != null) {
+				while (shouldContinue.getAsBoolean() && (current = queue.poll()) != null) {
 					current.run();
 				}
 			}
@@ -51,7 +52,11 @@ public interface TaskQueue {
 		};
 	}
 
-	public void run();
+	public default void run() {
+		run(() -> true);
+	}
+
+	public void run(BooleanSupplier shouldContinue);
 
 	public void add(Runnable runnable);
 
