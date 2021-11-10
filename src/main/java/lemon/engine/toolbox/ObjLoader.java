@@ -4,12 +4,12 @@ import com.google.common.collect.ImmutableMap;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.math.FloatData;
+import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.thread.ThreadManager;
 import org.lwjgl.opengl.GL11;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,32 +20,33 @@ import java.util.StringTokenizer;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 public class ObjLoader implements Loader {
+	private static final Logger logger = Logger.getLogger(ObjLoader.class.getName());
 	private static final ImmutableMap<String, BiConsumer<ObjLoader, String[]>> processors;
 	static {
 		var builder = ImmutableMap.<String, BiConsumer<ObjLoader, String[]>>builder();
+		builder.put("#", (objLoader, split) -> {});
+		builder.put("o", (objLoader, split) -> {});
+		builder.put("g", (objLoader, split) -> {});
+		builder.put("s", (objLoader, split) -> {});
 		builder.put("mtllib", (objLoader, split) -> {
-			MtlLoader materialLoader = new MtlLoader("/res/" + split[1], mtlLoader -> {
-				System.out.println("Materials List:");
-				for (var m : mtlLoader.getMaterialMap().keySet()) {
-					System.out.println(mtlLoader.getMaterialMap().get(m));
-				}
-				objLoader.parsedMaterials = mtlLoader.getMaterialMap();
-				System.out.println(objLoader.parsedMaterials);
-				var m = new Material();
-				m.setKd(new Color(1f, 0.3f, 0.3f));
-				objLoader.parsedMaterials.put("Wood", m);
-			});
-			materialLoader.load();
+			try {
+				MtlLoader materialLoader = new MtlLoader("/res/" + split[1], mtlLoader -> {
+					logger.info("Material List: " + mtlLoader.materialMap().values());
+					objLoader.parsedMaterials = mtlLoader.materialMap();
+				});
+				materialLoader.load();
+			} catch (Exception ex) {
+				logger.warning("Failed to load " + Arrays.toString(split));
+				objLoader.parsedMaterials.clear();
+			}
 		});
 		builder.put("v", (objLoader, split) -> objLoader.parsedVertices.add(Vector3D.ofParsed(split[1], split[2], split[3])));
 		builder.put("vn", (objLoader, split) -> objLoader.parsedNormals.add(Vector3D.ofParsed(split[1], split[2], split[3])));
 		builder.put("vt", (objLoader, split) -> {}); // ignored
-		builder.put("usemtl", (objLoader, split) -> {
-			objLoader.currentVertexColor = split[1];
-			System.out.println("Switch to " + split[1]);
-		});
+		builder.put("usemtl", (objLoader, split) -> objLoader.currentMaterial = split[1]);
 		builder.put("f", (objLoader, split) -> {
 			for (int i = 0; i < 3; i++) { // triangles
 				StringTokenizer tokenizer2 = new StringTokenizer(split[i + 1], "/");
@@ -62,7 +63,15 @@ public class ObjLoader implements Loader {
 					objLoader.cache.get(a).put(b, index);
 					objLoader.modelIndices.add(index);
 					objLoader.modelVertices.add(objLoader.parsedVertices.get(a));
-					objLoader.modelColors.add(objLoader.parsedMaterials.getOrDefault(objLoader.currentVertexColor, objLoader.parsedMaterials.get("Wood")).Kd);
+					var material = objLoader.parsedMaterials.computeIfAbsent(objLoader.currentMaterial,
+							name -> {
+								logger.warning("Unknown material: " + name);
+								return new Material(name, Color.WHITE);
+							});
+					var red = MathUtil.saturate(0.1f * material.ambient().r() + 1.4f * material.diffuse().r());
+					var green = MathUtil.saturate(0.1f * material.ambient().g() + 1.4f * material.diffuse().g());
+					var blue = MathUtil.saturate(0.1f * material.ambient().b() + 1.4f * material.diffuse().b());
+					objLoader.modelColors.add(new Color(red, green, blue));
 					objLoader.modelNormals.add(objLoader.parsedNormals.get(b));
 				}
 			}
@@ -70,7 +79,7 @@ public class ObjLoader implements Loader {
 		processors = builder.build();
 	}
 	private static final BiConsumer<ObjLoader, String[]> UNKNOWN_PROCESSOR = (loader, split) -> {
-		System.out.println("Unknown Key: " + Arrays.toString(split));
+		logger.warning("Unknown Key: " + Arrays.toString(split));
 	};
 
 	private int numLinesRead;
@@ -85,12 +94,8 @@ public class ObjLoader implements Loader {
 	private final List<Integer> modelIndices = new ArrayList<>();
 	private final Map<Integer, Map<Integer, Integer>> cache = new HashMap<>();
 	private final Consumer<ObjLoader> postLoadCallback;
-	private Map<String, Material> parsedMaterials = new HashMap<>() {{
-		var m = new Material();
-		m.setKd(new Color(1f, 0.3f, 0.3f));
-		put("Wood", m);
-	}};
-	private String currentVertexColor = "Wood";
+	private Map<String, Material> parsedMaterials = new HashMap<>();
+	private String currentMaterial = null;
 	private final Disposables disposables = new Disposables(
 			parsedVertices::clear, modelVertices::clear,
 			parsedNormals::clear, modelNormals::clear,

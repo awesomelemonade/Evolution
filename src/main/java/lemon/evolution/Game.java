@@ -159,8 +159,6 @@ public class Game implements Screen {
 						return new Model(indices, vertices, colors);
 					}).map(IndexedDrawable::new);
 			Consumer<Entity> sphereRenderer = ball -> {
-				GL11.glEnable(GL11.GL_BLEND);
-				GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 				GL11.glEnable(GL11.GL_DEPTH_TEST);
 				CommonPrograms3D.COLOR.use(program -> {
 					try (var translationMatrix = MatrixPool.ofTranslation(ball.position());
@@ -171,7 +169,6 @@ public class Game implements Screen {
 					sphereDrawable.draw();
 				});
 				GL11.glDisable(GL11.GL_DEPTH_TEST);
-				GL11.glDisable(GL11.GL_BLEND);
 			};
 			// Render spheres
 			entityRenderer.registerIndividual(PuzzleBall.class, sphereRenderer);
@@ -197,7 +194,7 @@ public class Game implements Screen {
 							CommonPrograms3D.LIGHT.use(program -> {
 								try (var translationMatrix = MatrixPool.ofTranslation(Vector3D.of(3.5f, -4f, 1f));
 									 var rotationMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
-									var sunlightDirection = Vector3D.of(-3.5f, 4f, -1f).normalize();
+									var sunlightDirection = Vector3D.of(0f, 1f, 0f).normalize();
 									program.loadMatrix(MatrixType.MODEL_MATRIX, (rotationMatrix.multiply(translationMatrix)));
 									program.loadVector("sunlightDirection", sunlightDirection);
 									program.loadVector("viewPos", gameLoop.currentPlayer().position());
@@ -236,8 +233,6 @@ public class Game implements Screen {
 						entityRenderer.registerCollection(Player.class, players -> {
 							for (var player : players) {
 								if (player != gameLoop.currentPlayer() || controls.isActivated(EvolutionControls.FREECAM)) {
-									GL11.glEnable(GL11.GL_BLEND);
-									GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 									GL11.glEnable(GL11.GL_DEPTH_TEST);
 									CommonPrograms3D.COLOR.use(program -> {
 										try (var translationMatrix = MatrixPool.ofTranslation(player.position());
@@ -248,7 +243,6 @@ public class Game implements Screen {
 										drawable.draw();
 									});
 									GL11.glDisable(GL11.GL_DEPTH_TEST);
-									GL11.glDisable(GL11.GL_BLEND);
 								}
 							}
 						});
@@ -288,7 +282,7 @@ public class Game implements Screen {
 				public void load() {
 					var currentRenderDistance = worldRenderer.terrainRenderer().getRenderDistance();
 					postLoadTasks.add(() -> worldRenderer.terrainRenderer().setRenderDistance(currentRenderDistance));
-					worldRenderer.terrainRenderer().setRenderDistance(256f / TerrainChunk.SIZE);
+					worldRenderer.terrainRenderer().setRenderDistance(320f / TerrainChunk.SIZE);
 					worldRenderer.terrainRenderer().preload(Vector3D.ZERO);
 					generatorStartSize = Math.max(1, generator.getQueueSize());
 				}
