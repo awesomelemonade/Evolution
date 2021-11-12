@@ -1,6 +1,5 @@
 package lemon.evolution;
 
-import lemon.engine.draw.CommonDrawables;
 import lemon.engine.event.Observable;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.math.Box2D;
@@ -8,10 +7,8 @@ import lemon.engine.render.CommonRenderables;
 import lemon.engine.render.Renderable;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
-import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
-import lemon.evolution.util.CommonPrograms2D;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
 import org.lwjgl.opengl.GL30;

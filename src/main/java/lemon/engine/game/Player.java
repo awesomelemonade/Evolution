@@ -15,7 +15,6 @@ import lemon.evolution.world.Location;
 
 public class Player extends AbstractControllableEntity implements Disposable {
 	public static final float START_HEALTH = 100f;
-	private static final float VOID_Y_COORDINATE = -100f;
 	private final Disposables disposables = new Disposables();
 	private final String name;
 	private final Camera camera;
@@ -27,13 +26,9 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		super(location, Vector3D.ZERO);
 		this.name = name;
 		this.camera = new Camera(mutablePosition(), mutableRotation(), projection);
-		disposables.add(onUpdate().add(() -> {
-			if (position().y() < VOID_Y_COORDINATE) {
-				health.setValue(0f);
-			}
-		}));
-		disposables.add(health.onChange(newHealth -> newHealth <= 0f, () -> world().entities().remove(this)));
+		disposables.add(health.onChange(newHealth -> newHealth <= 0f, this::removeFromWorld));
 		this.alive = world().entities().observableContains(this, disposables::add);
+		disposables.add(this.alive.onChangeTo(false, () -> health.setValue(0f)));
 		// TODO: Temporary
 		inventory.addAndSetCurrentItem(BasicItems.ROCKET_LAUNCHER);
 		inventory.addItem(BasicItems.MISSILE_SHOWER);

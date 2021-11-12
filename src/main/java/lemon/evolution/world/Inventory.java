@@ -37,6 +37,10 @@ public class Inventory implements Disposable {
 		items.add(item);
 	}
 
+	public void addItems(ItemType item, int amount) {
+		items.add(item, amount);
+	}
+
 	public void addAndSetCurrentItem(ItemType item) {
 		items.add(item);
 		currentItem.setValue(Optional.of(item));

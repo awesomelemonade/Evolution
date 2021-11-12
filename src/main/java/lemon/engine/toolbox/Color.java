@@ -32,6 +32,10 @@ public record Color(float red, float green, float blue, float alpha) implements 
 		this(color.red, color.green, color.blue, color.alpha);
 	}
 
+	public Color(String red, String green, String blue) {
+		this(Float.parseFloat(red), Float.parseFloat(green), Float.parseFloat(blue));
+	}
+
 	public Vector3D asRGBVector() {
 		return Vector3D.of(this.red(), this.green(), this.blue());
 	}
@@ -78,5 +82,9 @@ public record Color(float red, float green, float blue, float alpha) implements 
 	@Override
 	public float w() {
 		return alpha;
+	}
+
+	public Color brighter() {
+		return new Color(Math.min(red * 1.4f, 1f), Math.min(green * 1.4f, 1f), Math.min(blue * 1.4f, 1f), alpha);
 	}
 }

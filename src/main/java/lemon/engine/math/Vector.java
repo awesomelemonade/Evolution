@@ -43,6 +43,11 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 	}
 
 	@CheckReturnValue
+	public default boolean isWithinDistanceSquared(T vector, float radius) {
+		return distanceSquared(vector) <= radius * radius;
+	}
+
+	@CheckReturnValue
 	public default float distance(T vector) {
 		return (float) Math.sqrt(distanceSquared(vector));
 	}

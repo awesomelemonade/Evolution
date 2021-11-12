@@ -10,9 +10,8 @@ import org.lwjgl.opengl.GL20;
 import java.nio.FloatBuffer;
 
 public class DynamicIndexedDrawable implements Drawable {
-	private VertexArray vertexArray;
-	private FloatData[][] vertices;
-	private int[] indices;
+	private VertexArray vertexArray = null;
+	private int numIndices;
 	private int stride;
 	private int drawMode;
 	private VertexBuffer indexBuffer;
@@ -26,11 +25,16 @@ public class DynamicIndexedDrawable implements Drawable {
 	}
 
 	public DynamicIndexedDrawable(int[] indices, FloatData[][] vertices, int drawMode, int hint) {
-		this.vertices = vertices;
-		this.indices = indices;
+		this.numIndices = indices.length;
 		this.drawMode = drawMode;
 		this.hint = hint;
 		this.stride = Drawable.getStride(vertices);
+		if (numIndices > 0) {
+			initVertexArray(indices, vertices);
+		}
+	}
+
+	private void initVertexArray(int[] indices, FloatData[][] vertices) {
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
 			indexBuffer = new VertexBuffer();
@@ -43,7 +47,7 @@ public class DynamicIndexedDrawable implements Drawable {
 				FloatBuffer buffer = Drawable.getFloatBuffer(vertices, stride);
 				this.vertexBufferSize = buffer.capacity();
 				GL15.glBufferData(target, buffer, hint);
-				int offset = 0;
+				long offset = 0;
 				for (int i = 0; i < vertices.length; i++) {
 					if (vertices[i].length > 0) {
 						int dimensions = vertices[i][0].numDimensions();
@@ -63,52 +67,55 @@ public class DynamicIndexedDrawable implements Drawable {
 	}
 
 	public void setData(int[] indices, FloatData[][] vertices) {
-		this.vertices = vertices;
-		this.indices = indices;
-		indexBuffer.bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
-			if (indices.length > 0) {
-				if (indices.length > indexBufferSize) {
-					indexBufferSize = indices.length;
-					GL15.glBufferData(target, indices, hint);
-				} else {
-					GL15.glBufferSubData(target, 0, indices);
-				}
-			}
-		});
-		vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
-			int oldStride = stride;
-			stride = Drawable.getStride(vertices);
-			FloatBuffer newBuffer = Drawable.getFloatBuffer(vertices, stride);
-			int newBufferSize = newBuffer.capacity();
-			if (newBufferSize > 0) {
-				if (newBufferSize > vertexBufferSize) {
-					vertexBufferSize = newBufferSize;
-					GL15.glBufferData(target, newBuffer, hint);
-				} else {
-					GL15.glBufferSubData(target, 0, newBuffer);
-				}
-			}
-			if (stride != 0 && stride != oldStride) {
-				vertexArray.bind(vao -> {
-					int offset = 0;
-					for (int i = 0; i < vertices.length; i++) {
-						if (vertices[i].length > 0) {
-							int dimensions = vertices[i][0].numDimensions();
-							GL20.glVertexAttribPointer(i, dimensions, GL11.GL_FLOAT, false,
-									stride * BYTES_PER_FLOAT, offset * BYTES_PER_FLOAT);
-							offset += dimensions;
+		this.numIndices = indices.length;
+		if (numIndices > 0) {
+			if (vertexArray == null) {
+				initVertexArray(indices, vertices);
+			} else {
+				indexBuffer.bind(GL15.GL_ELEMENT_ARRAY_BUFFER, (target, vbo) -> {
+					if (indices.length > indexBufferSize) {
+						indexBufferSize = indices.length;
+						GL15.glBufferData(target, indices, hint);
+					} else {
+						GL15.glBufferSubData(target, 0, indices);
+					}
+				});
+				vertexBuffer.bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
+					int oldStride = stride;
+					stride = Drawable.getStride(vertices);
+					FloatBuffer newBuffer = Drawable.getFloatBuffer(vertices, stride);
+					int newBufferSize = newBuffer.capacity();
+					if (newBufferSize > 0) {
+						if (newBufferSize > vertexBufferSize) {
+							vertexBufferSize = newBufferSize;
+							GL15.glBufferData(target, newBuffer, hint);
+						} else {
+							GL15.glBufferSubData(target, 0, newBuffer);
 						}
+					}
+					if (stride != 0 && stride != oldStride) {
+						vertexArray.bind(vao -> {
+							long offset = 0;
+							for (int i = 0; i < vertices.length; i++) {
+								if (vertices[i].length > 0) {
+									int dimensions = vertices[i][0].numDimensions();
+									GL20.glVertexAttribPointer(i, dimensions, GL11.GL_FLOAT, false,
+											stride * BYTES_PER_FLOAT, offset * BYTES_PER_FLOAT);
+									offset += dimensions;
+								}
+							}
+						});
 					}
 				});
 			}
-		});
+		}
 	}
 
 	@Override
 	public void draw() {
-		if (indices.length > 0) {
+		if (numIndices > 0) {
 			vertexArray.bind(vao -> {
-				GL11.glDrawElements(drawMode, indices.length, GL11.GL_UNSIGNED_INT, 0);
+				GL11.glDrawElements(drawMode, numIndices, GL11.GL_UNSIGNED_INT, 0);
 			});
 		}
 	}

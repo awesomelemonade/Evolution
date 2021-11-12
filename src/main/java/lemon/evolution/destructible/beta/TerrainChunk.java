@@ -25,7 +25,7 @@ public class TerrainChunk {
 	public static final int TRIANGLES_SUBDIVISION_SIZE = 8;
 	public static final int TRIANGLE_COORDS_TO_SUBDIVISION_COORDS = SIZE / TRIANGLES_SUBDIVISION_SIZE;
 	public static final Vector3D MARCHING_CUBE_SIZE = Vector3D.of(SIZE + 1, SIZE + 1, SIZE + 1);
-	public static final int NUM_TEXTURES = 40;
+	public static final int NUM_TEXTURES = 48;
 	private static final float[] ZERO_TEXTURE_WEIGHTS = new float[NUM_TEXTURES];
 	private final Terrain terrain;
 	private final int chunkX;
