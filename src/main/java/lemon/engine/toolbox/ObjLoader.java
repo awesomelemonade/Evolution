@@ -47,33 +47,44 @@ public class ObjLoader implements Loader {
 		builder.put("vn", (objLoader, split) -> objLoader.parsedNormals.add(Vector3D.ofParsed(split[1], split[2], split[3])));
 		builder.put("vt", (objLoader, split) -> {}); // ignored
 		builder.put("usemtl", (objLoader, split) -> objLoader.currentMaterial = split[1]);
+		BiConsumer<ObjLoader, String> vertexAdder = (objLoader, vertexString) -> {
+			StringTokenizer tokenizer = new StringTokenizer(vertexString, "/");
+			int vertexIndex = Integer.parseInt(tokenizer.nextToken()) - 1;
+			int textureCoordIndex = Integer.parseInt(tokenizer.nextToken()) - 1; // unused
+			int normalIndex = Integer.parseInt(tokenizer.nextToken()) - 1;
+			var a = vertexIndex;
+			var b = normalIndex;
+			if (objLoader.cache.containsKey(a) && objLoader.cache.get(a).containsKey(b)) {
+				objLoader.modelIndices.add(objLoader.cache.get(a).get(b));
+			} else {
+				objLoader.cache.computeIfAbsent(a, key -> new HashMap<>());
+				int index = objLoader.modelVertices.size();
+				objLoader.cache.get(a).put(b, index);
+				objLoader.modelIndices.add(index);
+				objLoader.modelVertices.add(objLoader.parsedVertices.get(a));
+				var material = objLoader.parsedMaterials.computeIfAbsent(objLoader.currentMaterial,
+						name -> {
+							logger.warning("Unknown material: " + name);
+							return new Material(name, objLoader.defaultColor);
+						});
+				var red = MathUtil.saturate(0.1f * material.ambient().r() + 1.4f * material.diffuse().r());
+				var green = MathUtil.saturate(0.1f * material.ambient().g() + 1.4f * material.diffuse().g());
+				var blue = MathUtil.saturate(0.1f * material.ambient().b() + 1.4f * material.diffuse().b());
+				objLoader.modelColors.add(new Color(red, green, blue));
+				objLoader.modelNormals.add(objLoader.parsedNormals.get(b));
+			}
+		};
 		builder.put("f", (objLoader, split) -> {
-			for (int i = 0; i < 3; i++) { // triangles
-				StringTokenizer tokenizer2 = new StringTokenizer(split[i + 1], "/");
-				int vertexIndex = Integer.parseInt(tokenizer2.nextToken()) - 1;
-				int textureCoordIndex = Integer.parseInt(tokenizer2.nextToken()) - 1; // unused
-				int normalIndex = Integer.parseInt(tokenizer2.nextToken()) - 1;
-				var a = vertexIndex;
-				var b = normalIndex;
-				if (objLoader.cache.containsKey(a) && objLoader.cache.get(a).containsKey(b)) {
-					objLoader.modelIndices.add(objLoader.cache.get(a).get(b));
-				} else {
-					objLoader.cache.computeIfAbsent(a, key -> new HashMap<>());
-					int index = objLoader.modelVertices.size();
-					objLoader.cache.get(a).put(b, index);
-					objLoader.modelIndices.add(index);
-					objLoader.modelVertices.add(objLoader.parsedVertices.get(a));
-					var material = objLoader.parsedMaterials.computeIfAbsent(objLoader.currentMaterial,
-							name -> {
-								logger.warning("Unknown material: " + name);
-								return new Material(name, objLoader.defaultColor);
-							});
-					var red = MathUtil.saturate(0.1f * material.ambient().r() + 1.4f * material.diffuse().r());
-					var green = MathUtil.saturate(0.1f * material.ambient().g() + 1.4f * material.diffuse().g());
-					var blue = MathUtil.saturate(0.1f * material.ambient().b() + 1.4f * material.diffuse().b());
-					objLoader.modelColors.add(new Color(red, green, blue));
-					objLoader.modelNormals.add(objLoader.parsedNormals.get(b));
-				}
+			var numVertices = split.length - 1;
+			vertexAdder.accept(objLoader, split[1]);
+			vertexAdder.accept(objLoader, split[2]);
+			vertexAdder.accept(objLoader, split[3]);
+			if (numVertices == 4) {
+				vertexAdder.accept(objLoader, split[1]);
+				vertexAdder.accept(objLoader, split[3]);
+				vertexAdder.accept(objLoader, split[4]);
+			} else if (numVertices > 4) {
+				throw new IllegalStateException("Unsupported model");
 			}
 		});
 		processors = builder.build();
