@@ -35,8 +35,14 @@ public class MaterialBuilder {
         if (name == null) {
             return Optional.empty();
         }
-        if (ambient == null || diffuse == null || specular == null) {
-            throw new IllegalStateException("Missing required attributes");
+        if (diffuse == null) {
+            throw new IllegalStateException("Missing Diffuse");
+        }
+        if (ambient == null) {
+            ambient = Color.WHITE;
+        }
+        if (specular == null) {
+            specular = Color.WHITE;
         }
         return Optional.of(new Material(name, ambient, diffuse, specular, Color.BLACK, 1f, 1f, 1f));
     }

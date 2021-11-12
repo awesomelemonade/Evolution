@@ -14,7 +14,7 @@ public class WorldRenderer implements Disposable {
 
 	public WorldRenderer(World world) {
 		this.terrainRenderer = new TerrainRenderer(world.terrain(), RENDER_DISTANCE);
-		this.entityRenderer = disposables.add(new EntityRenderer(world.entities()));
+		this.entityRenderer = new EntityRenderer(world.filterableEntities());
 	}
 
 	public void render(Vector3D position) {

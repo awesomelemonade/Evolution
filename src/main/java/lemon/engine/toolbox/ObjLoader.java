@@ -66,7 +66,7 @@ public class ObjLoader implements Loader {
 					var material = objLoader.parsedMaterials.computeIfAbsent(objLoader.currentMaterial,
 							name -> {
 								logger.warning("Unknown material: " + name);
-								return new Material(name, Color.WHITE);
+								return new Material(name, objLoader.defaultColor);
 							});
 					var red = MathUtil.saturate(0.1f * material.ambient().r() + 1.4f * material.diffuse().r());
 					var green = MathUtil.saturate(0.1f * material.ambient().g() + 1.4f * material.diffuse().g());
@@ -94,6 +94,7 @@ public class ObjLoader implements Loader {
 	private final List<Integer> modelIndices = new ArrayList<>();
 	private final Map<Integer, Map<Integer, Integer>> cache = new HashMap<>();
 	private final Consumer<ObjLoader> postLoadCallback;
+	private final Color defaultColor;
 	private Map<String, Material> parsedMaterials = new HashMap<>();
 	private String currentMaterial = null;
 	private final Disposables disposables = new Disposables(
@@ -103,19 +104,24 @@ public class ObjLoader implements Loader {
 	);
 
 	public ObjLoader(String file, Executor executor, Consumer<ObjLoader> postLoadCallback) {
-		this(file, objLoader -> executor.execute(() -> {
+		this(file, Color.WHITE, executor, postLoadCallback);
+	}
+
+	public ObjLoader(String file, Color defaultColor, Executor executor, Consumer<ObjLoader> postLoadCallback) {
+		this(file, defaultColor, objLoader -> executor.execute(() -> {
 			postLoadCallback.accept(objLoader);
 			objLoader.disposables.dispose();
 		}));
 	}
 
-	private ObjLoader(String file, Consumer<ObjLoader> postLoadCallback) {
+	private ObjLoader(String file, Color defaultColor, Consumer<ObjLoader> postLoadCallback) {
 		this.file = file;
 		this.reader = new BufferedReader(new InputStreamReader(
 				ObjLoader.class.getResourceAsStream(file)));
 		disposables.add(Disposable.ofBufferedReader(reader));
 		this.totalLines = Toolbox.getNumLines(file);
 		this.postLoadCallback = postLoadCallback;
+		this.defaultColor = defaultColor;
 	}
 
 	// Let's just skip the model phase

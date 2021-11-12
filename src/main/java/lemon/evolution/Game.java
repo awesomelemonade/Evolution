@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
+import lemon.engine.draw.Drawable;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.Player;
@@ -71,6 +72,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -173,11 +175,41 @@ public class Game implements Screen {
 			// Render spheres
 			entityRenderer.registerIndividual(PuzzleBall.class, sphereRenderer);
 			entityRenderer.registerIndividual(ExplodeOnTimeProjectile.class, entity -> entity.isType(ExplodeType.GRENADE), sphereRenderer);
-
-			// Where we're handling how to render spheres
-			entityRenderer.registerIndividual(RainmakerEntity.class, sphereRenderer);
 			entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.RAIN_DROPLET), sphereRenderer);
 
+			BiConsumer<Entity, Drawable> genericEntityRenderer = (entity, drawable) -> {
+				GL11.glEnable(GL11.GL_DEPTH_TEST);
+				CommonPrograms3D.LIGHT.use(program -> {
+					try (var translationMatrix = MatrixPool.ofTranslation(entity.position());
+						 var scalarMatrix = MatrixPool.ofScalar(entity.scalar())) {
+						var sunlightDirection = Vector3D.of(0f, 1f, 0f).normalize();
+						program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(scalarMatrix));
+						program.loadVector("sunlightDirection", sunlightDirection);
+						program.loadVector("viewPos", gameLoop.currentPlayer().position());
+					}
+					drawable.draw();
+				});
+				GL11.glDisable(GL11.GL_DEPTH_TEST);
+			};
+			var cloudLoader = new ObjLoader("/res/cloud.obj", postLoadTasks::add,
+					objLoader -> {
+						var drawable = objLoader.toIndexedDrawable();
+						Consumer<Entity> renderer = entity -> {
+							GL11.glEnable(GL11.GL_DEPTH_TEST);
+							CommonPrograms3D.LIGHT.use(program -> {
+								try (var translationMatrix = MatrixPool.ofTranslation(entity.position());
+									 var scalarMatrix = MatrixPool.ofScalar(entity.scalar().multiply(0.03f))) {
+									var sunlightDirection = Vector3D.of(0f, 1f, 0f).normalize();
+									program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(scalarMatrix));
+									program.loadVector("sunlightDirection", sunlightDirection);
+									program.loadVector("viewPos", gameLoop.currentPlayer().position());
+								}
+								drawable.draw();
+							});
+							GL11.glDisable(GL11.GL_DEPTH_TEST);
+						};
+						entityRenderer.registerIndividual(RainmakerEntity.class, renderer);
+					});
 			var dragonLoader = new ObjLoader("/res/dragon.obj", postLoadTasks::add,
 					objLoader -> {
 						var drawable = objLoader.toIndexedDrawable();
@@ -185,6 +217,9 @@ public class Game implements Screen {
 			var rocketLauncherUnloadedLoader = new ObjLoader("/res/rocket-launcher-unloaded.obj", postLoadTasks::add,
 					objLoader -> {
 						var drawable = objLoader.toIndexedDrawable();
+						entityRenderer.registerIndividual(StaticEntity.class,
+								entity -> entity.isType(StaticEntity.Type.ROCKET_LAUNCHER),
+								entity -> genericEntityRenderer.accept(entity, drawable));
 					});
 			var rocketLauncherLoadedLoader = new ObjLoader("/res/rocket-launcher-loaded.obj", postLoadTasks::add,
 					objLoader -> {
@@ -195,7 +230,7 @@ public class Game implements Screen {
 								try (var translationMatrix = MatrixPool.ofTranslation(Vector3D.of(3.5f, -4f, 1f));
 									 var rotationMatrix = MatrixPool.ofRotationY(MathUtil.PI / 2f)) {
 									var sunlightDirection = Vector3D.of(0f, 1f, 0f).normalize();
-									program.loadMatrix(MatrixType.MODEL_MATRIX, (rotationMatrix.multiply(translationMatrix)));
+									program.loadMatrix(MatrixType.MODEL_MATRIX, rotationMatrix.multiply(translationMatrix));
 									program.loadVector("sunlightDirection", sunlightDirection);
 									program.loadVector("viewPos", gameLoop.currentPlayer().position());
 									program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
@@ -273,6 +308,7 @@ public class Game implements Screen {
 					});
 
 			window.pushScreen(new Loading(window::popScreen,
+					cloudLoader,
 					dragonLoader, rocketLauncherUnloadedLoader,
 					rocketLauncherLoadedLoader, rocketLauncherProjectileLoader,
 					foxLoader,
@@ -282,7 +318,7 @@ public class Game implements Screen {
 				public void load() {
 					var currentRenderDistance = worldRenderer.terrainRenderer().getRenderDistance();
 					postLoadTasks.add(() -> worldRenderer.terrainRenderer().setRenderDistance(currentRenderDistance));
-					worldRenderer.terrainRenderer().setRenderDistance(320f / TerrainChunk.SIZE);
+					worldRenderer.terrainRenderer().setRenderDistance(256f / TerrainChunk.SIZE);
 					worldRenderer.terrainRenderer().preload(Vector3D.ZERO);
 					generatorStartSize = Math.max(1, generator.getQueueSize());
 				}
@@ -460,6 +496,10 @@ public class Game implements Screen {
 				}
 			});
 			disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
+
+			uiScreen.addProgressBar(new Box2D(10f, 45f, windowWidth - 20f, 25f),
+					() -> gameLoop.controller().powerMeter());
+
 			var minimap = uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f), world, () -> gameLoop.currentPlayer());
 			disposables.add(controls.activated(EvolutionControls.MINIMAP).onChangeAndRun(visible -> {
 				minimap.visible().setValue(visible);
@@ -468,7 +508,7 @@ public class Game implements Screen {
 			for (int i = 0; i < gameLoop.players().size(); i++) {
 				var player = gameLoop.players().get(i);
 				uiScreen.addProgressBar(new Box2D(50f, windowHeight - 280f - i * 30f, 100f, 15f),
-						() -> player.health().getValue() / Player.START_HEALTH).visible().setValue(false);
+						() -> player.health().getValue() / Player.START_HEALTH);
 			}
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());

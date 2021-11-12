@@ -30,6 +30,7 @@ public class MtlLoader implements Loader {
         builder.put("Ni", (loader, split) -> {});
         builder.put("d", (loader, split) -> {});
         builder.put("illum", (loader, split) -> {});
+        builder.put("Tf", (loader, split) -> {});
         builder.put("#", (loader, split) -> {});
         processors = builder.build();
     }

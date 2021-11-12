@@ -12,7 +12,7 @@ public class ExplodeOnHitProjectile extends AbstractEntity implements Disposable
 
 	public ExplodeOnHitProjectile(Location location, Vector3D velocity, ExplodeType type) {
 		super(location, velocity, type.scalar());
-		this.meta().set("type", type);
+		setType(type);
 		this.disposables.add(this.onCollide().add(explosionPosition -> {
 			removeFromWorld();
 			world().generateExplosion(explosionPosition, type.explosionRadius());

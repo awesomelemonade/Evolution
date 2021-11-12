@@ -21,6 +21,10 @@ public abstract class AbstractEntity implements Entity {
 		this(location, velocity, Vector3D.ONE);
 	}
 
+	public AbstractEntity(Location location, Vector3D velocity, float scalar) {
+		this(location, velocity, Vector3D.of(scalar, scalar, scalar));
+	}
+
 	public AbstractEntity(Location location, Vector3D velocity, Vector3D scalar) {
 		this.world = location.world();
 		this.position = MutableVector3D.of(location.position());
