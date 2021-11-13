@@ -11,7 +11,7 @@ public class StaticEntity extends AbstractEntity {
 	}
 
 	public static enum Type {
-		ROCKET_LAUNCHER(1.0f);
+		ROCKET_LAUNCHER(1.0f), CRATE(1.0f), PARACHUTE(1.0f);
 		private final Vector3D scalar;
 
 		private Type(float scalar) {

@@ -17,21 +17,17 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 	private final Disposables disposables = new Disposables();
 	private final GameControls<EvolutionControls, GLFWInput> controls;
 	private final Observable<T> current;
-	private float lastMouseX;
-	private float lastMouseY;
 
 	public EntityController(GameControls<EvolutionControls, GLFWInput> controls, T entity) {
 		this.controls = controls;
 		this.current = new Observable<>(entity);
-		controls.addCallback(GLFWInput::cursorPositionEvent, event -> {
+		controls.addCallback(GLFWInput::cursorDeltaEvent, event -> {
 			if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
-				float deltaY = (float) (-(event.x() - lastMouseX) * MOUSE_SENSITIVITY);
-				float deltaX = (float) (-(event.y() - lastMouseY) * MOUSE_SENSITIVITY);
+				float deltaY = (float) (-(event.x()) * MOUSE_SENSITIVITY);
+				float deltaX = (float) (-(event.y()) * MOUSE_SENSITIVITY);
 				current.getValue().mutableRotation().asXYVector().add(deltaX, deltaY)
 						.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
 			}
-			lastMouseX = (float) event.x();
-			lastMouseY = (float) event.y();
 		});
 		controls.addCallback(GLFWInput::mouseScrollEvent, event -> {
 			playerSpeed = Math.max(0f, playerSpeed + ((float) (event.yOffset() / 100f)));

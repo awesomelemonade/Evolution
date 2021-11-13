@@ -1,5 +1,6 @@
 package lemon.evolution;
 
+import com.google.common.collect.Streams;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.math.Box2D;
@@ -14,9 +15,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class Loading implements Screen {
 	private static final Logger logger = Logger.getLogger(Loading.class.getName());
@@ -25,12 +28,20 @@ public class Loading implements Screen {
 	private Instant startTime;
 	private LoadingBar loadingBar;
 
-	public Loading(Runnable callback, Loader... loaders) {
+	public Loading(Runnable callback, Collection<? extends Loader> loaders) {
 		this.callback = callback;
-		this.loaders = new ArrayDeque<>(Arrays.asList(loaders));
-		if (loaders.length == 0) {
+		this.loaders = new ArrayDeque<>(loaders);
+		if (loaders.size() == 0) {
 			throw new IllegalStateException("Must have at least 1 loader");
 		}
+	}
+
+	public Loading(Runnable callback, Loader... loaders) {
+		this(callback, Arrays.asList(loaders));
+	}
+
+	public Loading(Runnable callback, Collection<? extends Loader> collection, Loader... array) {
+		this(callback, Streams.concat(collection.stream(), Arrays.stream(array)).toList());
 	}
 
 	@Override

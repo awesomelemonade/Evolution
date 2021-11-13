@@ -1,6 +1,7 @@
 package lemon.evolution.destructible.beta;
 
 import com.google.common.collect.ImmutableList;
+import lemon.engine.draw.DrawableData;
 import lemon.engine.draw.DynamicIndexedDrawable;
 import lemon.engine.event.Computable;
 import lemon.engine.math.FloatData;
@@ -44,6 +45,7 @@ public class TerrainChunk {
 	private static final int[] NORMALS_PREREQUISITE_CHUNK_OFFSET_Y = { 0, -1,  0,  1,  0, -1,  0,  1, -1, 1, -1, 0, 1,  0, -1, 0, 1, 0};
 	private static final int[] NORMALS_PREREQUISITE_CHUNK_OFFSET_Z = {-1, -1, -1, -1, -1,  0,  0,  0,  0, 0,  0, 0, 0,  1,  1, 1, 1, 1};
 	private final Computable<MarchingCubeNormals> normals;
+	private final Computable<DrawableData> drawableData;
 	private final Computable<DynamicIndexedDrawable> drawable;
 	private final Executor poolExecutor;
 
@@ -139,7 +141,7 @@ public class TerrainChunk {
 			}).map(Vector3D::normalize).toArray(Vector3D[]::new);
 			computable.compute(new MarchingCubeNormals(model, normals));
 		});
-		this.drawable = this.normals.then((computable, normals) -> {
+		this.drawableData = this.normals.then(poolExecutor, (computable, normals) -> {
 			var model = normals.model(); // Normals MUST be the same as the model
 			// (cannot use this.model.getValueOrThrow() because model could have changed already and desync with normals)
 			var indices = model.indices();
@@ -159,11 +161,14 @@ public class TerrainChunk {
 			for (int i = 0; i < numVec4s; i++) {
 				vertexData[2 + i] = weights[i];
 			}
+			computable.compute(new DrawableData(indices, vertexData));
+		});
+		this.drawable = this.drawableData.then((computable, data) -> {
 			mainThreadExecutor.execute(() -> {
 				computable.compute(drawable -> {
-					drawable.setData(indices, vertexData);
+					drawable.setData(data);
 					return drawable;
-				}, () -> new DynamicIndexedDrawable(indices, vertexData));
+				}, () -> new DynamicIndexedDrawable(data));
 			});
 		});
 	}

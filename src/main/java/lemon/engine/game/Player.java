@@ -30,13 +30,15 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		this.alive = world().entities().observableContains(this, disposables::add);
 		disposables.add(this.alive.onChangeTo(false, () -> health.setValue(0f)));
 		// TODO: Temporary
+		/*
 		inventory.addAndSetCurrentItem(BasicItems.ROCKET_LAUNCHER);
 		inventory.addItem(BasicItems.MISSILE_SHOWER);
 		inventory.addItem(PenguinGunItemType.INSTANCE);
 		inventory.addItem(DrillItemType.INSTANCE);
-		inventory.addItem(RainmakerItemType.INSTANCE); // Rainmaker item type
+		inventory.addItem(BasicItems.RAINMAKER);
 		inventory.addItem(JetpackItemType.INSTANCE);
 		inventory.addItem(BasicItems.GRENADE_LAUNCHER);
+		*/
 	}
 
 	@Override
