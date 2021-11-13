@@ -1,6 +1,6 @@
 # This file uses centimeters as units for non-parametric coordinates.
 
-mtllib cloud.mtl
+# mtllib cloud.mtl
 v -224.987464 248.553599 294.077871
 v -196.395409 244.717269 338.725953
 v -229.491414 288.401468 294.069713
