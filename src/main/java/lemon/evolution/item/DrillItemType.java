@@ -1,5 +1,6 @@
 package lemon.evolution.item;
 
+import lemon.evolution.entity.DrillEntity;
 import lemon.evolution.world.ControllableEntity;
 
 public enum DrillItemType implements ItemType {
@@ -12,7 +13,10 @@ public enum DrillItemType implements ItemType {
 
     @Override
     public void use(ControllableEntity player, float power) {
-        System.out.println("Drill gun used");
+        player.world().entities().add(new DrillEntity(
+                player,
+                player.location().add(player.vectorDirection().multiply(1f)),
+                player.vectorDirection().multiply(1f * power)));
     }
 
     @Override
