@@ -17,9 +17,10 @@ import java.time.Instant;
 
 public class DrillEntity extends AbstractEntity implements Disposable {
     private final Disposables disposables = new Disposables();
-    private final float SPEED = 1.0f;
-    private final Duration FORWARD_TIME = Duration.ofSeconds(1);
+    private final float SPEED = 1f;
+    private final Duration FORWARD_TIME = Duration.ofMillis(500);
     private Instant startTime;
+    private float explosionRadius = 3f;
 
     public DrillEntity(ControllableEntity player, Location location, Vector3D velocity) {
         super(location, velocity);
@@ -29,6 +30,7 @@ public class DrillEntity extends AbstractEntity implements Disposable {
             if (Instant.now().isAfter(startTime)) {
                 var mutableForce = player.mutableForce();
                 var playerForwardVector = player.groundWatcher().groundParallel().orElse(player.vectorDirection()).multiply(SPEED);
+                world().generateExclusiveExplosion(player.position(), explosionRadius * velocity.length(), (Player) player);
                 mutableForce.add(playerForwardVector);
             }
             if (Instant.now().isAfter(startTime.plus(FORWARD_TIME))) {

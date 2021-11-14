@@ -38,7 +38,23 @@ public class World implements Disposable {
 				direction = Vector3D.ofRandomUnitVector();
 			}
 			player.mutableVelocity().add(direction.scaleToLength(strength));
-			player.health().setValue(player.health().getValue() - strength * 20f);
+			player.damage(strength * 20f);
+		});
+		onExplosion.callListeners(position, radius);
+	}
+
+	public void generateExclusiveExplosion(Vector3D position, float radius, Player playerExcluded) {
+		terrain.generateExplosion(position, radius);
+		players().forEach(player -> {
+			if (player != playerExcluded) {
+				float strength = Math.min(radius / 3f, 3f * radius / player.position().distanceSquared(position));
+				var direction = player.position().subtract(position);
+				if (direction.equals(Vector3D.ZERO)) {
+					direction = Vector3D.ofRandomUnitVector();
+				}
+				player.mutableVelocity().add(direction.scaleToLength(strength));
+				player.damage(strength * 20f);
+			}
 		});
 		onExplosion.callListeners(position, radius);
 	}
