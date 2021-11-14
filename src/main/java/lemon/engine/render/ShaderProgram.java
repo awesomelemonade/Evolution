@@ -2,6 +2,7 @@ package lemon.engine.render;
 
 import com.google.common.collect.ImmutableMap;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Plane;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposable;
@@ -91,6 +92,9 @@ public interface ShaderProgram extends Disposable {
 	}
 	public default void loadVector(String name, Vector3D vector) {
 		this.getUniformVariable(name).loadVector(vector);
+	}
+	public default void loadPlane(String name, Plane plane) {
+		this.getUniformVariable(name).loadPlane(plane);
 	}
 	public default void loadColor3f(Color color) {
 		loadColor3f("color", color);

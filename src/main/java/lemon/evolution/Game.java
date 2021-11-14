@@ -47,6 +47,7 @@ import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.util.GLFWGameControls;
+import lemon.evolution.water.beta.WaterFrameBuffer;
 import lemon.evolution.water.beta.WaterQuad;
 import lemon.evolution.world.CsvWorldLoader;
 import lemon.evolution.world.Entity;
@@ -88,6 +89,9 @@ public enum Game implements Screen {
 	private float lastMouseY;
 
 	private FrameBuffer frameBuffer;
+
+	private WaterFrameBuffer reflectionFrameBuffer;
+	private WaterFrameBuffer refractionFrameBuffer;
 
 	private DebugOverlay debugOverlay;
 	private Benchmarker benchmarker;
@@ -413,6 +417,57 @@ public enum Game implements Screen {
 				gameLoop.getGatedControls().setEnabled(true);
 			}));
 
+			/* REFLECTION FRAME BUFFER FOR WATER */
+			reflectionFrameBuffer = disposables.add(new WaterFrameBuffer(windowWidth, windowHeight, WaterFrameBuffer.Type.REFLECTION));
+			reflectionFrameBuffer.bind(rfb -> {
+				/* Texture Attachment */
+				int texture = GL11.glGenTextures();
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture);
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, WaterFrameBuffer.REFLECTION_WIDTH, WaterFrameBuffer.REFLECTION_HEIGHT,
+						0, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, texture, 0);
+
+				/* Depth Buffer Attachment */
+				int depthBuffer = GL30.glGenRenderbuffers();
+				GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, depthBuffer);
+				GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL11.GL_DEPTH_COMPONENT, WaterFrameBuffer.REFLECTION_WIDTH, WaterFrameBuffer.REFLECTION_HEIGHT);
+				GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GL30.GL_RENDERBUFFER, depthBuffer);
+
+				/* Unbind */
+				GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+				GL11.glViewport(0, 0, windowWidth, windowHeight);
+
+			});
+
+			/* REFLECTION FRAME BUFFER FOR WATER */
+			refractionFrameBuffer = disposables.add(new WaterFrameBuffer(windowWidth, windowHeight, WaterFrameBuffer.Type.REFRACTION));
+			refractionFrameBuffer.bind(refractionFrameBuffer -> {
+				/* Texture Attachment */
+				int texture = GL11.glGenTextures();
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, WaterFrameBuffer.REFRACTION_WIDTH, WaterFrameBuffer.REFRACTION_HEIGHT,
+						0, GL11.GL_RGB, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, texture, 0);
+
+				/* Depth Texture Attachment */
+				int depthTexture = GL11.glGenTextures();
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
+				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, WaterFrameBuffer.REFRACTION_WIDTH, WaterFrameBuffer.REFRACTION_HEIGHT,
+						0, GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture, 0);
+
+				/* Unbind */
+				GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+				GL11.glViewport(0, 0, windowWidth, windowHeight);
+			});
+
+
 			uiScreen = disposables.add(new UIScreen(window.input()));
 			uiScreen.addButton(new Box2D(100f, 100f, 100f, 20f), Color.GREEN, x -> {
 				System.out.println("Clicked");
@@ -467,6 +522,9 @@ public enum Game implements Screen {
 		world.update(dt);
 
 		gameLoop.update();
+
+		GL11.glEnable(GL30.GL_CLIP_DISTANCE0); // Start of clipping plane stuff for the water
+
 		if (controls.isActivated(EvolutionControls.FREECAM)) {
 			float MOUSE_SENSITIVITY = .001f;
 			controls.addCallback(GLFWInput::cursorPositionEvent, event -> {
