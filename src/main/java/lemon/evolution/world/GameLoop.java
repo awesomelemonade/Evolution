@@ -7,10 +7,13 @@ import lemon.engine.event.Event;
 import lemon.engine.event.EventWith;
 import lemon.engine.event.Observable;
 import lemon.engine.game.Player;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.engine.toolbox.Scheduler;
 import lemon.evolution.EvolutionControls;
+import lemon.evolution.entity.ItemDropEntity;
 import lemon.evolution.util.GLFWGameControls;
 import lemon.evolution.util.GatedGLFWGameControls;
 import lemon.evolution.util.PlayerController;
@@ -23,12 +26,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class GameLoop implements Disposable {
-	private static final Duration OBSERVE_TIME = Duration.ofSeconds(60);
-	private static final Duration ACTION_TIME = Duration.ofSeconds(8);
+	private static final Duration OBSERVE_TIME = Duration.ofSeconds(120);
+	private static final Duration ACTION_TIME = Duration.ofSeconds(30);
 	private static final Duration RESOLVE_TIME = Duration.ofSeconds(2);
 	private final Disposables disposables = new Disposables();
 	private final Disposables endTurnDisposables = disposables.add(new Disposables());
 	private final GatedGLFWGameControls<EvolutionControls> gatedControls;
+	private final World world;
 	private final ImmutableList<Player> allPlayers;
 	private final PlayerController controller;
 	private final Iterator<Player> cycler;
@@ -40,7 +44,8 @@ public class GameLoop implements Disposable {
 	public Instant startTime; // TODO: Temporary
 	public Instant endTime; // TODO: Temporary
 
-	public GameLoop(ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
+	public GameLoop(World world, ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
+		this.world = world;
 		this.gatedControls = new GatedGLFWGameControls<>(controls);
 		this.cycler = Iterators.filter(Iterators.cycle(allPlayers), player -> player.alive().getValue());
 		this.allPlayers = allPlayers;
@@ -55,7 +60,8 @@ public class GameLoop implements Disposable {
 		// Win Condition
 		var alivePlayers = FSetWithEvents.ofFiltered(allPlayers, Player::alive, disposables::add);
 		disposables.add(alivePlayers.onRemove(player -> {
-			if (alivePlayers.size() == 1) {
+			var numTeams = alivePlayers.stream().map(Player::team).distinct().count();
+			if (numTeams == 1) {
 				onWinner.callListeners(alivePlayers.stream().findFirst().orElseThrow());
 			}
 		}));
@@ -75,6 +81,15 @@ public class GameLoop implements Disposable {
 			}));
 		}));
 		disposables.add(() -> gatedControls.setEnabled(true));
+		// Item Drops
+		disposables.add(controller.observableCurrent().onChange(player -> {
+			var radius = 50.0 * Math.sqrt(Math.random());
+			var angle = MathUtil.TAU * Math.random();
+			var cos = Math.cos(angle);
+			var sin = Math.sin(angle);
+			var location = new Location(player.world(), Vector3D.of((float) (radius * cos), 100f, (float) (radius * sin)));
+			world.entities().add(new ItemDropEntity(location));
+		}));
 	}
 
 	public void endTurn() {

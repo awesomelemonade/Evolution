@@ -12,12 +12,14 @@ uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 
+uniform vec4 filterColor;
+
 void main(void) {
 	vec4 worldPosition = modelMatrix * vec4(position, 1.0);
 
 	gl_Position = projectionMatrix * viewMatrix * worldPosition;
 
-	passColor = color;
+	passColor = filterColor * color;
 	passNormal = normal;
 	fragPos = worldPosition.xyz;
 }

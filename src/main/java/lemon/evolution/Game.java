@@ -7,6 +7,7 @@ import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.Player;
+import lemon.engine.game.Team;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.Camera;
@@ -40,6 +41,7 @@ import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
+import lemon.evolution.ui.beta.UIProgressBar;
 import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
@@ -208,20 +210,20 @@ public class Game implements Screen {
 			var projection = new Projection(MathUtil.toRadians(60f),
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
 			var playersBuilder = new ImmutableList.Builder<Player>();
-			int numPlayers = 8;
+			int numPlayers = 6;
 			for (int i = 0; i < numPlayers; i++) {
-				var distance = 15f;
+				var distance = 25f;
 				var angle = MathUtil.TAU * ((float) i) / numPlayers;
 				var cos = (float) Math.cos(angle);
 				var sin = (float) Math.sin(angle);
-				var player = disposables.add(new Player("Player " + (i + 1), new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
-				player.mutableRotation().setY((float) Math.atan2(player.position().y(), player.position().x()));
+				var player = disposables.add(new Player("Player " + (i + 1), Team.values()[i % Team.values().length], new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
+				player.mutableRotation().setY(-angle + MathUtil.PI / 2);
 				playersBuilder.add(player);
 			}
 			var players = playersBuilder.build();
 			world.entities().addAll(players);
 			world.entities().flush();
-			gameLoop = disposables.add(new GameLoop(players, controls));
+			gameLoop = disposables.add(new GameLoop(world, players, controls));
 			disposables.add(gameLoop.onWinner(player -> {
 				window.popAndPushScreen(Menu.INSTANCE);
 			}));
@@ -377,9 +379,7 @@ public class Game implements Screen {
 
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(true, () -> {
 				gameLoop.getGatedControls().setEnabled(false);
-				MutableVector3D pos = MutableVector3D.of(gameLoop.currentPlayer().mutablePosition().asImmutable());
-				MutableVector3D rot = MutableVector3D.of(gameLoop.currentPlayer().mutableRotation().asImmutable());
-				freecam = new Camera(pos, rot, gameLoop.currentPlayer().camera().getProjection());
+				freecam = new Camera(gameLoop.currentPlayer().camera());
 				viewModel.setVisible(false);
 			}));
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(false, () -> {
@@ -388,7 +388,7 @@ public class Game implements Screen {
 			}));
 
 			uiScreen = disposables.add(new UIScreen(window.input()));
-			//disposables.add(controls.activated(EvolutionControls.SHOW_UI).onChangeAndRun(activated -> uiScreen.visible().setValue(activated)));
+			disposables.add(controls.activated(EvolutionControls.SHOW_UI).onChangeAndRun(activated -> uiScreen.visible().setValue(activated)));
 
 			var progressBar = uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
 				if (gameLoop.startTime != null && gameLoop.endTime != null) {
@@ -401,8 +401,13 @@ public class Game implements Screen {
 			});
 			disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
 
-			uiScreen.addProgressBar(new Box2D(10f, 45f, windowWidth - 20f, 25f),
-					() -> gameLoop.controller().powerMeter()).visible().setValue(false);
+			var powerMeterProgressBar = uiScreen.addProgressBar(new Box2D(windowWidth - 30f, 45f, 20f, 150f),
+					() -> gameLoop.controller().powerMeter(), UIProgressBar.ProgressDirection.UP);
+			disposables.add(gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
+				var color = player.team().color();
+				progressBar.setColor(color);
+				powerMeterProgressBar.setColor(color);
+			}));
 
 			var minimap = uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f), world, () -> gameLoop.currentPlayer());
 			disposables.add(controls.activated(EvolutionControls.MINIMAP).onChangeAndRun(visible -> {
@@ -412,7 +417,7 @@ public class Game implements Screen {
 			for (int i = 0; i < gameLoop.players().size(); i++) {
 				var player = gameLoop.players().get(i);
 				uiScreen.addProgressBar(new Box2D(50f, windowHeight - 280f - i * 30f, 100f, 15f),
-						() -> player.health().getValue() / Player.START_HEALTH).visible().setValue(false);
+						() -> player.health().getValue() / Player.START_HEALTH).setColor(player.team().color());
 			}
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());

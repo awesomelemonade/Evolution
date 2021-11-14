@@ -25,6 +25,11 @@ public class Camera {
 		this.transformationMatrixSupplier = MathUtil.getTransformationSupplier(() -> this.position().invert(), () -> this.rotation().invert());
 	}
 
+	// Copy Constructor
+	public Camera(Camera camera) {
+		this(camera.position(), camera.rotation(), camera.projection());
+	}
+
 	public Vector3D position() {
 		return position.asImmutable();
 	}
@@ -41,7 +46,7 @@ public class Camera {
 		return rotation;
 	}
 
-	public Projection getProjection() {
+	public Projection projection() {
 		return projection;
 	}
 

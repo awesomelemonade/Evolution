@@ -21,5 +21,4 @@ void main(void) {
 	vec3 specular = specularStrength * pow(max(dot(viewDirection, reflectDirection), 0), 32) * lightColor;
 	vec3 result = (ambient + diffuse + specular) * passColor.rgb;
 	outColor = vec4(result, passColor.a);
-	//outColor = passColor;
 }
