@@ -418,11 +418,6 @@ public class Game implements Screen {
 				GL30.glBindRenderbuffer(GL30.GL_RENDERBUFFER, depthBuffer);
 				GL30.glRenderbufferStorage(GL30.GL_RENDERBUFFER, GL11.GL_DEPTH_COMPONENT, WaterFrameBuffer.REFLECTION_WIDTH, WaterFrameBuffer.REFLECTION_HEIGHT);
 				GL30.glFramebufferRenderbuffer(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, GL30.GL_RENDERBUFFER, depthBuffer);
-
-				/* Unbind */
-				GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-				GL11.glViewport(0, 0, windowWidth, windowHeight);
-
 			});
 
 			/* REFLECTION FRAME BUFFER FOR WATER */
@@ -445,10 +440,6 @@ public class Game implements Screen {
 				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 				GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture, 0);
-
-				/* Unbind */
-				GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-				GL11.glViewport(0, 0, windowWidth, windowHeight);
 			});
 
 
@@ -534,7 +525,6 @@ public class Game implements Screen {
 
 		gameLoop.update();
 
-		GL11.glEnable(GL30.GL_CLIP_DISTANCE0); // Start of clipping plane stuff for the water
 
 		if (controls.isActivated(EvolutionControls.FREECAM)) {
 			float MOUSE_SENSITIVITY = .001f;
@@ -630,10 +620,14 @@ public class Game implements Screen {
 			});
 			GL11.glDepthMask(true);
 			var worldRenderTime = System.nanoTime();
+			// Where the terrain is rendered
+			//GL11.glEnable(GL30.GL_CLIP_DISTANCE0); // Start of clipping plane stuff for the water
 			worldRenderer.render(gameLoop.currentPlayer().position());
 			worldRenderTime = System.nanoTime() - worldRenderTime;
 			benchmarker.getLineGraph("worldRenderTime").add(worldRenderTime);
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 			CommonPrograms3D.WATER.use(program -> {
 				waterQuad.draw();
 			});
