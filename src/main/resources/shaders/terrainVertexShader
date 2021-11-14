@@ -1,6 +1,6 @@
 #version 400 core
 
-#define NUM_TEXTURES 40
+#define NUM_TEXTURES 48
 #define TEXTURE_ARRAY_SIZE NUM_TEXTURES / 4
 
 in vec3 position;

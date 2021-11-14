@@ -16,12 +16,12 @@ public class ExplodeOnTimeProjectile extends AbstractEntity implements Disposabl
 
 	public ExplodeOnTimeProjectile(Location location, Vector3D velocity, ExplodeType type) {
 		super(location, velocity, type.scalar());
-		this.meta().set("type", type);
+		setType(type);
 		this.creationTime = Instant.now();
 		disposables.add(this.onUpdate().add(() -> {
 			if (Instant.now().isAfter(creationTime.plus(2, ChronoUnit.SECONDS))) {
 				removeFromWorld();
-				EntityUtil.generateExplosion(world(), position(), type.explosionRadius());
+				world().generateExplosion(position(), type.explosionRadius());
 			}
 		}));
 	}

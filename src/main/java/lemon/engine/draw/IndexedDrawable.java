@@ -30,7 +30,7 @@ public class IndexedDrawable implements Drawable {
 			}, false);
 			new VertexBuffer().bind(GL15.GL_ARRAY_BUFFER, (target, vbo) -> {
 				GL15.glBufferData(target, Drawable.getFloatBuffer(vertices, stride), GL15.GL_STATIC_DRAW);
-				int offset = 0;
+				long offset = 0;
 				for (int i = 0; i < vertices.length; i++) {
 					if (vertices[i].length > 0) {
 						int dimensions = vertices[i][0].numDimensions();

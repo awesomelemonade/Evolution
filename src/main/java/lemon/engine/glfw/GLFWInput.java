@@ -2,6 +2,7 @@ package lemon.engine.glfw;
 
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.event.EventWith;
+import lemon.engine.toolbox.Disposables;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWCharModsCallback;
 import org.lwjgl.glfw.GLFWCursorEnterCallback;
@@ -48,6 +49,7 @@ public class GLFWInput {
 	private final EventWith<GLFWWindowMoveEvent> windowMoveEvent = new EventWith<>();
 	private final EventWith<GLFWWindowRefreshEvent> windowRefreshEvent = new EventWith<>();
 	private final EventWith<GLFWWindowSizeEvent> windowSizeEvent = new EventWith<>();
+	private final EventWith<GLFWCursorDeltaEvent> cursorDeltaEvent = new EventWith<>();
 
 	public EventWith<GLFWCharacterEvent> characterEvent() {
 		return characterEvent;
@@ -103,6 +105,10 @@ public class GLFWInput {
 
 	public EventWith<GLFWWindowSizeEvent> windowSizeEvent() {
 		return windowSizeEvent;
+	}
+
+	public EventWith<GLFWCursorDeltaEvent> cursorDeltaEvent() {
+		return cursorDeltaEvent;
 	}
 
 	public GLFWInput(GLFWWindow window) {
@@ -190,6 +196,17 @@ public class GLFWInput {
 			public void invoke(long window, int width, int height) {
 				windowSizeEvent.callListeners(new GLFWWindowSizeEvent(GLFWInput.this.window, width, height));
 			}
+		});
+		var lastMousePositions = new Object() {
+			double x = 0.0;
+			double y = 0.0;
+		};
+		cursorPositionEvent.add(event -> {
+			var mouseX = event.x();
+			var mouseY = event.y();
+			cursorDeltaEvent.callListeners(new GLFWCursorDeltaEvent(event.glfwWindow(), mouseX - lastMousePositions.x, mouseY - lastMousePositions.y));
+			lastMousePositions.x = mouseX;
+			lastMousePositions.y = mouseY;
 		});
 	}
 

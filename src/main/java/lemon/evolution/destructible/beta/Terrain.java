@@ -1,14 +1,15 @@
 package lemon.evolution.destructible.beta;
 
-import lemon.engine.math.MutableVector3D;
+import lemon.engine.math.MathUtil;
+import lemon.engine.math.Matrix;
+import lemon.engine.math.Triangle;
+import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.draw.Drawable;
 import lemon.engine.function.AbsoluteIntValue;
 import lemon.engine.function.SzudzikIntPair;
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Matrix;
-import lemon.engine.math.Vector3D;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -30,7 +31,8 @@ public class Terrain {
 	}
 
 	public void flushForRendering() {
-		updaters.run();
+		var time = System.nanoTime();
+		updaters.run(() -> System.nanoTime() - time <= 10_000_000L);
 	}
 
 	public void preloadChunk(int chunkX, int chunkY, int chunkZ) {
@@ -112,17 +114,26 @@ public class Terrain {
 	}
 
 	public void terraform(TerrainChunk chunk, Vector3D origin, float radius, float dt, float brushSpeed, int texture) {
+		// Avoid making a copy of origin and using Vector for memory optimization
+		var originX = origin.x();
+		var originY = origin.y();
+		var originZ = origin.z();
+		var radiusSquared = radius * radius;
+		int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
+		int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
+		int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
 		chunk.updateAllData((data, textureData) -> {
-			int offsetX = chunk.getChunkX() * TerrainChunk.SIZE;
-			int offsetY = chunk.getChunkY() * TerrainChunk.SIZE;
-			int offsetZ = chunk.getChunkZ() * TerrainChunk.SIZE;
-			var point = MutableVector3D.ofZero();
 			for (int i = 0; i < TerrainChunk.SIZE; i++) {
 				for (int j = 0; j < TerrainChunk.SIZE; j++) {
 					for (int k = 0; k < TerrainChunk.SIZE; k++) {
-						point.set(offsetX + i, offsetY + j, offsetZ + k).multiply(scalar);
-						float distanceSquared = origin.distanceSquared(point.asImmutable());
-						if (distanceSquared <= radius * radius) {
+						var pointX = scalar.x() * (offsetX + i);
+						var pointY = scalar.y() * (offsetY + j);
+						var pointZ = scalar.z() * (offsetZ + k);
+						var deltaX = originX - pointX;
+						var deltaY = originY - pointY;
+						var deltaZ = originZ - pointZ;
+						var distanceSquared = deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ;
+						if (distanceSquared <= radiusSquared) {
 							float distance = (float) Math.sqrt(distanceSquared);
 							float brushWeight = smoothstep(radius, radius * 0.7f, distance);
 							var amount = brushSpeed * brushWeight * dt;
@@ -187,6 +198,28 @@ public class Terrain {
 
 	public int getChunkZ(float z) {
 		return Math.floorDiv((int) Math.floor(z / scalar.z()), TerrainChunk.SIZE);
+	}
+
+	public int getCollideX(float x) {
+		return Math.floorDiv((int) Math.floor(x / scalar.x()), TerrainChunk.TRIANGLE_COORDS_TO_SUBDIVISION_COORDS);
+	}
+
+	public int getCollideY(float y) {
+		return Math.floorDiv((int) Math.floor(y / scalar.y()), TerrainChunk.TRIANGLE_COORDS_TO_SUBDIVISION_COORDS);
+	}
+
+	public int getCollideZ(float z) {
+		return Math.floorDiv((int) Math.floor(z / scalar.z()), TerrainChunk.TRIANGLE_COORDS_TO_SUBDIVISION_COORDS);
+	}
+
+	public List<Triangle> getTriangles(int collideX, int collideY, int collideZ) {
+		var chunkX = Math.floorDiv(collideX, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var chunkY = Math.floorDiv(collideY, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var chunkZ = Math.floorDiv(collideZ, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var collideXPart = Math.floorMod(collideX, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var collideYPart = Math.floorMod(collideY, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		var collideZPart = Math.floorMod(collideZ, TerrainChunk.TRIANGLES_SUBDIVISION_SIZE);
+		return getChunk(chunkX, chunkY, chunkZ).getTriangles(collideXPart, collideYPart, collideZPart);
 	}
 
 	public float getChunkDistance(float distance) {

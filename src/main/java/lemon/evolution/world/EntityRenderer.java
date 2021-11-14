@@ -1,9 +1,7 @@
 package lemon.evolution.world;
 
 import lemon.engine.render.Renderable;
-import lemon.engine.toolbox.Disposable;
-import lemon.engine.toolbox.Disposables;
-import lemon.futility.FSetWithEvents;
+import lemon.futility.FilterableFSetWithEvents;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,12 +9,11 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-public class EntityRenderer implements Renderable, Disposable {
-	private final Disposables disposables = new Disposables();
+public class EntityRenderer implements Renderable {
 	private final List<Runnable> renderers = new ArrayList<>();
-	private final FSetWithEvents<Entity> entities;
+	private final FilterableFSetWithEvents<Entity> entities;
 
-	public EntityRenderer(FSetWithEvents<Entity> entities) {
+	public EntityRenderer(FilterableFSetWithEvents<Entity> entities) {
 		this.entities = entities;
 	}
 
@@ -29,22 +26,17 @@ public class EntityRenderer implements Renderable, Disposable {
 	}
 
 	public <T extends Entity> void registerIndividual(Class<T> clazz, Consumer<? super T> renderer) {
-		var filtered = entities.ofFiltered(clazz, disposables::add);
+		var filtered = entities.ofFiltered(clazz);
 		renderers.add(() -> filtered.forEach(renderer));
 	}
 
 	public <T extends Entity> void registerCollection(Class<T> clazz, Consumer<Collection<T>> consumer) {
-		var filtered = entities.ofFiltered(clazz, disposables::add);
+		var filtered = entities.ofFiltered(clazz);
 		renderers.add(() -> consumer.accept(filtered));
 	}
 
 	@Override
 	public void render() {
 		renderers.forEach(Runnable::run);
-	}
-
-	@Override
-	public void dispose() {
-		disposables.dispose();
 	}
 }

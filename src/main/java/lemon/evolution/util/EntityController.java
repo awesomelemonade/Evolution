@@ -12,33 +12,31 @@ import lemon.evolution.world.ControllableEntity;
 public class EntityController<T extends ControllableEntity> implements Disposable {
 	private static final boolean USE_SURF = false;
 	private static final float MOUSE_SENSITIVITY = 0.001f;
+	private static final Vector3D JUMP_DIRECTION = Vector3D.of(0f, 1f, 0f);
 	private static final float JUMP_HEIGHT = 1f;
 	private static float playerSpeed = 0.08f;
 	private final Disposables disposables = new Disposables();
 	private final GameControls<EvolutionControls, GLFWInput> controls;
 	private final Observable<T> current;
-	private float lastMouseX;
-	private float lastMouseY;
 
 	public EntityController(GameControls<EvolutionControls, GLFWInput> controls, T entity) {
 		this.controls = controls;
 		this.current = new Observable<>(entity);
-		controls.addCallback(GLFWInput::cursorPositionEvent, event -> {
+		controls.addCallback(GLFWInput::cursorDeltaEvent, event -> {
 			if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
-				float deltaY = (float) (-(event.x() - lastMouseX) * MOUSE_SENSITIVITY);
-				float deltaX = (float) (-(event.y() - lastMouseY) * MOUSE_SENSITIVITY);
+				float deltaY = (float) (-(event.x()) * MOUSE_SENSITIVITY);
+				float deltaX = (float) (-(event.y()) * MOUSE_SENSITIVITY);
 				current.getValue().mutableRotation().asXYVector().add(deltaX, deltaY)
 						.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
 			}
-			lastMouseX = (float) event.x();
-			lastMouseY = (float) event.y();
 		});
 		controls.addCallback(GLFWInput::mouseScrollEvent, event -> {
 			playerSpeed = Math.max(0f, playerSpeed + ((float) (event.yOffset() / 100f)));
 		});
 		disposables.add(controls.onActivated(EvolutionControls.JUMP, () -> {
 			var currentEntity = current.getValue();
-			currentEntity.groundWatcher().groundNormal().ifPresent(normal -> currentEntity.mutableVelocity().add(normal.multiply(JUMP_HEIGHT)));
+			currentEntity.groundWatcher().groundNormal().ifPresent(normal ->
+					currentEntity.mutableVelocity().add(JUMP_DIRECTION.multiply(JUMP_HEIGHT)));
 		}));
 		var currentCleanup = disposables.add(new Disposables());
 		disposables.add(current.onChangeAndRun(newEntity -> {

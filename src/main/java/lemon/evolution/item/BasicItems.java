@@ -1,6 +1,5 @@
 package lemon.evolution.item;
 
-import lemon.engine.math.Vector3D;
 import lemon.evolution.entity.*;
 import lemon.evolution.world.ControllableEntity;
 
@@ -17,6 +16,9 @@ public enum BasicItems implements ItemType {
     GRENADE_LAUNCHER("Grenade Launcher", "/res/inventory_icons/rocketLauncher.png", (player, power) -> {
         EntityUtil.newLaunchedEntity(player, power / 3f, (location, velocity) ->
                 new ExplodeOnTimeProjectile(location, velocity, ExplodeType.GRENADE));
+    }),
+    RAINMAKER("Rainmaker", "/res/inventory_icons/rainMaker.png", (player, power) -> {
+        EntityUtil.newLaunchedEntity(player, power * 1.5f, RainmakerEntity::new);
     });
     private final String name;
     private final String guiImagePath;

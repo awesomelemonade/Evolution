@@ -45,6 +45,7 @@ public enum Menu implements Screen {
 
 	@Override
 	public void onLoad(GLFWWindow window) {
+		System.gc(); // Manual Garbage Collection
 		this.window = window;
 		font = disposables.add(new Font(Paths.get("/res/fonts/FreeSans.fnt")));
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
@@ -125,7 +126,7 @@ public enum Menu implements Screen {
 												Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
 										return Math.min(cylinder, terrain);
 									};
-									start(new Game(scalarField));
+									start(new Game(scalarField, window.getWidth(), window.getHeight()));
 								}
 								case 1 -> {
 									var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 4);
@@ -145,7 +146,7 @@ public enum Menu implements Screen {
 												Math.pow(5.75f, noise.apply(vector.divide(500f))) * 3.5);
 										return Math.min(cylinder, terrain);
 									};
-									start(new Game(scalarField));
+									start(new Game(scalarField, window.getWidth() / 2, window.getHeight() / 2));
 								}
 								case 2 -> start(FontTest.INSTANCE);
 								default -> System.out.println(i);

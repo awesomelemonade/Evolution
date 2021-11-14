@@ -1,5 +1,6 @@
 package lemon.evolution.ui.beta;
 
+import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.Vector2D;
@@ -8,6 +9,7 @@ import lemon.engine.texture.Texture;
 import lemon.engine.toolbox.Color;
 import lemon.evolution.UIMinimap;
 import lemon.evolution.world.ControllableEntity;
+import lemon.evolution.world.Inventory;
 import lemon.evolution.world.World;
 
 import java.util.function.Consumer;
@@ -39,7 +41,11 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIProgressBar(this, box, progressGetter));
 	}
 
-	public UIMinimap addMinimap(Box2D box, World world, Supplier<ControllableEntity> entitySupplier) {
+	public UIProgressBar addProgressBar(Box2D box, Supplier<Float> progressGetter, UIProgressBar.ProgressDirection direction) {
+		return addComponent(new UIProgressBar(this, box, progressGetter, direction));
+	}
+
+	public UIMinimap addMinimap(Box2D box, World world, Supplier<Player> entitySupplier) {
 		return addComponent(new UIMinimap(this, box, world, entitySupplier));
 	}
 
@@ -51,8 +57,8 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIImage(this, box, texture));
 	}
 
-	public UIInventory addInventory() {
-		return addComponent(new UIInventory(this));
+	public UIInventory addInventory(Inventory inventory) {
+		return addComponent(new UIInventory(this, inventory));
 	}
 
 	@Override

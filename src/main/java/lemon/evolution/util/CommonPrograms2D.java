@@ -39,7 +39,7 @@ public enum CommonPrograms2D implements ShaderProgramHolder {
 	TEXTURE(names("position", "textureCoords"), program -> {
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
-		program.loadInt("textureSampler", TextureBank.REUSE.id());
+		program.loadSampler("textureSampler", TextureBank.REUSE);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/textureVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/textureFragmentShader").orElseThrow())),
@@ -57,15 +57,15 @@ public enum CommonPrograms2D implements ShaderProgramHolder {
 		program.loadMatrix(MatrixType.VIEW_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
 		program.loadVector("color", Vector3D.ZERO);
-		program.loadInt("textureSampler", TextureBank.REUSE.id());
+		program.loadSampler("textureSampler", TextureBank.REUSE);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders2d/textVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders2d/textFragmentShader").orElseThrow())),
 	MINIMAP(names("position", "textureCoords"), program -> {
 		program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, Matrix.IDENTITY_4);
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
-		program.loadInt("colorSampler", TextureBank.MINIMAP_COLOR.id());
-		program.loadInt("depthSampler", TextureBank.MINIMAP_DEPTH.id());
+		program.loadSampler("colorSampler", TextureBank.MINIMAP_COLOR);
+		program.loadSampler("depthSampler", TextureBank.MINIMAP_DEPTH);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/minimapVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/minimapFragmentShader").orElseThrow()));

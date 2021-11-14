@@ -18,7 +18,6 @@ import lemon.evolution.ui.beta.AbstractUIComponent;
 import lemon.evolution.ui.beta.UIComponent;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
-import lemon.evolution.world.ControllableEntity;
 import lemon.evolution.world.World;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
@@ -35,16 +34,16 @@ public class UIMinimap extends AbstractUIComponent {
 	private final World world;
 	private final Set<Player> players;
 	private final TerrainRenderer terrainRenderer;
-	private final Supplier<ControllableEntity> entitySupplier;
+	private final Supplier<Player> playerSupplier;
 
-	public UIMinimap(UIComponent parent, Box2D box, World world, Supplier<ControllableEntity> entitySupplier) {
+	public UIMinimap(UIComponent parent, Box2D box, World world, Supplier<Player> entitySupplier) {
 		super(parent);
 		this.frameBuffer = disposables.add(new FrameBuffer(box));
 		this.box = box;
 		this.world = world;
 		this.terrainRenderer = new TerrainRenderer(world.terrain(), 80f / world.terrain().scalar().x() / TerrainChunk.SIZE);
 		this.players = world.entities().ofFiltered(Player.class, disposables::add);
-		this.entitySupplier = entitySupplier;
+		this.playerSupplier = entitySupplier;
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
 			Texture colorTexture = disposables.add(new Texture());
@@ -75,9 +74,9 @@ public class UIMinimap extends AbstractUIComponent {
 		if (isVisible()) {
 			frameBuffer.bind(frameBuffer -> {
 				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-				var entity = entitySupplier.get();
-				var currentPosition = entity.position();
-				var currentRotation = entity.rotation();
+				var currentPlayer = playerSupplier.get();
+				var currentPosition = currentPlayer.position();
+				var currentRotation = currentPlayer.rotation();
 				var zoom = (float) Math.sqrt(players.stream().mapToDouble(player -> currentPosition.toXZVector().distanceSquared(player.position().toXZVector())).max().orElse(250.0)) + 20f;
 				zoom = MathUtil.clamp(zoom, 20f, 100f);
 				terrainRenderer.setRenderDistance(world.terrain().getChunkDistance(zoom + 1f));
@@ -97,7 +96,7 @@ public class UIMinimap extends AbstractUIComponent {
 						var height = 8;
 						var x = projectedCurrentPosition.x() * box.width() / 2f - width / 2f + box.width() / 2f;
 						var y = projectedCurrentPosition.y() * box.height() / 2f - height / 2f + box.height() / 2f;
-						var color = player == entity ? Color.GREEN : Color.RED;
+						var color = player.team() == currentPlayer.team() ? Color.GREEN : Color.RED;
 						CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color);
 						CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color, MathUtil.PI / 4f);
 					}
