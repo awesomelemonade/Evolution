@@ -20,4 +20,20 @@ public record Plane(Vector3D origin, Vector3D normal, float[] equation) {
 	public float getSignedDistanceTo(Vector3D point) {
 		return point.dotProduct(normal) + this.equation[3];
 	}
+
+	public float a() {
+		return equation[0];
+	}
+
+	public float b() {
+		return equation[1];
+	}
+
+	public float c() {
+		return equation[2];
+	}
+
+	public float d() {
+		return equation[3];
+	}
 }

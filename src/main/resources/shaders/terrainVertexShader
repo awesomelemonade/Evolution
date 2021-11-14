@@ -16,8 +16,13 @@ uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 
+uniform vec4 plane;
+
 void main(void) {
 	vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+
+	gl_ClipDistance[0] = dot(worldPosition, plane); // Clipping Plane Stuff
+
 	vec4 relativePosition = viewMatrix * worldPosition;
 	
 	gl_Position = projectionMatrix * relativePosition;
