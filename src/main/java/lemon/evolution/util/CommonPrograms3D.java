@@ -55,6 +55,7 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 		program.loadMatrix(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
 		program.loadVector("sunlightDirection", Vector3D.of(0f, -1f, 0f));
 		program.loadVector("viewPos", Vector3D.ZERO);
+		program.loadColor4f("filterColor", Color.WHITE);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/lightVertexShader").orElseThrow()),
 			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/lightFragmentShader").orElseThrow())),

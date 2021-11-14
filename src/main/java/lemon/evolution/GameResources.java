@@ -8,6 +8,7 @@ import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
+import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.ObjLoader;
 import lemon.evolution.entity.*;
 import lemon.evolution.pool.MatrixPool;
@@ -106,13 +107,18 @@ public class GameResources {
                         for (var player : players) {
                             if (player != gameLoop.currentPlayer() || controls.isActivated(EvolutionControls.FREECAM)) {
                                 GL11.glEnable(GL11.GL_DEPTH_TEST);
-                                CommonPrograms3D.COLOR.use(program -> {
+                                CommonPrograms3D.LIGHT.use(program -> {
+                                    program.loadColor4f("filterColor", player.team().color());
                                     try (var translationMatrix = MatrixPool.ofTranslation(player.position());
                                          var rotationMatrix = MatrixPool.ofRotationY(player.rotation().y() + MathUtil.PI);
                                          var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
                                         program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
+                                        var sunlightDirection = Vector3D.of(0f, 1f, 0f).normalize();
+                                        program.loadVector("sunlightDirection", sunlightDirection);
+                                        program.loadVector("viewPos", gameLoop.currentPlayer().position());
                                     }
                                     drawable.draw();
+                                    program.loadColor4f("filterColor", Color.WHITE);
                                 });
                                 GL11.glDisable(GL11.GL_DEPTH_TEST);
                             }

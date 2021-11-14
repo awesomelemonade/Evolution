@@ -7,7 +7,6 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.item.BasicItems;
-import lemon.evolution.item.*;
 import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.AbstractControllableEntity;
 import lemon.evolution.world.Inventory;
@@ -21,24 +20,21 @@ public class Player extends AbstractControllableEntity implements Disposable {
 	private final Observable<Float> health = new Observable<>(START_HEALTH);
 	private final Observable<Boolean> alive;
 	private final Inventory inventory = disposables.add(new Inventory());
+	private final Team team;
 
-	public Player(String name, Location location, Projection projection) {
+	public Player(String name, Team team, Location location, Projection projection) {
 		super(location, Vector3D.ZERO);
 		this.name = name;
+		this.team = team;
 		this.camera = new Camera(mutablePosition(), mutableRotation(), projection);
 		disposables.add(health.onChange(newHealth -> newHealth <= 0f, this::removeFromWorld));
 		this.alive = world().entities().observableContains(this, disposables::add);
 		disposables.add(this.alive.onChangeTo(false, () -> health.setValue(0f)));
-		// TODO: Temporary
-		/*
+		// Add items
+		for (int i = 0; i < 100; i++) {
+			inventory.addItem(BasicItems.ROCKET_LAUNCHER);
+		}
 		inventory.addAndSetCurrentItem(BasicItems.ROCKET_LAUNCHER);
-		inventory.addItem(BasicItems.MISSILE_SHOWER);
-		inventory.addItem(PenguinGunItemType.INSTANCE);
-		inventory.addItem(DrillItemType.INSTANCE);
-		inventory.addItem(BasicItems.RAINMAKER);
-		inventory.addItem(JetpackItemType.INSTANCE);
-		inventory.addItem(BasicItems.GRENADE_LAUNCHER);
-		*/
 	}
 
 	@Override
@@ -64,6 +60,10 @@ public class Player extends AbstractControllableEntity implements Disposable {
 
 	public Inventory inventory() {
 		return inventory;
+	}
+
+	public Team team() {
+		return team;
 	}
 
 	@Override

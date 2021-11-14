@@ -55,7 +55,8 @@ public class GameLoop implements Disposable {
 		// Win Condition
 		var alivePlayers = FSetWithEvents.ofFiltered(allPlayers, Player::alive, disposables::add);
 		disposables.add(alivePlayers.onRemove(player -> {
-			if (alivePlayers.size() == 1) {
+			var numTeams = alivePlayers.stream().map(Player::team).distinct().count();
+			if (numTeams == 1) {
 				onWinner.callListeners(alivePlayers.stream().findFirst().orElseThrow());
 			}
 		}));
