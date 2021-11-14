@@ -35,7 +35,7 @@ public class Font implements Disposable {
 			String filename = page.substring("page id=0 file=\"".length(), page.length() - "\"".length());
 			processCommon(common);
 			int charCount = Integer.parseInt(chars.substring("chars count=".length()));
-			texture.load(new TextureData(ImageIO.read(Font.class.getResourceAsStream((path.getParent().toString() + "/" + filename).replaceAll("\\\\", "/")))));
+			texture.load(new TextureData(ImageIO.read(Font.class.getResourceAsStream((path.getParent().toString() + "/" + filename).replaceAll("\\\\", "/"))), false));
 			for (int i = 0; i < charCount; ++i) {
 				processCharData(reader.readLine());
 			}

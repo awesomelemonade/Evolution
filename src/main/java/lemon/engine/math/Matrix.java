@@ -65,12 +65,12 @@ public class Matrix {
 		} else {
 			buffer.clear();
 		}
-		addToFloatBuffer(buffer);
+		putInBuffer(buffer);
 		buffer.flip();
 		return buffer;
 	}
 
-	public void addToFloatBuffer(FloatBuffer buffer) {
+	public void putInBuffer(FloatBuffer buffer) {
 		for (int j = 0; j < this.getColumns(); j++) {
 			for (int i = 0; i < this.getRows(); i++) {
 				buffer.put(this.get(i, j));

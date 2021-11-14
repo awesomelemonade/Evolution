@@ -12,7 +12,7 @@ public record TextureData(int width, int height, ByteBuffer data) {
 		this.data = data;
 	}
 
-	public TextureData(BufferedImage image) {
-		this(image.getWidth(), image.getHeight(), Toolbox.toByteBuffer(image));
+	public TextureData(BufferedImage image, boolean inverted) {
+		this(image.getWidth(), image.getHeight(), Toolbox.toByteBuffer(image, inverted));
 	}
 }

@@ -86,10 +86,14 @@ public class GLFWWindow implements Disposable {
 			long renderTime = System.nanoTime();
 			currentScreen.render();
 			renderTime = System.nanoTime() - renderTime;
-			onBenchmark.callListeners(Benchmark.of(this, (float) (updateTime), (float) (renderTime), ((float) delta) / 1000000f));
 			screenSwitchQueue.run();
 			GLFW.glfwSwapBuffers(window);
+			long pollEventsTime = System.nanoTime();
 			GLFW.glfwPollEvents();
+			pollEventsTime = System.nanoTime() - pollEventsTime;
+			onBenchmark.callListeners(Benchmark.of(
+					this, (float) updateTime, (float) renderTime,
+					(float) pollEventsTime, ((float) delta) / 1000000f));
 			timeSync.sync(settings.getTargetFrameRate());
 		}
 	}

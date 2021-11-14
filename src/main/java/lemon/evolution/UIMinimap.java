@@ -18,7 +18,6 @@ import lemon.evolution.ui.beta.AbstractUIComponent;
 import lemon.evolution.ui.beta.UIComponent;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
-import lemon.evolution.world.ControllableEntity;
 import lemon.evolution.world.World;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL14;
@@ -35,37 +34,37 @@ public class UIMinimap extends AbstractUIComponent {
 	private final World world;
 	private final Set<Player> players;
 	private final TerrainRenderer terrainRenderer;
-	private final Supplier<ControllableEntity> entitySupplier;
+	private final Supplier<Player> playerSupplier;
 
-	public UIMinimap(UIComponent parent, Box2D box, World world, Supplier<ControllableEntity> entitySupplier) {
+	public UIMinimap(UIComponent parent, Box2D box, World world, Supplier<Player> entitySupplier) {
 		super(parent);
 		this.frameBuffer = disposables.add(new FrameBuffer(box));
 		this.box = box;
 		this.world = world;
 		this.terrainRenderer = new TerrainRenderer(world.terrain(), 80f / world.terrain().scalar().x() / TerrainChunk.SIZE);
 		this.players = world.entities().ofFiltered(Player.class, disposables::add);
-		this.entitySupplier = entitySupplier;
+		this.playerSupplier = entitySupplier;
 		frameBuffer.bind(frameBuffer -> {
 			GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
 			Texture colorTexture = disposables.add(new Texture());
 			var boxWidth = (int) box.width();
 			var boxHeight = (int) box.height();
 			TextureBank.MINIMAP_COLOR.bind(() -> {
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.getId());
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.id());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, boxWidth, boxHeight, 0, GL11.GL_RGB,
 						GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.getId(), 0);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.id(), 0);
 			});
 			Texture depthTexture = disposables.add(new Texture());
 			TextureBank.MINIMAP_DEPTH.bind(() -> {
-				GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.getId());
+				GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.id());
 				GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, boxWidth, boxHeight, 0,
 						GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
 				GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
-				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.getId(), 0);
+				GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.id(), 0);
 			});
 		});
 	}
@@ -75,9 +74,9 @@ public class UIMinimap extends AbstractUIComponent {
 		if (isVisible()) {
 			frameBuffer.bind(frameBuffer -> {
 				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-				var entity = entitySupplier.get();
-				var currentPosition = entity.position();
-				var currentRotation = entity.rotation();
+				var currentPlayer = playerSupplier.get();
+				var currentPosition = currentPlayer.position();
+				var currentRotation = currentPlayer.rotation();
 				var zoom = (float) Math.sqrt(players.stream().mapToDouble(player -> currentPosition.toXZVector().distanceSquared(player.position().toXZVector())).max().orElse(250.0)) + 20f;
 				zoom = MathUtil.clamp(zoom, 20f, 100f);
 				terrainRenderer.setRenderDistance(world.terrain().getChunkDistance(zoom + 1f));
@@ -97,7 +96,7 @@ public class UIMinimap extends AbstractUIComponent {
 						var height = 8;
 						var x = projectedCurrentPosition.x() * box.width() / 2f - width / 2f + box.width() / 2f;
 						var y = projectedCurrentPosition.y() * box.height() / 2f - height / 2f + box.height() / 2f;
-						var color = player == entity ? Color.GREEN : Color.RED;
+						var color = player.team() == currentPlayer.team() ? Color.GREEN : Color.RED;
 						CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color);
 						CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color, MathUtil.PI / 4f);
 					}

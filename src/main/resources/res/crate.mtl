@@ -1,0 +1,16 @@
+# Blender MTL File: 'wooden crate.blend'
+# Material Count: 1
+
+newmtl crate
+Ns 323.999994
+Ka 1.000000 1.000000 1.000000
+Kd 0.483149 0.130901 0.800000
+Ks 0.251000 0.251000 0.251000
+Ke 0.000000 0.000000 0.000000
+Ni 1.330000
+d 1.000000
+illum 2
+map_Bump -bm 1.100000 C:\\Users\\rensi\\OneDrive\\Desktop\\wooden crate\\Textures\\crate_Normal.png
+map_Kd C:\\Users\\rensi\\OneDrive\\Desktop\\wooden crate\\Textures\\crate_BaseColor.png
+map_Ns C:\\Users\\rensi\\OneDrive\\Desktop\\wooden crate\\Textures\\crate_Roughness.png
+refl C:\\Users\\rensi\\OneDrive\\Desktop\\wooden crate\\Textures\\crate_Metallic.png

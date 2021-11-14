@@ -1,15 +1,26 @@
 package lemon.engine.texture;
 
 import lemon.engine.toolbox.Disposable;
+import lemon.engine.toolbox.Toolbox;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL13;
+import org.lwjgl.opengl.GL30;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class Texture implements Disposable {
 	private final int id;
 
 	public Texture() {
 		id = GL11.glGenTextures();
+	}
+
+	public Texture(String path, boolean inverted) {
+		this();
+		this.load(new TextureData(Toolbox.readImage(path).orElseThrow(), inverted));
 	}
 
 	public void load(TextureData data) {
@@ -41,7 +52,34 @@ public class Texture implements Disposable {
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, 0);
 	}
 
-	public int getId() {
+	public void load(TextureData[] dataArray) {
+		if (dataArray.length == 0) {
+			throw new IllegalArgumentException("Cannot load empty data array");
+		}
+		GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, id);
+		// Wrap
+		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
+		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
+		// Scale
+		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+		// Send to OpenGL
+		int width = dataArray[0].width();
+		int height = dataArray[0].height();
+		GL12.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, GL11.GL_RGBA, width, height, dataArray.length, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+		for (int i = 0; i < dataArray.length; i++) {
+			var data = dataArray[i];
+			if (data.width() != width || data.height() != height) {
+				throw new IllegalArgumentException("Images must have the same dimensions: " +
+						Arrays.stream(dataArray).map(x ->
+								String.format("[width=%d, height=%d]", x.width(), x.height())).collect(Collectors.toList()));
+			}
+			GL12.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, width, height, 1, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, data.data());
+		}
+		GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, 0);
+	}
+
+	public int id() {
 		return id;
 	}
 

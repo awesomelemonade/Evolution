@@ -60,7 +60,7 @@ public class FMultisetWithEvents<T> extends FCollection<T> implements Multiset<T
 	@Override
 	public boolean remove(@Nullable Object o) {
 		var ret = backingSet.remove(o);
-		if (ret && contains(o)) {
+		if (ret && !contains(o)) {
 			onFallToZero.callListeners((T) o);
 		}
 		return ret;
@@ -146,7 +146,7 @@ public class FMultisetWithEvents<T> extends FCollection<T> implements Multiset<T
 		return onRaiseAboveZero;
 	}
 
-	public EventWith<T> getOnFallToZero() {
+	public EventWith<T> onFallToZero() {
 		return onFallToZero;
 	}
 

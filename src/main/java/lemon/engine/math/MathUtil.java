@@ -270,4 +270,8 @@ public class MathUtil {
 	public static float mod(float value, float mod) {
 		return ((value % mod) + mod) % mod;
 	}
+
+	public static <T> T randomChoice(T[] array) {
+		return array[(int) (Math.random() * array.length)];
+	}
 }

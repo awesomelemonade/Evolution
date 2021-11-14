@@ -1,0 +1,16 @@
+#version 400 core
+
+in vec2 position;
+in vec4 color;
+
+uniform float yOffset;
+uniform mat4 projectionMatrix;
+uniform mat4 transformationMatrix;
+uniform vec4 filterColor;
+
+out vec4 passColor;
+
+void main(void) {
+    gl_Position = transformationMatrix * projectionMatrix * vec4(position.x, position.y + yOffset, 0.0, 1.0);
+    passColor = color * filterColor;
+}
