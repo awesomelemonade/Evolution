@@ -7,6 +7,7 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.item.BasicItems;
+import lemon.evolution.item.TeleportBallItem;
 import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.AbstractControllableEntity;
 import lemon.evolution.world.Inventory;
@@ -31,6 +32,7 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		this.alive = world().entities().observableContains(this, disposables::add);
 		disposables.add(this.alive.onChangeTo(false, () -> health.setValue(0f)));
 		// Add items
+		inventory.addItem(TeleportBallItem.INSTANCE);
 		for (int i = 0; i < 100; i++) {
 			inventory.addItem(BasicItems.ROCKET_LAUNCHER);
 		}

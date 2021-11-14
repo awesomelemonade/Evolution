@@ -61,6 +61,8 @@ public class Evolution {
 				}
 			});
 			System.getProperties().list(System.out);
+			System.out.println("VENDOR: " + GL11.glGetString(GL11.GL_VENDOR));
+			System.out.println("RENDERER: " + GL11.glGetString(GL11.GL_RENDERER));
 			logger.log(Level.INFO, String.format("LWJGL Version: %s", Version.getVersion()));
 			logger.log(Level.INFO, String.format("OpenGL Version: %s", GL11.glGetString(GL11.GL_VERSION)));
 			logger.log(Level.INFO, String.format("GLFW Version: %s", GLFW.glfwGetVersionString()));
