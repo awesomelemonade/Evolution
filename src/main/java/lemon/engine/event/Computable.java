@@ -102,7 +102,13 @@ public class Computable<T> {
 	}
 
 	public synchronized void request() {
-		request(ignored -> {});
+		if (needsUpdate) {
+			if (!currentlyComputing) {
+				currentlyComputing = true;
+				needsUpdate = false;
+				computer.accept(this);
+			}
+		}
 	}
 
 	public synchronized Optional<T> requestAndGetValue() {

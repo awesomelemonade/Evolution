@@ -1,87 +1,79 @@
 package lemon.evolution.ui.beta;
 
+import lemon.engine.event.Observable;
 import lemon.engine.math.Box2D;
-import lemon.evolution.item.BasicItems;
+import lemon.engine.render.Renderable;
+import lemon.engine.texture.Texture;
+import lemon.engine.toolbox.Disposable;
+import lemon.engine.toolbox.Disposables;
 import lemon.evolution.item.ItemType;
 import lemon.evolution.world.Inventory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public class UIInventory extends AbstractUIComponent {
 
+public class UIInventory extends AbstractUIComponent implements Disposable {
     private static final int SIDE_LENGTH = 500;
-    private static final int START_X = 800;
+    private static final int START_X = 50;
     private static final int START_Y = 50;
     private static final int ITEM_MARGIN = 15;
-    private Inventory inventory;
-    private ItemType[] items;
-    private final ItemType defaultMissile = BasicItems.MISSILE_SHOWER;
+    private static final int IMAGE_WIDTH = 95;
+    private static final int IMAGE_HEIGHT = 95;
+    private final Observable<Inventory> inventory;
+    private final Map<ItemType, Texture> itemTextures = new HashMap<>();
+    private final Texture highlighterTexture;
 
-    // draw rectangle
-    private UIImage grid;
-
-    private List<UIImage> images;
-    private List<UIImage> highlighters;
-
-    public UIInventory(UIComponent parent) {
+    public UIInventory(UIComponent parent, Inventory initialInventory) {
         super(parent);
-        images = new ArrayList<>();
-        highlighters = new ArrayList<>();
-        grid = new UIImage(this, new Box2D(START_X, START_Y, SIDE_LENGTH, SIDE_LENGTH), "/res/inventory_icons/inventory.png");
-        visible().setValue(false);
+        this.inventory = new Observable<>(initialInventory);
+        children().add(new UIImage(this, new Box2D(START_X, START_Y, SIDE_LENGTH, SIDE_LENGTH), "/res/inventory_icons/inventory.png"));
+        highlighterTexture = new Texture("/res/inventory_icons/Highlighter.png", true);
+        var disposeOnInventoryChange = new Disposables();
+        var disposeOnItemsChange = new Disposables();
+        disposables.add(this.inventory.onChangeAndRun(inventory -> {
+            disposeOnInventoryChange.dispose();
+            disposeOnItemsChange.dispose();
+            var items = inventory.itemsList();
+            disposeOnInventoryChange.add(items.onChangeAndRun(() -> {
+                disposeOnItemsChange.dispose();
+                items.forEachWithIndex((index, item) -> {
+                    int xPos = START_X + ITEM_MARGIN + (SIDE_LENGTH - 2 * ITEM_MARGIN) / 4 * (index % 4) + 8;
+                    int yPos = START_Y + ITEM_MARGIN + (SIDE_LENGTH - 2 * ITEM_MARGIN) / 4 * (3 - index / 4) + 13;
+                    var highlighter = disposeOnItemsChange.add(new UIImage(this,
+                            new Box2D(xPos, yPos, IMAGE_WIDTH, IMAGE_HEIGHT),
+                            highlighterTexture));
+                    disposeOnItemsChange.add(inventory.observableCurrentItem().onChangeAndRun(optionalItem -> {
+                        highlighter.visible().setValue(optionalItem.map(item::equals).orElse(false));
+                    }));
+                    // Add for rendering
+                    children().add(disposeOnItemsChange.add(new UIImage(this,
+                            new Box2D(xPos, yPos, IMAGE_WIDTH, IMAGE_HEIGHT),
+                            itemTextures.computeIfAbsent(item, x -> new Texture(x.guiImagePath(), true)),
+                            uiImage -> {
+                                if (isVisible()) {
+                                    inventory.setCurrentItem(item);
+                                }
+                            })));
+                    children().add(highlighter);
+                });
+            }));
+        }));
     }
 
     @Override
     public void render() {
         if (isVisible()) {
-            grid.render();
-            for (UIImage image : images) {
-                image.render();
-            }
-            for (UIImage highlighter : highlighters) {
-                highlighter.render();
-            }
+            children().forEach(Renderable::render);
         }
     }
 
     public void setInventory(Inventory inventory) {
-        this.inventory = inventory;
-        items = inventory.items().toArray(new ItemType[0]);
-        System.out.println("number of items: " + items.length);
-        highlighters.clear();
-        images.clear();
-        int count = 0;
-        for (ItemType item : items) {
-            System.out.println(item == null ? "item is null" : item.getName());
-            int finalCount = count;
-            int xPos = START_X + ITEM_MARGIN + (SIDE_LENGTH - 2 * ITEM_MARGIN) / 4 * (count % 4) + 8;
-            int yPos = START_Y + ITEM_MARGIN + (SIDE_LENGTH - 2 * ITEM_MARGIN) / 4 * (3 - count / 4) + 13;
-            highlighters.add(new UIImage(this,
-                    new Box2D(xPos, yPos, 95, 95),
-                    "/res/inventory_icons/Highlighter.png"));
-            highlighters.get(count).visible().setValue(false);
-            images.add(new UIImage(this,
-                    new Box2D(xPos, yPos, 95, 95),
-                    item.guiImagePath(),
-                    x -> {
-                        if (isVisible()) {
-                            System.out.println("Player clicked on " + item.getName());
-                            this.inventory.setCurrentItem(item);
-                            System.out.println("current item: " + inventory.currentItem().orElse(item).getName());
-                            setHighlighted();
-                        }
-                    }));
-            setHighlighted();
-            count++;
-        }
+        this.inventory.setValue(inventory);
     }
 
-    // makes all items not highlighted except current item
-    private void setHighlighted() {
-        for (int i = 0; i < highlighters.size(); i++) {
-            highlighters.get(i).visible().setValue(false);
-            if (items[i] == inventory.currentItem().orElse(defaultMissile)) highlighters.get(i).visible().setValue(true);
-        }
+    @Override
+    public void dispose() {
+        disposables.dispose();
     }
 }

@@ -3,8 +3,9 @@ package lemon.evolution.destructible.beta;
 import lemon.engine.math.Vector3D;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MarchingCube {
 	private final float[] offsets; // [offsetX, offsetY, offsetZ]
@@ -29,15 +30,9 @@ public class MarchingCube {
 		List<Integer> indices = new ArrayList<>();
 		List<Vector3D> vertices = new ArrayList<>();
 		List<float[]> textureWeights = new ArrayList<>();
-		List<Integer> hashes = new ArrayList<>();
-		int[][][][] edgeIndices = new int[grid.getSizeX()][grid.getSizeY()][grid.getSizeZ()][3];
-		for (int[][][] a : edgeIndices) {
-			for (int[][] b : a) {
-				for (int[] c : b) {
-					Arrays.fill(c, -1);
-				}
-			}
-		}
+		List<Integer> prenormalHashes = new ArrayList<>();
+		Map<Long, Integer> edgeIndices = new HashMap<>();
+		List<TripleIndex> triangleCoords = new ArrayList<>();
 		int[] vectorIndices = new int[12];
 		for (int i = 0; i < grid.getSizeX() - 1; i++) {
 			for (int j = 0; j < grid.getSizeY() - 1; j++) {
@@ -51,41 +46,54 @@ public class MarchingCube {
 							int y = j + cacheOffsets[1];
 							int z = k + cacheOffsets[2];
 							int w = cacheOffsets[3];
-							if (edgeIndices[x][y][z][w] == -1) {
-								int[] o = MarchingCubeConstants.INTERPOLATE_OFFSETS[l];
-								var vertexA = Vector3D.of(offsets[0] + strides[0] * (i + o[0]),
-										offsets[1] + strides[1] * (j + o[1]), offsets[2] + strides[2] * (k + o[2]));
-								var vertexB = Vector3D.of(offsets[0] + strides[0] * (i + o[3]),
-										offsets[1] + strides[1] * (j + o[4]), offsets[2] + strides[2] * (k + o[5]));
-								var aX = i + o[0];
-								var aY = j + o[1];
-								var aZ = k + o[2];
-								var bX = i + o[3];
-								var bY = j + o[4];
-								var bZ = k + o[5];
+							int finalI = i;
+							int finalJ = j;
+							int finalK = k;
+							int finalL = l;
+							vectorIndices[l] = edgeIndices.computeIfAbsent(hashEdgeIndex(x, y, z, w), hashed -> {
+								int[] o = MarchingCubeConstants.INTERPOLATE_OFFSETS[finalL];
+								var vertexA = Vector3D.of(offsets[0] + strides[0] * (finalI + o[0]),
+										offsets[1] + strides[1] * (finalJ + o[1]), offsets[2] + strides[2] * (finalK + o[2]));
+								var vertexB = Vector3D.of(offsets[0] + strides[0] * (finalI + o[3]),
+										offsets[1] + strides[1] * (finalJ + o[4]), offsets[2] + strides[2] * (finalK + o[5]));
+								var aX = finalI + o[0];
+								var aY = finalJ + o[1];
+								var aZ = finalK + o[2];
+								var bX = finalI + o[3];
+								var bY = finalJ + o[4];
+								var bZ = finalK + o[5];
 								var dataA = grid.get(aX, aY, aZ);
 								var dataB = grid.get(bX, bY, bZ);
 								var weightsA = textureWeightsGrid.get(aX, aY, aZ);
 								var weightsB = textureWeightsGrid.get(bX, bY, bZ);
-								edgeIndices[x][y][z][w] = vertices.size();
+								var edgeIndex = vertices.size();
 								float percentage = (threshold - dataA) / (dataB - dataA);
 								vertices.add(interpolate(vertexA, vertexB, percentage));
 								textureWeights.add(interpolate(weightsA, weightsB, percentage));
-								hashes.add(PreNormals.hash(x, y, z, w));
-							}
-							vectorIndices[l] = edgeIndices[x][y][z][w];
+								prenormalHashes.add(PreNormals.hash(x, y, z, w));
+								return edgeIndex;
+							});
 						}
 					}
 					int[] triangles = MarchingCubeConstants.TRIANGLE_TABLE[index];
-					for (int l = 0; l < triangles.length; l++) {
+					for (int l = 0; l < triangles.length; l += 3) {
 						indices.add(vectorIndices[triangles[l]]);
+						indices.add(vectorIndices[triangles[l + 1]]);
+						indices.add(vectorIndices[triangles[l + 2]]);
+						triangleCoords.add(new TripleIndex(i, j, k));
 					}
 				}
 			}
 		}
 		return new MarchingCubeMesh(indices.stream().mapToInt(Integer::intValue).toArray(),
 				vertices.toArray(Vector3D[]::new), textureWeights.toArray(float[][]::new),
-				hashes.stream().mapToInt(Integer::intValue).toArray());
+				prenormalHashes.stream().mapToInt(Integer::intValue).toArray(),
+				triangleCoords.toArray(TripleIndex[]::new));
+	}
+
+	private long hashEdgeIndex(long x, long y, long z, long w) {
+		// 16 bits per dimension - 2^16 = 65536
+		return (x << 48) | (y << 32) | (z << 16) | w;
 	}
 
 	private Vector3D interpolate(Vector3D a, Vector3D b, float percentage) {

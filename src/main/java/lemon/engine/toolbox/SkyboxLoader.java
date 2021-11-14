@@ -28,7 +28,7 @@ public class SkyboxLoader {
 			ByteBuffer[] data = new ByteBuffer[6];
 			for (int i = 0; i < data.length; ++i) {
 				InputStream stream = SkyboxLoader.class.getResourceAsStream(directory + "/" + reader.readLine());
-				data[i] = Toolbox.toByteBuffer(ImageIO.read(stream));
+				data[i] = Toolbox.toByteBuffer(ImageIO.read(stream), false);
 			}
 			reader.close();
 			return new CubeMapData(Integer.parseInt(tokenizer.nextToken()), Integer.parseInt(tokenizer.nextToken()),

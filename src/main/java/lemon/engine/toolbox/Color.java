@@ -1,12 +1,9 @@
 package lemon.engine.toolbox;
 
-import lemon.engine.math.FloatData;
 import lemon.engine.math.Vector3D;
+import lemon.engine.math.Vector4D;
 
-import java.nio.FloatBuffer;
-
-public record Color(float red, float green, float blue, float alpha) implements FloatData {
-	public static final int NUM_DIMENSIONS = 4;
+public record Color(float red, float green, float blue, float alpha) implements Vector4D {
 	public static final Color WHITE = new Color(1f, 1f, 1f);
 	public static final Color RED = new Color(1f, 0f, 0f);
 	public static final Color GREEN = new Color(0f, 1f, 0f);
@@ -16,6 +13,8 @@ public record Color(float red, float green, float blue, float alpha) implements 
 	public static final Color MAGENTA = new Color(1f, 0f, 1f);
 	public static final Color BLACK = new Color(0f, 0f, 0f);
 	public static final Color GRAY = new Color(0.5f, 0.5f, 0.5f);
+	public static final Color ORANGE = new Color(1f, 0.5f, 0f);
+	public static final Color PURPLE = new Color(0.5f, 0f, 1f);
 
 	public Color() {
 		this(1f);
@@ -31,6 +30,10 @@ public record Color(float red, float green, float blue, float alpha) implements 
 
 	public Color(Color color) {
 		this(color.red, color.green, color.blue, color.alpha);
+	}
+
+	public Color(String red, String green, String blue) {
+		this(Float.parseFloat(red), Float.parseFloat(green), Float.parseFloat(blue));
 	}
 
 	public Vector3D asRGBVector() {
@@ -62,23 +65,26 @@ public record Color(float red, float green, float blue, float alpha) implements 
 	}
 
 	@Override
-	public int numDimensions() {
-		return NUM_DIMENSIONS;
+	public float x() {
+		return red;
 	}
 
 	@Override
-	public void putInBuffer(FloatBuffer buffer) {
-		buffer.put(red);
-		buffer.put(green);
-		buffer.put(blue);
-		buffer.put(alpha);
+	public float y() {
+		return green;
 	}
 
 	@Override
-	public void putInArray(float[] array) {
-		array[0] = red;
-		array[1] = green;
-		array[2] = blue;
-		array[3] = alpha;
+	public float z() {
+		return blue;
+	}
+
+	@Override
+	public float w() {
+		return alpha;
+	}
+
+	public Color brighter() {
+		return new Color(Math.min(red * 1.4f, 1f), Math.min(green * 1.4f, 1f), Math.min(blue * 1.4f, 1f), alpha);
 	}
 }

@@ -14,14 +14,14 @@ public class ExplodeOnTimeProjectile extends AbstractEntity implements Disposabl
 	private final Instant creationTime;
 	private final Disposables disposables = new Disposables();
 
-	public ExplodeOnTimeProjectile(Location location, Vector3D velocity, Type type) {
+	public ExplodeOnTimeProjectile(Location location, Vector3D velocity, ExplodeType type) {
 		super(location, velocity, type.scalar());
-		this.meta().set("type", type);
+		setType(type);
 		this.creationTime = Instant.now();
 		disposables.add(this.onUpdate().add(() -> {
 			if (Instant.now().isAfter(creationTime.plus(2, ChronoUnit.SECONDS))) {
 				removeFromWorld();
-				EntityUtil.generateExplosion(world(), position());
+				world().generateExplosion(position(), type.explosionRadius());
 			}
 		}));
 	}
@@ -34,23 +34,5 @@ public class ExplodeOnTimeProjectile extends AbstractEntity implements Disposabl
 	@Override
 	public void dispose() {
 		disposables.dispose();
-	}
-
-	public enum Type {
-		GRENADE(0.2f);
-
-		private final Vector3D scalar;
-
-		private Type(float size) {
-			this(Vector3D.of(size, size, size));
-		}
-
-		private Type(Vector3D scalar) {
-			this.scalar = scalar;
-		}
-
-		public Vector3D scalar() {
-			return scalar;
-		}
 	}
 }

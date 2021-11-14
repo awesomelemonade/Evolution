@@ -1,5 +1,7 @@
 package lemon.evolution.destructible.beta;
 
+import com.google.common.collect.ImmutableList;
+import lemon.engine.draw.DrawableData;
 import lemon.engine.draw.DynamicIndexedDrawable;
 import lemon.engine.event.Computable;
 import lemon.engine.math.FloatData;
@@ -20,9 +22,11 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TerrainChunk {
-	public static final int SIZE = 16;
+	public static final int SIZE = 32;
+	public static final int TRIANGLES_SUBDIVISION_SIZE = 8;
+	public static final int TRIANGLE_COORDS_TO_SUBDIVISION_COORDS = SIZE / TRIANGLES_SUBDIVISION_SIZE;
 	public static final Vector3D MARCHING_CUBE_SIZE = Vector3D.of(SIZE + 1, SIZE + 1, SIZE + 1);
-	public static final int NUM_TEXTURES = 40;
+	public static final int NUM_TEXTURES = 48;
 	private static final float[] ZERO_TEXTURE_WEIGHTS = new float[NUM_TEXTURES];
 	private final Terrain terrain;
 	private final int chunkX;
@@ -40,8 +44,10 @@ public class TerrainChunk {
 	private static final int[] NORMALS_PREREQUISITE_CHUNK_OFFSET_X = {-1,  0,  0,  0,  1, -1, -1, -1,  0, 0,  1, 1, 1, -1,  0, 0, 0, 1};
 	private static final int[] NORMALS_PREREQUISITE_CHUNK_OFFSET_Y = { 0, -1,  0,  1,  0, -1,  0,  1, -1, 1, -1, 0, 1,  0, -1, 0, 1, 0};
 	private static final int[] NORMALS_PREREQUISITE_CHUNK_OFFSET_Z = {-1, -1, -1, -1, -1,  0,  0,  0,  0, 0,  0, 0, 0,  1,  1, 1, 1, 1};
-	private final Computable<Vector3D[]> normals;
+	private final Computable<MarchingCubeNormals> normals;
+	private final Computable<DrawableData> drawableData;
 	private final Computable<DynamicIndexedDrawable> drawable;
+	private final Executor poolExecutor;
 
 	public TerrainChunk(Terrain terrain,
 						int chunkX,
@@ -52,6 +58,7 @@ public class TerrainChunk {
 						TerrainGenerator generator,
 						Executor poolExecutor,
 						Executor mainThreadExecutor) {
+		this.poolExecutor = poolExecutor;
 		var scalar = terrain.scalar();
 		this.terrain = terrain;
 		this.chunkX = chunkX;
@@ -89,9 +96,10 @@ public class TerrainChunk {
 			var vertices = mesh.vertices();
 			var textureWeights = mesh.textureWeights();
 			var indices = mesh.indices();
-			var hashes = mesh.hashes();
+			var hashes = mesh.prenormalHashes();
+			var triangleCoords = mesh.triangleCoords();
 			var preNormals = new PreNormals();
-			List<Triangle> triangles = new ArrayList<>();
+			SparseGrid3D<List<Triangle>> triangles = new SparseGrid3D<>(TRIANGLES_SUBDIVISION_SIZE, TRIANGLES_SUBDIVISION_SIZE, TRIANGLES_SUBDIVISION_SIZE, ArrayList::new);
 			Vector3D[] transformed = new Vector3D[vertices.length];
 			var x = Vector3D.of(chunkX * TerrainChunk.SIZE, chunkY * TerrainChunk.SIZE, chunkZ * TerrainChunk.SIZE);
 			for (int i = 0; i < vertices.length; i++) {
@@ -109,7 +117,10 @@ public class TerrainChunk {
 					preNormals.addNormal(hashes[indices[i]], scaledNormal);
 					preNormals.addNormal(hashes[indices[i + 1]], scaledNormal);
 					preNormals.addNormal(hashes[indices[i + 2]], scaledNormal);
-					triangles.add(triangle);
+					var coords = triangleCoords[i / 3];
+					triangles.compute(coords.x() / TRIANGLE_COORDS_TO_SUBDIVISION_COORDS,
+							coords.y() / TRIANGLE_COORDS_TO_SUBDIVISION_COORDS,
+							coords.z() / TRIANGLE_COORDS_TO_SUBDIVISION_COORDS).add(triangle);
 				}
 			}
 			computable.compute(new MarchingCubeModel(indices, vertices, textureWeights, hashes, preNormals, triangles));
@@ -128,10 +139,11 @@ public class TerrainChunk {
 				var preNormal = preNormals.getNormal(hash);
 				return getBorderingPreNormal(hash).map(preNormal::add).orElse(preNormal);
 			}).map(Vector3D::normalize).toArray(Vector3D[]::new);
-			computable.compute(normals);
+			computable.compute(new MarchingCubeNormals(model, normals));
 		});
-		this.drawable = this.normals.then((computable, normals) -> {
-			var model = this.model.getValueOrThrow();
+		this.drawableData = this.normals.then(poolExecutor, (computable, normals) -> {
+			var model = normals.model(); // Normals MUST be the same as the model
+			// (cannot use this.model.getValueOrThrow() because model could have changed already and desync with normals)
 			var indices = model.indices();
 			var vertices = model.vertices();
 			var textureWeights = model.textureWeights();
@@ -145,15 +157,18 @@ public class TerrainChunk {
 			}
 			var vertexData = new FloatData[2 + numVec4s][];
 			vertexData[0] = vertices;
-			vertexData[1] = normals;
+			vertexData[1] = normals.normals();
 			for (int i = 0; i < numVec4s; i++) {
 				vertexData[2 + i] = weights[i];
 			}
+			computable.compute(new DrawableData(indices, vertexData));
+		});
+		this.drawable = this.drawableData.then((computable, data) -> {
 			mainThreadExecutor.execute(() -> {
 				computable.compute(drawable -> {
-					drawable.setData(indices, vertexData);
+					drawable.setData(data);
 					return drawable;
-				}, () -> new DynamicIndexedDrawable(indices, vertexData));
+				}, () -> new DynamicIndexedDrawable(data));
 			});
 		});
 	}
@@ -247,13 +262,13 @@ public class TerrainChunk {
 	}
 
 	public void updateAllData(BiConsumer<float[][][], SparseGrid3D<float[]>> updater) {
-		var data = this.data.getValue();
-		var textureData = this.textureData.getValue();
-		data.ifPresent(a -> textureData.ifPresent(b -> {
-			updater.accept(a, b);
-			this.data.compute();
-			this.textureData.compute();
-		}));
+		poolExecutor.execute(() -> {
+			this.data.compute(c -> {
+				this.textureData.compute(d -> {
+					updater.accept(c, d);
+				});
+			});
+		});
 	}
 
 	public Computable<DynamicIndexedDrawable> drawable() {
@@ -276,8 +291,8 @@ public class TerrainChunk {
 		return transformationMatrix;
 	}
 
-	public Optional<List<Triangle>> getTriangles() {
-		return model.getValue().map(MarchingCubeModel::triangles);
+	public List<Triangle> getTriangles(int x, int y, int z) {
+		return model.getValue().map(model -> model.triangles().getOrDefault(x, y, z, ImmutableList.of())).orElse(ImmutableList.of());
 	}
 
 	public TerrainChunk getNeighboringChunk(int offsetX, int offsetY, int offsetZ) {

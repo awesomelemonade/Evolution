@@ -10,12 +10,12 @@ import lemon.evolution.world.Location;
 public class ExplodeOnHitProjectile extends AbstractEntity implements Disposable {
 	private final Disposables disposables = new Disposables();
 
-	public ExplodeOnHitProjectile(Location location, Vector3D velocity, Type type) {
+	public ExplodeOnHitProjectile(Location location, Vector3D velocity, ExplodeType type) {
 		super(location, velocity, type.scalar());
-		this.meta().set("type", type);
+		setType(type);
 		this.disposables.add(this.onCollide().add(explosionPosition -> {
 			removeFromWorld();
-			EntityUtil.generateExplosion(world(), explosionPosition);
+			world().generateExplosion(explosionPosition, type.explosionRadius());
 		}));
 		this.disposables.add(this.onUpdate().add(() -> {
 			if (position().y() < -200f) {
@@ -32,23 +32,5 @@ public class ExplodeOnHitProjectile extends AbstractEntity implements Disposable
 	@Override
 	public void dispose() {
 		disposables.dispose();
-	}
-
-	public enum Type {
-		MISSILE(0.2f);
-
-		private final Vector3D scalar;
-
-		private Type(float size) {
-			this(Vector3D.of(size, size, size));
-		}
-
-		private Type(Vector3D scalar) {
-			this.scalar = scalar;
-		}
-
-		public Vector3D scalar() {
-			return scalar;
-		}
 	}
 }

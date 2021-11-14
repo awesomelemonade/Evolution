@@ -29,12 +29,12 @@ public class MissileShowerEntity extends AbstractEntity implements Disposable {
 
 	public void explode(Location location) {
 		removeFromWorld();
-		var numRockets = 256;
-		var upwardVelocity = Vector3D.of(0f, 1f, 0f);
+		var numRockets = 32;
+		var upwardVelocity = Vector3D.of(0f, 0.5f, 0f);
 		for (int i = 0; i < numRockets; i++) {
 			var angle = (float) (Math.random() * MathUtil.TAU);
 			var horizontalVelocity = Vector3D.of(MathUtil.cos(angle), 0, MathUtil.sin(angle)).multiply((float) (Math.random() * 1f));
-			world().entities().add(new ExplodeOnHitProjectile(location, upwardVelocity.add(horizontalVelocity), ExplodeOnHitProjectile.Type.MISSILE));
+			world().entities().add(new ExplodeOnHitProjectile(location, upwardVelocity.add(horizontalVelocity), ExplodeType.MINI_MISSILE));
 		}
 	}
 

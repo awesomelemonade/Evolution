@@ -5,7 +5,7 @@ import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,7 +14,7 @@ public abstract class AbstractUIComponent implements UIComponent {
 	private final Observable<Boolean> visible = new Observable<>(true);
 	private final GLFWInput input;
 	private final UIComponent parent;
-	private final Set<UIComponent> children = new HashSet<>();
+	private final Set<UIComponent> children = new LinkedHashSet<>();
 	protected final Disposables disposables = new Disposables();
 
 	public AbstractUIComponent(GLFWInput input) {
@@ -25,7 +25,6 @@ public abstract class AbstractUIComponent implements UIComponent {
 	public AbstractUIComponent(UIComponent parent) {
 		this.parent = parent;
 		this.input = null;
-		parent.children().add(this);
 	}
 
 	@Override

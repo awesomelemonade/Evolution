@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.Plane;
 import lemon.engine.math.Vector3D;
+import lemon.engine.texture.TextureBank;
+import lemon.engine.math.Vector4D;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposable;
 import org.lwjgl.opengl.GL11;
@@ -87,6 +89,9 @@ public interface ShaderProgram extends Disposable {
 	public default void loadInt(String name, int value) {
 		this.getUniformVariable(name).loadInt(value);
 	}
+	public default void loadSampler(String name, TextureBank textureBank) {
+		this.loadInt(name, textureBank.id());
+	}
 	public default void loadFloat(String name, float value) {
 		this.getUniformVariable(name).loadFloat(value);
 	}
@@ -95,6 +100,9 @@ public interface ShaderProgram extends Disposable {
 	}
 	public default void loadPlane(String name, Plane plane) {
 		this.getUniformVariable(name).loadPlane(plane);
+	}
+	public default void loadVector(String name, Vector4D vector) {
+		this.getUniformVariable(name).loadVector(vector);
 	}
 	public default void loadColor3f(Color color) {
 		loadColor3f("color", color);

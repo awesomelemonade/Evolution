@@ -8,6 +8,7 @@ import lemon.engine.texture.Texture;
 import lemon.engine.toolbox.Color;
 import lemon.evolution.UIMinimap;
 import lemon.evolution.world.ControllableEntity;
+import lemon.evolution.world.Inventory;
 import lemon.evolution.world.World;
 
 import java.util.function.Consumer;
@@ -51,8 +52,8 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIImage(this, box, texture));
 	}
 
-	public UIInventory addInventory() {
-		return addComponent(new UIInventory(this));
+	public UIInventory addInventory(Inventory inventory) {
+		return addComponent(new UIInventory(this, inventory));
 	}
 
 	@Override
