@@ -209,9 +209,9 @@ public class Game implements Screen {
 			var projection = new Projection(MathUtil.toRadians(60f),
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
 			var playersBuilder = new ImmutableList.Builder<Player>();
-			int numPlayers = 8;
+			int numPlayers = 6;
 			for (int i = 0; i < numPlayers; i++) {
-				var distance = 15f;
+				var distance = 25f;
 				var angle = MathUtil.TAU * ((float) i) / numPlayers;
 				var cos = (float) Math.cos(angle);
 				var sin = (float) Math.sin(angle);
@@ -222,7 +222,7 @@ public class Game implements Screen {
 			var players = playersBuilder.build();
 			world.entities().addAll(players);
 			world.entities().flush();
-			gameLoop = disposables.add(new GameLoop(players, controls));
+			gameLoop = disposables.add(new GameLoop(world, players, controls));
 			disposables.add(gameLoop.onWinner(player -> {
 				window.popAndPushScreen(Menu.INSTANCE);
 			}));
