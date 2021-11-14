@@ -41,6 +41,10 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIProgressBar(this, box, progressGetter));
 	}
 
+	public UIProgressBar addProgressBar(Box2D box, Supplier<Float> progressGetter, UIProgressBar.ProgressDirection direction) {
+		return addComponent(new UIProgressBar(this, box, progressGetter, direction));
+	}
+
 	public UIMinimap addMinimap(Box2D box, World world, Supplier<Player> entitySupplier) {
 		return addComponent(new UIMinimap(this, box, world, entitySupplier));
 	}

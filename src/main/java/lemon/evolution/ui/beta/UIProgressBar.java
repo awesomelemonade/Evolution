@@ -11,6 +11,7 @@ public class UIProgressBar extends AbstractUIComponent {
 	private final Box2D box;
 	private final Supplier<Float> progressGetter;
 	private final ProgressDirection progressDirection;
+	private Color color = Color.BLUE;
 
 	public UIProgressBar(UIComponent parent, Box2D box, Supplier<Float> progressGetter) {
 		this(parent, box, progressGetter, ProgressDirection.RIGHT);
@@ -23,27 +24,35 @@ public class UIProgressBar extends AbstractUIComponent {
 		this.progressDirection = progressDirection;
 	}
 
+	public void setColor(Color color) {
+		this.color = color;
+	}
+
+	public Color color() {
+		return color;
+	}
+
 	@Override
 	public void render() {
 		if (isVisible()) {
 			CommonRenderables.renderQuad2D(box, Color.WHITE);
 			float progress = MathUtil.saturate(progressGetter.get());
-			progressDirection.renderPart(box, progress);
+			progressDirection.renderPart(box, progress, color);
 		}
 	}
 
-	enum ProgressDirection {
+	public enum ProgressDirection {
 		RIGHT {
 			@Override
-			public void renderPart(Box2D box, float progress) {
-				CommonRenderables.renderQuad2D(new Box2D(box.x(), box.y(), box.width() * progress, box.height()), Color.BLUE);
+			public void renderPart(Box2D box, float progress, Color color) {
+				CommonRenderables.renderQuad2D(new Box2D(box.x(), box.y(), box.width() * progress, box.height()), color);
 			}
 		}, UP {
 			@Override
-			public void renderPart(Box2D box, float progress) {
-				CommonRenderables.renderQuad2D(new Box2D(box.x(), box.y(), box.width(), box.height() * progress), Color.BLUE);
+			public void renderPart(Box2D box, float progress, Color color) {
+				CommonRenderables.renderQuad2D(new Box2D(box.x(), box.y(), box.width(), box.height() * progress), color);
 			}
 		};
-		public abstract void renderPart(Box2D box, float progress);
+		public abstract void renderPart(Box2D box, float progress, Color color);
 	}
 }

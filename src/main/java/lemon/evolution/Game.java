@@ -41,6 +41,7 @@ import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
+import lemon.evolution.ui.beta.UIProgressBar;
 import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
@@ -378,9 +379,7 @@ public class Game implements Screen {
 
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(true, () -> {
 				gameLoop.getGatedControls().setEnabled(false);
-				MutableVector3D pos = MutableVector3D.of(gameLoop.currentPlayer().mutablePosition().asImmutable());
-				MutableVector3D rot = MutableVector3D.of(gameLoop.currentPlayer().mutableRotation().asImmutable());
-				freecam = new Camera(pos, rot, gameLoop.currentPlayer().camera().getProjection());
+				freecam = new Camera(gameLoop.currentPlayer().camera());
 				viewModel.setVisible(false);
 			}));
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(false, () -> {
@@ -389,7 +388,7 @@ public class Game implements Screen {
 			}));
 
 			uiScreen = disposables.add(new UIScreen(window.input()));
-			//disposables.add(controls.activated(EvolutionControls.SHOW_UI).onChangeAndRun(activated -> uiScreen.visible().setValue(activated)));
+			disposables.add(controls.activated(EvolutionControls.SHOW_UI).onChangeAndRun(activated -> uiScreen.visible().setValue(activated)));
 
 			var progressBar = uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
 				if (gameLoop.startTime != null && gameLoop.endTime != null) {
@@ -402,8 +401,13 @@ public class Game implements Screen {
 			});
 			disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
 
-			uiScreen.addProgressBar(new Box2D(10f, 45f, windowWidth - 20f, 25f),
-					() -> gameLoop.controller().powerMeter()).visible().setValue(false);
+			var powerMeterProgressBar = uiScreen.addProgressBar(new Box2D(windowWidth - 30f, 45f, 20f, 150f),
+					() -> gameLoop.controller().powerMeter(), UIProgressBar.ProgressDirection.UP);
+			disposables.add(gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
+				var color = player.team().color();
+				progressBar.setColor(color);
+				powerMeterProgressBar.setColor(color);
+			}));
 
 			var minimap = uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f), world, () -> gameLoop.currentPlayer());
 			disposables.add(controls.activated(EvolutionControls.MINIMAP).onChangeAndRun(visible -> {
@@ -413,7 +417,7 @@ public class Game implements Screen {
 			for (int i = 0; i < gameLoop.players().size(); i++) {
 				var player = gameLoop.players().get(i);
 				uiScreen.addProgressBar(new Box2D(50f, windowHeight - 280f - i * 30f, 100f, 15f),
-						() -> player.health().getValue() / Player.START_HEALTH).visible().setValue(false);
+						() -> player.health().getValue() / Player.START_HEALTH).setColor(player.team().color());
 			}
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());
