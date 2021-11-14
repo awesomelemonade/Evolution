@@ -34,7 +34,6 @@ public class ObjLoader implements Loader {
 		builder.put("mtllib", (objLoader, split) -> {
 			try {
 				MtlLoader materialLoader = new MtlLoader("/res/" + split[1], mtlLoader -> {
-					logger.info("Material List: " + mtlLoader.materialMap().values());
 					objLoader.parsedMaterials = mtlLoader.materialMap();
 				});
 				materialLoader.load();

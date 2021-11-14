@@ -1,5 +1,6 @@
 package lemon.evolution.ui.beta;
 
+import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.Vector2D;
@@ -40,7 +41,7 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIProgressBar(this, box, progressGetter));
 	}
 
-	public UIMinimap addMinimap(Box2D box, World world, Supplier<ControllableEntity> entitySupplier) {
+	public UIMinimap addMinimap(Box2D box, World world, Supplier<Player> entitySupplier) {
 		return addComponent(new UIMinimap(this, box, world, entitySupplier));
 	}
 

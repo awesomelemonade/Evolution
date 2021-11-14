@@ -216,7 +216,7 @@ public class Game implements Screen {
 				var cos = (float) Math.cos(angle);
 				var sin = (float) Math.sin(angle);
 				var player = disposables.add(new Player("Player " + (i + 1), Team.values()[i % Team.values().length], new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
-				player.mutableRotation().setY((float) Math.atan2(player.position().z(), player.position().x()));
+				player.mutableRotation().setY(-angle + MathUtil.PI / 2);
 				playersBuilder.add(player);
 			}
 			var players = playersBuilder.build();
