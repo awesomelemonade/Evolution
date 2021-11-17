@@ -5,6 +5,7 @@ import lemon.engine.font.Font;
 import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
 import lemon.engine.function.SzudzikIntPair;
+import lemon.engine.game.Player;
 import lemon.engine.game2d.Quad2D;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.Matrix;
@@ -54,7 +55,7 @@ public enum Menu implements Screen {
 		buttonsText.add(new TextModel(font, "Field"));
 		buttonsText.add(new TextModel(font, "Flatter Field"));
 		buttonsText.add(new TextModel(font, "Font Test"));
-		for (int i = 0; i < 100; ++i) {
+		for (int i = 0; i < 7; ++i) {
 			buttons.add(new Quad2D(new Box2D(-0.3f, -.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
 			buttonsText.add(new TextModel(font, "Button " + (i+4)));
 		}
@@ -126,7 +127,7 @@ public enum Menu implements Screen {
 												Math.pow(2.5f, noise.apply(vector.divide(500f))) * 2.5);
 										return Math.min(cylinder, terrain);
 									};
-									start(new Game(scalarField, window.getWidth(), window.getHeight()));
+									start(new PlayerSelectMenu(scalarField, window.getWidth(), window.getHeight()));
 								}
 								case 1 -> {
 									var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 4);
@@ -146,7 +147,7 @@ public enum Menu implements Screen {
 												Math.pow(5.75f, noise.apply(vector.divide(500f))) * 3.5);
 										return Math.min(cylinder, terrain);
 									};
-									start(new Game(scalarField, window.getWidth() / 2, window.getHeight() / 2));
+									start(new PlayerSelectMenu(scalarField, window.getWidth() / 2, window.getHeight() / 2));
 								}
 								case 2 -> start(FontTest.INSTANCE);
 								default -> System.out.println(i);
