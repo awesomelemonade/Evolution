@@ -68,6 +68,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -77,6 +78,7 @@ import java.util.logging.Logger;
 
 public class Game implements Screen {
 	private static final Logger logger = Logger.getLogger(Game.class.getName());
+	private ImmutableList<Player> players;
 
 	private GameResources resources;
 
@@ -98,6 +100,7 @@ public class Game implements Screen {
 
 	private World world;
 	private WorldRenderer worldRenderer;
+	private Projection projection;
 
 	private Vector3D lightPosition;
 
@@ -117,11 +120,15 @@ public class Game implements Screen {
 	private ScalarField<Vector3D> scalarfield;
 	private int resolutionWidth;
 	private int resolutionHeight;
+	private ArrayList<String> redPlayers;
+	private ArrayList<String> bluePlayers;
 
-	public Game(ScalarField<Vector3D> scalarfield, int resolutionWidth, int resolutionHeight) {
+	public Game(ScalarField<Vector3D> scalarfield, int resolutionWidth, int resolutionHeight, ArrayList<String> redPlayers, ArrayList<String> bluePlayers) {
 		this.scalarfield = scalarfield;
 		this.resolutionWidth = resolutionWidth;
 		this.resolutionHeight = resolutionHeight;
+		this.redPlayers = redPlayers;
+		this.bluePlayers = bluePlayers;
 	}
 
 	@Override
@@ -207,20 +214,9 @@ public class Game implements Screen {
 					});
 
 			this.controls = disposables.add(GLFWGameControls.getDefaultControls(window.input(), EvolutionControls.class));
-			var projection = new Projection(MathUtil.toRadians(60f),
+			addPlayers();
+			projection = new Projection(MathUtil.toRadians(60f),
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
-			var playersBuilder = new ImmutableList.Builder<Player>();
-			int numPlayers = 6;
-			for (int i = 0; i < numPlayers; i++) {
-				var distance = 25f;
-				var angle = MathUtil.TAU * ((float) i) / numPlayers;
-				var cos = (float) Math.cos(angle);
-				var sin = (float) Math.sin(angle);
-				var player = disposables.add(new Player("Player " + (i + 1), Team.values()[i % Team.values().length], new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
-				player.mutableRotation().setY(-angle + MathUtil.PI / 2);
-				playersBuilder.add(player);
-			}
-			var players = playersBuilder.build();
 			world.entities().addAll(players);
 			world.entities().flush();
 			gameLoop = disposables.add(new GameLoop(world, players, controls));
@@ -592,6 +588,30 @@ public class Game implements Screen {
 		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
 			debugOverlay.render();
 		}
+	}
+
+	public void addPlayers() {
+		var playersBuilder = new ImmutableList.Builder<Player>();
+		int numPlayers = bluePlayers.size() + redPlayers.size();
+		for (int i = 0; i < bluePlayers.size(); ++i) {
+			var distance = 25f;
+			var angle = MathUtil.TAU * ((float) i) / numPlayers;
+			var cos = (float) Math.cos(angle);
+			var sin = (float) Math.sin(angle);
+			var player = disposables.add(new Player(bluePlayers.get(i), Team.BLUE, new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
+			player.mutableRotation().setY(-angle + MathUtil.PI / 2);
+			playersBuilder.add(player);
+		}
+		for (int i = 0; i < redPlayers.size(); ++i) {
+			var distance = 25f;
+			var angle = MathUtil.TAU * ((float) i) / numPlayers;
+			var cos = (float) Math.cos(angle);
+			var sin = (float) Math.sin(angle);
+			var player = disposables.add(new Player(redPlayers.get(i), Team.RED, new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
+			player.mutableRotation().setY(-angle + MathUtil.PI / 2);
+			playersBuilder.add(player);
+		}
+		players = playersBuilder.build();
 	}
 
 	@Override
