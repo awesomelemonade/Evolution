@@ -14,7 +14,7 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 	private static final float MOUSE_SENSITIVITY = 0.001f;
 	private static final Vector3D JUMP_DIRECTION = Vector3D.of(0f, 1f, 0f);
 	private static final float JUMP_HEIGHT = 1f;
-	private static float playerSpeed = 0.08f;
+	private static float playerSpeed = 0.05f;
 	private final Disposables disposables = new Disposables();
 	private final GameControls<EvolutionControls, GLFWInput> controls;
 	private final Observable<T> current;
