@@ -439,6 +439,8 @@ public class Game implements Screen {
 				}
 			}));
 
+			uiScreen.addText("Hello World!", Vector2D.of(100, 100), 1f);
+
 			controls.onActivated(EvolutionControls.SCREENSHOT, () -> {
 				try {
 					var buffer = BufferUtils.createIntBuffer(windowWidth * windowHeight);

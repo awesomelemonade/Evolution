@@ -1,6 +1,7 @@
 package lemon.evolution;
 
 import lemon.engine.control.GLFWWindow;
+import lemon.engine.font.CommonFonts;
 import lemon.engine.font.Font;
 import lemon.engine.function.MurmurHash;
 import lemon.engine.function.PerlinNoise;
@@ -13,9 +14,7 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
-import lemon.engine.toolbox.Histogram;
 import lemon.evolution.destructible.beta.ScalarField;
-import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
@@ -24,7 +23,6 @@ import lemon.engine.math.MathUtil;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.ToIntFunction;
@@ -47,7 +45,7 @@ public enum Menu implements Screen {
 	public void onLoad(GLFWWindow window) {
 		System.gc(); // Manual Garbage Collection
 		this.window = window;
-		font = disposables.add(new Font(Paths.get("/res/fonts/FreeSans.fnt")));
+		font = CommonFonts.freeSans();
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
 		buttons = new ArrayList<>();
 		buttonsText = new ArrayList<>();

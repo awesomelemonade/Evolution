@@ -3,6 +3,7 @@ package lemon.evolution;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.TextModel;
+import lemon.engine.font.CommonFonts;
 import lemon.engine.font.Font;
 import lemon.engine.render.MatrixType;
 import lemon.engine.time.Benchmarker;
@@ -36,7 +37,7 @@ public class DebugOverlay implements Disposable {
 	public DebugOverlay(GLFWWindow window, Benchmarker benchmarker) {
 		this.window = window;
 		this.benchmarker = benchmarker;
-		font = disposables.add(new Font(Paths.get("/res/fonts/FreeSans.fnt")));
+		font = CommonFonts.freeSans();
 		debugTextModel = disposables.add(new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW));
 		keyTextModel = disposables.add(new TextModel(font, "[Unknown]", GL15.GL_DYNAMIC_DRAW));
 	}

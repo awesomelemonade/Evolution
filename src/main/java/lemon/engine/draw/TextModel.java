@@ -19,6 +19,11 @@ public class TextModel implements Drawable, Disposable {
 	private CharSequence text;
 	private int bufferSize;
 	private int hint;
+	private int padding;
+
+	private FloatBuffer buffer;
+	private int width;
+	private int height;
 
 	public TextModel(Font font, CharSequence text) {
 		this(font, text, GL15.GL_STATIC_DRAW);
@@ -31,6 +36,7 @@ public class TextModel implements Drawable, Disposable {
 		this.font = font;
 		this.text = text;
 		this.hint = hint;
+		this.padding = 8;
 		vertexArray = new VertexArray();
 		vertexArray.bind(vao -> {
 			vertexBuffer = new VertexBuffer();
@@ -46,9 +52,6 @@ public class TextModel implements Drawable, Disposable {
 		});
 	}
 
-	private FloatBuffer buffer;
-	private int width;
-
 	private void calculateData(CharSequence text) {
 		int newCapacity = text.length() * 4 * 6;
 		if (buffer == null || buffer.capacity() < newCapacity) {
@@ -57,29 +60,32 @@ public class TextModel implements Drawable, Disposable {
 			buffer.clear();
 		}
 		char prevChar = '\0';
-		int cursor = 0;
+		int cursorX = padding;
+		int cursorY = padding;
+		int kerning = 0;
 		CharData currentData = null;
 		for (int i = 0; i < text.length(); ++i) {
 			char currentChar = text.charAt(i);
 			currentData = font.getCharData(currentChar);
-			int kerning = font.getKerning(prevChar, currentChar);
-			putChar(buffer, currentData, cursor + kerning);
-			cursor += (currentData.xAdvance() + kerning);
+			kerning = font.getKerning(prevChar, currentChar);
+			putChar(buffer, currentData, cursorX + kerning, cursorY);
+			cursorX += currentData.xAdvance();
 			prevChar = currentChar;
 		}
-		width = currentData == null ? 0 : cursor - currentData.xAdvance() + currentData.width();
+		width = 2 * padding + (currentData == null ? 0 : (cursorX - currentData.xAdvance() + currentData.width() + kerning));
+		height = 2 * padding + font.getBase();
 		buffer.flip();
 	}
 
-	private void putChar(FloatBuffer buffer, CharData data, int cursor) {
+	private void putChar(FloatBuffer buffer, CharData data, int offsetX, int offsetY) {
 		float scaleWidth = font.getScaleWidth();
 		float scaleHeight = font.getScaleHeight();
 		float textureX = data.x() / scaleWidth;
 		float textureY = data.y() / scaleHeight;
 		float textureWidth = data.width() / scaleWidth;
 		float textureHeight = data.height() / scaleHeight;
-		float x = cursor + data.xOffset();
-		float y = font.getLineHeight() - data.yOffset() - font.getBase() / 2f;
+		float x = offsetX; // offsetX + data.xOffset()
+		float y = offsetY + font.getBase() - data.yOffset();
 		float width = data.width();
 		float height = data.height();
 
@@ -130,7 +136,7 @@ public class TextModel implements Drawable, Disposable {
 	}
 
 	public int height() {
-		return font.getLineHeight();
+		return height;
 	}
 
 	@Override

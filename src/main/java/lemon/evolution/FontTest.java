@@ -3,6 +3,7 @@ package lemon.evolution;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.TextModel;
+import lemon.engine.font.CommonFonts;
 import lemon.engine.font.Font;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
@@ -17,7 +18,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL15;
 
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +35,7 @@ public enum FontTest implements Screen {
 		CommonPrograms2D.TEXT.use(program -> {
 			program.loadVector("color", Vector3D.of(0f, 1f, 1f));
 		});
-		font = disposables.add(new Font(Paths.get("/res/fonts/FreeSans.fnt")));
+		font = CommonFonts.freeSans();
 		text = new HashMap<>();
 
 		text.put(new TextModel(font, "ABCDEFG"), MathUtil.getScalar(Vector3D.of(0.005f, 0.005f, 0.005f)));

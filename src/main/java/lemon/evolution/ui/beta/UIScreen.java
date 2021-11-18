@@ -61,6 +61,10 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIInventory(this, inventory));
 	}
 
+	public UIText addText(String text, Vector2D position, float scale) {
+		return addComponent(new UIText(this, text, position, scale));
+	}
+
 	@Override
 	public void render() {
 		if (isVisible()) {
