@@ -20,8 +20,11 @@ public class GroundWatcher implements Disposable {
 					if (negSlidePlaneNormal.dotProduct(Vector3D.of(0f, -1f, 0f)) > 0) {
 						onGround = true;
 						groundNormal = negSlidePlaneNormal.invert();
-						groundParallel = negSlidePlaneNormal
-								.crossProduct(entity.vectorDirection()).crossProduct(negSlidePlaneNormal);
+						// TODO: Needs to make use of entity rotation (when it gets added)
+						var crossProduct = negSlidePlaneNormal.crossProduct(entity.vectorDirection()).crossProduct(negSlidePlaneNormal);
+						if (crossProduct.lengthSquared() > 0.01f) {
+							groundParallel = crossProduct.normalize();
+						}
 					}
 				})
 		);

@@ -51,7 +51,7 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 		var mutableRotation = entity.mutableRotation();
 		var rotation = entity.rotation();
 		var mutableForce = current.getValue().mutableForce();
-		var playerForwardVector = entity.groundWatcher().groundParallel().orElse(entity.vectorDirection()).multiply(playerSpeed);
+		var playerForwardVector = entity.groundWatcher().groundParallel().orElseGet(entity::vectorDirectionFromYaw).multiply(playerSpeed);
 		var playerHorizontalVector = Vector3D.of(-playerForwardVector.z(), playerForwardVector.y(), playerForwardVector.x());
 		if (controls.isActivated(EvolutionControls.STRAFE_LEFT)) {
 			mutableForce.subtract(playerHorizontalVector);

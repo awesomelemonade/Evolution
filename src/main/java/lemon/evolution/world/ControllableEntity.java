@@ -10,6 +10,10 @@ public interface ControllableEntity extends Entity {
 		return MathUtil.getVectorDirection(rotation());
 	}
 
+	public default Vector3D vectorDirectionFromYaw() {
+		return MathUtil.getVectorDirectionFromYaw(rotation().y());
+	}
+
 	public default Vector3D rotation() {
 		return mutableRotation().asImmutable();
 	}

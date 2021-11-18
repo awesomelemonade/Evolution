@@ -65,6 +65,9 @@ public class Evolution {
 			logger.log(Level.INFO, String.format("OpenGL Version: %s", GL11.glGetString(GL11.GL_VERSION)));
 			logger.log(Level.INFO, String.format("GLFW Version: %s", GLFW.glfwGetVersionString()));
 			logger.log(Level.INFO, String.format("Supported GLSL Version: %s", GL11.glGetString(GL20.GL_SHADING_LANGUAGE_VERSION)));
+			logger.log(Level.INFO, String.format("OpenGL Vendor: %s", GL11.glGetString(GL11.GL_VENDOR)));
+			logger.log(Level.INFO, String.format("OpenGL Renderer: %s", GL11.glGetString(GL11.GL_RENDERER)));
+
 			window.run();
 			disposable.dispose();
 		} catch (Exception ex) {
