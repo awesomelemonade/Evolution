@@ -50,8 +50,6 @@ public class PlayerSelectMenu implements Screen {
     private ArrayList<String> bluePlayers = new ArrayList<>();
     private ArrayList<Quad2D> redBoxes = new ArrayList<>();
     private ArrayList<String> redPlayers = new ArrayList<>();
-    private ArrayList<Vector3D> blueTextPos = new ArrayList<>();
-    private ArrayList<Vector3D> redTextPos = new ArrayList<>();
     private final Matrix boxSize = new Matrix(MathUtil.getScalar(Vector3D.of(.00095f, .0013f, .001f)));
 
     public PlayerSelectMenu (ScalarField<Vector3D> scalarfield, int resolutionWidth, int resolutionHeight) {
@@ -67,7 +65,7 @@ public class PlayerSelectMenu implements Screen {
         blueHeader = new Quad2D(new Box2D(-.55f, .75f, .4f, .1f), Color.WHITE);
         redHeader = new Quad2D(new Box2D(.15f, .75f, .4f, .1f), Color.WHITE);
         buttons.add(new Triangle2D(Vector3D.of(-.575f, .85f, 0), Vector3D.of(-.575f, .75f, 0), Vector3D.of(-.675f, .8f, 0), Color.WHITE));
-        buttons.add(new Triangle2D(Vector3D.of(-.125f, .85f, 0), Vector3D.of(-.125f, .75f, 0), Vector3D.of(.025f, .8f, 0), Color.WHITE));
+        buttons.add(new Triangle2D(Vector3D.of(-.125f, .85f, 0), Vector3D.of(-.125f, .75f, 0), Vector3D.of(-.025f, .8f, 0), Color.WHITE));
         buttons.add(new Triangle2D(Vector3D.of(.125f, .85f, 0), Vector3D.of(.125f, .75f, 0), Vector3D.of(.025f, .8f, 0), Color.WHITE));
         buttons.add(new Triangle2D(Vector3D.of(.575f, .85f, 0), Vector3D.of(.575f, .75f, 0), Vector3D.of(.675f, .8f, 0), Color.WHITE));
         finishButton = new Quad2D(new Box2D(-.25f, -.6f, .5f, .15f), Color.WHITE);
@@ -213,18 +211,18 @@ public class PlayerSelectMenu implements Screen {
         CommonPrograms2D.TEXT.use(program -> {
             program.loadVector("color", (Vector3D.of(1f, 0f, 1f)));
             for (int i = 0; i < bluePlayers.size(); ++i) {
-                program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(-.5f, .5f - i * .2f, 0)).multiply(boxSize));
+                program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(-.49f, .5f - i * .2f, 0)).multiply(boxSize));
                 new TextModel(font, bluePlayers.get(i)).draw();
             }
             for (int i = 0; i < redPlayers.size(); ++i) {
-                program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(.2f, .5f - i * .2f, 0)).multiply(boxSize));
+                program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(.21f, .5f - i * .2f, 0)).multiply(boxSize));
                 new TextModel(font, redPlayers.get(i)).draw();
             }
-            program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(-.225f, -.575f, 0)).multiply(boxSize));
+            program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(-.215f, -.575f, 0)).multiply(boxSize));
             new TextModel(font, "Start Game").draw();
-            program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(-.55f, .75f, 0)).multiply(boxSize));
+            program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(-.54f, .75f, 0)).multiply(boxSize));
             new TextModel(font, "Blue Team").draw();
-            program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(.15f, .75f, 0)).multiply(boxSize));
+            program.loadMatrix(MatrixType.MODEL_MATRIX, MathUtil.getTranslation(Vector3D.of(.16f, .75f, 0)).multiply(boxSize));
             new TextModel(font, "Red Team").draw();
         });
         GL11.glDisable(GL11.GL_BLEND);

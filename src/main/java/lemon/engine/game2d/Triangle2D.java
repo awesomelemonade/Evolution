@@ -35,12 +35,12 @@ public class Triangle2D implements Drawable {
         });
     }
     public FloatBuffer getFloatBuffer() {
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(24);
-        triangle.a().putInBuffer(buffer);
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(18);
+        triangle.a().toXYVector().putInBuffer(buffer);
         colors[0].putInBuffer(buffer);
-        triangle.b().putInBuffer(buffer);
+        triangle.b().toXYVector().putInBuffer(buffer);
         colors[1].putInBuffer(buffer);
-        triangle.c().putInBuffer(buffer);
+        triangle.c().toXYVector().putInBuffer(buffer);
         colors[2].putInBuffer(buffer);
         buffer.flip();
         return buffer;
