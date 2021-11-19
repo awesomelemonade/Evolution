@@ -59,7 +59,11 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 
 	@CheckReturnValue
 	public default T normalize() {
-		return this.divide(this.length());
+		var length = this.length();
+		if (length == 0f) {
+			throw new IllegalStateException("Cannot scale a vector with length 0");
+		}
+		return this.divide(length);
 	}
 
 	@CheckReturnValue

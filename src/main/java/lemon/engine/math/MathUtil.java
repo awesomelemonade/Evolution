@@ -53,6 +53,10 @@ public class MathUtil {
 				(float) (-(cosX * Math.cos(rotation.y()))));
 	}
 
+	public static Vector3D getVectorDirectionFromYaw(float yaw) {
+		return Vector3D.of((float) (-Math.sin(yaw)), 0f, (float) (-Math.cos(yaw)));
+	}
+
 	public static Matrix getPerspective(Projection projection) {
 		Matrix matrix = new Matrix(4);
 		getPerspective(matrix, projection);

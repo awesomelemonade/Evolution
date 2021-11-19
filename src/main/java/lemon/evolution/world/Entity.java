@@ -19,7 +19,7 @@ public interface Entity {
 		return mutableForce().asImmutable();
 	}
 	public default Vector3D vectorDirection() {
-		return velocity();
+		return velocity().normalize();
 	}
 	public default Vector3D scalar() {
 		return Vector3D.ONE;

@@ -51,8 +51,8 @@ public enum Menu implements Screen {
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
 		buttons = new ArrayList<>();
 		buttonsText = new ArrayList<>();
-		buttonsText.add(new TextModel(font, "Field"));
-		buttonsText.add(new TextModel(font, "Flatter Field"));
+		buttonsText.add(new TextModel(font, "Skull Island"));
+		buttonsText.add(new TextModel(font, "Low Res"));
 		buttonsText.add(new TextModel(font, "Font Test"));
 		for (int i = 0; i < 100; ++i) {
 			buttons.add(new Quad2D(new Box2D(-0.3f, -.3f - i * 0.2f, 0.6f, 0.1f), new Color(1f, 1f, 1f)));
@@ -92,7 +92,6 @@ public enum Menu implements Screen {
 					float mouseY = (2f * rawMouseY / event.glfwWindow().getHeight()) - 1f;
 					if (0.35f <= mouseX && mouseX <= 0.375f) {
 						if (-.2f >= mouseY && mouseY >= -.7f) {
-							System.out.println((int) (-((mouseY + .2)) / height));
 							drawnButtons = (int) (-((mouseY + .2)) / height);
 							mouseDown = true;
 						}
