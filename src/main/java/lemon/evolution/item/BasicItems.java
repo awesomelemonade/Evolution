@@ -20,8 +20,14 @@ public enum BasicItems implements ItemType {
     RAINMAKER("Rainmaker", "/res/inventory_icons/rainMaker.png", (player, power) -> {
         EntityUtil.newLaunchedEntity(player, power * 1.5f, RainmakerEntity::new);
     }),
-    TELEPORT_BALL("Teleport Ball", "", (player, power) -> {
+    TELEPORT_BALL("Teleport Ball", "/res/inventory_icons/rocketLauncher.png", (player, power) -> {
         EntityUtil.newLaunchedEntity(player, power / 2f, (location, velocity) -> new TeleportBallEntity(location, velocity, player));
+    }),
+    DRILL("Drill", "/res/inventory_icons/drill.png", (player, power) -> {
+        player.world().entities().add(new DrillEntity(
+                player,
+                player.location().add(player.vectorDirection()),
+                player.vectorDirection().multiply(power)));
     });
     private final String name;
     private final String guiImagePath;

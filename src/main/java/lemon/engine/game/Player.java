@@ -7,7 +7,6 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.item.BasicItems;
-import lemon.evolution.item.DrillItemType;
 import lemon.evolution.physics.beta.CollisionResponse;
 import lemon.evolution.world.AbstractControllableEntity;
 import lemon.evolution.world.Inventory;
@@ -36,9 +35,6 @@ public class Player extends AbstractControllableEntity implements Disposable {
 			inventory.addItem(BasicItems.ROCKET_LAUNCHER);
 		}
 		inventory.addAndSetCurrentItem(BasicItems.ROCKET_LAUNCHER);
-		for (int i = 0; i < 5; i++) {
-			inventory.addAndSetCurrentItem(DrillItemType.INSTANCE);
-		}
 	}
 
 	public void damage(float damage) {
