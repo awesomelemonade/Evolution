@@ -37,6 +37,10 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		inventory.addAndSetCurrentItem(BasicItems.ROCKET_LAUNCHER);
 	}
 
+	public void damage(float damage) {
+		health.setValue(health.getValue() - damage);
+	}
+
 	@Override
 	public CollisionResponse getCollisionResponse() {
 		return CollisionResponse.SLIDE;
