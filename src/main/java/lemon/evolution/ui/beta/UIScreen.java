@@ -61,8 +61,12 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIInventory(this, inventory));
 	}
 
-	public UIText addText(String text, Vector2D position, float scale) {
-		return addComponent(new UIText(this, text, position, scale));
+	public UIText addText(String text, Vector2D position, float scale, Color color) {
+		return addComponent(new UIText(this, text, position, scale, color));
+	}
+
+	public UIText addCenteredText(String text, Vector2D position, float scale, Color color) {
+		return addComponent(UIText.ofCentered(this, text, position, scale, color));
 	}
 
 	@Override
