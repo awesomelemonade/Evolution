@@ -181,6 +181,7 @@ public class Game implements Screen {
 			entityRenderer.registerIndividual(PuzzleBall.class, sphereRenderer);
 			entityRenderer.registerIndividual(ExplodeOnTimeProjectile.class, entity -> entity.isType(ExplodeType.GRENADE), sphereRenderer);
 			entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.RAIN_DROPLET), sphereRenderer);
+			entityRenderer.registerIndividual(TeleportBallEntity.class, sphereRenderer);
 
 			var csvLoader = new CsvWorldLoader("/res/SkullIsland.csv", world.terrain(), postLoadTasks::add,
 					csvWorldLoader -> {
