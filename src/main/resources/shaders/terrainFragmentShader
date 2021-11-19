@@ -38,7 +38,7 @@ void main(void) {
 	for (int i = 0; i < NUM_TEXTURES; i++) {
 		float weight = passTextureWeights[i / 4][i % 4];
 		vec4 currentColor = getTriplanarTexturingArrays(samplers, passTextureCoords, i, blendWeights);
-        currentColor += (1.0 - currentColor.a) * vec4(0.0, 1.0, 0.0, 1.0);
+        //currentColor += (1.0 - currentColor.a) * vec4(0.0, 1.0, 0.0, 1.0);
 		color += weight * currentColor;
 		sumWeights += weight;
 	}
@@ -54,5 +54,5 @@ void main(void) {
 	vec3 reflectDirection = reflect(-sunlightDirection, passNormal);
 	vec3 specular = specularStrength * pow(max(dot(viewDirection, reflectDirection), 0), 32) * lightColor;
 	vec3 result = (ambient + diffuse + specular) * color.rgb;
-	outColor = vec4(result, 1);
+	outColor = vec4(result, color.a);
 }
