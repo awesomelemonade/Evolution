@@ -10,7 +10,7 @@ import lemon.engine.game.Player;
 import lemon.engine.game.Team;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
-import lemon.engine.math.Camera;
+import lemon.engine.math.FirstPersonCamera;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.MutableVector3D;
@@ -87,7 +87,7 @@ public class Game implements Screen {
 	private GLFWGameControls<EvolutionControls> controls;
 	private GameLoop gameLoop;
 
-	private Camera freecam;
+	private FirstPersonCamera freecam;
 	private float lastMouseX;
 	private float lastMouseY;
 
@@ -183,7 +183,7 @@ public class Game implements Screen {
 			entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.RAIN_DROPLET), sphereRenderer);
 			entityRenderer.registerIndividual(TeleportBallEntity.class, sphereRenderer);
 
-			var csvLoader = new CsvWorldLoader("/res/SkullIsland.csv", world.terrain(), postLoadTasks::add,
+			var csvLoader = new CsvWorldLoader("/res/castle.csv", world.terrain(), postLoadTasks::add,
 					csvWorldLoader -> {
 						var mapping = csvWorldLoader.blockMapping();
 						var materials = new MCMaterial[mapping.size()];
@@ -380,7 +380,7 @@ public class Game implements Screen {
 
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(true, () -> {
 				gameLoop.getGatedControls().setEnabled(false);
-				freecam = new Camera(gameLoop.currentPlayer().camera());
+				freecam = new FirstPersonCamera(gameLoop.currentPlayer().camera());
 				viewModel.setVisible(false);
 			}));
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(false, () -> {
@@ -440,7 +440,7 @@ public class Game implements Screen {
 				}
 			}));
 
-			uiScreen.addCenteredText("Hello World!", Vector2D.of(windowWidth / 2f, 100), 1f, Color.RED);
+			uiScreen.addCenteredText("Hello World!", Vector2D.of(windowWidth / 2f, 100), 1f, Color.RED).visible().setValue(false);
 
 			controls.onActivated(EvolutionControls.SCREENSHOT, () -> {
 				try {
@@ -540,7 +540,7 @@ public class Game implements Screen {
 	}
 
 	public void updateMatrices() {
-		Camera camera;
+		FirstPersonCamera camera;
 		if (controls.isActivated(EvolutionControls.FREECAM)) {
 			camera = freecam;
 		} else {

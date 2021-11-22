@@ -41,7 +41,7 @@ public class ItemDropEntity extends AbstractEntity implements Disposable {
     @Override
     public Vector3D getEnvironmentalForce() {
         if (initialDrop) {
-            return World.GRAVITY_VECTOR.add(this.velocity().multiply(World.AIR_FRICTION * 10f));
+            return World.GRAVITY_VECTOR.add(this.velocity().multiply(World.AIR_RESISTANCE * 10f));
         } else {
             return super.getEnvironmentalForce();
         }
