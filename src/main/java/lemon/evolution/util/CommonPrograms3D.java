@@ -76,7 +76,12 @@ public enum CommonPrograms3D implements ShaderProgramHolder {
 		program.loadSampler("samplers", TextureBank.TERRAIN);
 	},
 			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/terrainVertexShader").orElseThrow()),
-			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/terrainFragmentShader").orElseThrow()));
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/terrainFragmentShader").orElseThrow())),
+	SHADOW(names("position"), program -> {
+		program.loadMatrix("lightMVP", Matrix.IDENTITY_4);
+	},
+			new Shader(GL20.GL_VERTEX_SHADER, Toolbox.getFile("/shaders/shadowVertexShader").orElseThrow()),
+			new Shader(GL20.GL_FRAGMENT_SHADER, Toolbox.getFile("/shaders/shadowFragmentShader").orElseThrow()));
 	private ShaderProgram shaderProgram;
 	private final String[] names;
 	private final Consumer<ShaderProgram> setDefaultUniformVariables;
