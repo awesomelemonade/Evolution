@@ -1,5 +1,7 @@
 package lemon.engine.math;
 
+import lemon.engine.event.Observable;
+
 import java.time.Duration;
 import java.time.Instant;
 
@@ -8,7 +10,7 @@ public class InterpolatedCameraByTime implements Camera {
     private final Camera to;
     private final Instant startTime;
     private final Duration duration;
-    private boolean done = false;
+    private final Observable<Boolean> done = new Observable<>(false);
 
     public InterpolatedCameraByTime(Camera from, Camera to, Instant startTime, Duration duration) {
         this.from = from;
@@ -20,14 +22,14 @@ public class InterpolatedCameraByTime implements Camera {
     public float calcT() {
         var t = ((float) Duration.between(startTime, Instant.now()).toMillis()) / ((float) duration.toMillis());
         if (t >= 1f) {
-            done = true;
+            done.setValue(true);
         }
         return MathUtil.saturate(t);
     }
 
     @Override
     public Vector3D position() {
-        if (done) {
+        if (done()) {
             return to.position();
         } else {
             var from = this.from.position();
@@ -39,7 +41,7 @@ public class InterpolatedCameraByTime implements Camera {
 
     @Override
     public Vector3D rotation() {
-        if (done) {
+        if (done()) {
             return to.rotation();
         } else {
             var from = this.from.rotation();
@@ -55,6 +57,18 @@ public class InterpolatedCameraByTime implements Camera {
     }
 
     public boolean done() {
+        return done.getValue();
+    }
+
+    public Observable<Boolean> observableDone() {
         return done;
+    }
+
+    public Camera from() {
+        return from;
+    }
+
+    public Camera to() {
+        return to;
     }
 }

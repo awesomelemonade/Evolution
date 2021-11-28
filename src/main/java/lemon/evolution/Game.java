@@ -81,7 +81,7 @@ public class Game implements Screen {
 	private GameLoop gameLoop;
 
 	private AggregateCamera camera;
-	private FirstPersonCamera freecam;
+	private MutableCamera freecam;
 	private float lastMouseX;
 	private float lastMouseY;
 
@@ -177,7 +177,7 @@ public class Game implements Screen {
 			entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.RAIN_DROPLET), sphereRenderer);
 			entityRenderer.registerIndividual(TeleportBallEntity.class, sphereRenderer);
 
-			var csvLoader = new CsvWorldLoader("/res/castle.csv", world.terrain(), postLoadTasks::add,
+			var csvLoader = new CsvWorldLoader("/res/pond.csv", world.terrain(), postLoadTasks::add,
 					csvWorldLoader -> {
 						var mapping = csvWorldLoader.blockMapping();
 						var materials = new MCMaterial[mapping.size()];
@@ -223,7 +223,8 @@ public class Game implements Screen {
 				window.popAndPushScreen(Menu.INSTANCE);
 			}));
 
-			resources = new GameResources(window, worldRenderer, gameLoop, controls);
+			camera = new AggregateCamera(gameLoop.currentPlayer().camera());
+			resources = new GameResources(window, worldRenderer, gameLoop, controls, camera);
 
 			window.pushScreen(new Loading(window::popScreen, resources.loaders(postLoadTasks::add),
 					new Loader() {
@@ -295,21 +296,21 @@ public class Game implements Screen {
 
 			debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
-			camera = new AggregateCamera(gameLoop.currentPlayer().camera());
 			disposables.add(gameLoop.observableCurrentPlayer().onChange(player -> {
 				camera.interpolateTo(player.camera());
 			}));
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChange(activated -> {
 				if (activated) {
-					gameLoop.getGatedControls().setEnabled(false);
-					freecam = FirstPersonCamera.ofCopy(gameLoop.currentPlayer().camera());
-					viewModel.setVisible(false);
+					freecam = MutableCamera.ofCopy(gameLoop.currentPlayer().camera());
 					camera.set(freecam);
 				} else {
-					gameLoop.getGatedControls().setEnabled(true);
-					viewModel.setVisible(true);
 					camera.interpolateTo(gameLoop.currentPlayer().camera());
 				}
+			}));
+			disposables.add(camera.observableCamera().onChangeAndRun(camera -> {
+				var inControl = camera == gameLoop.currentPlayer().camera();
+				viewModel.setVisible(inControl);
+				gameLoop.getGatedControls().setEnabled(inControl);
 			}));
 
 			Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);

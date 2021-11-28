@@ -43,4 +43,8 @@ public class GatedGLFWGameControls<T> implements GameControls<T, GLFWInput>, Dis
 	public void setEnabled(boolean enabled) {
 		this.enabled.setValue(enabled);
 	}
+
+	public Observable<Boolean> observableEnabled() {
+		return enabled;
+	}
 }

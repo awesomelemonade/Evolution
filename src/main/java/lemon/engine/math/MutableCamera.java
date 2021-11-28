@@ -1,19 +1,19 @@
 package lemon.engine.math;
 
-public class FirstPersonCamera implements Camera {
+public class MutableCamera implements Camera {
 	private final MutableVector3D position;
 	private final MutableVector3D rotation;
 	private final Projection projection;
 
-	public FirstPersonCamera(Projection projection) {
+	public MutableCamera(Projection projection) {
 		this(MutableVector3D.ofZero(), MutableVector3D.ofZero(), projection);
 	}
 
-	public FirstPersonCamera(Vector3D position, Vector3D rotation, Projection projection) {
+	public MutableCamera(Vector3D position, Vector3D rotation, Projection projection) {
 		this(MutableVector3D.of(position), MutableVector3D.of(rotation), projection);
 	}
 
-	public FirstPersonCamera(MutableVector3D position, MutableVector3D rotation, Projection projection) {
+	public MutableCamera(MutableVector3D position, MutableVector3D rotation, Projection projection) {
 		this.position = position;
 		this.rotation = rotation;
 		this.projection = projection;
@@ -46,7 +46,7 @@ public class FirstPersonCamera implements Camera {
 		return MathUtil.getPerspective(projection);
 	}
 
-	public static FirstPersonCamera ofCopy(FirstPersonCamera camera) {
-		return new FirstPersonCamera(camera.position(), camera.rotation(), camera.projection());
+	public static MutableCamera ofCopy(MutableCamera camera) {
+		return new MutableCamera(camera.position(), camera.rotation(), camera.projection());
 	}
 }
