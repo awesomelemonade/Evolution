@@ -1,9 +1,9 @@
 package lemon.engine.math;
 
 public interface Camera {
-    public Matrix getTransformationMatrix();
+    public Vector3D position();
 
-    public Matrix getInvertedRotationMatrix();
+    public Vector3D rotation();
 
-    public Matrix getProjectionMatrix();
+    public Matrix projectionMatrix();
 }

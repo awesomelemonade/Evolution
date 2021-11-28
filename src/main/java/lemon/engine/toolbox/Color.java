@@ -89,6 +89,22 @@ public record Color(float red, float green, float blue, float alpha) implements 
 		return alpha == 0f;
 	}
 
+	public float r() {
+		return red;
+	}
+
+	public float g() {
+		return green;
+	}
+
+	public float b() {
+		return blue;
+	}
+
+	public float a() {
+		return alpha;
+	}
+
 	public Color brighter() {
 		return new Color(Math.min(red * 1.4f, 1f), Math.min(green * 1.4f, 1f), Math.min(blue * 1.4f, 1f), alpha);
 	}

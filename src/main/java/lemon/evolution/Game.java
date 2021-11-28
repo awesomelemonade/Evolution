@@ -9,14 +9,7 @@ import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.Player;
 import lemon.engine.game.Team;
 import lemon.engine.glfw.GLFWInput;
-import lemon.engine.math.Box2D;
-import lemon.engine.math.FirstPersonCamera;
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Matrix;
-import lemon.engine.math.MutableVector3D;
-import lemon.engine.math.Projection;
-import lemon.engine.math.Vector2D;
-import lemon.engine.math.Vector3D;
+import lemon.engine.math.*;
 import lemon.engine.model.LineGraph;
 import lemon.engine.model.Model;
 import lemon.engine.model.SphereModelBuilder;
@@ -87,6 +80,7 @@ public class Game implements Screen {
 	private GLFWGameControls<EvolutionControls> controls;
 	private GameLoop gameLoop;
 
+	private AggregateCamera camera;
 	private FirstPersonCamera freecam;
 	private float lastMouseX;
 	private float lastMouseY;
@@ -301,9 +295,26 @@ public class Game implements Screen {
 
 			debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
+			camera = new AggregateCamera(gameLoop.currentPlayer().camera());
+			disposables.add(gameLoop.observableCurrentPlayer().onChange(player -> {
+				camera.interpolateTo(player.camera());
+			}));
+			disposables.add(controls.activated(EvolutionControls.FREECAM).onChange(activated -> {
+				if (activated) {
+					gameLoop.getGatedControls().setEnabled(false);
+					freecam = FirstPersonCamera.ofCopy(gameLoop.currentPlayer().camera());
+					viewModel.setVisible(false);
+					camera.set(freecam);
+				} else {
+					gameLoop.getGatedControls().setEnabled(true);
+					viewModel.setVisible(true);
+					camera.interpolateTo(gameLoop.currentPlayer().camera());
+				}
+			}));
+
 			Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 			CommonProgramsSetup.setup2D(orthoProjectionMatrix);
-			CommonProgramsSetup.setup3D(gameLoop.currentPlayer().camera().getProjectionMatrix());
+			CommonProgramsSetup.setup3D(camera.projectionMatrix());
 
 			updateMatrices();
 
@@ -376,16 +387,6 @@ public class Game implements Screen {
 						world.entities().add(new ItemDropEntity(gameLoop.currentPlayer().location().add(Vector3D.of(0f, 100f, 0f))));
 					}
 				}
-			}));
-
-			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(true, () -> {
-				gameLoop.getGatedControls().setEnabled(false);
-				freecam = new FirstPersonCamera(gameLoop.currentPlayer().camera());
-				viewModel.setVisible(false);
-			}));
-			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(false, () -> {
-				gameLoop.getGatedControls().setEnabled(true);
-				viewModel.setVisible(true);
 			}));
 
 			uiScreen = disposables.add(new UIScreen(window.input()));
@@ -540,16 +541,15 @@ public class Game implements Screen {
 	}
 
 	public void updateMatrices() {
-		FirstPersonCamera camera;
-		if (controls.isActivated(EvolutionControls.FREECAM)) {
-			camera = freecam;
-		} else {
-			camera = gameLoop.currentPlayer().camera();
-		}
-		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, camera.getTransformationMatrix());
-		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.getProjectionMatrix());
+		var position = camera.position();
+		var rotation = camera.rotation();
+		var translationMatrix = MathUtil.getTranslation(position.invert());
+		var rotationMatrix = MathUtil.getRotation(rotation.invert());
+		var transformationMatrix = rotationMatrix.multiply(translationMatrix);
+		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, transformationMatrix);
+		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.projectionMatrix());
 		CommonPrograms3D.CUBEMAP.use(program -> {
-			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, camera.getInvertedRotationMatrix());
+			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, rotationMatrix);
 		});
 	}
 
