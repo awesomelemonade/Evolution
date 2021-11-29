@@ -9,6 +9,8 @@ import org.lwjgl.opengl.GL30;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class Texture implements Disposable {
@@ -92,5 +94,21 @@ public class Texture implements Disposable {
 		GL11.glBindTexture(target, id);
 		runnable.run();
 		GL11.glBindTexture(target, 0);
+	}
+
+	public void bind(int target, Consumer<Integer> consumer, boolean unbind) {
+		GL11.glBindTexture(target, id);
+		consumer.accept(id);
+		if (unbind) {
+			GL11.glBindTexture(target, 0);
+		}
+	}
+
+	public void bind(int target, BiConsumer<Integer, Integer> consumer, boolean unbind) {
+		GL11.glBindTexture(target, id);
+		consumer.accept(target, id);
+		if (unbind) {
+			GL11.glBindTexture(target, 0);
+		}
 	}
 }

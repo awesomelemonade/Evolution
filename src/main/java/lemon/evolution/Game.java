@@ -20,6 +20,7 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.model.LineGraph;
 import lemon.engine.model.Model;
 import lemon.engine.model.SphereModelBuilder;
+import lemon.engine.render.CommonRenderables;
 import lemon.engine.render.MatrixType;
 import lemon.engine.texture.Texture;
 import lemon.engine.texture.TextureBank;
@@ -99,8 +100,6 @@ public class Game implements Screen {
 	private World world;
 	private WorldRenderer worldRenderer;
 
-	private Vector3D lightPosition;
-
 	private ViewModel viewModel;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
@@ -117,6 +116,8 @@ public class Game implements Screen {
 	private ScalarField<Vector3D> scalarfield;
 	private int resolutionWidth;
 	private int resolutionHeight;
+
+	private FrameBuffer shadowMapFrameBuffer;
 
 	public Game(ScalarField<Vector3D> scalarfield, int resolutionWidth, int resolutionHeight) {
 		this.scalarfield = scalarfield;
@@ -298,6 +299,7 @@ public class Game implements Screen {
 			benchmarker.put("totalMemory", new LineGraph(1000, 5000000000f));
 			benchmarker.put("worldRenderTime", new LineGraph(1000, 100000000));
 			benchmarker.put("particleTime", new LineGraph(1000, 100000000));
+			benchmarker.put("shadowRenderTime", new LineGraph(1000, 100000000));
 
 			debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
@@ -347,8 +349,31 @@ public class Game implements Screen {
 				});
 			});
 
+			var shadowResolutionWidth = resolutionWidth;
+			var shadowResolutionHeight = resolutionHeight;
+			shadowMapFrameBuffer = disposables.add(new FrameBuffer(shadowResolutionWidth, shadowResolutionHeight));
+			shadowMapFrameBuffer.bind(fbo -> {
+				GL11.glDrawBuffer(GL30.GL_COLOR_ATTACHMENT0);
+				Texture colorTexture = disposables.add(new Texture());
+				TextureBank.SHADOW_COLOR.bind(() -> {
+					GL11.glBindTexture(GL11.GL_TEXTURE_2D, colorTexture.id());
+					GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL11.GL_RGB, resolutionWidth, resolutionHeight, 0, GL11.GL_RGB,
+							GL11.GL_UNSIGNED_BYTE, (ByteBuffer) null);
+					GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+					GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+					GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, colorTexture.id(), 0);
+				});
+				Texture depthTexture = disposables.add(new Texture());
+				TextureBank.SHADOW_DEPTH.bind(() -> {
+					GL11.glBindTexture(GL11.GL_TEXTURE_2D, depthTexture.id());
+					GL11.glTexImage2D(GL11.GL_TEXTURE_2D, 0, GL14.GL_DEPTH_COMPONENT32, shadowResolutionWidth, shadowResolutionHeight, 0,
+							GL11.GL_DEPTH_COMPONENT, GL11.GL_FLOAT, (ByteBuffer) null);
+					GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+					GL11.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+					GL32.glFramebufferTexture(GL30.GL_FRAMEBUFFER, GL30.GL_DEPTH_ATTACHMENT, depthTexture.id(), 0);
+				});
+			});
 
-			lightPosition = gameLoop.currentPlayer().position();
 
 			var texture = new Texture();
 			texture.load(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow(), true));
@@ -573,10 +598,30 @@ public class Game implements Screen {
 			particleTime = System.nanoTime() - particleTime;
 			benchmarker.getLineGraph("particleTime").add(particleTime);
 		});
+		var shadowRenderTime = System.nanoTime();
+		shadowMapFrameBuffer.bind(frameBuffer -> {
+			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+			//CommonRenderables.renderQuad2D(new Box2D(-200, -200, 400, 400), Color.BLUE);
+			CommonPrograms3D.SHADOW.use(program -> {
+				var size = 100f;
+				var currentPosition = gameLoop.currentPlayer().position();
+				var projectionMatrix = MathUtil.getOrtho(-size, size, size, -size, 0f, 1000f);
+				try (var translationMatrix = MatrixPool.ofTranslation(currentPosition.add(Vector3D.of(0f, 100f, 0f)).invert());
+					 var pitchMatrix = MatrixPool.ofRotationX(MathUtil.PI / 2f);
+					 var viewMatrix = MatrixPool.ofMultiplied(pitchMatrix, translationMatrix)) {
+					program.loadMatrix("lightMVP", projectionMatrix.multiply(viewMatrix));
+				}
+				// TODO: Needs to draw with shadow shader program
+				//worldRenderer.render(gameLoop.currentPlayer().position());
+			});
+		});
+		shadowRenderTime = System.nanoTime() - shadowRenderTime;
+		benchmarker.getLineGraph("shadowRenderTime").add(shadowRenderTime);
 		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();
 		});
 		viewModel.render();
+		CommonRenderables.renderTexturedQuad2D(new Box2D(0, 0, 100, 100), TextureBank.SHADOW_COLOR);
 		CommonPrograms2D.COLOR.use(program -> {
 			// Render crosshair
 			try (var translationMatrix = MatrixPool.ofTranslation(window.getWidth() / 2f, window.getHeight() / 2f, 0f);
