@@ -3,17 +3,24 @@ package lemon.engine.toolbox;
 import lemon.engine.texture.CubeMapData;
 
 import javax.imageio.ImageIO;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.StringTokenizer;
 
 public class SkyboxLoader {
 	private String directory;
 	private String configFilename;
+
+	public SkyboxLoader(String directory) {
+		this(directory, findConfigFilename(directory));
+	}
+
+	private static String findConfigFilename(String directory) {
+		var file = new File(SkyboxLoader.class.getResource(directory).getPath());
+		return Arrays.stream(file.list())
+				.filter(filename -> filename.endsWith(".cfg")).findAny().orElseThrow();
+	}
 
 	public SkyboxLoader(String directory, String configFilename) {
 		this.directory = directory;
