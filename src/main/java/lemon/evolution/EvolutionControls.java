@@ -15,7 +15,7 @@ public enum EvolutionControls implements GLFWGameControls.DefaultBinder<Evolutio
 	STRAFE_RIGHT(keyboardHold(GLFW.GLFW_KEY_D)),
 	JUMP(keyboardHold(GLFW.GLFW_KEY_SPACE)),
 	FLY(keyboardHold(GLFW.GLFW_KEY_SPACE)),
-	FREECAM(keyboardToggle(GLFW.GLFW_KEY_J)),
+	FREECAM(keyboardHold(GLFW.GLFW_KEY_J)),
 	FALL(keyboardHold(GLFW.GLFW_KEY_LEFT_SHIFT)),
 	CROUCH(keyboardHold(GLFW.GLFW_KEY_LEFT_SHIFT)),
 	DEBUG_TOGGLE(keyboardToggle(GLFW.GLFW_KEY_F3)),

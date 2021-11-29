@@ -13,7 +13,7 @@ public class FreeCamera implements CameraHolder {
         this.camera = new MutableCamera(camera);
         this.controls = controls;
         controls.addCallback(GLFWInput::cursorDeltaEvent, event -> {
-            if (controls.isActivated(EvolutionControls.FREECAM) && controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
+            if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
                 float deltaY = (float) (-(event.x()) * MOUSE_SENSITIVITY);
                 float deltaX = (float) (-(event.y()) * MOUSE_SENSITIVITY);
                 this.camera.mutableRotation().asXYVector().add(deltaX, deltaY)
@@ -23,34 +23,32 @@ public class FreeCamera implements CameraHolder {
     }
 
     public void update() {
-        if (controls.isActivated(EvolutionControls.FREECAM)) {
-            float speed = .5f;
-            float angle = (camera.rotation().y() + MathUtil.PI / 2f);
-            float sin = (float) Math.sin(angle);
-            float cos = (float) Math.cos(angle);
-            var playerHorizontalVector = Vector2D.of(speed * sin, speed * cos);
-            var mutableForce = MutableVector3D.ofZero();
-            if (controls.isActivated(EvolutionControls.STRAFE_LEFT)) {
-                mutableForce.asXZVector().subtract(playerHorizontalVector);
-            }
-            if (controls.isActivated(EvolutionControls.STRAFE_RIGHT)) {
-                mutableForce.asXZVector().add(playerHorizontalVector);
-            }
-            var playerForwardVector = Vector2D.of(speed * cos, -speed * sin);
-            if (controls.isActivated(EvolutionControls.MOVE_FORWARDS)) {
-                mutableForce.asXZVector().add(playerForwardVector);
-            }
-            if (controls.isActivated(EvolutionControls.MOVE_BACKWARDS)) {
-                mutableForce.asXZVector().subtract(playerForwardVector);
-            }
-            if (controls.isActivated(EvolutionControls.FLY)) {
-                mutableForce.addY(speed);
-            }
-            if (controls.isActivated(EvolutionControls.FALL)) {
-                mutableForce.subtractY(speed);
-            }
-            camera.mutablePosition().add(mutableForce.asImmutable());
+        float speed = .5f;
+        float angle = (camera.rotation().y() + MathUtil.PI / 2f);
+        float sin = (float) Math.sin(angle);
+        float cos = (float) Math.cos(angle);
+        var playerHorizontalVector = Vector2D.of(speed * sin, speed * cos);
+        var mutableForce = MutableVector3D.ofZero();
+        if (controls.isActivated(EvolutionControls.STRAFE_LEFT)) {
+            mutableForce.asXZVector().subtract(playerHorizontalVector);
         }
+        if (controls.isActivated(EvolutionControls.STRAFE_RIGHT)) {
+            mutableForce.asXZVector().add(playerHorizontalVector);
+        }
+        var playerForwardVector = Vector2D.of(speed * cos, -speed * sin);
+        if (controls.isActivated(EvolutionControls.MOVE_FORWARDS)) {
+            mutableForce.asXZVector().add(playerForwardVector);
+        }
+        if (controls.isActivated(EvolutionControls.MOVE_BACKWARDS)) {
+            mutableForce.asXZVector().subtract(playerForwardVector);
+        }
+        if (controls.isActivated(EvolutionControls.FLY)) {
+            mutableForce.addY(speed);
+        }
+        if (controls.isActivated(EvolutionControls.FALL)) {
+            mutableForce.subtractY(speed);
+        }
+        camera.mutablePosition().add(mutableForce.asImmutable());
     }
 
     public void setPositionAndRotation(Camera camera) {

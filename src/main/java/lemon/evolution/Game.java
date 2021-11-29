@@ -298,12 +298,12 @@ public class Game implements Screen {
 			disposables.add(gameLoop.observableCurrentPlayer().onChange(player -> {
 				camera.interpolateTo(player.camera());
 			}));
-			disposables.add(controls.activated(EvolutionControls.FREECAM).onChange(activated -> {
-				if (activated) {
+			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(true, () -> {
+				if (camera.camera() == freecam) {
+					camera.interpolateTo(gameLoop.currentPlayer().camera());
+				} else {
 					freecam.setPositionAndRotation(gameLoop.currentPlayer().camera());
 					camera.set(freecam);
-				} else {
-					camera.interpolateTo(gameLoop.currentPlayer().camera());
 				}
 			}));
 			disposables.add(camera.observableCamera().onChangeAndRun(camera -> {
