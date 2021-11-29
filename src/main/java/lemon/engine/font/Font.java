@@ -14,18 +14,19 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 public class Font implements Disposable {
-	private int lineHeight;
-	private int base;
-	private int scaleWidth;
-	private int scaleHeight;
-	private Texture texture;
-	private Map<Integer, CharData> data;
-	private Map<Integer, Map<Integer, Integer>> kernings;
+	private final int lineHeight;
+	private final int base;
+	private final int scaleWidth;
+	private final int scaleHeight;
+	private final Texture texture;
+	private final Map<Integer, CharData> data;
+	private final Map<Integer, Map<Integer, Integer>> kernings;
+	private final int additionalKerning;
 
 	public Font(Path path) {
-		texture = new Texture();
-		data = new HashMap<>();
-		kernings = new HashMap<>();
+		this.texture = new Texture();
+		this.data = new HashMap<>();
+		this.kernings = new HashMap<>();
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(Font.class.getResourceAsStream(path.toString().replaceAll("\\\\", "/"))));
 			reader.readLine(); // String info = reader.readLine();
@@ -33,7 +34,12 @@ public class Font implements Disposable {
 			String page = reader.readLine();
 			String chars = reader.readLine();
 			String filename = page.substring("page id=0 file=\"".length(), page.length() - "\"".length());
-			processCommon(common);
+			StringTokenizer tokenizer = new StringTokenizer(common);
+			tokenizer.nextToken(); // common
+			lineHeight = getValue(tokenizer.nextToken());
+			base = getValue(tokenizer.nextToken());
+			scaleWidth = getValue(tokenizer.nextToken());
+			scaleHeight = getValue(tokenizer.nextToken());
 			int charCount = Integer.parseInt(chars.substring("chars count=".length()));
 			texture.load(new TextureData(ImageIO.read(Font.class.getResourceAsStream((path.getParent().toString() + "/" + filename).replaceAll("\\\\", "/"))), false));
 			for (int i = 0; i < charCount; ++i) {
@@ -45,9 +51,26 @@ public class Font implements Disposable {
 				processKerning(reader.readLine());
 			}
 			reader.close();
+			additionalKerning = 0;
 		} catch (IOException e) {
 			e.printStackTrace();
+			throw new IllegalStateException(e);
 		}
+	}
+
+	private Font(int lineHieght, int base, int scaleWidth, int scaleHeight, Texture texture, Map<Integer, CharData> data, Map<Integer, Map<Integer, Integer>> kernings, int additionalKerning) {
+		this.lineHeight = lineHieght;
+		this.base = base;
+		this.scaleWidth = scaleWidth;
+		this.scaleHeight = scaleHeight;
+		this.texture = texture;
+		this.data = data;
+		this.kernings = kernings;
+		this.additionalKerning = additionalKerning;
+	}
+
+	public static Font ofCopyWithAdditionalKerning(Font font, int additionalKerning) {
+		return new Font(font.getLineHeight(), font.getBase(), font.getScaleWidth(), font.getScaleHeight(), font.getTexture(), font.data, font.kernings, additionalKerning);
 	}
 
 	public CharData getCharData(char c) {
@@ -64,15 +87,6 @@ public class Font implements Disposable {
 			return 0;
 		}
 		return kernings.get(intA).get(intB);
-	}
-
-	public void processCommon(String line) {
-		StringTokenizer tokenizer = new StringTokenizer(line);
-		tokenizer.nextToken(); // common
-		lineHeight = getValue(tokenizer.nextToken());
-		base = getValue(tokenizer.nextToken());
-		scaleWidth = getValue(tokenizer.nextToken());
-		scaleHeight = getValue(tokenizer.nextToken());
 	}
 
 	public void processCharData(String line) {
@@ -113,6 +127,10 @@ public class Font implements Disposable {
 
 	public int getScaleHeight() {
 		return scaleHeight;
+	}
+
+	public int getAdditionalKerning() {
+		return additionalKerning;
 	}
 
 	@Override

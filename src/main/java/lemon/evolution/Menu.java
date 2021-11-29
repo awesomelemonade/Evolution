@@ -145,7 +145,7 @@ public enum Menu implements Screen {
 									};
 									start(new Game(scalarField, window.getWidth() / 2, window.getHeight() / 2));
 								}
-								case 2 -> start(FontTest.INSTANCE);
+								case 2 -> start(TitleScreen.INSTANCE);
 								default -> System.out.println(i);
 							}
 						}

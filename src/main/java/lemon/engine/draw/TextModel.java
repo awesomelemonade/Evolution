@@ -69,10 +69,10 @@ public class TextModel implements Drawable, Disposable {
 			currentData = font.getCharData(currentChar);
 			kerning = font.getKerning(prevChar, currentChar);
 			putChar(buffer, currentData, cursorX + kerning, cursorY);
-			cursorX += currentData.xAdvance();
+			cursorX += currentData.xAdvance() + font.getAdditionalKerning();
 			prevChar = currentChar;
 		}
-		width = 2 * padding + (currentData == null ? 0 : (cursorX - currentData.xAdvance() + currentData.width() + kerning));
+		width = 2 * padding + (currentData == null ? 0 : (cursorX - currentData.xAdvance() + font.getAdditionalKerning() + currentData.width() + kerning));
 		height = 2 * padding + font.getBase();
 		buffer.flip();
 	}

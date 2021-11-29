@@ -1,5 +1,6 @@
 package lemon.evolution.ui.beta;
 
+import lemon.engine.font.Font;
 import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
@@ -67,6 +68,10 @@ public class UIScreen extends AbstractUIComponent {
 
 	public UIText addCenteredText(String text, Vector2D position, float scale, Color color) {
 		return addComponent(UIText.ofCentered(this, text, position, scale, color));
+	}
+
+	public UIText addCenteredText(Font font, String text, Vector2D position, float scale, Color color) {
+		return addComponent(UIText.ofCentered(this, font, text, position, scale, color));
 	}
 
 	@Override
