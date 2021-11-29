@@ -8,8 +8,6 @@ import lemon.engine.math.Vector2D;
 import lemon.engine.render.Renderable;
 import lemon.engine.texture.Texture;
 import lemon.engine.toolbox.Color;
-import lemon.evolution.UIMinimap;
-import lemon.evolution.world.ControllableEntity;
 import lemon.evolution.world.Inventory;
 import lemon.evolution.world.World;
 

@@ -81,9 +81,7 @@ public class Game implements Screen {
 	private GameLoop gameLoop;
 
 	private AggregateCamera camera;
-	private MutableCamera freecam;
-	private float lastMouseX;
-	private float lastMouseY;
+	private FreeCamera freecam;
 
 	private FrameBuffer frameBuffer;
 
@@ -224,6 +222,7 @@ public class Game implements Screen {
 			}));
 
 			camera = new AggregateCamera(gameLoop.currentPlayer().camera());
+			freecam = new FreeCamera(camera, controls);
 			resources = new GameResources(window, worldRenderer, gameLoop, controls, camera);
 
 			window.pushScreen(new Loading(window::popScreen, resources.loaders(postLoadTasks::add),
@@ -301,7 +300,7 @@ public class Game implements Screen {
 			}));
 			disposables.add(controls.activated(EvolutionControls.FREECAM).onChange(activated -> {
 				if (activated) {
-					freecam = MutableCamera.ofCopy(gameLoop.currentPlayer().camera());
+					freecam.setPositionAndRotation(gameLoop.currentPlayer().camera());
 					camera.set(freecam);
 				} else {
 					camera.interpolateTo(gameLoop.currentPlayer().camera());
@@ -473,46 +472,7 @@ public class Game implements Screen {
 		world.update(dt);
 
 		gameLoop.update();
-		if (controls.isActivated(EvolutionControls.FREECAM)) {
-			float MOUSE_SENSITIVITY = .001f;
-			controls.addCallback(GLFWInput::cursorPositionEvent, event -> {
-				if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
-					float deltaY = (float) (-(event.x() - lastMouseX) * MOUSE_SENSITIVITY);
-					float deltaX = (float) (-(event.y() - lastMouseY) * MOUSE_SENSITIVITY);
-					freecam.mutableRotation().asXYVector().add(deltaX, deltaY)
-							.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
-				}
-				lastMouseX = (float) event.x();
-				lastMouseY = (float) event.y();
-			});
-
-			float speed = .5f;
-			float angle = (freecam.rotation().y() + MathUtil.PI / 2f);
-			float sin = (float) Math.sin(angle);
-			float cos = (float) Math.cos(angle);
-			var playerHorizontalVector = Vector2D.of(speed * sin, speed * cos);
-			var mutableForce = MutableVector3D.ofZero();
-			if (controls.isActivated(EvolutionControls.STRAFE_LEFT)) {
-				mutableForce.asXZVector().subtract(playerHorizontalVector);
-			}
-			if (controls.isActivated(EvolutionControls.STRAFE_RIGHT)) {
-				mutableForce.asXZVector().add(playerHorizontalVector);
-			}
-			var playerForwardVector = Vector2D.of(speed * cos, -speed * sin);
-			if (controls.isActivated(EvolutionControls.MOVE_FORWARDS)) {
-				mutableForce.asXZVector().add(playerForwardVector);
-			}
-			if (controls.isActivated(EvolutionControls.MOVE_BACKWARDS)) {
-				mutableForce.asXZVector().subtract(playerForwardVector);
-			}
-			if (controls.isActivated(EvolutionControls.FLY)) {
-				mutableForce.addY(speed);
-			}
-			if (controls.isActivated(EvolutionControls.FALL)) {
-				mutableForce.subtractY(speed);
-			}
-			freecam.mutablePosition().add(mutableForce.asImmutable());
-		}
+		freecam.update();
 
 		benchmarker.getLineGraph("debug").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();

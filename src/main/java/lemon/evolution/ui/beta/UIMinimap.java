@@ -1,4 +1,4 @@
-package lemon.evolution;
+package lemon.evolution.ui.beta;
 
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.frameBuffer.FrameBuffer;
