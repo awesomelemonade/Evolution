@@ -8,6 +8,8 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryUtil;
 
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import java.util.Arrays;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -36,6 +38,15 @@ public class Evolution {
 	}
 
 	public static void main(String[] args) {
+		try {
+			var url = Evolution.class.getResource("/res/music.wav");
+			var clip = AudioSystem.getClip();
+			var ais = AudioSystem.getAudioInputStream(url);
+			clip.open(ais);
+			clip.loop(Clip.LOOP_CONTINUOUSLY);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
 		LogManager.getLogManager().reset();
 		Logger rootLogger = Logger.getLogger("");
 		logger.setLevel(Level.ALL);
