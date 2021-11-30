@@ -38,6 +38,7 @@ public enum Menu implements Screen {
 		System.gc(); // Manual Garbage Collection
 		this.window = window;
 		menuButtons = new ArrayList<>();
+		menuButtons.add(new MenuButton("Instructions", this::showInstructions));
 		var highResWidth = window.getWidth();
 		var highResHeight = window.getHeight();
 		var lowResWidth = window.getWidth() / 2;
@@ -47,6 +48,7 @@ public enum Menu implements Screen {
 			menuButtons.add(new MenuButton(map.mapName() + "*", () -> start(new Game(lowResWidth, lowResHeight, map))));
 		}
 		menuButtons.add(new MenuButton("Splash", () -> start(TitleScreen.INSTANCE)));
+		menuButtons.add(new MenuButton("Credits", this::showCredits));
 
 		var font = CommonFonts.freeSansTightened();
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
@@ -144,6 +146,20 @@ public enum Menu implements Screen {
 
 	public void start(Screen screen) {
 		window.popAndPushScreen(screen);
+	}
+
+	public void showInstructions() {
+		window.popAndPushScreen(new TextScreen(List.of(
+				"Instructions",
+				"TBD"
+		), this));
+	}
+
+	public void showCredits() {
+		window.popAndPushScreen(new TextScreen(List.of(
+				"Credits",
+				"TBD"
+		), this));
 	}
 
 	@Override
