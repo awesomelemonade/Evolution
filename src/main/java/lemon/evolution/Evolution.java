@@ -2,14 +2,13 @@ package lemon.evolution;
 
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.thread.ThreadManager;
+import lemon.evolution.audio.BackgroundAudio;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryUtil;
 
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
 import java.util.Arrays;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
@@ -38,15 +37,8 @@ public class Evolution {
 	}
 
 	public static void main(String[] args) {
-		try {
-			var url = Evolution.class.getResource("/res/music.wav");
-			var clip = AudioSystem.getClip();
-			var ais = AudioSystem.getAudioInputStream(url);
-			clip.open(ais);
-			clip.loop(Clip.LOOP_CONTINUOUSLY);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
+		BackgroundAudio.init();
+		BackgroundAudio.play(BackgroundAudio.Track.MENU);
 		LogManager.getLogManager().reset();
 		Logger rootLogger = Logger.getLogger("");
 		logger.setLevel(Level.ALL);

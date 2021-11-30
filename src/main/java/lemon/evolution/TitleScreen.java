@@ -64,18 +64,10 @@ public enum TitleScreen implements Screen {
                     buffers[k].put((byte) intValue);
                     buffers[k].put((byte) intValue);
                     buffers[k].put((byte) 0b11111111);
-                    //imageArray[i * width + j] = (0b11111111 << 24) | (intValue << 16) | (intValue << 8) | intValue;
                 }
             }
             buffers[k].flip();
         }
-        /*try {
-            var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-            image.setRGB(0, 0, width, height, imageArray, 0, width);
-            ImageIO.write(image, "png", new File("noise.png"));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }*/
         var texture = disposables.add(new Texture());
         texture.load(Arrays.stream(buffers).map(buffer -> new TextureData(width, height, buffer)).toArray(TextureData[]::new));
         TextureBank.PERLIN_NOISE.bind(() -> {
