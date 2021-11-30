@@ -6,7 +6,8 @@ public enum TextureBank {
 	REUSE(0), COLOR(1), DEPTH(2), SKYBOX(3),
 	GRASS(4), SLOPE(5), ROCK(6), BASE(7),
 	MINIMAP_COLOR(8), MINIMAP_DEPTH(9),
-	TERRAIN(10), VIEWMODEL_COLOR(11), VIEWMODEL_DEPTH(12);
+	TERRAIN(10), VIEWMODEL_COLOR(11), VIEWMODEL_DEPTH(12),
+	PERLIN_NOISE(13);
 	private final int id;
 
 	private TextureBank(int id) {

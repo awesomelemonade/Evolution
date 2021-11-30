@@ -2,6 +2,7 @@ package lemon.evolution;
 
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.thread.ThreadManager;
+import lemon.evolution.audio.BackgroundAudio;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -36,6 +37,8 @@ public class Evolution {
 	}
 
 	public static void main(String[] args) {
+		BackgroundAudio.init();
+		BackgroundAudio.play(BackgroundAudio.Track.MENU);
 		LogManager.getLogManager().reset();
 		Logger rootLogger = Logger.getLogger("");
 		logger.setLevel(Level.ALL);

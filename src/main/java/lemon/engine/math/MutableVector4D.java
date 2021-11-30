@@ -2,6 +2,10 @@ package lemon.engine.math;
 
 public interface MutableVector4D {
 	// construction
+	public static MutableVector4D ofZero() {
+		return of(0f, 0f, 0f, 0f);
+	}
+
 	public static MutableVector4D of(Vector4D vector) {
 		return of(vector.x(), vector.y(), vector.z(), vector.w());
 	}

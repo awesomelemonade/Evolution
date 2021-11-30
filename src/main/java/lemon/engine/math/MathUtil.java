@@ -239,6 +239,10 @@ public class MathUtil {
 	}
 
 	public static void lookAt(Matrix matrix, Vector3D direction, Vector3D up) {
+		if (direction.isZero() || up.isZero()) {
+			matrix.set(Matrix.IDENTITY_4);
+			return;
+		}
 		var f = direction.normalize();
 		var u = up.normalize();
 		var s = f.crossProduct(u).normalize();

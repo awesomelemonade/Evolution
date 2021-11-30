@@ -53,13 +53,17 @@ public class Texture implements Disposable {
 	}
 
 	public void load(TextureData[] dataArray) {
+		load(dataArray, GL11.GL_REPEAT);
+	}
+
+	public void load(TextureData[] dataArray, int wrap) {
 		if (dataArray.length == 0) {
 			throw new IllegalArgumentException("Cannot load empty data array");
 		}
 		GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, id);
 		// Wrap
-		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
-		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_WRAP_T, GL11.GL_REPEAT);
+		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_WRAP_S, wrap);
+		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_WRAP_T, wrap);
 		// Scale
 		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
 		GL11.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);

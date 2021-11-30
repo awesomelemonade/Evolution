@@ -106,7 +106,7 @@ public enum Menu implements Screen {
 							ToIntFunction<int[]> pairer = (b) -> (int) SzudzikIntPair.pair(b[0], b[1], b[2]);
 							switch (i) {
 								case 0 -> {
-									var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
+									var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> (int) SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 6);
 									PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 6);
 									ScalarField<Vector3D> scalarField;
 									scalarField = vector -> {
@@ -126,7 +126,7 @@ public enum Menu implements Screen {
 									start(new Game(scalarField, window.getWidth(), window.getHeight()));
 								}
 								case 1 -> {
-									var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 4);
+									var noise2d = new PerlinNoise<Vector2D>(2, MurmurHash::createWithSeed, (b) -> (int) SzudzikIntPair.pair(b[0], b[1]), x -> 1f, 4);
 									PerlinNoise<Vector3D> noise = new PerlinNoise<>(3, MurmurHash::createWithSeed, pairer, x -> 1f, 7);
 									ScalarField<Vector3D> scalarField;
 									scalarField = vector -> {
@@ -145,7 +145,7 @@ public enum Menu implements Screen {
 									};
 									start(new Game(scalarField, window.getWidth() / 2, window.getHeight() / 2));
 								}
-								case 2 -> start(FontTest.INSTANCE);
+								case 2 -> start(TitleScreen.INSTANCE);
 								default -> System.out.println(i);
 							}
 						}

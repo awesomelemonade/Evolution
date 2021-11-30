@@ -38,6 +38,11 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 	}
 
 	@CheckReturnValue
+	public default boolean isZero() {
+		return lengthSquared() == 0f;
+	}
+
+	@CheckReturnValue
 	public default float distanceSquared(T vector) {
 		return this.subtract(vector).lengthSquared();
 	}
