@@ -331,7 +331,7 @@ public class Game implements Screen {
 			});
 			TextureBank.SKYBOX.bind(() -> {
 				Texture skyboxTexture = new Texture();
-				skyboxTexture.load(new SkyboxLoader("/res/darkskies", "darkskies.cfg").load());
+				skyboxTexture.load(new SkyboxLoader("/res/mp_organic").load());
 				GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.id());
 			});
 			Map.of(
