@@ -45,6 +45,14 @@ public class Matrix {
 		this.data[m][n] = data;
 	}
 
+	public void set(Matrix matrix) {
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[0].length; j++) {
+				data[i][j] = matrix.get(i, j);
+			}
+		}
+	}
+
 	public float get(int m, int n) {
 		return data[m][n];
 	}
@@ -112,10 +120,35 @@ public class Matrix {
 		return Arrays.deepToString(data);
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof Matrix matrix) {
+			var rows = getRows();
+			var columns = getColumns();
+			if (rows != matrix.getRows() || columns != matrix.getColumns()) {
+				return false;
+			}
+			for (int i = 0; i < rows; i++) {
+				for (int j = 0; j < columns; j++) {
+					if (data[i][j] != matrix.get(i, j)) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
 	public static Matrix unmodifiableMatrix(Matrix matrix) {
 		return new Matrix(matrix) {
 			@Override
 			public void set(int x, int y, float data) {
+				throw new IllegalStateException(unmodifiableMessage);
+			}
+
+			@Override
+			public void set(Matrix matrix) {
 				throw new IllegalStateException(unmodifiableMessage);
 			}
 
