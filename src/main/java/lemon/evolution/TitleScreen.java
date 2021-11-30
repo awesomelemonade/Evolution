@@ -22,6 +22,7 @@ import lemon.evolution.util.CommonPrograms2D;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
 
 import java.nio.ByteBuffer;
@@ -41,8 +42,6 @@ public enum TitleScreen implements Screen {
         this.window = window;
         ToIntFunction<int[]> pairer = (b) -> Math.toIntExact(SzudzikIntPair.pair(b[0], b[1], b[2] * 32 + b[3]));
         PerlinNoise<Vector4D> noise = new PerlinNoise<>(4, MurmurHash::createWithSeed, pairer, x -> 1f, 3);
-        var min = Float.MAX_VALUE;
-        var max = Float.MIN_VALUE;
         var width = 32;
         var height = 32;
         var vector = MutableVector4D.ofZero();
@@ -56,10 +55,9 @@ public enum TitleScreen implements Screen {
                     var radius = BACKGROUND_LOOP_TIME / 8;
                     var angle = ((float) k) / BACKGROUND_LOOP_TIME * MathUtil.TAU;
                     var value = noise.apply(vector.set(i - width / 2f, j - height / 2f, (float) (radius * Math.cos(angle)), (float) (radius * Math.sin(angle)))
-                            .divide(64f).asImmutable());
-                    min = Math.min(min, value);
-                    max = Math.max(max, value);
-                    int intValue = Math.max(0, Math.min(255, (int) (256f * ((value / 5f) + 0.5f))));
+                            .divide(64f).asImmutable()) / 5f + 0.5f; // Normalize to 0f -> 1f range
+                    value /= 2f; // darker
+                    int intValue = Math.max(0, Math.min(255, (int) (256f * value)));
                     buffers[k].put((byte) intValue);
                     buffers[k].put((byte) intValue);
                     buffers[k].put((byte) intValue);
@@ -69,7 +67,7 @@ public enum TitleScreen implements Screen {
             buffers[k].flip();
         }
         var texture = disposables.add(new Texture());
-        texture.load(Arrays.stream(buffers).map(buffer -> new TextureData(width, height, buffer)).toArray(TextureData[]::new));
+        texture.load(Arrays.stream(buffers).map(buffer -> new TextureData(width, height, buffer)).toArray(TextureData[]::new), GL12.GL_CLAMP_TO_EDGE);
         TextureBank.PERLIN_NOISE.bind(() -> {
             GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, texture.id());
         });
