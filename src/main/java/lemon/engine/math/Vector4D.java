@@ -14,22 +14,6 @@ public interface Vector4D extends Vector<Vector4D> {
 	public float z();
 	public float w();
 
-	public default float r() {
-		return x();
-	}
-
-	public default float g() {
-		return y();
-	}
-
-	public default float b() {
-		return z();
-	}
-
-	public default float a() {
-		return w();
-	}
-
 	public static Vector4D of(float x, float y, float z, float w) {
 		return new Impl(x, y, z, w);
 	}

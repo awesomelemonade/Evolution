@@ -15,8 +15,8 @@ import java.util.function.BiConsumer;
 
 public class World implements Disposable {
 	public static final Vector3D GRAVITY_VECTOR = Vector3D.of(0, -0.07f, 0);
-	public static final float AIR_FRICTION = -0.02f;
-	public static final float VOID_Y_COORDINATE = -100f;
+	public static final float AIR_RESISTANCE = -0.02f;
+	public static final float VOID_Y_COORDINATE = 0f;
 	private final Disposables disposables = new Disposables();
 	private final Terrain terrain;
 	private final CollisionContext collisionContext;
@@ -41,6 +41,10 @@ public class World implements Disposable {
 			player.damage(strength * 20f);
 		});
 		onExplosion.callListeners(position, radius);
+	}
+
+	public void generateLineExplosion() {
+
 	}
 
 	public void generateExclusiveExplosion(Vector3D position, float radius, Player playerExcluded) {
@@ -78,7 +82,7 @@ public class World implements Disposable {
 	}
 
 	public Vector3D getEnvironmentalForce(Entity entity) {
-		return GRAVITY_VECTOR.add(entity.velocity().multiply(AIR_FRICTION));
+		return GRAVITY_VECTOR.add(entity.velocity().multiply(AIR_RESISTANCE));
 	}
 
 	public Terrain terrain() {

@@ -9,14 +9,7 @@ import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.Player;
 import lemon.engine.game.Team;
 import lemon.engine.glfw.GLFWInput;
-import lemon.engine.math.Box2D;
-import lemon.engine.math.Camera;
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.Matrix;
-import lemon.engine.math.MutableVector3D;
-import lemon.engine.math.Projection;
-import lemon.engine.math.Vector2D;
-import lemon.engine.math.Vector3D;
+import lemon.engine.math.*;
 import lemon.engine.model.LineGraph;
 import lemon.engine.model.Model;
 import lemon.engine.model.SphereModelBuilder;
@@ -87,9 +80,8 @@ public class Game implements Screen {
 	private GLFWGameControls<EvolutionControls> controls;
 	private GameLoop gameLoop;
 
-	private Camera freecam;
-	private float lastMouseX;
-	private float lastMouseY;
+	private AggregateCamera camera;
+	private FreeCamera freecam;
 
 	private FrameBuffer frameBuffer;
 
@@ -183,7 +175,7 @@ public class Game implements Screen {
 			entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.RAIN_DROPLET), sphereRenderer);
 			entityRenderer.registerIndividual(TeleportBallEntity.class, sphereRenderer);
 
-			var csvLoader = new CsvWorldLoader("/res/SkullIsland.csv", world.terrain(), postLoadTasks::add,
+			var csvLoader = new CsvWorldLoader("/res/pond.csv", world.terrain(), postLoadTasks::add,
 					csvWorldLoader -> {
 						var mapping = csvWorldLoader.blockMapping();
 						var materials = new MCMaterial[mapping.size()];
@@ -229,7 +221,9 @@ public class Game implements Screen {
 				window.popAndPushScreen(Menu.INSTANCE);
 			}));
 
-			resources = new GameResources(window, worldRenderer, gameLoop, controls);
+			camera = new AggregateCamera(gameLoop.currentPlayer().camera());
+			freecam = new FreeCamera(camera, controls);
+			resources = new GameResources(window, worldRenderer, gameLoop, controls, camera);
 
 			window.pushScreen(new Loading(window::popScreen, resources.loaders(postLoadTasks::add),
 					new Loader() {
@@ -301,9 +295,26 @@ public class Game implements Screen {
 
 			debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
 
+			disposables.add(gameLoop.observableCurrentPlayer().onChange(player -> {
+				camera.interpolateTo(player.camera());
+			}));
+			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(true, () -> {
+				if (camera.camera() == freecam) {
+					camera.interpolateTo(gameLoop.currentPlayer().camera());
+				} else {
+					freecam.setPositionAndRotation(gameLoop.currentPlayer().camera());
+					camera.set(freecam);
+				}
+			}));
+			disposables.add(camera.observableCamera().onChangeAndRun(camera -> {
+				var inControl = camera == gameLoop.currentPlayer().camera();
+				viewModel.setVisible(inControl);
+				gameLoop.getGatedControls().setEnabled(inControl);
+			}));
+
 			Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 			CommonProgramsSetup.setup2D(orthoProjectionMatrix);
-			CommonProgramsSetup.setup3D(gameLoop.currentPlayer().camera().getProjectionMatrix());
+			CommonProgramsSetup.setup3D(camera.projectionMatrix());
 
 			updateMatrices();
 
@@ -378,16 +389,6 @@ public class Game implements Screen {
 				}
 			}));
 
-			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(true, () -> {
-				gameLoop.getGatedControls().setEnabled(false);
-				freecam = new Camera(gameLoop.currentPlayer().camera());
-				viewModel.setVisible(false);
-			}));
-			disposables.add(controls.activated(EvolutionControls.FREECAM).onChangeTo(false, () -> {
-				gameLoop.getGatedControls().setEnabled(true);
-				viewModel.setVisible(true);
-			}));
-
 			uiScreen = disposables.add(new UIScreen(window.input()));
 			disposables.add(controls.activated(EvolutionControls.SHOW_UI).onChangeAndRun(activated -> uiScreen.visible().setValue(activated)));
 
@@ -440,7 +441,7 @@ public class Game implements Screen {
 				}
 			}));
 
-			uiScreen.addCenteredText("Hello World!", Vector2D.of(windowWidth / 2f, 100), 1f, Color.RED);
+			uiScreen.addCenteredText("Hello World!", Vector2D.of(windowWidth / 2f, 100), 1f, Color.RED).visible().setValue(false);
 
 			controls.onActivated(EvolutionControls.SCREENSHOT, () -> {
 				try {
@@ -471,46 +472,7 @@ public class Game implements Screen {
 		world.update(dt);
 
 		gameLoop.update();
-		if (controls.isActivated(EvolutionControls.FREECAM)) {
-			float MOUSE_SENSITIVITY = .001f;
-			controls.addCallback(GLFWInput::cursorPositionEvent, event -> {
-				if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
-					float deltaY = (float) (-(event.x() - lastMouseX) * MOUSE_SENSITIVITY);
-					float deltaX = (float) (-(event.y() - lastMouseY) * MOUSE_SENSITIVITY);
-					freecam.mutableRotation().asXYVector().add(deltaX, deltaY)
-							.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
-				}
-				lastMouseX = (float) event.x();
-				lastMouseY = (float) event.y();
-			});
-
-			float speed = .5f;
-			float angle = (freecam.rotation().y() + MathUtil.PI / 2f);
-			float sin = (float) Math.sin(angle);
-			float cos = (float) Math.cos(angle);
-			var playerHorizontalVector = Vector2D.of(speed * sin, speed * cos);
-			var mutableForce = MutableVector3D.ofZero();
-			if (controls.isActivated(EvolutionControls.STRAFE_LEFT)) {
-				mutableForce.asXZVector().subtract(playerHorizontalVector);
-			}
-			if (controls.isActivated(EvolutionControls.STRAFE_RIGHT)) {
-				mutableForce.asXZVector().add(playerHorizontalVector);
-			}
-			var playerForwardVector = Vector2D.of(speed * cos, -speed * sin);
-			if (controls.isActivated(EvolutionControls.MOVE_FORWARDS)) {
-				mutableForce.asXZVector().add(playerForwardVector);
-			}
-			if (controls.isActivated(EvolutionControls.MOVE_BACKWARDS)) {
-				mutableForce.asXZVector().subtract(playerForwardVector);
-			}
-			if (controls.isActivated(EvolutionControls.FLY)) {
-				mutableForce.addY(speed);
-			}
-			if (controls.isActivated(EvolutionControls.FALL)) {
-				mutableForce.subtractY(speed);
-			}
-			freecam.mutablePosition().add(mutableForce.asImmutable());
-		}
+		freecam.update();
 
 		benchmarker.getLineGraph("debug").add(totalLength);
 		float current = Runtime.getRuntime().freeMemory();
@@ -540,16 +502,15 @@ public class Game implements Screen {
 	}
 
 	public void updateMatrices() {
-		Camera camera;
-		if (controls.isActivated(EvolutionControls.FREECAM)) {
-			camera = freecam;
-		} else {
-			camera = gameLoop.currentPlayer().camera();
-		}
-		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, camera.getTransformationMatrix());
-		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.getProjectionMatrix());
+		var position = camera.position();
+		var rotation = camera.rotation();
+		var translationMatrix = MathUtil.getTranslation(position.invert());
+		var rotationMatrix = MathUtil.getRotation(rotation.invert());
+		var transformationMatrix = rotationMatrix.multiply(translationMatrix);
+		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, transformationMatrix);
+		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.projectionMatrix());
 		CommonPrograms3D.CUBEMAP.use(program -> {
-			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, camera.getInvertedRotationMatrix());
+			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, rotationMatrix);
 		});
 	}
 

@@ -39,18 +39,20 @@ public class UIText extends AbstractUIComponent {
 
     @Override
     public void render() {
-        if (!backgroundColor.isClear()) {
-            CommonRenderables.renderQuad2D(new Box2D(position.x(), position.y(), model.width(), model.height()), backgroundColor);
-        }
-        CommonPrograms2D.TEXT.use(program -> {
-            try (var translationMatrix = MatrixPool.ofTranslation(position.x(), position.y(), 0f);
-                 var scalarMatrix = MatrixPool.ofScalar(scale, scale, 1f);
-                 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
-                program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
+        if (isVisible()) {
+            if (!backgroundColor.isClear()) {
+                CommonRenderables.renderQuad2D(new Box2D(position.x(), position.y(), model.width(), model.height()), backgroundColor);
             }
-            program.loadColor3f(textColor);
-            model.draw();
-        });
+            CommonPrograms2D.TEXT.use(program -> {
+                try (var translationMatrix = MatrixPool.ofTranslation(position.x(), position.y(), 0f);
+                     var scalarMatrix = MatrixPool.ofScalar(scale, scale, 1f);
+                     var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+                    program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
+                }
+                program.loadColor3f(textColor);
+                model.draw();
+            });
+        }
     }
 
     public static UIText ofCentered(UIComponent parent, String text, Vector2D position, float scale, Color textColor) {
