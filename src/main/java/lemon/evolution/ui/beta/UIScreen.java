@@ -64,12 +64,12 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(new UIText(this, text, position, scale, color));
 	}
 
-	public UIText addCenteredText(String text, Vector2D position, float scale, Color color) {
-		return addComponent(UIText.ofCentered(this, text, position, scale, color));
-	}
-
 	public UIText addCenteredText(Font font, String text, Vector2D position, float scale, Color color) {
 		return addComponent(UIText.ofCentered(this, font, text, position, scale, color));
+	}
+
+	public UIPlayerInfo addPlayerInfo(Box2D box, Supplier<Float> healthGetter) {
+		return addComponent(new UIPlayerInfo(this, box, healthGetter));
 	}
 
 	@Override

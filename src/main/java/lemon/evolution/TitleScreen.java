@@ -87,8 +87,9 @@ public enum TitleScreen implements Screen {
         Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
         CommonProgramsSetup.setup2D(orthoProjectionMatrix);
         screen = new UIScreen(window.input());
-        screen.addCenteredText(Font.ofCopyWithAdditionalKerning(CommonFonts.freeSans(), -12),
+        screen.addCenteredText(CommonFonts.freeSansTightened(),
                 "EVOLUTION", Vector2D.of(windowWidth / 2f, windowHeight * 0.75f), 0.7f, new Color(0.9f));
+        screen.addPlayerInfo(new Box2D(100, 100, 180, 35), () -> 0.5f);
     }
 
     @Override

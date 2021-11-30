@@ -441,8 +441,6 @@ public class Game implements Screen {
 				}
 			}));
 
-			uiScreen.addCenteredText("Hello World!", Vector2D.of(windowWidth / 2f, 100), 1f, Color.RED).visible().setValue(false);
-
 			controls.onActivated(EvolutionControls.SCREENSHOT, () -> {
 				try {
 					var buffer = BufferUtils.createIntBuffer(windowWidth * windowHeight);
