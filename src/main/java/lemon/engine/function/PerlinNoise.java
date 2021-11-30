@@ -2,6 +2,7 @@ package lemon.engine.function;
 
 import lemon.engine.math.Vector;
 
+import java.util.Arrays;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;

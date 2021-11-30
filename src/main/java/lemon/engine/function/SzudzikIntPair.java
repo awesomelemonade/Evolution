@@ -1,17 +1,13 @@
 package lemon.engine.function;
 
 public class SzudzikIntPair {
-	public static int pair(int x, int y) {
+	public static long pair(int x, int y) {
 		if (x < 0 || y < 0) {
 			throw new IllegalArgumentException(String.format("Out of Range: (%d, %d)", x, y));
 		}
 		long longX = x;
 		long longY = y;
-		long z = (x >= y ? longX * longX + longX + longY : longX + longY * longY);
-		if (z < Integer.MIN_VALUE || z > Integer.MAX_VALUE) {
-			throw new IllegalArgumentException(String.format("Out of Range: (%d, %d) -> %d", x, y, z));
-		}
-		return (int) z;
+		return x >= y ? longX * longX + longX + longY : longX + longY * longY;
 	}
 
 	public static long pair(int x, int y, int z) {
@@ -33,5 +29,9 @@ public class SzudzikIntPair {
 			hash += longY;
 		}
 		return hash;
+	}
+
+	public static long pair(int x, int y, int z, int w) {
+		return pair(Math.toIntExact(pair(x, y)), Math.toIntExact(pair(z, w)));
 	}
 }
