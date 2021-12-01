@@ -9,5 +9,5 @@ uniform sampler2D textureSampler;
 
 void main(void) {
 	float distance = 1.0 - texture(textureSampler, passTextureCoords).a;
-	outColor = vec4(color, 1 - smoothstep(0.5, 0.6, distance));
+	outColor = vec4(color, 1 - smoothstep(0.525, 0.625, distance));
 }
