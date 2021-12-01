@@ -5,7 +5,7 @@ public enum EvolutionMaps implements MapInfo {
 	CASTLE("Castle", "castle.csv", EvolutionSkyboxes.AME_SIEGE, 25f, 50f),
 	CLOUDSKY("Cloud Sky", "cloudsky.csv", EvolutionSkyboxes.AME_NEBULA, 25f, 50f),
 	HAGIA_SOPHIA("Hagia Sophia", "hagiasophia.csv", EvolutionSkyboxes.MP_DRUIDCOVE, 25f, 50f),
-	POND("Pond", "pond.csv", EvolutionSkyboxes.MP_ORGANIC, 12.5f, 15f);
+	POND("Pond", "pond.csv", EvolutionSkyboxes.MP_ORGANIC, 10.5f, 15f);
 
 	private final String mapName;
 	private final String csvPath;

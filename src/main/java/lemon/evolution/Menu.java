@@ -177,6 +177,7 @@ public enum Menu implements Screen {
 				"Move - WASD",
 				"Jump/Fall - Space/Shift",
 				"Use Item - Mouse1",
+				"Rotate Camera - Mouse2",
 				"Start Game - Enter",
 				"End Turn - Backspace",
 				"Inventory - E",
