@@ -10,6 +10,7 @@ import lemon.engine.toolbox.Color;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
+import org.lwjgl.opengl.GL11;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 public class Loading implements Screen {
 	private static final Logger logger = Logger.getLogger(Loading.class.getName());
+	private PerlinBackground background;
 	private final Deque<Loader> loaders;
 	private final Runnable callback;
 	private Instant startTime;
@@ -46,10 +48,10 @@ public class Loading implements Screen {
 
 	@Override
 	public void onLoad(GLFWWindow window) {
+		this.background = new PerlinBackground(new Box2D(-1, -1, 2, 2));
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
 		this.loadingBar = new LoadingBar(new Box2D(-1f, -1.1f, 2f, 0.3f),
-				new Color(1f, 0f, 0f), new Color(1f, 0f, 0f),
-				new Color(0f, 0f, 0f), new Color(0f, 0f, 0f));
+				Color.RED, Color.RED, Color.CLEAR, Color.CLEAR);
 		this.loaders.peek().load();
 		startTime = Instant.now();
 	}
@@ -76,8 +78,12 @@ public class Loading implements Screen {
 
 	@Override
 	public void render() {
+		background.render();
 		CommonPrograms2D.COLOR.use(program -> {
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 			loadingBar.draw();
+			GL11.glDisable(GL11.GL_BLEND);
 		});
 	}
 
