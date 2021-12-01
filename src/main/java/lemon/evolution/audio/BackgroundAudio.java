@@ -43,7 +43,7 @@ public class BackgroundAudio {
         }
     }
     public enum Track {
-        MENU("music.wav"), COMBAT("music.wav");
+        MENU("music2.wav"), COMBAT("music.wav");
 
         private final String filename;
 
