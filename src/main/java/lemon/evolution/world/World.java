@@ -5,6 +5,7 @@ import lemon.engine.game.Player;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
+import lemon.evolution.MapInfo;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.futility.FBufferedSetWithEvents;
@@ -23,10 +24,12 @@ public class World implements Disposable {
 	private final FBufferedSetWithEvents<Entity> entities = new FBufferedSetWithEvents<>();
 	private final FilterableFSetWithEvents<Entity> filterableEntities = new FilterableFSetWithEvents<>(entities);
 	private final EventWith2<Vector3D, Float> onExplosion = new EventWith2<>();
+	private final MapInfo mapInfo;
 
-	public World(Terrain terrain, CollisionContext collisionContext) {
+	public World(Terrain terrain, CollisionContext collisionContext, MapInfo mapInfo) {
 		this.terrain = terrain;
 		this.collisionContext = collisionContext;
+		this.mapInfo = mapInfo;
 	}
 
 	public void generateExplosion(Vector3D position, float radius) {
@@ -77,7 +80,8 @@ public class World implements Disposable {
 			);
 			entity.mutableForce().set(entity.getEnvironmentalForce());
 		});
-		entities.removeIf(entity -> entity.position().y() < VOID_Y_COORDINATE);
+		entities.removeIf(entity -> entity.position().y() < VOID_Y_COORDINATE ||
+				entity.position().toXZVector().lengthSquared() > mapInfo.worldRadius() * mapInfo.worldRadius());
 		entities.flush();
 	}
 

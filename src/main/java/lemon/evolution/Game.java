@@ -157,7 +157,7 @@ public class Game implements Screen {
 					}
 				}
 			};
-			world = disposables.add(new World(terrain, collisionContext));
+			world = disposables.add(new World(terrain, collisionContext, map));
 			worldRenderer = disposables.add(new WorldRenderer(world));
 
 			var entityRenderer = worldRenderer.entityRenderer();
@@ -235,6 +235,7 @@ public class Game implements Screen {
 			world.entities().flush();
 			gameLoop = disposables.add(new GameLoop(map, world, players, controls));
 			disposables.add(gameLoop.onWinner(player -> {
+				logger.info(player.team() + " won");
 				window.popAndPushScreen(Menu.INSTANCE);
 			}));
 

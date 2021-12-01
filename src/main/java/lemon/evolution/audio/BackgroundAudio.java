@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BackgroundAudio {
-    private static final Map<Track, AudioInputStream> audioStreams = new HashMap<>();
     private static boolean initialized = false;
     private static boolean playing = false;
     private static Clip clip;
@@ -16,11 +15,7 @@ public class BackgroundAudio {
         }
         try {
             clip = AudioSystem.getClip();
-            for (var track : Track.values()) {
-                var url = BackgroundAudio.class.getResource("/res/" + track.filename());
-                audioStreams.put(track, AudioSystem.getAudioInputStream(url));
-            }
-        } catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
+        } catch (LineUnavailableException e) {
             e.printStackTrace();
             throw new IllegalStateException(e);
         }
@@ -30,10 +25,12 @@ public class BackgroundAudio {
     public static void play(Track track) {
         stop();
         try {
-            clip.open(audioStreams.get(track));
+            var url = BackgroundAudio.class.getResource("/res/" + track.filename());
+            var audioStream = AudioSystem.getAudioInputStream(url);
+            clip.open(audioStream);
             clip.loop(Clip.LOOP_CONTINUOUSLY);
             playing = true;
-        } catch (LineUnavailableException | IOException e) {
+        } catch (LineUnavailableException | IOException | UnsupportedAudioFileException e) {
             e.printStackTrace();
         }
     }

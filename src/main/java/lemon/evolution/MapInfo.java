@@ -6,4 +6,5 @@ public interface MapInfo {
 	public SkyboxInfo skyboxInfo();
 	public float playerSpawnRadius();
 	public float itemDropSpawnRadius();
+	public float worldRadius();
 }
