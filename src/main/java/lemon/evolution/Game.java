@@ -106,14 +106,14 @@ public class Game implements Screen {
 
 	private final Disposables disposables = new Disposables();
 
-	private ScalarField<Vector3D> scalarfield;
 	private int resolutionWidth;
 	private int resolutionHeight;
+	private MapInfo map;
 
-	public Game(ScalarField<Vector3D> scalarfield, int resolutionWidth, int resolutionHeight) {
-		this.scalarfield = scalarfield;
+	public Game(int resolutionWidth, int resolutionHeight, MapInfo map) {
 		this.resolutionWidth = resolutionWidth;
 		this.resolutionHeight = resolutionHeight;
+		this.map = map;
 	}
 
 	@Override
@@ -208,7 +208,7 @@ public class Game implements Screen {
 			var playersBuilder = new ImmutableList.Builder<Player>();
 			int numPlayers = 6;
 			for (int i = 0; i < numPlayers; i++) {
-				var distance = 25f;
+				var distance = map.playerSpawnRadius();
 				var angle = MathUtil.TAU * ((float) i) / numPlayers;
 				var cos = (float) Math.cos(angle);
 				var sin = (float) Math.sin(angle);
@@ -219,7 +219,7 @@ public class Game implements Screen {
 			var players = playersBuilder.build();
 			world.entities().addAll(players);
 			world.entities().flush();
-			gameLoop = disposables.add(new GameLoop(world, players, controls));
+			gameLoop = disposables.add(new GameLoop(map, world, players, controls));
 			disposables.add(gameLoop.onWinner(player -> {
 				window.popAndPushScreen(Menu.INSTANCE);
 			}));
@@ -345,7 +345,7 @@ public class Game implements Screen {
 			});
 			TextureBank.SKYBOX.bind(() -> {
 				Texture skyboxTexture = new Texture();
-				skyboxTexture.load(new SkyboxLoader("/res/mp_organic").load());
+				skyboxTexture.load(new SkyboxLoader("/res/" + map.skyboxInfo().directoryPath()).load());
 				GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.id());
 			});
 			Map.of(

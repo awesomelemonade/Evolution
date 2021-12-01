@@ -15,6 +15,7 @@ public record Color(float red, float green, float blue, float alpha) implements 
 	public static final Color GRAY = new Color(0.5f, 0.5f, 0.5f);
 	public static final Color ORANGE = new Color(1f, 0.5f, 0f);
 	public static final Color PURPLE = new Color(0.5f, 0f, 1f);
+	public static final Color BROWN = Color.fromHex("#4E3524");
 	public static final Color CLEAR = new Color(0f, 0f, 0f, 0f);
 
 	public Color() {
