@@ -58,6 +58,10 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		return health;
 	}
 
+	public float healthAsPercentage() {
+		return health.getValue() / Player.START_HEALTH;
+	}
+
 	public Observable<Boolean> alive() {
 		return alive;
 	}

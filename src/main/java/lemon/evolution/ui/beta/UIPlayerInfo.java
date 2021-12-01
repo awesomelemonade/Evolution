@@ -15,17 +15,17 @@ public class UIPlayerInfo extends AbstractUIComponent {
 	private static final Color BACKGROUND_TEXT_COLOR2 = Color.fromHex("#262626");
 	private static final Color BACKGROUND_HEALTH_COLOR = Color.fromHex("#5f6163");
 	private static final Color TEXT_COLOR = Color.WHITE;
-	private static final Color HEALTH_BAR_COLOR = Color.RED;
 	private static final float PADDING = 2;
+	private static Color healthBarColor;
 	private final Box2D box;
 	private final Box2D outerTextBox;
 	private final Box2D innerTextBox;
 	private final ColoredBox[] healthBarHighlights;
 
 
-	public UIPlayerInfo(UIComponent parent, Box2D box, Supplier<Float> healthGetter) {
+	public UIPlayerInfo(UIComponent parent, Box2D box, String name, Color healthBarColor, Supplier<Float> healthGetter) {
 		super(parent);
-		String name = "Waffles             Lvl. 19";
+		String level = "Lvl. 19";
 		this.box = box;
 		var progressHeight = (box.height() - 3f * PADDING) * 2f / 5f;
 		var textBoxHeight = (box.height() - 3f * PADDING) * 3f / 5f;
@@ -41,9 +41,13 @@ public class UIPlayerInfo extends AbstractUIComponent {
 		};
 		this.outerTextBox = new Box2D(box.x() + PADDING, box.y() + 2 * PADDING + progressHeight, box.width() - 2 * PADDING, textBoxHeight);
 		this.innerTextBox = Box2D.ofInner(outerTextBox, PADDING);
-		this.children().add(UIText.ofHeight(this, CommonFonts.freeSansTightened(), name, Vector2D.of(innerTextBox.x(), innerTextBox.y() + PADDING), innerTextBox.height() - 2 * PADDING, TEXT_COLOR));
+		var textHeight = innerTextBox.height() - 2 * PADDING;
+		this.children().add(UIText.ofHeight(this, CommonFonts.freeSansTightened(), name,
+				Vector2D.of(innerTextBox.x(), innerTextBox.y() + PADDING), textHeight, TEXT_COLOR));
+		this.children().add(UIText.ofHeightRightAligned(this, CommonFonts.freeSansTightened(), level,
+				Vector2D.of(innerTextBox.x() + innerTextBox.width(), innerTextBox.y() + PADDING), textHeight, TEXT_COLOR));
 		var progressBar = new UIProgressBar(this, progressBox, healthGetter, UIProgressBar.ProgressDirection.RIGHT);
-		progressBar.setColor(HEALTH_BAR_COLOR);
+		progressBar.setColor(healthBarColor);
 		progressBar.setBackgroundColor(BACKGROUND_HEALTH_COLOR);
 		this.children().add(progressBar);
 	}

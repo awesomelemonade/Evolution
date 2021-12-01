@@ -89,7 +89,7 @@ public enum TitleScreen implements Screen {
         screen = new UIScreen(window.input());
         screen.addCenteredText(CommonFonts.freeSansTightened(),
                 "EVOLUTION", Vector2D.of(windowWidth / 2f, windowHeight * 0.75f), 0.7f, new Color(0.9f));
-        screen.addPlayerInfo(new Box2D(100, 100, 180, 35), () -> 0.5f);
+        screen.addPlayerInfo(new Box2D(100, 100, 180, 35), "Waffles", Color.RED, () -> 0.5f);
     }
 
     @Override

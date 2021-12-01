@@ -416,10 +416,10 @@ public class Game implements Screen {
 				minimap.visible().setValue(visible);
 			}));
 
+			var playerInfoHeight = 35f;
 			for (int i = 0; i < gameLoop.players().size(); i++) {
 				var player = gameLoop.players().get(i);
-				uiScreen.addProgressBar(new Box2D(50f, windowHeight - 280f - i * 30f, 100f, 15f),
-						() -> player.health().getValue() / Player.START_HEALTH).setColor(player.team().color());
+				uiScreen.addPlayerInfo(new Box2D(50f, windowHeight - 250f - (i + 1) * (playerInfoHeight + 5f), 180f, playerInfoHeight), player);
 			}
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());

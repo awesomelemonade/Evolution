@@ -68,8 +68,12 @@ public class UIScreen extends AbstractUIComponent {
 		return addComponent(UIText.ofCentered(this, font, text, position, scale, color));
 	}
 
-	public UIPlayerInfo addPlayerInfo(Box2D box, Supplier<Float> healthGetter) {
-		return addComponent(new UIPlayerInfo(this, box, healthGetter));
+	public UIPlayerInfo addPlayerInfo(Box2D box, Player player) {
+		return addPlayerInfo(box, player.name(), player.team().color(), player::healthAsPercentage);
+	}
+
+	public UIPlayerInfo addPlayerInfo(Box2D box, String name, Color color, Supplier<Float> healthGetter) {
+		return addComponent(new UIPlayerInfo(this, box, name, color, healthGetter));
 	}
 
 	@Override

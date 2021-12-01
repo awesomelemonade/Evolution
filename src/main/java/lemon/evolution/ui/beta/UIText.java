@@ -59,6 +59,12 @@ public class UIText extends AbstractUIComponent {
         return new UIText(parent, text, position, height / font.getBase(), new TextModel(font, text), textColor, Color.CLEAR);
     }
 
+    public static UIText ofHeightRightAligned(UIComponent parent, Font font, String text, Vector2D position, float height, Color textColor) {
+        var model = new TextModel(font, text);
+        var scale = height / font.getBase();
+        return new UIText(parent, text, position.subtract(Vector2D.of(model.width() * scale, 0f)), scale, model, textColor, Color.CLEAR);
+    }
+
     public static UIText ofCentered(UIComponent parent, Font font, String text, Vector2D position, float scale, Color textColor) {
         return ofCentered(parent, font, text, position, scale, textColor, Color.CLEAR);
     }
