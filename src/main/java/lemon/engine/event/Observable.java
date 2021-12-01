@@ -65,4 +65,10 @@ public class Observable<T> {
 		disposer.accept(b.onChange(condition -> ret.setValue(condition && a.getValue())));
 		return ret;
 	}
+
+	public static Observable<Boolean> ofNot(Observable<Boolean> observable, Consumer<Disposable> disposer) {
+		var ret = new Observable<>(!observable.getValue());
+		disposer.accept(observable.onChange(condition -> ret.setValue(!condition)));
+		return ret;
+	}
 }

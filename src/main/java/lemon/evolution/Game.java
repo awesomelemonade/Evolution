@@ -6,6 +6,7 @@ import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.draw.TextModel;
+import lemon.engine.event.Observable;
 import lemon.engine.font.CommonFonts;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.Player;
@@ -156,7 +157,7 @@ public class Game implements Screen {
 					}
 				}
 			};
-			world = disposables.add(new World(terrain, collisionContext));
+			world = disposables.add(new World(terrain, collisionContext, map));
 			worldRenderer = disposables.add(new WorldRenderer(world));
 
 			var entityRenderer = worldRenderer.entityRenderer();
@@ -234,6 +235,7 @@ public class Game implements Screen {
 			world.entities().flush();
 			gameLoop = disposables.add(new GameLoop(map, world, players, controls));
 			disposables.add(gameLoop.onWinner(player -> {
+				logger.info(player.team() + " won");
 				window.popAndPushScreen(Menu.INSTANCE);
 			}));
 
@@ -322,11 +324,13 @@ public class Game implements Screen {
 					camera.set(freecam);
 				}
 			}));
+			var observableNotInControl = new Observable<>(false);
 			disposables.add(camera.observableCamera().onChangeAndRun(camera -> {
 				var inControl = camera == gameLoop.currentPlayer().camera();
+				observableNotInControl.setValue(!inControl);
 				viewModel.setVisible(inControl);
-				gameLoop.getGatedControls().setEnabled(inControl);
 			}));
+			disposables.add(gameLoop.getGatedControls().gate().addInput(observableNotInControl));
 
 			Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 			CommonProgramsSetup.setup2D(orthoProjectionMatrix);
@@ -461,14 +465,15 @@ public class Game implements Screen {
 			// sets up inventory toggle
 			disposables.add(controls.onActivated(EvolutionControls.TOGGLE_INVENTORY, () -> {
 				uiInventory.visible().setValue(!uiInventory.visible().getValue());
-				if (uiInventory.isVisible()) {
+			}));
+			disposables.add(uiInventory.visible().onChangeAndRun(visible -> {
+				if (visible) {
 					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
-					gameLoop.getGatedControls().setEnabled(false);
 				} else {
 					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
-					gameLoop.getGatedControls().setEnabled(true);
 				}
 			}));
+			disposables.add(gameLoop.getGatedControls().gate().addInput(uiInventory.visible()));
 
 			controls.onActivated(EvolutionControls.SCREENSHOT, () -> {
 				try {

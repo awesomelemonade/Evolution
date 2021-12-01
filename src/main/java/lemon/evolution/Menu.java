@@ -51,7 +51,7 @@ public enum Menu implements Screen {
 		orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 
 		screen = disposables.add(new UIScreen(window.input()));
-		screen.addCenteredText(CommonFonts.freeSansTightened(), "Evolution", Vector2D.of(windowWidth / 2f, windowHeight * 3f / 4f), 0.75f, Color.WHITE);
+		screen.addCenteredText(CommonFonts.freeSansTightened(), "EVOLUTION", Vector2D.of(windowWidth / 2f, windowHeight * 3f / 4f), 0.75f, Color.WHITE);
 
 		menuButtons = new ArrayList<>();
 		menuButtons.add(new MenuButton("Instructions", this::showInstructions));
