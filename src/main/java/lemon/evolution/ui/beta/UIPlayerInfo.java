@@ -16,16 +16,15 @@ public class UIPlayerInfo extends AbstractUIComponent {
 	private static final Color BACKGROUND_HEALTH_COLOR = Color.fromHex("#5f6163");
 	private static final Color TEXT_COLOR = Color.WHITE;
 	private static final float PADDING = 2;
-	private static Color healthBarColor;
+	private final UIProgressBar progressBar;
 	private final Box2D box;
 	private final Box2D outerTextBox;
 	private final Box2D innerTextBox;
 	private final ColoredBox[] healthBarHighlights;
 
 
-	public UIPlayerInfo(UIComponent parent, Box2D box, String name, Color healthBarColor, Supplier<Float> healthGetter) {
+	public UIPlayerInfo(UIComponent parent, Box2D box, String name, String info, Color healthBarColor, Supplier<Float> healthGetter) {
 		super(parent);
-		String level = "Lvl. 19";
 		this.box = box;
 		var progressHeight = (box.height() - 3f * PADDING) * 2f / 5f;
 		var textBoxHeight = (box.height() - 3f * PADDING) * 3f / 5f;
@@ -44,9 +43,9 @@ public class UIPlayerInfo extends AbstractUIComponent {
 		var textHeight = innerTextBox.height() - 2 * PADDING;
 		this.children().add(UIText.ofHeight(this, CommonFonts.freeSansTightened(), name,
 				Vector2D.of(innerTextBox.x(), innerTextBox.y() + PADDING), textHeight, TEXT_COLOR));
-		this.children().add(UIText.ofHeightRightAligned(this, CommonFonts.freeSansTightened(), level,
+		this.children().add(UIText.ofHeightRightAligned(this, CommonFonts.freeSansTightened(), info,
 				Vector2D.of(innerTextBox.x() + innerTextBox.width(), innerTextBox.y() + PADDING), textHeight, TEXT_COLOR));
-		var progressBar = new UIProgressBar(this, progressBox, healthGetter, UIProgressBar.ProgressDirection.RIGHT);
+		progressBar = new UIProgressBar(this, progressBox, healthGetter, UIProgressBar.ProgressDirection.RIGHT);
 		progressBar.setColor(healthBarColor);
 		progressBar.setBackgroundColor(BACKGROUND_HEALTH_COLOR);
 		this.children().add(progressBar);
@@ -73,6 +72,10 @@ public class UIPlayerInfo extends AbstractUIComponent {
 				CommonRenderables.renderTransparentQuad2D(box.box(), box.color());
 			}
 		}
+	}
+
+	public UIProgressBar progressBar() {
+		return progressBar;
 	}
 
 	private static record ColoredBox(Box2D box, Color color) {}

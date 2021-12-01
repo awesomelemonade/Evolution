@@ -71,6 +71,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 public class Game implements Screen {
@@ -411,25 +412,6 @@ public class Game implements Screen {
 			uiScreen = disposables.add(new UIScreen(window.input()));
 			disposables.add(controls.activated(EvolutionControls.SHOW_UI).onChangeAndRun(activated -> uiScreen.visible().setValue(activated)));
 
-			var progressBar = uiScreen.addProgressBar(new Box2D(10f, 10f, windowWidth - 20f, 25f), () -> {
-				if (gameLoop.startTime != null && gameLoop.endTime != null) {
-					float progressedTime = Duration.between(gameLoop.startTime, Instant.now()).toMillis();
-					float totalTime = Duration.between(gameLoop.startTime, gameLoop.endTime).toMillis();
-					return progressedTime / totalTime;
-				} else {
-					return 0f;
-				}
-			});
-			disposables.add(gameLoop.started().onChangeAndRun(started -> progressBar.visible().setValue(started)));
-
-			var powerMeterProgressBar = uiScreen.addProgressBar(new Box2D(windowWidth - 30f, 45f, 20f, 150f),
-					() -> gameLoop.controller().powerMeter(), UIProgressBar.ProgressDirection.UP);
-			disposables.add(gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
-				var color = player.team().color();
-				progressBar.setColor(color);
-				powerMeterProgressBar.setColor(color);
-			}));
-
 			var minimap = uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f), world, () -> gameLoop.currentPlayer());
 			disposables.add(controls.activated(EvolutionControls.MINIMAP).onChangeAndRun(visible -> {
 				minimap.visible().setValue(visible);
@@ -440,6 +422,34 @@ public class Game implements Screen {
 				var player = gameLoop.players().get(i);
 				uiScreen.addPlayerInfo(new Box2D(50f, windowHeight - 250f - (i + 1) * (playerInfoHeight + 5f), 180f, playerInfoHeight), player);
 			}
+
+			Supplier<Float> progressGetter = () -> {
+				if (gameLoop.startTime != null && gameLoop.endTime != null) {
+					float progressedTime = Duration.between(gameLoop.startTime, Instant.now()).toMillis();
+					float totalTime = Duration.between(gameLoop.startTime, gameLoop.endTime).toMillis();
+					return progressedTime / totalTime;
+				} else {
+					return 0f;
+				}
+			};
+			var bottomInfoHeight = 35f;
+			var bottomInfoMargin = 10f;
+			var powerMeterWidth = 180f;
+			var progressBox = new Box2D(bottomInfoMargin, bottomInfoMargin, windowWidth - 3f * bottomInfoMargin - powerMeterWidth, bottomInfoHeight);
+			var progressInfo = uiScreen.addPlayerInfo(progressBox, "Turn Timer", " ", Color.RED, progressGetter);
+
+			var powerMeterBox = new Box2D(windowWidth - powerMeterWidth - bottomInfoMargin, bottomInfoMargin, powerMeterWidth, bottomInfoHeight);
+			var powerMeterInfo = uiScreen.addPlayerInfo(powerMeterBox, "Power Meter", " ", Color.RED, () -> gameLoop.controller().powerMeter());
+
+			disposables.add(gameLoop.started().onChangeAndRun(started -> {
+				progressInfo.visible().setValue(started);
+				powerMeterInfo.visible().setValue(started);
+			}));
+			disposables.add(gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
+				var color = player.team().color();
+				progressInfo.progressBar().setColor(color);
+				powerMeterInfo.progressBar().setColor(color);
+			}));
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());
 			uiInventory.visible().setValue(false);
@@ -553,6 +563,9 @@ public class Game implements Screen {
 
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			for (var player : gameLoop.players()) {
+				if (!player.alive().getValue()) {
+					continue;
+				}
 				var model = cachedTextModels.computeIfAbsent(player.name(), name -> new TextModel(CommonFonts.freeSansTightened(), name));
 				CommonPrograms3D.TEXT.use(program -> {
 					var scale = 0.3f / model.height();

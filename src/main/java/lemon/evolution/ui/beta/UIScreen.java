@@ -69,11 +69,12 @@ public class UIScreen extends AbstractUIComponent {
 	}
 
 	public UIPlayerInfo addPlayerInfo(Box2D box, Player player) {
-		return addPlayerInfo(box, player.name(), player.team().color(), player::healthAsPercentage);
+		var level = ((int) (Math.random() * 9)) + 1;
+		return addPlayerInfo(box, player.name(), "Lvl. " + level, player.team().color(), player::healthAsPercentage);
 	}
 
-	public UIPlayerInfo addPlayerInfo(Box2D box, String name, Color color, Supplier<Float> healthGetter) {
-		return addComponent(new UIPlayerInfo(this, box, name, color, healthGetter));
+	public UIPlayerInfo addPlayerInfo(Box2D box, String name, String info, Color color, Supplier<Float> healthGetter) {
+		return addComponent(new UIPlayerInfo(this, box, name, info, color, healthGetter));
 	}
 
 	@Override
