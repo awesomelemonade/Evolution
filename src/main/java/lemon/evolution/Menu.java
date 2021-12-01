@@ -7,6 +7,8 @@ import lemon.engine.game2d.Quad2D;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Matrix;
+import lemon.engine.math.Projection;
+import lemon.engine.math.Vector2D;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
@@ -14,6 +16,7 @@ import lemon.engine.toolbox.Disposables;
 import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
+import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -33,11 +36,23 @@ public enum Menu implements Screen {
 	private boolean mouseDown = false;
 	private final Matrix buttonSize = MathUtil.getScalar(Vector3D.of(.001f, .0013f, .001f));
 	private List<MenuButton> menuButtons;
+	private SkyboxBackground background;
+	private Matrix orthoProjectionMatrix;
+	private UIScreen screen;
 
 	@Override
 	public void onLoad(GLFWWindow window) {
 		System.gc(); // Manual Garbage Collection
 		this.window = window;
+		this.background = disposables.add(new SkyboxBackground(MathUtil.randomChoice(EvolutionSkyboxes.values())));
+
+		var windowWidth = window.getWidth();
+		var windowHeight = window.getHeight();
+		orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
+
+		screen = disposables.add(new UIScreen(window.input()));
+		screen.addCenteredText(CommonFonts.freeSansTightened(), "Evolution", Vector2D.of(windowWidth / 2f, windowHeight * 3f / 4f), 0.75f, Color.WHITE);
+
 		menuButtons = new ArrayList<>();
 		menuButtons.add(new MenuButton("Instructions", this::showInstructions));
 		var highResWidth = window.getWidth();
@@ -53,6 +68,9 @@ public enum Menu implements Screen {
 
 		var font = CommonFonts.freeSansTightened();
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
+		var projection = new Projection(MathUtil.toRadians(60f),
+				((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
+		CommonProgramsSetup.setup3D(MathUtil.getPerspective(projection));
 		buttons = new ArrayList<>();
 		buttonsText = new ArrayList<>();
 		for (int i = 0; i < menuButtons.size(); ++i) {
@@ -121,6 +139,7 @@ public enum Menu implements Screen {
 
 	@Override
 	public void render() {
+		background.render();
 		CommonPrograms2D.MENUBUTTON.use(program -> {
 			for (int i = 0; i < NUM_BUTTONS; ++i) {
 				program.loadFloat("yOffset", .2f * (drawnButtons + i) - .2f * i);
@@ -143,6 +162,9 @@ public enum Menu implements Screen {
 			}
 		});
 		GL11.glDisable(GL11.GL_BLEND);
+		CommonPrograms2D.setMatrices(MatrixType.PROJECTION_MATRIX, orthoProjectionMatrix);
+		screen.render();
+		CommonPrograms2D.setMatrices(MatrixType.PROJECTION_MATRIX, Matrix.IDENTITY_4);
 	}
 
 	public void start(Screen screen) {
