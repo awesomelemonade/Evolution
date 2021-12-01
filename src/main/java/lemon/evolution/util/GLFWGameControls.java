@@ -69,7 +69,7 @@ public class GLFWGameControls<T> implements GameControls<T, GLFWInput>, Disposab
 
 	private void bind(int key, T control, FSetWithEvents<Integer> set) {
 		var observable = activated(control);
-		observable.setValue(keyboardHolds.contains(key));
+		observable.setValue(set.contains(key));
 		disposables.add(set.onAdd(k -> {
 			if (k == key) {
 				observable.setValue(true);
@@ -111,8 +111,16 @@ public class GLFWGameControls<T> implements GameControls<T, GLFWInput>, Disposab
 			return (input, self) -> input.bindKeyboardHold(key, self);
 		}
 
-		public static BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> keyboardToggle(int key) {
-			return (input, self) -> input.bindKeyboardToggle(key, self);
+		public static BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> keyboardToggle(int key, boolean initialState) {
+			return (input, self) -> {
+				var observable = input.activated(self);
+				observable.setValue(initialState);
+				input.disposables.add(input.keyboardHolds.onAdd(k -> {
+					if (k == key) {
+						observable.setValue(!observable.getValue());
+					}
+				}));
+			};
 		}
 	}
 }
