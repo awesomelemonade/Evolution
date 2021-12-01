@@ -202,6 +202,9 @@ public class Game implements Screen {
 			this.controls = disposables.add(GLFWGameControls.getDefaultControls(window.input(), EvolutionControls.class));
 			var projection = new Projection(MathUtil.toRadians(60f),
 					((float) window.getWidth()) / ((float) window.getHeight()), 0.01f, 1000f);
+
+			var namesList = new NamesList("/res/names.txt");
+
 			var playersBuilder = new ImmutableList.Builder<Player>();
 			int numPlayers = 6;
 			for (int i = 0; i < numPlayers; i++) {
@@ -209,7 +212,7 @@ public class Game implements Screen {
 				var angle = MathUtil.TAU * ((float) i) / numPlayers;
 				var cos = (float) Math.cos(angle);
 				var sin = (float) Math.sin(angle);
-				var player = disposables.add(new Player("Player " + (i + 1), Team.values()[i % Team.values().length], new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
+				var player = disposables.add(new Player(namesList.random(), Team.values()[i % Team.values().length], new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
 				player.mutableRotation().setY(-angle + MathUtil.PI / 2);
 				playersBuilder.add(player);
 			}
