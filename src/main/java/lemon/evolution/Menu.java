@@ -11,6 +11,7 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
+import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
@@ -38,6 +39,7 @@ public enum Menu implements Screen {
 		System.gc(); // Manual Garbage Collection
 		this.window = window;
 		menuButtons = new ArrayList<>();
+		menuButtons.add(new MenuButton("Instructions", this::showInstructions));
 		var highResWidth = window.getWidth();
 		var highResHeight = window.getHeight();
 		var lowResWidth = window.getWidth() / 2;
@@ -47,6 +49,7 @@ public enum Menu implements Screen {
 			menuButtons.add(new MenuButton(map.mapName() + "*", () -> start(new Game(lowResWidth, lowResHeight, map))));
 		}
 		menuButtons.add(new MenuButton("Splash", () -> start(TitleScreen.INSTANCE)));
+		menuButtons.add(new MenuButton("Credits", this::showCredits));
 
 		var font = CommonFonts.freeSansTightened();
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
@@ -144,6 +147,29 @@ public enum Menu implements Screen {
 
 	public void start(Screen screen) {
 		window.popAndPushScreen(screen);
+	}
+
+	public void showInstructions() {
+		window.popAndPushScreen(new TextScreen(List.of(
+				"Instructions",
+				"Move - WASD",
+				"Jump/Fall - Space/Shift",
+				"Use Item - Mouse1",
+				"Start Game - Enter",
+				"End Turn - Backspace",
+				"Inventory - E",
+				"Free Camera - J",
+				"Toggle Minimap - M",
+				"Toggle UI - F1",
+				"Screenshot - F2",
+				"Debug - F3"
+		), this));
+	}
+
+	public void showCredits() {
+		var text = Toolbox.getFileInLines("/res/credits.txt")
+				.orElseGet(() -> List.of("Unable to load credits"));
+		window.popAndPushScreen(new TextScreen(text, this));
 	}
 
 	@Override

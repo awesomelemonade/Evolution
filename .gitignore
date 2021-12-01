@@ -10,3 +10,4 @@ src/META-INF/
 target/
 pom.xml
 evolution-screenshot.png
+src/main/resources/res/credits.txt
