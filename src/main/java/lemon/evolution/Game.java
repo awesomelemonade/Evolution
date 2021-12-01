@@ -29,6 +29,7 @@ import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.entity.*;
+import lemon.evolution.item.BasicItems;
 import lemon.evolution.particle.beta.ParticleSystem;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
@@ -385,8 +386,12 @@ public class Game implements Screen {
 							}
 						}
 					}
-					if (event.key() == GLFW.GLFW_KEY_R) {
-						world.entities().add(new StaticEntity(gameLoop.currentPlayer().location(), MathUtil.randomChoice(StaticEntity.Type.values())));
+					if (event.key() == GLFW.GLFW_KEY_L) {
+						for (var player : gameLoop.players()) {
+							for (var item : BasicItems.values()) {
+								player.inventory().addItems(item, 100);
+							}
+						}
 					}
 					if (event.key() == GLFW.GLFW_KEY_T) {
 						world.entities().add(new ItemDropEntity(gameLoop.currentPlayer().location().add(Vector3D.of(0f, 100f, 0f))));

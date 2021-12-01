@@ -99,6 +99,7 @@ public class GameResources {
                     };
                     entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.MISSILE), renderer);
                     entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.MINI_MISSILE), renderer);
+                    entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.NUKE), renderer);
                     entityRenderer.registerIndividual(MissileShowerEntity.class, renderer);
                 });
         builder.put("/res/fox.obj",
