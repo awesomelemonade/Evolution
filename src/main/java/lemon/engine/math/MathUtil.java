@@ -5,6 +5,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 
 import java.nio.IntBuffer;
+import java.util.List;
 import java.util.function.Supplier;
 
 public class MathUtil {
@@ -281,5 +282,9 @@ public class MathUtil {
 
 	public static <T> T randomChoice(T[] array) {
 		return array[(int) (Math.random() * array.length)];
+	}
+
+	public static <T> T randomChoice(List<T> list) {
+		return list.get((int) (Math.random() * list.size()));
 	}
 }

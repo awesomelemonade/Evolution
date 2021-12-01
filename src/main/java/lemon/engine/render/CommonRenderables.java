@@ -22,7 +22,20 @@ public class CommonRenderables {
 			});
 		});
 	}
-	
+
+	public static void renderTransparentQuad2D(Box2D box, Color color) {
+		CommonPrograms2D.COLOR.use(program -> {
+			GL11.glEnable(GL11.GL_BLEND);
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+			boxToMatrix(box, matrix -> {
+				program.loadColor4f("filterColor", color);
+				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrix);
+				CommonDrawables.COLORED_QUAD.draw();
+			});
+			GL11.glDisable(GL11.GL_BLEND);
+		});
+	}
+
 	public static void renderQuad2D(Box2D box, Color color, float rotation) {
 		CommonPrograms2D.COLOR.use(program -> {
 			try (var translationMatrix = MatrixPool.ofTranslation(box.x() + box.width() / 2f, box.y() + box.height() / 2f, 0f);

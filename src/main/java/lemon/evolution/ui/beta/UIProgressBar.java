@@ -11,6 +11,7 @@ public class UIProgressBar extends AbstractUIComponent {
 	private final Box2D box;
 	private final Supplier<Float> progressGetter;
 	private final ProgressDirection progressDirection;
+	private Color backgroundColor = Color.WHITE;
 	private Color color = Color.BLUE;
 
 	public UIProgressBar(UIComponent parent, Box2D box, Supplier<Float> progressGetter) {
@@ -32,10 +33,18 @@ public class UIProgressBar extends AbstractUIComponent {
 		return color;
 	}
 
+	public void setBackgroundColor(Color color) {
+		this.backgroundColor = color;
+	}
+
+	public Color backgroundColor() {
+		return backgroundColor;
+	}
+
 	@Override
 	public void render() {
 		if (isVisible()) {
-			CommonRenderables.renderQuad2D(box, Color.WHITE);
+			CommonRenderables.renderQuad2D(box, backgroundColor);
 			float progress = MathUtil.saturate(progressGetter.get());
 			progressDirection.renderPart(box, progress, color);
 		}

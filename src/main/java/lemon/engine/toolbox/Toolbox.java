@@ -10,6 +10,7 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,6 +39,22 @@ public class Toolbox {
 			}
 			reader.close();
 			return Optional.of(builder);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return Optional.empty();
+	}
+
+	public static Optional<List<String>> getFileInLines(String path) {
+		try {
+			BufferedReader reader = new BufferedReader(new InputStreamReader(Toolbox.class.getResourceAsStream(path)));
+			List<String> lines = new ArrayList<>();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				lines.add(line);
+			}
+			reader.close();
+			return Optional.of(lines);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

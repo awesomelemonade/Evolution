@@ -108,4 +108,20 @@ public record Color(float red, float green, float blue, float alpha) implements 
 	public Color brighter() {
 		return new Color(Math.min(red * 1.4f, 1f), Math.min(green * 1.4f, 1f), Math.min(blue * 1.4f, 1f), alpha);
 	}
+
+	public static Color fromHex(String hex) {
+		if (hex.charAt(0) == '#') {
+			return new Color(
+					Integer.valueOf(hex.substring(1, 3), 16) / 255f,
+					Integer.valueOf(hex.substring(3, 5), 16) / 255f,
+					Integer.valueOf(hex.substring(5, 7), 16) / 255f
+			);
+		} else {
+			return new Color(
+					Integer.valueOf(hex.substring(0, 2), 16) / 255f,
+					Integer.valueOf(hex.substring(2, 4), 16) / 255f,
+					Integer.valueOf(hex.substring(4, 6), 16) / 255f
+			);
+		}
+	}
 }

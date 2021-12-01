@@ -33,4 +33,8 @@ public record Box2D(float x, float y, float width, float height) implements Floa
 		array[2] = width;
 		array[3] = height;
 	}
+
+	public static Box2D ofInner(Box2D outer, float padding) {
+		return new Box2D(outer.x() + padding, outer.y() + padding, outer.width() - 2 * padding, outer.height() - 2 * padding);
+	}
 }

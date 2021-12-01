@@ -18,14 +18,14 @@ public enum EvolutionControls implements GLFWGameControls.DefaultBinder<Evolutio
 	FREECAM(keyboardHold(GLFW.GLFW_KEY_J)),
 	FALL(keyboardHold(GLFW.GLFW_KEY_LEFT_SHIFT)),
 	CROUCH(keyboardHold(GLFW.GLFW_KEY_LEFT_SHIFT)),
-	DEBUG_TOGGLE(keyboardToggle(GLFW.GLFW_KEY_F3)),
+	DEBUG_TOGGLE(keyboardToggle(GLFW.GLFW_KEY_F3, false)),
 	END_TURN(keyboardHold(GLFW.GLFW_KEY_BACKSPACE)),
 	START_GAME(keyboardHold(GLFW.GLFW_KEY_ENTER)),
 	USE_ITEM(mouseHold(GLFW.GLFW_MOUSE_BUTTON_1)),
-	MINIMAP(keyboardToggle(GLFW.GLFW_KEY_M)),
+	MINIMAP(keyboardToggle(GLFW.GLFW_KEY_M, true)),
 	TOGGLE_INVENTORY(keyboardHold(GLFW.GLFW_KEY_E)),
 	SCREENSHOT(keyboardHold(GLFW.GLFW_KEY_F2)),
-	SHOW_UI(keyboardToggle(GLFW.GLFW_KEY_F1));
+	SHOW_UI(keyboardToggle(GLFW.GLFW_KEY_F1, true));
 
 	private final BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> defaultBinder;
 	private EvolutionControls(BiConsumer<GLFWGameControls<EvolutionControls>, EvolutionControls> defaultBinder) {
