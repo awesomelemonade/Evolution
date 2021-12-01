@@ -35,7 +35,7 @@ public class TextScreen implements Screen {
 		Matrix orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 		CommonProgramsSetup.setup2D(orthoProjectionMatrix);
 		var font = Font.ofCopyWithAdditionalKerning(CommonFonts.freeSans(), -12);
-		screen = new UIScreen(window.input());
+		screen = disposables.add(new UIScreen(window.input()));
 		var titleScale = 0.6f;
 		var scale = 0.3f;
 		var currentY = windowHeight * 0.75f;
