@@ -11,6 +11,7 @@ import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
 import lemon.engine.toolbox.Disposables;
+import lemon.engine.toolbox.Toolbox;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
@@ -151,15 +152,24 @@ public enum Menu implements Screen {
 	public void showInstructions() {
 		window.popAndPushScreen(new TextScreen(List.of(
 				"Instructions",
-				"TBD"
+				"Move - WASD",
+				"Jump/Fall - Space/Shift",
+				"Use Item - Mouse1",
+				"Start Game - Enter",
+				"End Turn - Backspace",
+				"Inventory - E",
+				"Free Camera - J",
+				"Toggle Minimap - M",
+				"Toggle UI - F1",
+				"Screenshot - F2",
+				"Debug - F3"
 		), this));
 	}
 
 	public void showCredits() {
-		window.popAndPushScreen(new TextScreen(List.of(
-				"Credits",
-				"TBD"
-		), this));
+		var text = Toolbox.getFileInLines("/res/credits.txt")
+				.orElseGet(() -> List.of("Unable to load credits"));
+		window.popAndPushScreen(new TextScreen(text, this));
 	}
 
 	@Override
