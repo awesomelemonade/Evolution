@@ -26,6 +26,7 @@ import lemon.engine.toolbox.GLState;
 import lemon.engine.toolbox.SkyboxLoader;
 import lemon.engine.toolbox.TaskQueue;
 import lemon.engine.toolbox.Toolbox;
+import lemon.evolution.audio.BackgroundAudio;
 import lemon.evolution.destructible.beta.ScalarField;
 import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
@@ -125,6 +126,9 @@ public class Game implements Screen {
 	@Override
 	public void onLoad(GLFWWindow window) {
 		if (!loaded) {
+			// Music
+			BackgroundAudio.play(BackgroundAudio.Track.COMBAT);
+			disposables.add(() -> BackgroundAudio.play(BackgroundAudio.Track.MENU));
 			// Prepare loaders
 			ScalarField<Vector3D> scalarField = vector -> -1f;
 			pool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -549,9 +553,6 @@ public class Game implements Screen {
 
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			for (var player : gameLoop.players()) {
-				if (player == gameLoop.currentPlayer()) {
-					continue;
-				}
 				var model = cachedTextModels.computeIfAbsent(player.name(), name -> new TextModel(CommonFonts.freeSansTightened(), name));
 				CommonPrograms3D.TEXT.use(program -> {
 					var scale = 0.3f / model.height();
@@ -559,7 +560,11 @@ public class Game implements Screen {
 					var translation = player.position().add(Vector3D.of(0f, 0.9f, 0f));
 					var translationMatrix = MathUtil.getTranslation(translation);
 					var delta = player.position().subtract(gameLoop.currentPlayer().position());
-					var angle = (float) (Math.atan2(-delta.z(), delta.x()) - Math.PI / 2.0);
+					var angle = delta.isZero() ? 0f : ((float) (Math.atan2(-delta.z(), delta.x()) - Math.PI / 2.0));
+					if (player == gameLoop.currentPlayer()) {
+						var scaledTime = (System.currentTimeMillis() % 20000) / 20000.0f;
+						angle = scaledTime * MathUtil.TAU;
+					}
 					var rotationMatrix = MathUtil.getRotationY(angle);
 					var scalarMatrix = MathUtil.getScalar(Vector3D.of(scale, scale, scale));
 
