@@ -1,6 +1,5 @@
 package lemon.evolution.entity;
-import lemon.engine.math.MathUtil;
-import lemon.engine.math.MutableVector3D;
+
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
@@ -10,9 +9,9 @@ import lemon.evolution.world.Location;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 public class TeleportBallEntity extends AbstractEntity implements Disposable {
+    private static final Duration TELEPORT_DURATION = Duration.ofSeconds(2);
     private final Instant creationTime;
     private final Disposables disposables = new Disposables();
 
@@ -20,7 +19,7 @@ public class TeleportBallEntity extends AbstractEntity implements Disposable {
         super(location, velocity);
         this.creationTime = Instant.now();
         disposables.add(this.onUpdate().add(() -> {
-            if (Instant.now().isAfter(creationTime.plus(2, ChronoUnit.SECONDS))) {
+            if (Instant.now().isAfter(creationTime.plus(TELEPORT_DURATION))) {
                 removeFromWorld();
                 player.mutablePosition().set(this.position());
             }

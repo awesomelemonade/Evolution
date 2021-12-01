@@ -29,6 +29,7 @@ import lemon.evolution.destructible.beta.Terrain;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainGenerator;
 import lemon.evolution.entity.*;
+import lemon.evolution.item.BasicItems;
 import lemon.evolution.particle.beta.ParticleSystem;
 import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
@@ -106,14 +107,14 @@ public class Game implements Screen {
 
 	private final Disposables disposables = new Disposables();
 
-	private ScalarField<Vector3D> scalarfield;
 	private int resolutionWidth;
 	private int resolutionHeight;
+	private MapInfo map;
 
-	public Game(ScalarField<Vector3D> scalarfield, int resolutionWidth, int resolutionHeight) {
-		this.scalarfield = scalarfield;
+	public Game(int resolutionWidth, int resolutionHeight, MapInfo map) {
 		this.resolutionWidth = resolutionWidth;
 		this.resolutionHeight = resolutionHeight;
+		this.map = map;
 	}
 
 	@Override
@@ -175,7 +176,7 @@ public class Game implements Screen {
 			entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.RAIN_DROPLET), sphereRenderer);
 			entityRenderer.registerIndividual(TeleportBallEntity.class, sphereRenderer);
 
-			var csvLoader = new CsvWorldLoader("/res/pond.csv", world.terrain(), postLoadTasks::add,
+			var csvLoader = new CsvWorldLoader("/res/" + map.csvPath(), world.terrain(), postLoadTasks::add,
 					csvWorldLoader -> {
 						var mapping = csvWorldLoader.blockMapping();
 						var materials = new MCMaterial[mapping.size()];
@@ -197,6 +198,8 @@ public class Game implements Screen {
 						TextureBank.TERRAIN.bind(() -> {
 							GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, textureArray.id());
 						});
+						logger.info(csvWorldLoader.materialCount().entrySet().stream()
+								.filter(entry -> !entry.getKey().isEmpty() && entry.getKey().textureFile().isEmpty()).toList().toString());
 					});
 
 			this.controls = disposables.add(GLFWGameControls.getDefaultControls(window.input(), EvolutionControls.class));
@@ -208,7 +211,7 @@ public class Game implements Screen {
 			var playersBuilder = new ImmutableList.Builder<Player>();
 			int numPlayers = 6;
 			for (int i = 0; i < numPlayers; i++) {
-				var distance = 25f;
+				var distance = map.playerSpawnRadius();
 				var angle = MathUtil.TAU * ((float) i) / numPlayers;
 				var cos = (float) Math.cos(angle);
 				var sin = (float) Math.sin(angle);
@@ -219,7 +222,7 @@ public class Game implements Screen {
 			var players = playersBuilder.build();
 			world.entities().addAll(players);
 			world.entities().flush();
-			gameLoop = disposables.add(new GameLoop(world, players, controls));
+			gameLoop = disposables.add(new GameLoop(map, world, players, controls));
 			disposables.add(gameLoop.onWinner(player -> {
 				window.popAndPushScreen(Menu.INSTANCE);
 			}));
@@ -345,7 +348,7 @@ public class Game implements Screen {
 			});
 			TextureBank.SKYBOX.bind(() -> {
 				Texture skyboxTexture = new Texture();
-				skyboxTexture.load(new SkyboxLoader("/res/mp_organic").load());
+				skyboxTexture.load(new SkyboxLoader("/res/" + map.skyboxInfo().directoryPath()).load());
 				GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.id());
 			});
 			Map.of(
@@ -383,8 +386,12 @@ public class Game implements Screen {
 							}
 						}
 					}
-					if (event.key() == GLFW.GLFW_KEY_R) {
-						world.entities().add(new StaticEntity(gameLoop.currentPlayer().location(), MathUtil.randomChoice(StaticEntity.Type.values())));
+					if (event.key() == GLFW.GLFW_KEY_L) {
+						for (var player : gameLoop.players()) {
+							for (var item : BasicItems.values()) {
+								player.inventory().addItems(item, 100);
+							}
+						}
 					}
 					if (event.key() == GLFW.GLFW_KEY_T) {
 						world.entities().add(new ItemDropEntity(gameLoop.currentPlayer().location().add(Vector3D.of(0f, 100f, 0f))));

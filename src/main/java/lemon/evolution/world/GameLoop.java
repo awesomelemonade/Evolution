@@ -13,6 +13,7 @@ import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.engine.toolbox.Scheduler;
 import lemon.evolution.EvolutionControls;
+import lemon.evolution.MapInfo;
 import lemon.evolution.entity.ItemDropEntity;
 import lemon.evolution.util.GLFWGameControls;
 import lemon.evolution.util.GatedGLFWGameControls;
@@ -44,7 +45,7 @@ public class GameLoop implements Disposable {
 	public Instant startTime; // TODO: Temporary
 	public Instant endTime; // TODO: Temporary
 
-	public GameLoop(World world, ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
+	public GameLoop(MapInfo map, World world, ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
 		this.world = world;
 		this.gatedControls = new GatedGLFWGameControls<>(controls);
 		this.cycler = Iterators.filter(Iterators.cycle(allPlayers), player -> player.alive().getValue());
@@ -83,7 +84,7 @@ public class GameLoop implements Disposable {
 		disposables.add(() -> gatedControls.setEnabled(true));
 		// Item Drops
 		disposables.add(controller.observableCurrent().onChange(player -> {
-			var radius = 50.0 * Math.sqrt(Math.random());
+			var radius = map.itemDropSpawnRadius() * Math.sqrt(Math.random());
 			var angle = MathUtil.TAU * Math.random();
 			var cos = Math.cos(angle);
 			var sin = Math.sin(angle);

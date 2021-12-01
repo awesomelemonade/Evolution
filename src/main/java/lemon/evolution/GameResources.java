@@ -99,6 +99,7 @@ public class GameResources {
                     };
                     entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.MISSILE), renderer);
                     entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.MINI_MISSILE), renderer);
+                    entityRenderer.registerIndividual(ExplodeOnHitProjectile.class, entity -> entity.isType(ExplodeType.NUKE), renderer);
                     entityRenderer.registerIndividual(MissileShowerEntity.class, renderer);
                 });
         builder.put("/res/fox.obj",
@@ -132,7 +133,7 @@ public class GameResources {
         builder.put("/res/crate.obj",
                 objLoader -> {
                     var drawable = objLoader.toIndexedDrawable();
-                    var crateRenderer = getGenericRenderer(drawable);
+                    var crateRenderer = getGenericRenderer(drawable, Color.BROWN);
                     entityRenderer.registerIndividual(StaticEntity.class,
                             entity -> entity.isType(StaticEntity.Type.CRATE),
                             crateRenderer);
@@ -153,7 +154,16 @@ public class GameResources {
     public Consumer<Entity> getGenericRenderer(Drawable drawable) {
         return getGenericRenderer(drawable, Vector3D.ZERO, 1f);
     }
+
+    public Consumer<Entity> getGenericRenderer(Drawable drawable, Color color) {
+        return getGenericRenderer(drawable, Vector3D.ZERO, 1f, color);
+    }
+
     public Consumer<Entity> getGenericRenderer(Drawable drawable, Vector3D offset, float scale) {
+        return getGenericRenderer(drawable, offset, scale, Color.WHITE);
+    }
+
+    public Consumer<Entity> getGenericRenderer(Drawable drawable, Vector3D offset, float scale, Color filterColor) {
         return entity -> {
             GL11.glEnable(GL11.GL_DEPTH_TEST);
             CommonPrograms3D.LIGHT.use(program -> {
@@ -164,7 +174,9 @@ public class GameResources {
                     program.loadVector("sunlightDirection", sunlightDirection);
                     program.loadVector("viewPos", gameLoop.currentPlayer().position());
                 }
+                program.loadColor4f("filterColor", filterColor);
                 drawable.draw();
+                program.loadColor4f("filterColor", Color.WHITE);
             });
             GL11.glDisable(GL11.GL_DEPTH_TEST);
         };
