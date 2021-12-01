@@ -197,6 +197,8 @@ public class Game implements Screen {
 						TextureBank.TERRAIN.bind(() -> {
 							GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, textureArray.id());
 						});
+						logger.info(csvWorldLoader.materialCount().entrySet().stream()
+								.filter(entry -> !entry.getKey().isEmpty() && entry.getKey().textureFile().isEmpty()).toList().toString());
 					});
 
 			this.controls = disposables.add(GLFWGameControls.getDefaultControls(window.input(), EvolutionControls.class));

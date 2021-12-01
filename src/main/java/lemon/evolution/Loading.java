@@ -7,6 +7,7 @@ import lemon.engine.math.Box2D;
 import lemon.engine.math.Matrix;
 import lemon.engine.splash.LoadingBar;
 import lemon.engine.toolbox.Color;
+import lemon.engine.toolbox.Disposables;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
 import lemon.evolution.util.CommonPrograms2D;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 
 public class Loading implements Screen {
 	private static final Logger logger = Logger.getLogger(Loading.class.getName());
+	private Disposables disposables = new Disposables();
 	private PerlinBackground background;
 	private final Deque<Loader> loaders;
 	private final Runnable callback;
@@ -48,10 +50,10 @@ public class Loading implements Screen {
 
 	@Override
 	public void onLoad(GLFWWindow window) {
-		this.background = new PerlinBackground(new Box2D(-1, -1, 2, 2));
+		this.background = disposables.add(new PerlinBackground(new Box2D(-1, -1, 2, 2)));
 		CommonProgramsSetup.setup2D(Matrix.IDENTITY_4);
-		this.loadingBar = new LoadingBar(new Box2D(-1f, -1.1f, 2f, 0.3f),
-				Color.RED, Color.RED, Color.CLEAR, Color.CLEAR);
+		this.loadingBar = disposables.add(new LoadingBar(new Box2D(-1f, -1.1f, 2f, 0.3f),
+				Color.RED, Color.RED, Color.CLEAR, Color.CLEAR));
 		this.loaders.peek().load();
 		startTime = Instant.now();
 	}
@@ -89,6 +91,6 @@ public class Loading implements Screen {
 
 	@Override
 	public void dispose() {
-		loadingBar.dispose();
+		disposables.dispose();
 	}
 }
