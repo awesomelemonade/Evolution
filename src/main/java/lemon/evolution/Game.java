@@ -5,6 +5,8 @@ import lemon.engine.control.GLFWWindow;
 import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.IndexedDrawable;
+import lemon.engine.draw.TextModel;
+import lemon.engine.font.CommonFonts;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.Player;
 import lemon.engine.game.Team;
@@ -63,6 +65,7 @@ import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -110,6 +113,8 @@ public class Game implements Screen {
 	private int resolutionWidth;
 	private int resolutionHeight;
 	private MapInfo map;
+
+	private Map<String, TextModel> cachedTextModels = new HashMap<>();
 
 	public Game(int resolutionWidth, int resolutionHeight, MapInfo map) {
 		this.resolutionWidth = resolutionWidth;
@@ -541,6 +546,28 @@ public class Game implements Screen {
 			particleSystem.render(gameLoop.currentPlayer().position());
 			particleTime = System.nanoTime() - particleTime;
 			benchmarker.getLineGraph("particleTime").add(particleTime);
+
+			GL11.glEnable(GL11.GL_DEPTH_TEST);
+			for (var player : gameLoop.players()) {
+				if (player == gameLoop.currentPlayer()) {
+					continue;
+				}
+				var model = cachedTextModels.computeIfAbsent(player.name(), name -> new TextModel(CommonFonts.freeSansTightened(), name));
+				CommonPrograms3D.TEXT.use(program -> {
+					var scale = 0.3f / model.height();
+					var initialTranslation = MathUtil.getTranslation(Vector3D.of(-model.width() / 2f, 0f, 0f));
+					var translation = player.position().add(Vector3D.of(0f, 0.9f, 0f));
+					var translationMatrix = MathUtil.getTranslation(translation);
+					var delta = player.position().subtract(gameLoop.currentPlayer().position());
+					var angle = (float) (Math.atan2(-delta.z(), delta.x()) - Math.PI / 2.0);
+					var rotationMatrix = MathUtil.getRotationY(angle);
+					var scalarMatrix = MathUtil.getScalar(Vector3D.of(scale, scale, scale));
+
+					program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(scalarMatrix.multiply(rotationMatrix.multiply(initialTranslation))));
+					model.draw();
+				});
+			}
+			GL11.glDisable(GL11.GL_DEPTH_TEST);
 		});
 		CommonPrograms3D.POST_PROCESSING.use(program -> {
 			CommonDrawables.TEXTURED_QUAD.draw();

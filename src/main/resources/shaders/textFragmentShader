@@ -1,0 +1,13 @@
+#version 400 core
+
+in vec2 passTextureCoords;
+
+out vec4 outColor;
+
+uniform vec3 color;
+uniform sampler2D textureSampler;
+
+void main(void) {
+	float distance = 1.0 - texture(textureSampler, passTextureCoords).a;
+	outColor = vec4(color, 1 - smoothstep(0.525, 0.625, distance));
+}
