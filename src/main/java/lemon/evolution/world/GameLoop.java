@@ -44,6 +44,7 @@ public class GameLoop implements Disposable {
 	public boolean usedWeapon = true; // TODO: Temporary
 	public Instant startTime; // TODO: Temporary
 	public Instant endTime; // TODO: Temporary
+	private final Observable<Boolean> isInAction = new Observable<>(false);
 
 	public GameLoop(MapInfo map, World world, ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
 		this.world = world;
@@ -71,8 +72,9 @@ public class GameLoop implements Disposable {
 			started.setValue(true);
 		}));
 		disposables.add(started.onChangeTo(true, () -> {
+			disposables.add(gatedControls.gate().addInput(Observable.ofNot(isInAction, disposables::add)));
 			disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
-				gatedControls.setEnabled(true);
+				isInAction.setValue(true);
 				var task = scheduler.add(ACTION_TIME, this::endTurn);
 				usedWeapon = false;
 				startTime = Instant.now();
@@ -81,7 +83,6 @@ public class GameLoop implements Disposable {
 				endTurnDisposables.add(controls.onActivated(EvolutionControls.END_TURN, this::endTurn));
 			}));
 		}));
-		disposables.add(() -> gatedControls.setEnabled(true));
 		// Item Drops
 		disposables.add(controller.observableCurrent().onChange(player -> {
 			var radius = map.itemDropSpawnRadius() * Math.sqrt(Math.random());
@@ -94,7 +95,7 @@ public class GameLoop implements Disposable {
 	}
 
 	public void endTurn() {
-		gatedControls.setEnabled(!started.getValue());
+		isInAction.setValue(!started.getValue());
 		scheduler.add(RESOLVE_TIME, this::cycleToNextPlayer);
 		endTurnDisposables.dispose();
 		endTime = Instant.now();
