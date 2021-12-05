@@ -89,4 +89,8 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 	public default boolean hasNaN() {
 		return Float.isNaN(lengthSquared());
 	}
+
+	public static <T extends Vector<T>> boolean isEqual(Vector<T> a, Vector<T> b, float delta) {
+		return a.subtract((T) b).lengthSquared() <= delta * delta;
+	}
 }

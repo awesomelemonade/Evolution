@@ -240,13 +240,22 @@ public class MathUtil {
 	}
 
 	public static void lookAt(Matrix matrix, Vector3D direction, Vector3D up) {
-		if (direction.isZero() || up.isZero()) {
+		if (direction.isZero()) {
 			matrix.set(Matrix.IDENTITY_4);
 			return;
 		}
+		if (up.isZero()) {
+			throw new IllegalArgumentException("Up vector cannot be zero");
+		}
 		var f = direction.normalize();
 		var u = up.normalize();
-		var s = f.crossProduct(u).normalize();
+		var s = f.crossProduct(u);
+		while (s.isZero()) {
+			// they're in the same or opposite directions
+			u = Vector3D.ofRandomUnitVector();
+			s = f.crossProduct(u);
+		}
+		s = s.normalize();
 		u = s.crossProduct(f);
 
 		matrix.clear();
