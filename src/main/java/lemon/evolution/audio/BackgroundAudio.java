@@ -37,6 +37,7 @@ public class BackgroundAudio {
     public static void stop() {
         if (playing) {
             clip.close();
+            playing = false;
         }
     }
     public enum Track {
