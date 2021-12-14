@@ -37,7 +37,6 @@ public class Evolution {
 	}
 
 	public static void main(String[] args) {
-		BackgroundAudio.init();
 		BackgroundAudio.play(BackgroundAudio.Track.MENU);
 		LogManager.getLogManager().reset();
 		Logger rootLogger = Logger.getLogger("");
