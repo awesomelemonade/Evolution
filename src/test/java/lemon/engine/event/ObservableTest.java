@@ -112,4 +112,58 @@ class ObservableTest {
 		assertFalse(and.getValue());
 		verify(booleanListener, never()).accept(false);
 	}
+
+	@Test
+	public void testNotInitialTrue() {
+		Observable<Boolean> a = new Observable<>(true);
+		var not = Observable.ofNot(a, disposables::add);
+		assertFalse(not.getValue());
+	}
+
+	@Test
+	public void testNotInitialFalse() {
+		Observable<Boolean> a = new Observable<>(false);
+		var not = Observable.ofNot(a, disposables::add);
+		assertTrue(not.getValue());
+	}
+
+	@Test
+	public void testNotChangeToTrue() {
+		Observable<Boolean> a = new Observable<>(true);
+		var not = Observable.ofNot(a, disposables::add);
+		disposables.add(not.onChange(booleanListener));
+		a.setValue(false);
+		assertTrue(not.getValue());
+		verify(booleanListener).accept(true);
+	}
+
+	@Test
+	public void testNotChangeToFalse() {
+		Observable<Boolean> a = new Observable<>(false);
+		var not = Observable.ofNot(a, disposables::add);
+		disposables.add(not.onChange(booleanListener));
+		a.setValue(true);
+		assertFalse(not.getValue());
+		verify(booleanListener).accept(false);
+	}
+
+	@Test
+	public void testNotNoChangeStayTrue() {
+		Observable<Boolean> a = new Observable<>(false);
+		var not = Observable.ofNot(a, disposables::add);
+		disposables.add(not.onChange(booleanListener));
+		a.setValue(false);
+		assertTrue(not.getValue());
+		verify(booleanListener, never()).accept(true);
+	}
+
+	@Test
+	public void testNotNoChangeStayFalse() {
+		Observable<Boolean> a = new Observable<>(true);
+		var not = Observable.ofNot(a, disposables::add);
+		disposables.add(not.onChange(booleanListener));
+		a.setValue(true);
+		assertFalse(not.getValue());
+		verify(booleanListener, never()).accept(false);
+	}
 }

@@ -76,4 +76,16 @@ public class FSetWithEventsTest {
 		verify(onRemove, never()).accept(0);
 		verify(onAnyChange, never()).accept(0);
 	}
+
+	@Test
+	public void testRemoveIfRemovingItems() {
+		for (int i = 0; i < 10; i++) {
+			set.add(i);
+		}
+		set.removeIf(x -> x < 5);
+		for (int i = 0; i < 10; i++) {
+			verify(onRemove, times(i < 5 ? 1 : 0)).accept(i);
+			assertEquals(i < 5, !set.contains(i));
+		}
+	}
 }

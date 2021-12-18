@@ -1,32 +1,29 @@
 package lemon.evolution.audio;
 
+import lemon.engine.toolbox.Lazy;
+
 import javax.sound.sampled.*;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class BackgroundAudio {
-    private static boolean initialized = false;
-    private static boolean playing = false;
-    private static Clip clip;
-    public static void init() {
-        if (initialized) {
-            return;
-        }
+    private static final Lazy<Clip> clip = new Lazy<>(() -> {
         try {
-            clip = AudioSystem.getClip();
+            return AudioSystem.getClip();
         } catch (LineUnavailableException e) {
             e.printStackTrace();
             throw new IllegalStateException(e);
         }
-        initialized = true;
-    }
+    });
+    private static boolean playing = false;
 
     public static void play(Track track) {
         stop();
         try {
             var url = BackgroundAudio.class.getResource("/res/" + track.filename());
             var audioStream = AudioSystem.getAudioInputStream(url);
+            var clip = clip();
             clip.open(audioStream);
             clip.loop(Clip.LOOP_CONTINUOUSLY);
             playing = true;
@@ -34,12 +31,18 @@ public class BackgroundAudio {
             e.printStackTrace();
         }
     }
+
     public static void stop() {
         if (playing) {
-            clip.close();
+            clip().close();
             playing = false;
         }
     }
+
+    private static Clip clip() {
+        return clip.get();
+    }
+
     public enum Track {
         MENU("music2.wav"), COMBAT("music.wav");
 
