@@ -7,7 +7,7 @@ import lemon.engine.toolbox.Color;
 
 import java.util.function.Supplier;
 
-public class UIProgressBar extends AbstractUIComponent {
+public class UIProgressBar extends AbstractUIChildComponent {
 	private final Box2D box;
 	private final Supplier<Float> progressGetter;
 	private final ProgressDirection progressDirection;
@@ -43,11 +43,9 @@ public class UIProgressBar extends AbstractUIComponent {
 
 	@Override
 	public void render() {
-		if (isVisible()) {
-			CommonRenderables.renderQuad2D(box, backgroundColor);
-			float progress = MathUtil.saturate(progressGetter.get());
-			progressDirection.renderPart(box, progress, color);
-		}
+		CommonRenderables.renderQuad2D(box, backgroundColor);
+		float progress = MathUtil.saturate(progressGetter.get());
+		progressDirection.renderPart(box, progress, color);
 	}
 
 	public enum ProgressDirection {

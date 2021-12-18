@@ -1,13 +1,13 @@
 package lemon.evolution.ui.beta;
 
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.math.Box2D;
 import lemon.engine.render.CommonRenderables;
 import lemon.engine.toolbox.Color;
 
-public class UICheckbox extends AbstractUIComponent {
+public class UICheckbox extends AbstractUIChildComponent {
 	private final Box2D box;
-	private final Observable<Boolean> toggled = new Observable<>(false);
+	private final FObservable<Boolean> toggled = new FObservable<>(false);
 
 	public UICheckbox(UIComponent parent, Box2D box) {
 		super(parent);
@@ -17,16 +17,14 @@ public class UICheckbox extends AbstractUIComponent {
 
 	@Override
 	public void render() {
-		if (isVisible()) {
-			if (isToggled()) {
-				CommonRenderables.renderQuad2D(box, Color.GREEN);
-			} else {
-				CommonRenderables.renderQuad2D(box, Color.RED);
-			}
+		if (isToggled()) {
+			CommonRenderables.renderQuad2D(box, Color.GREEN);
+		} else {
+			CommonRenderables.renderQuad2D(box, Color.RED);
 		}
 	}
 
-	public Observable<Boolean> toggled() {
+	public FObservable<Boolean> toggled() {
 		return toggled;
 	}
 

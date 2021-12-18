@@ -1,21 +1,42 @@
 package lemon.evolution.ui.beta;
 
-import lemon.engine.event.Observable;
+import com.google.common.collect.ImmutableSet;
+import lemon.futility.FObservable;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Disposable;
+import lemon.futility.Observable;
 
-import java.util.Optional;
 import java.util.Set;
 
 public interface UIComponent extends Renderable, Disposable {
-	public Observable<Boolean> visible();
-	public default boolean isVisible() {
-		return parent().map(UIComponent::isVisible).orElse(true) && visible().getValue();
+	public default void render() {
+		// Do Nothing
 	}
-	public Optional<UIComponent> parent();
-	public Set<UIComponent> children();
-	public default GLFWInput input() {
-		return parent().orElseThrow().input();
+
+	public default void renderOverlay() {
+		// Do Nothing
 	}
+
+	public FObservable<Boolean> observableEnabled();
+
+	public Observable<Boolean> observableVisible();
+
+	public default void setEnabled(boolean enabled) {
+		observableEnabled().setValue(enabled);
+	}
+
+	public default boolean enabled() {
+		return observableEnabled().getValue();
+	}
+
+	public default boolean visible() {
+		return observableVisible().getValue();
+	}
+
+	public default Set<UIComponent> children() {
+		return ImmutableSet.of();
+	}
+
+	public GLFWInput input();
 }

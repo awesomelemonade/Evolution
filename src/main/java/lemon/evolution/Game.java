@@ -6,12 +6,11 @@ import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.draw.TextModel;
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.font.CommonFonts;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.game.Player;
 import lemon.engine.game.Team;
-import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.*;
 import lemon.engine.model.LineGraph;
 import lemon.engine.model.Model;
@@ -39,7 +38,6 @@ import lemon.evolution.physics.beta.CollisionContext;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.screen.beta.Screen;
 import lemon.evolution.setup.CommonProgramsSetup;
-import lemon.evolution.ui.beta.UIProgressBar;
 import lemon.evolution.ui.beta.UIScreen;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
@@ -324,7 +322,7 @@ public class Game implements Screen {
 					camera.set(freecam);
 				}
 			}));
-			var observableNotInControl = new Observable<>(false);
+			var observableNotInControl = new FObservable<>(false);
 			disposables.add(camera.observableCamera().onChangeAndRun(camera -> {
 				var inControl = camera == gameLoop.currentPlayer().camera();
 				observableNotInControl.setValue(!inControl);
@@ -414,12 +412,10 @@ public class Game implements Screen {
 			}));
 
 			uiScreen = disposables.add(new UIScreen(window.input()));
-			disposables.add(controls.activated(EvolutionControls.SHOW_UI).onChangeAndRun(activated -> uiScreen.visible().setValue(activated)));
+			disposables.add(controls.activated(EvolutionControls.SHOW_UI).onChangeAndRun(uiScreen::setEnabled));
 
 			var minimap = uiScreen.addMinimap(new Box2D(50f, windowHeight - 250f, 200f, 200f), world, () -> gameLoop.currentPlayer());
-			disposables.add(controls.activated(EvolutionControls.MINIMAP).onChangeAndRun(visible -> {
-				minimap.visible().setValue(visible);
-			}));
+			disposables.add(controls.activated(EvolutionControls.MINIMAP).onChangeAndRun(minimap::setEnabled));
 
 			var playerInfoHeight = 35f;
 			for (int i = 0; i < gameLoop.players().size(); i++) {
@@ -446,8 +442,8 @@ public class Game implements Screen {
 			var powerMeterInfo = uiScreen.addPlayerInfo(powerMeterBox, "Power Meter", " ", Color.RED, () -> gameLoop.controller().powerMeter());
 
 			disposables.add(gameLoop.started().onChangeAndRun(started -> {
-				progressInfo.visible().setValue(started);
-				powerMeterInfo.visible().setValue(started);
+				progressInfo.setEnabled(started);
+				powerMeterInfo.setEnabled(started);
 			}));
 			disposables.add(gameLoop.observableCurrentPlayer().onChangeAndRun(player -> {
 				var color = player.team().color();
@@ -456,24 +452,24 @@ public class Game implements Screen {
 			}));
 
 			var uiInventory = uiScreen.addInventory(gameLoop.currentPlayer().inventory());
-			uiInventory.visible().setValue(false);
+			uiInventory.setEnabled(false);
 			disposables.add(gameLoop.observableCurrentPlayer().onChange(player -> {
 				var inventory = player.inventory();
-				uiInventory.visible().setValue(false);
+				uiInventory.setEnabled(false);
 				uiInventory.setInventory(inventory);
 			}));
 			// sets up inventory toggle
 			disposables.add(controls.onActivated(EvolutionControls.TOGGLE_INVENTORY, () -> {
-				uiInventory.visible().setValue(!uiInventory.visible().getValue());
+				uiInventory.setEnabled(!uiInventory.enabled());
 			}));
-			disposables.add(uiInventory.visible().onChangeAndRun(visible -> {
+			disposables.add(uiInventory.observableVisible().onChangeAndRun(visible -> {
 				if (visible) {
 					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_NORMAL);
 				} else {
 					GLFW.glfwSetInputMode(GLFW.glfwGetCurrentContext(), GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED);
 				}
 			}));
-			disposables.add(gameLoop.getGatedControls().gate().addInput(uiInventory.visible()));
+			disposables.add(gameLoop.getGatedControls().gate().addInput(uiInventory.observableVisible()));
 
 			controls.onActivated(EvolutionControls.SCREENSHOT, () -> {
 				try {

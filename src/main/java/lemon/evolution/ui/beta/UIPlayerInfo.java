@@ -4,12 +4,11 @@ import lemon.engine.font.CommonFonts;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.Vector2D;
 import lemon.engine.render.CommonRenderables;
-import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Color;
 
 import java.util.function.Supplier;
 
-public class UIPlayerInfo extends AbstractUIComponent {
+public class UIPlayerInfo extends AbstractUIChildComponent {
 	private static final Color BACKGROUND_COLOR = Color.BLACK;
 	private static final Color BACKGROUND_TEXT_COLOR = Color.fromHex("#515457");
 	private static final Color BACKGROUND_TEXT_COLOR2 = Color.fromHex("#262626");
@@ -63,14 +62,15 @@ public class UIPlayerInfo extends AbstractUIComponent {
 
 	@Override
 	public void render() {
-		if (isVisible()) {
-			CommonRenderables.renderQuad2D(box, BACKGROUND_COLOR);
-			CommonRenderables.renderQuad2D(outerTextBox, BACKGROUND_TEXT_COLOR);
-			CommonRenderables.renderQuad2D(innerTextBox, BACKGROUND_TEXT_COLOR2);
-			children().forEach(Renderable::render);
-			for (var box : healthBarHighlights) {
-				CommonRenderables.renderTransparentQuad2D(box.box(), box.color());
-			}
+		CommonRenderables.renderQuad2D(box, BACKGROUND_COLOR);
+		CommonRenderables.renderQuad2D(outerTextBox, BACKGROUND_TEXT_COLOR);
+		CommonRenderables.renderQuad2D(innerTextBox, BACKGROUND_TEXT_COLOR2);
+	}
+
+	@Override
+	public void renderOverlay() {
+		for (var box : healthBarHighlights) {
+			CommonRenderables.renderTransparentQuad2D(box.box(), box.color());
 		}
 	}
 

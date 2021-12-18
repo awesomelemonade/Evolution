@@ -1,6 +1,6 @@
 package lemon.engine.math;
 
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -10,7 +10,7 @@ public class InterpolatedCameraByTime implements Camera {
     private final Camera to;
     private final Instant startTime;
     private final Duration duration;
-    private final Observable<Boolean> done = new Observable<>(false);
+    private final FObservable<Boolean> done = new FObservable<>(false);
 
     public InterpolatedCameraByTime(Camera from, Camera to, Instant startTime, Duration duration) {
         this.from = from;
@@ -60,7 +60,7 @@ public class InterpolatedCameraByTime implements Camera {
         return done.getValue();
     }
 
-    public Observable<Boolean> observableDone() {
+    public FObservable<Boolean> observableDone() {
         return done;
     }
 

@@ -5,7 +5,7 @@ import com.google.common.collect.Iterators;
 import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.engine.event.Event;
 import lemon.engine.event.EventWith;
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.game.Player;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
@@ -40,11 +40,11 @@ public class GameLoop implements Disposable {
 	private final EventWith<Player> onWinner = new EventWith<>();
 	private final Scheduler scheduler = disposables.add(new Scheduler());
 	private final Event onUpdate = new Event();
-	private final Observable<Boolean> started = new Observable<>(false);
+	private final FObservable<Boolean> started = new FObservable<>(false);
 	public boolean usedWeapon = true; // TODO: Temporary
 	public Instant startTime; // TODO: Temporary
 	public Instant endTime; // TODO: Temporary
-	private final Observable<Boolean> isInAction = new Observable<>(false);
+	private final FObservable<Boolean> isInAction = new FObservable<>(false);
 
 	public GameLoop(MapInfo map, World world, ImmutableList<Player> allPlayers, GLFWGameControls<EvolutionControls> controls) {
 		this.world = world;
@@ -72,7 +72,7 @@ public class GameLoop implements Disposable {
 			started.setValue(true);
 		}));
 		disposables.add(started.onChangeTo(true, () -> {
-			disposables.add(gatedControls.gate().addInput(Observable.ofNot(isInAction, disposables::add)));
+			disposables.add(gatedControls.gate().addInput(FObservable.ofNot(isInAction, disposables::add)));
 			disposables.add(controller.observableCurrent().onChangeAndRun(player -> {
 				isInAction.setValue(true);
 				var task = scheduler.add(ACTION_TIME, this::endTurn);
@@ -114,7 +114,7 @@ public class GameLoop implements Disposable {
 		return controller.current();
 	}
 
-	public Observable<Player> observableCurrentPlayer() {
+	public FObservable<Player> observableCurrentPlayer() {
 		return controller.observableCurrent();
 	}
 
@@ -136,7 +136,7 @@ public class GameLoop implements Disposable {
 		return onWinner.add(listener);
 	}
 
-	public Observable<Boolean> started() {
+	public FObservable<Boolean> started() {
 		return started;
 	}
 

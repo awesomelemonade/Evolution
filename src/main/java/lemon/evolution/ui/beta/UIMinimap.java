@@ -14,8 +14,6 @@ import lemon.engine.toolbox.Color;
 import lemon.evolution.destructible.beta.TerrainChunk;
 import lemon.evolution.destructible.beta.TerrainRenderer;
 import lemon.evolution.pool.MatrixPool;
-import lemon.evolution.ui.beta.AbstractUIComponent;
-import lemon.evolution.ui.beta.UIComponent;
 import lemon.evolution.util.CommonPrograms2D;
 import lemon.evolution.util.CommonPrograms3D;
 import lemon.evolution.world.World;
@@ -28,7 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public class UIMinimap extends AbstractUIComponent {
+public class UIMinimap extends AbstractUIChildComponent {
 	private final FrameBuffer frameBuffer;
 	private final Box2D box;
 	private final World world;
@@ -71,45 +69,43 @@ public class UIMinimap extends AbstractUIComponent {
 
 	@Override
 	public void render() {
-		if (isVisible()) {
-			frameBuffer.bind(frameBuffer -> {
-				GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
-				var currentPlayer = playerSupplier.get();
-				var currentPosition = currentPlayer.position();
-				var currentRotation = currentPlayer.rotation();
-				var zoom = (float) Math.sqrt(players.stream().mapToDouble(player -> currentPosition.toXZVector().distanceSquared(player.position().toXZVector())).max().orElse(250.0)) + 20f;
-				zoom = MathUtil.clamp(zoom, 20f, 100f);
-				terrainRenderer.setRenderDistance(world.terrain().getChunkDistance(zoom + 1f));
-				var projectionMatrix = MathUtil.getOrtho(-zoom, zoom, zoom, -zoom, 0f, 1000f);
-				CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, projectionMatrix);
-				try (var translationMatrix = MatrixPool.ofTranslation(currentPosition.add(Vector3D.of(0f, 100f, 0f)).invert());
-					 var pitchMatrix = MatrixPool.ofRotationX(MathUtil.PI / 2f);
-					 var rollMatrix = MatrixPool.ofRotationZ(currentRotation.y());
-					 var rotationMatrix = MatrixPool.ofMultiplied(rollMatrix, pitchMatrix);
-					 var viewMatrix = MatrixPool.ofMultiplied(rotationMatrix, translationMatrix)) {
-					CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, viewMatrix);
-					terrainRenderer.render(currentPosition);
+		frameBuffer.bind(frameBuffer -> {
+			GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+			var currentPlayer = playerSupplier.get();
+			var currentPosition = currentPlayer.position();
+			var currentRotation = currentPlayer.rotation();
+			var zoom = (float) Math.sqrt(players.stream().mapToDouble(player -> currentPosition.toXZVector().distanceSquared(player.position().toXZVector())).max().orElse(250.0)) + 20f;
+			zoom = MathUtil.clamp(zoom, 20f, 100f);
+			terrainRenderer.setRenderDistance(world.terrain().getChunkDistance(zoom + 1f));
+			var projectionMatrix = MathUtil.getOrtho(-zoom, zoom, zoom, -zoom, 0f, 1000f);
+			CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, projectionMatrix);
+			try (var translationMatrix = MatrixPool.ofTranslation(currentPosition.add(Vector3D.of(0f, 100f, 0f)).invert());
+				 var pitchMatrix = MatrixPool.ofRotationX(MathUtil.PI / 2f);
+				 var rollMatrix = MatrixPool.ofRotationZ(currentRotation.y());
+				 var rotationMatrix = MatrixPool.ofMultiplied(rollMatrix, pitchMatrix);
+				 var viewMatrix = MatrixPool.ofMultiplied(rotationMatrix, translationMatrix)) {
+				CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, viewMatrix);
+				terrainRenderer.render(currentPosition);
 
-					for (var player : players) {
-						var projectedCurrentPosition = projectionMatrix.multiply(viewMatrix.multiply(player.position()));
-						var width = 8;
-						var height = 8;
-						var x = projectedCurrentPosition.x() * box.width() / 2f - width / 2f + box.width() / 2f;
-						var y = projectedCurrentPosition.y() * box.height() / 2f - height / 2f + box.height() / 2f;
-						var color = player.team() == currentPlayer.team() ? Color.GREEN : Color.RED;
-						CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color);
-						CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color, MathUtil.PI / 4f);
-					}
+				for (var player : players) {
+					var projectedCurrentPosition = projectionMatrix.multiply(viewMatrix.multiply(player.position()));
+					var width = 8;
+					var height = 8;
+					var x = projectedCurrentPosition.x() * box.width() / 2f - width / 2f + box.width() / 2f;
+					var y = projectedCurrentPosition.y() * box.height() / 2f - height / 2f + box.height() / 2f;
+					var color = player.team() == currentPlayer.team() ? Color.GREEN : Color.RED;
+					CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color);
+					CommonRenderables.renderQuad2D(new Box2D(x, y, width, height), color, MathUtil.PI / 4f);
 				}
-			});
-			CommonPrograms2D.MINIMAP.use(program -> {
-				try (var translationMatrix = MatrixPool.ofTranslation(box.x() + box.width() / 2f, box.y() + box.height() / 2f, 0f);
-					 var scalarMatrix = MatrixPool.ofScalar(box.width() / 2f, box.height() / 2f, 1f);
-					 var matrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
-					program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrix);
-					CommonDrawables.TEXTURED_QUAD.draw();
-				}
-			});
-		}
+			}
+		});
+		CommonPrograms2D.MINIMAP.use(program -> {
+			try (var translationMatrix = MatrixPool.ofTranslation(box.x() + box.width() / 2f, box.y() + box.height() / 2f, 0f);
+				 var scalarMatrix = MatrixPool.ofScalar(box.width() / 2f, box.height() / 2f, 1f);
+				 var matrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrix);
+				CommonDrawables.TEXTURED_QUAD.draw();
+			}
+		});
 	}
 }

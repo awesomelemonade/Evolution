@@ -1,6 +1,6 @@
 package lemon.evolution.util;
 
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
@@ -16,8 +16,8 @@ public class PlayerController extends EntityController<Player> implements Dispos
 	private static final float POWER_METER_SPEED_FACTOR = 2.0f;
 	private final Disposables disposables = new Disposables();
 	private final GameLoop gameLoop;
-	private final Observable<Float> powerMeter = new Observable<>(0f);
-	private final Observable<Optional<Instant>> startUseItemTime = new Observable<>(Optional.empty());
+	private final FObservable<Float> powerMeter = new FObservable<>(0f);
+	private final FObservable<Optional<Instant>> startUseItemTime = new FObservable<>(Optional.empty());
 
 	public PlayerController(GameLoop gameLoop, GameControls<EvolutionControls, GLFWInput> controls, Player initialPlayer) {
 		super(controls, initialPlayer);
@@ -65,7 +65,7 @@ public class PlayerController extends EntityController<Player> implements Dispos
 		disposables.dispose();
 	}
 
-	public Observable<Float> observablePowerMeter() {
+	public FObservable<Float> observablePowerMeter() {
 		return powerMeter;
 	}
 

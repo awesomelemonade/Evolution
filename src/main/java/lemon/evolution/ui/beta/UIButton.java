@@ -7,7 +7,7 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
-public class UIButton extends AbstractUIComponent {
+public class UIButton extends AbstractUIChildComponent {
 	private final Box2D box;
 	private final Color color;
 
@@ -16,7 +16,7 @@ public class UIButton extends AbstractUIComponent {
 		this.box = box;
 		this.color = color;
 		disposables.add(input().mouseButtonEvent().add(event -> {
-			if (isVisible() &&
+			if (visible() &&
 					event.button() == GLFW.GLFW_MOUSE_BUTTON_1 &&
 					event.action() == GLFW.GLFW_RELEASE) {
 				event.glfwWindow().pollMouse((mouseX, mouseY) -> {
@@ -30,8 +30,6 @@ public class UIButton extends AbstractUIComponent {
 
 	@Override
 	public void render() {
-		if (isVisible()) {
-			CommonRenderables.renderQuad2D(box, color);
-		}
+		CommonRenderables.renderQuad2D(box, color);
 	}
 }

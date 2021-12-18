@@ -2,7 +2,6 @@ package lemon.futility;
 
 import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.engine.event.EventWith;
-import lemon.engine.event.Observable;
 import lemon.engine.toolbox.Disposable;
 
 import java.util.Collection;
@@ -154,8 +153,8 @@ public class FSetWithEvents<T> extends FCollection<T> implements Set<T> {
 		return Collections.unmodifiableSet(set);
 	}
 
-	public Observable<Boolean> observableContains(T item, Consumer<Disposable> disposables) {
-		var observable = new Observable<>(contains(item));
+	public FObservable<Boolean> observableContains(T item, Consumer<Disposable> disposables) {
+		var observable = new FObservable<>(contains(item));
 		disposables.accept(onAdd.add(added -> {
 			if (item == added) {
 				observable.setValue(true);
@@ -170,7 +169,7 @@ public class FSetWithEvents<T> extends FCollection<T> implements Set<T> {
 	}
 
 	public static <T> FSetWithEvents<T> ofFiltered(Collection<T> collection,
-												   Function<T, Observable<Boolean>> mapper,
+												   Function<T, ? extends Observable<Boolean>> mapper,
 												   Consumer<Disposable> disposer) {
 		var set = new FSetWithEvents<T>();
 		for (var item : collection) {

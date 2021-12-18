@@ -5,7 +5,6 @@ import lemon.engine.game.Player;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.Vector2D;
-import lemon.engine.render.Renderable;
 import lemon.engine.texture.Texture;
 import lemon.engine.toolbox.Color;
 import lemon.evolution.world.Inventory;
@@ -14,7 +13,7 @@ import lemon.evolution.world.World;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class UIScreen extends AbstractUIComponent {
+public class UIScreen extends AbstractUIBaseComponent {
 	public UIScreen(GLFWInput input) {
 		super(input);
 	}
@@ -75,12 +74,5 @@ public class UIScreen extends AbstractUIComponent {
 
 	public UIPlayerInfo addPlayerInfo(Box2D box, String name, String info, Color color, Supplier<Float> healthGetter) {
 		return addComponent(new UIPlayerInfo(this, box, name, info, color, healthGetter));
-	}
-
-	@Override
-	public void render() {
-		if (isVisible()) {
-			children().forEach(Renderable::render);
-		}
 	}
 }

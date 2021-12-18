@@ -1,7 +1,7 @@
 package lemon.evolution.ui.beta;
 
 import lemon.engine.draw.CommonDrawables;
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.math.Vector2D;
 import lemon.engine.render.MatrixType;
 import lemon.engine.toolbox.Color;
@@ -9,21 +9,21 @@ import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms2D;
 import org.lwjgl.glfw.GLFW;
 
-public class UIWheel extends AbstractUIComponent {
+public class UIWheel extends AbstractUIChildComponent {
 	private final Vector2D position;
 	private final float radius;
 	private final Color color;
-	private final Observable<Float> value; // 0 to 2 * pi
-	private final Observable<Boolean> heldDown = new Observable<>(false);
+	private final FObservable<Float> value; // 0 to 2 * pi
+	private final FObservable<Boolean> heldDown = new FObservable<>(false);
 
 	public UIWheel(UIComponent parent, Vector2D position, float radius, float value, Color color) {
 		super(parent);
 		this.position = position;
 		this.radius = radius;
 		this.color = color;
-		this.value = new Observable<>(value);
+		this.value = new FObservable<>(value);
 		disposables.add(input().mouseButtonEvent().add(event -> {
-			if (isVisible() && event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
+			if (visible() && event.button() == GLFW.GLFW_MOUSE_BUTTON_1) {
 				if (event.action() == GLFW.GLFW_PRESS) {
 					event.glfwWindow().pollMouse((mouseX, mouseY) -> {
 						if (position.distanceSquared(mouseX, mouseY) <= radius * radius) {
@@ -38,7 +38,7 @@ public class UIWheel extends AbstractUIComponent {
 			}
 		}));
 		disposables.add(input().cursorPositionEvent().add(event -> {
-			if (isVisible() && isHeldDown()) {
+			if (visible() && isHeldDown()) {
 				this.setValue(event.x(), event.glfwWindow().getHeight() - event.y());
 			}
 		}));
@@ -46,22 +46,20 @@ public class UIWheel extends AbstractUIComponent {
 
 	@Override
 	public void render() {
-		if (isVisible()) {
-			CommonPrograms2D.COLOR.use(program -> {
-				try (var translation = MatrixPool.ofTranslation(1f, 0f, 0f);
-					 var scalar = MatrixPool.ofScalar(radius / 2f, radius / 20f, 0f);
-					 var translation2 = MatrixPool.ofTranslation(position.x(), position.y(), 0f);
-					 var rotation = MatrixPool.ofRotationZ(-getValue());
-					 var multiplied = MatrixPool.ofMultiplied(scalar, translation);
-					 var multiplied2 = MatrixPool.ofMultiplied(rotation, multiplied);
-					 var multiplied3 = MatrixPool.ofMultiplied(translation2, multiplied2)) {
-					program.loadColor4f("filterColor", color);
-					program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, multiplied3);
-					CommonDrawables.COLORED_QUAD.draw();
-					program.loadColor4f("filterColor", Color.WHITE);
-				}
-			});
-		}
+		CommonPrograms2D.COLOR.use(program -> {
+			try (var translation = MatrixPool.ofTranslation(1f, 0f, 0f);
+				 var scalar = MatrixPool.ofScalar(radius / 2f, radius / 20f, 0f);
+				 var translation2 = MatrixPool.ofTranslation(position.x(), position.y(), 0f);
+				 var rotation = MatrixPool.ofRotationZ(-getValue());
+				 var multiplied = MatrixPool.ofMultiplied(scalar, translation);
+				 var multiplied2 = MatrixPool.ofMultiplied(rotation, multiplied);
+				 var multiplied3 = MatrixPool.ofMultiplied(translation2, multiplied2)) {
+				program.loadColor4f("filterColor", color);
+				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, multiplied3);
+				CommonDrawables.COLORED_QUAD.draw();
+				program.loadColor4f("filterColor", Color.WHITE);
+			}
+		});
 	}
 
 	private void setValue(double mouseX, double mouseY) {
@@ -73,11 +71,11 @@ public class UIWheel extends AbstractUIComponent {
 		return value.getValue();
 	}
 
-	public Observable<Float> value() {
+	public FObservable<Float> value() {
 		return value;
 	}
 
-	public Observable<Boolean> heldDown() {
+	public FObservable<Boolean> heldDown() {
 		return heldDown;
 	}
 
