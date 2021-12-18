@@ -1,6 +1,6 @@
 package lemon.evolution.util;
 
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
@@ -17,11 +17,11 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 	private static float playerSpeed = 0.05f;
 	private final Disposables disposables = new Disposables();
 	private final GameControls<EvolutionControls, GLFWInput> controls;
-	private final Observable<T> current;
+	private final FObservable<T> current;
 
 	public EntityController(GameControls<EvolutionControls, GLFWInput> controls, T entity) {
 		this.controls = controls;
-		this.current = new Observable<>(entity);
+		this.current = new FObservable<>(entity);
 		controls.addCallback(GLFWInput::cursorDeltaEvent, event -> {
 			if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
 				float deltaY = (float) (-(event.x()) * MOUSE_SENSITIVITY);
@@ -98,7 +98,7 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 		return current.getValue();
 	}
 
-	public Observable<T> observableCurrent() {
+	public FObservable<T> observableCurrent() {
 		return current;
 	}
 

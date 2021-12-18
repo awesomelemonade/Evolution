@@ -1,7 +1,7 @@
 package lemon.evolution.util;
 
 import lemon.engine.event.EventWith;
-import lemon.engine.event.Observable;
+import lemon.futility.Observable;
 import lemon.engine.toolbox.Disposable;
 
 import java.util.function.Consumer;

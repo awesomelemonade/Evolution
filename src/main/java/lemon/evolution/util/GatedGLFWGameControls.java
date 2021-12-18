@@ -1,8 +1,9 @@
 package lemon.evolution.util;
 
 import lemon.engine.event.EventWith;
-import lemon.engine.event.Gate;
-import lemon.engine.event.Observable;
+import lemon.futility.Gate;
+import lemon.futility.FObservable;
+import lemon.futility.Observable;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
@@ -25,7 +26,7 @@ public class GatedGLFWGameControls<T> implements GameControls<T, GLFWInput>, Dis
 	@Override
 	public <U> void addCallback(Function<GLFWInput, EventWith<U>> inputEvent, Consumer<? super U> callback) {
 		baseControls.addCallback(inputEvent, event -> {
-			if (gate.output().getValue()) {
+			if (gate.output()) {
 				callback.accept(event);
 			}
 		});
@@ -33,7 +34,7 @@ public class GatedGLFWGameControls<T> implements GameControls<T, GLFWInput>, Dis
 
 	@Override
 	public Observable<Boolean> activated(T control) {
-		return controls.computeIfAbsent(control, c -> Observable.ofAnd(baseControls.activated(control), gate.output(), disposables::add));
+		return controls.computeIfAbsent(control, c -> FObservable.ofAnd(baseControls.activated(control), gate.observableOutput(), disposables::add));
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package lemon.evolution.entity;
 
-import lemon.engine.event.Observable;
 import lemon.engine.game.Player;
 import lemon.engine.math.Vector3D;
 import lemon.engine.toolbox.Disposable;

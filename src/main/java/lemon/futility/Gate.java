@@ -1,10 +1,10 @@
-package lemon.engine.event;
+package lemon.futility;
 
 import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.engine.toolbox.Disposable;
 
 public class Gate {
-	private final Observable<Boolean> output = new Observable<>(true);
+	private final FObservable<Boolean> output = new FObservable<>(true);
 	private int numBlocking = 0;
 
 	@CheckReturnValue
@@ -30,7 +30,11 @@ public class Gate {
 		});
 	}
 
-	public Observable<Boolean> output() {
+	public Observable<Boolean> observableOutput() {
 		return output;
+	}
+
+	public boolean output() {
+		return output.getValue();
 	}
 }

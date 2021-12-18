@@ -1,7 +1,7 @@
 package lemon.evolution.util;
 
 import lemon.engine.event.EventWith;
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.glfw.GLFWInput;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
@@ -20,7 +20,7 @@ public class GLFWGameControls<T> implements GameControls<T, GLFWInput>, Disposab
 	private final FSetWithEvents<Integer> keyboardHolds = new FSetWithEvents<>();
 	private final FSetWithEvents<Integer> keyboardToggles = new FSetWithEvents<>();
 	private final FSetWithEvents<Integer> mouseHolds = new FSetWithEvents<>();
-	private final Map<T, Observable<Boolean>> controls = new HashMap<>();
+	private final Map<T, FObservable<Boolean>> controls = new HashMap<>();
 	private final Disposables disposables = new Disposables();
 
 	public GLFWGameControls(GLFWInput input) {
@@ -83,8 +83,8 @@ public class GLFWGameControls<T> implements GameControls<T, GLFWInput>, Disposab
 	}
 
 	@Override
-	public Observable<Boolean> activated(T control) {
-		return controls.computeIfAbsent(control, c -> new Observable<>(false));
+	public FObservable<Boolean> activated(T control) {
+		return controls.computeIfAbsent(control, c -> new FObservable<>(false));
 	}
 
 	@Override

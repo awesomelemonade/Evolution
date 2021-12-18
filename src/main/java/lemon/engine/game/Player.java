@@ -1,6 +1,6 @@
 package lemon.engine.game;
 
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.math.MutableCamera;
 import lemon.engine.math.Projection;
 import lemon.engine.math.Vector3D;
@@ -17,8 +17,8 @@ public class Player extends AbstractControllableEntity implements Disposable {
 	private final Disposables disposables = new Disposables();
 	private final String name;
 	private final MutableCamera camera;
-	private final Observable<Float> health = new Observable<>(START_HEALTH);
-	private final Observable<Boolean> alive;
+	private final FObservable<Float> health = new FObservable<>(START_HEALTH);
+	private final FObservable<Boolean> alive;
 	private final Inventory inventory = disposables.add(new Inventory());
 	private final Team team;
 
@@ -54,7 +54,7 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		return camera;
 	}
 
-	public Observable<Float> health() {
+	public FObservable<Float> health() {
 		return health;
 	}
 
@@ -62,7 +62,7 @@ public class Player extends AbstractControllableEntity implements Disposable {
 		return health.getValue() / Player.START_HEALTH;
 	}
 
-	public Observable<Boolean> alive() {
+	public FObservable<Boolean> alive() {
 		return alive;
 	}
 

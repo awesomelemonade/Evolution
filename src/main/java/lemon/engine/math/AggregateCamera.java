@@ -1,6 +1,6 @@
 package lemon.engine.math;
 
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.toolbox.Disposables;
 
 import java.time.Duration;
@@ -8,10 +8,10 @@ import java.time.Instant;
 
 public class AggregateCamera implements CameraHolder {
     private static final Duration TRANSITION_TIME = Duration.ofSeconds(1);
-    private final Observable<Camera> camera;
+    private final FObservable<Camera> camera;
 
     public AggregateCamera(Camera camera) {
-        this.camera = new Observable<>(camera);
+        this.camera = new FObservable<>(camera);
     }
 
     public void interpolateTo(Camera camera) {
@@ -35,7 +35,7 @@ public class AggregateCamera implements CameraHolder {
         return camera.getValue();
     }
 
-    public Observable<Camera> observableCamera() {
+    public FObservable<Camera> observableCamera() {
         return camera;
     }
 }

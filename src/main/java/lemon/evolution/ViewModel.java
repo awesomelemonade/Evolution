@@ -1,6 +1,6 @@
 package lemon.evolution;
 
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.frameBuffer.FrameBuffer;
 import lemon.engine.math.Box2D;
 import lemon.engine.render.CommonRenderables;
@@ -20,7 +20,7 @@ public class ViewModel implements Renderable, Disposable {
 	private final Disposables disposables = new Disposables();
 	private final Box2D renderBox;
 	private final FrameBuffer frameBuffer;
-	private final Observable<Boolean> visible = new Observable<>(true);
+	private final FObservable<Boolean> visible = new FObservable<>(true);
 	private final Renderable renderable;
 
 	public ViewModel(int width, int height, Renderable renderable) {
@@ -54,7 +54,7 @@ public class ViewModel implements Renderable, Disposable {
 		this.visible.setValue(visible);
 	}
 
-	public Observable<Boolean> visible() {
+	public FObservable<Boolean> visible() {
 		return visible;
 	}
 

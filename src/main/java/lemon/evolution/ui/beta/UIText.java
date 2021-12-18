@@ -11,7 +11,7 @@ import lemon.engine.toolbox.Color;
 import lemon.evolution.pool.MatrixPool;
 import lemon.evolution.util.CommonPrograms2D;
 
-public class UIText extends AbstractUIComponent {
+public class UIText extends AbstractUIChildComponent {
     private final Vector2D position;
     private final float scale;
     private final String text;
@@ -39,20 +39,18 @@ public class UIText extends AbstractUIComponent {
 
     @Override
     public void render() {
-        if (isVisible()) {
-            if (!backgroundColor.isClear()) {
-                CommonRenderables.renderQuad2D(new Box2D(position.x(), position.y(), model.width(), model.height()), backgroundColor);
-            }
-            CommonPrograms2D.TEXT.use(program -> {
-                try (var translationMatrix = MatrixPool.ofTranslation(position.x(), position.y(), 0f);
-                     var scalarMatrix = MatrixPool.ofScalar(scale, scale, 1f);
-                     var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
-                    program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
-                }
-                program.loadColor3f(textColor);
-                model.draw();
-            });
+        if (!backgroundColor.isClear()) {
+            CommonRenderables.renderQuad2D(new Box2D(position.x(), position.y(), model.width(), model.height()), backgroundColor);
         }
+        CommonPrograms2D.TEXT.use(program -> {
+            try (var translationMatrix = MatrixPool.ofTranslation(position.x(), position.y(), 0f);
+                 var scalarMatrix = MatrixPool.ofScalar(scale, scale, 1f);
+                 var transformationMatrix = MatrixPool.ofMultiplied(translationMatrix, scalarMatrix)) {
+                program.loadMatrix(MatrixType.MODEL_MATRIX, transformationMatrix);
+            }
+            program.loadColor3f(textColor);
+            model.draw();
+        });
     }
 
     public static UIText ofHeight(UIComponent parent, Font font, String text, Vector2D position, float height, Color textColor) {

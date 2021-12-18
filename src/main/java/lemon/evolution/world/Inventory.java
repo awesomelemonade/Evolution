@@ -1,6 +1,6 @@
 package lemon.evolution.world;
 
-import lemon.engine.event.Observable;
+import lemon.futility.FObservable;
 import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.evolution.item.ItemType;
@@ -13,7 +13,7 @@ public class Inventory implements Disposable {
 	private final Disposables disposables = new Disposables();
 	private final FMultisetWithEvents<ItemType> items = new FMultisetWithEvents<>();
 	private final FListWithEvents<ItemType> itemsList = FListWithEvents.fromMultiset(items, disposables::add);
-	private final Observable<Optional<ItemType>> currentItem = new Observable<>(Optional.empty());
+	private final FObservable<Optional<ItemType>> currentItem = new FObservable<>(Optional.empty());
 
 	public Inventory() {
 		disposables.add(items.onFallToZero(item -> {
@@ -58,7 +58,7 @@ public class Inventory implements Disposable {
 		currentItem.setValue(Optional.empty());
 	}
 
-	public Observable<Optional<ItemType>> observableCurrentItem() {
+	public FObservable<Optional<ItemType>> observableCurrentItem() {
 		return currentItem;
 	}
 
