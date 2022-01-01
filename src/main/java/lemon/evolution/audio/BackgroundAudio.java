@@ -1,6 +1,7 @@
 package lemon.evolution.audio;
 
 import lemon.engine.toolbox.Lazy;
+import lemon.evolution.cmd.EvolutionOptions;
 
 import javax.sound.sampled.*;
 import java.io.IOException;
@@ -20,15 +21,17 @@ public class BackgroundAudio {
 
     public static void play(Track track) {
         stop();
-        try {
-            var url = BackgroundAudio.class.getResource("/res/" + track.filename());
-            var audioStream = AudioSystem.getAudioInputStream(url);
-            var clip = clip();
-            clip.open(audioStream);
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-            playing = true;
-        } catch (LineUnavailableException | IOException | UnsupportedAudioFileException e) {
-            e.printStackTrace();
+        if (EvolutionOptions.ENABLE_MUSIC) {
+            try {
+                var url = BackgroundAudio.class.getResource("/res/" + track.filename());
+                var audioStream = AudioSystem.getAudioInputStream(url);
+                var clip = clip();
+                clip.open(audioStream);
+                clip.loop(Clip.LOOP_CONTINUOUSLY);
+                playing = true;
+            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException e) {
+                e.printStackTrace();
+            }
         }
     }
 

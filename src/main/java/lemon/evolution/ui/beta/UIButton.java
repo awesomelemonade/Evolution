@@ -2,19 +2,22 @@ package lemon.evolution.ui.beta;
 
 import lemon.engine.math.Box2D;
 import lemon.engine.render.CommonRenderables;
+import lemon.engine.render.Renderable;
 import lemon.engine.toolbox.Color;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Consumer;
 
 public class UIButton extends AbstractUIChildComponent {
-	private final Box2D box;
-	private final Color color;
+	private final Renderable renderable;
 
-	public UIButton(UIComponent parent, Box2D box, Color color, Consumer<UIButton> eventHandler) {
+	public UIButton(UIComponent parent, Box2D box, Consumer<UIButton> eventHandler, Color color) {
+		this(parent, box, eventHandler, () -> CommonRenderables.renderQuad2D(box, color));
+	}
+
+	public UIButton(UIComponent parent, Box2D box, Consumer<UIButton> eventHandler, Renderable renderable) {
 		super(parent);
-		this.box = box;
-		this.color = color;
+		this.renderable = renderable;
 		disposables.add(input().mouseButtonEvent().add(event -> {
 			if (visible() &&
 					event.button() == GLFW.GLFW_MOUSE_BUTTON_1 &&
@@ -30,6 +33,6 @@ public class UIButton extends AbstractUIChildComponent {
 
 	@Override
 	public void render() {
-		CommonRenderables.renderQuad2D(box, color);
+		renderable.render();
 	}
 }

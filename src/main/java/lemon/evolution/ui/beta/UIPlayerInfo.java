@@ -32,10 +32,10 @@ public class UIPlayerInfo extends AbstractUIChildComponent {
 		var whiteHighlight = new Color(1f, 1f, 1f, 0.2f);
 		var blackHighlight = new Color(0f, 0f, 0f, 0.2f);
 		healthBarHighlights = new ColoredBox[] {
-				new ColoredBox(createUpperBox(progressBox, 0.4f), whiteHighlight),
-				new ColoredBox(createUpperBox(progressBox, 0.3f), whiteHighlight),
-				new ColoredBox(createLowerBox(progressBox, 0.4f), blackHighlight),
-				new ColoredBox(createLowerBox(progressBox, 0.3f), blackHighlight)
+				new ColoredBox(Box2D.ofUpperBox(progressBox, 0.4f), whiteHighlight),
+				new ColoredBox(Box2D.ofUpperBox(progressBox, 0.3f), whiteHighlight),
+				new ColoredBox(Box2D.ofLowerBox(progressBox, 0.4f), blackHighlight),
+				new ColoredBox(Box2D.ofLowerBox(progressBox, 0.3f), blackHighlight)
 		};
 		this.outerTextBox = new Box2D(box.x() + PADDING, box.y() + 2 * PADDING + progressHeight, box.width() - 2 * PADDING, textBoxHeight);
 		this.innerTextBox = Box2D.ofInner(outerTextBox, PADDING);
@@ -48,16 +48,6 @@ public class UIPlayerInfo extends AbstractUIChildComponent {
 		progressBar.setColor(healthBarColor);
 		progressBar.setBackgroundColor(BACKGROUND_HEALTH_COLOR);
 		this.children().add(progressBar);
-	}
-
-	private Box2D createUpperBox(Box2D box, float percentage) {
-		var height = box.height() * percentage;
-		return new Box2D(box.x(), box.y() + (box.height() - height), box.width(), height);
-	}
-
-	private Box2D createLowerBox(Box2D box, float percentage) {
-		var height = box.height() * percentage;
-		return new Box2D(box.x(), box.y(), box.width(), height);
 	}
 
 	@Override

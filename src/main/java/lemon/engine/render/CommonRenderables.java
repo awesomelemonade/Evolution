@@ -1,6 +1,7 @@
 package lemon.engine.render;
 
 import lemon.engine.draw.CommonDrawables;
+import lemon.engine.draw.Drawable;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.Matrix;
 import lemon.engine.texture.Texture;
@@ -13,14 +14,17 @@ import org.lwjgl.opengl.GL11;
 import java.util.function.Consumer;
 
 public class CommonRenderables {
-	public static void renderQuad2D(Box2D box, Color color) {
+	public static void renderDrawable2D(Box2D box, Color color, Drawable drawable) {
 		CommonPrograms2D.COLOR.use(program -> {
 			boxToMatrix(box, matrix -> {
 				program.loadColor4f("filterColor", color);
 				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrix);
-				CommonDrawables.COLORED_QUAD.draw();
+				drawable.draw();
 			});
 		});
+	}
+	public static void renderQuad2D(Box2D box, Color color) {
+		renderDrawable2D(box, color, CommonDrawables.COLORED_QUAD);
 	}
 
 	public static void renderTransparentQuad2D(Box2D box, Color color) {

@@ -3,6 +3,7 @@ package lemon.evolution;
 import lemon.engine.control.GLFWWindow;
 import lemon.engine.thread.ThreadManager;
 import lemon.evolution.audio.BackgroundAudio;
+import lemon.evolution.cmd.EvolutionOptions;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
@@ -57,7 +58,7 @@ public class Evolution {
 			return createWindow(args);
 		}, Menu.INSTANCE)) {
 			var disposable = window.input().keyEvent().add(event -> {
-				if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+				if (EvolutionOptions.ENABLE_ESCAPE && event.key() == GLFW.GLFW_KEY_ESCAPE) {
 					GLFW.glfwSetWindowShouldClose(window.getId(), true);
 					ThreadManager.INSTANCE.interrupt();
 				}
