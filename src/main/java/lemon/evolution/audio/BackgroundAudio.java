@@ -5,8 +5,6 @@ import lemon.evolution.cmd.EvolutionOptions;
 
 import javax.sound.sampled.*;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class BackgroundAudio {
     private static final Lazy<Clip> clip = new Lazy<>(() -> {
