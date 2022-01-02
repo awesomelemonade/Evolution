@@ -11,6 +11,7 @@ import lemon.engine.toolbox.Disposable;
 import lemon.engine.toolbox.Disposables;
 import lemon.futility.FObservable;
 import lemon.futility.FSetWithEvents;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 
@@ -35,13 +36,16 @@ public class UIButtonList extends AbstractUIChildComponent {
 		// Buttons & Scroll Bar GUI
 		var buttonsBox = Box2D.ofLeftBox(buttonListBox, 0.90f);
 		var scrollBox = Box2D.ofRightBox(buttonListBox, 0.05f);
-		children().add(new UIRenderable(this, () -> CommonRenderables.renderQuad2D(scrollBox, new Color(0.3f, 0.3f, 0.3f))));
+		var scrollBarHeight = 0.05f;
 		var disposeOnScroll = new Disposables();
-		disposeOnScroll.add(scrollPercentage.onChangeAndRun(percentage -> {
+		// Scroll Bar Fixed GUI
+		children().add(new UIRenderable(this, () -> CommonRenderables.renderTransparentQuad2D(scrollBox, new Color(0.3f, 0.3f, 0.3f, 0.5f))));
+		// Mutable Components
+		disposables.add(scrollPercentage.onChangeAndRun(percentage -> {
 			disposeOnScroll.dispose();
 			// Construct Buttons
 			var layout = new GridLayout(buttonsBox, visibleButtons, 1, spacing);
-			var offsetButtons = (int) (percentage * buttons.size());
+			var offsetButtons = (int) (percentage * (buttons.size() - visibleButtons));
 			for (int i = 0; i < visibleButtons; i++) {
 				var buttonInfo = buttons.get(offsetButtons + i);
 				var buttonBox = layout.getBox(i, 0);
@@ -50,21 +54,35 @@ public class UIButtonList extends AbstractUIChildComponent {
 				mutableComponents.add(UIText.ofHeightCenterAligned(this, CommonFonts.freeSansTightened(), buttonInfo.text(), buttonTextBox, Color.BLACK));
 			}
 			// Construct Scroll Bar
-			var scrollBarBox = Box2D.ofInner(scrollBox, 0f, 0f, 50f, 50f);
+			var scrollMiddlePercentage = ((1.0f - scrollBarHeight) * percentage) + scrollBarHeight / 2f;
+			var scrollBarBox = Box2D.ofVerticalBox(scrollBox, scrollMiddlePercentage, scrollBarHeight);
 			mutableComponents.add(new UIRenderable(this, () -> CommonRenderables.renderQuad2D(scrollBarBox, Color.WHITE)));
 			// Deconstruct components after update
 			disposeOnScroll.add(mutableComponents::clear);
 		}));
-		// Scroll Bar Fixed GUI
-		final var scrollRate = 0.01f;
-		var upArrowBox = Box2D.ofInner(scrollBox, 0f, 0f, 0f, scrollBox.height() - 50f);
-		children().add(new UIButton(this, upArrowBox, button -> {
-			scrollPercentage.setValue(MathUtil.saturate(scrollPercentage.getValue() - scrollRate));
-		}, () -> CommonRenderables.renderDrawable2D(upArrowBox, Color.WHITE, CommonDrawables.COLORED_TRIANGLE)));
-		var downArrowBox = Box2D.ofInner(scrollBox, 0f, 0f, scrollBox.height() - 50f, 0f);
-		children().add(new UIButton(this, downArrowBox, button -> {
-			scrollPercentage.setValue(MathUtil.saturate(scrollPercentage.getValue() + scrollRate));
-		}, () -> CommonRenderables.renderDrawable2D(downArrowBox, Color.WHITE, CommonDrawables.COLORED_TRIANGLE)));
+		var disposeOnRelease = new Disposables();
+		Runnable onScrollBoxPress = () -> {
+			disposeOnRelease.add(input().cursorPositionEvent().add(cursorPositionEvent -> {
+				var mouseY = (float) (cursorPositionEvent.glfwWindow().getHeight() - cursorPositionEvent.y());
+				var scrollRangeHeight = scrollBox.height() - scrollBarHeight;
+				var newPercentage = (mouseY - scrollBox.y() - scrollBarHeight / 2.0f) / scrollRangeHeight;
+				scrollPercentage.setValue(MathUtil.saturate(newPercentage));
+			}));
+		};
+		disposables.add(input().mouseButtonEvent().add(mouseButtonEvent -> {
+			if (mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_1 && mouseButtonEvent.action() == GLFW.GLFW_PRESS) {
+				mouseButtonEvent.glfwWindow().pollMouse((mouseX, mouseY) -> {
+					if (scrollBox.intersect(mouseX, mouseY)) {
+						onScrollBoxPress.run();
+					}
+				});
+			}
+		}));
+		disposables.add(input().mouseButtonEvent().add(releaseButtonEvent -> {
+			if (releaseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_1 && releaseButtonEvent.action() == GLFW.GLFW_RELEASE) {
+				disposeOnRelease.dispose();
+			}
+		}));
 	}
 
 	public static record ButtonInfo(String text, Runnable runnable) {}

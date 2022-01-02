@@ -62,6 +62,13 @@ public record Box2D(float x, float y, float width, float height) implements Floa
 		return new Box2D(box.x(), box.y(), box.width(), height);
 	}
 
+	public static Box2D ofVerticalBox(Box2D box, float middlePercentage, float heightPercentage) {
+		var halfHeightPercentage = heightPercentage / 2.0f;
+		var lowerPaddingHeight = box.height() * (middlePercentage - halfHeightPercentage);
+		var upperPaddingHeight = box.height() * (1.0f - (middlePercentage + halfHeightPercentage));
+		return new Box2D(box.x(), box.y() + lowerPaddingHeight, box.width(), box.height() - lowerPaddingHeight - upperPaddingHeight);
+	}
+
 	public static Box2D ofLeftBox(Box2D box, float percentage) {
 		var width = box.width() * percentage;
 		return new Box2D(box.x(), box.y(), width, box.height());
