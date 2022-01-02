@@ -10,6 +10,7 @@ import lemon.engine.toolbox.Color;
 import lemon.evolution.world.Inventory;
 import lemon.evolution.world.World;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -23,8 +24,8 @@ public class UIScreen extends AbstractUIBaseComponent {
 		return component;
 	}
 
-	public UIButton addButton(Box2D box, Color color, Consumer<UIButton> eventHandler) {
-		return addComponent(new UIButton(this, box, color, eventHandler));
+	public UIButton addButton(Box2D box, Consumer<UIButton> eventHandler, Color color) {
+		return addComponent(new UIButton(this, box, eventHandler, color));
 	}
 
 	public UIWheel addWheel(Vector2D position, float radius, float value, Color color) {
@@ -74,5 +75,9 @@ public class UIScreen extends AbstractUIBaseComponent {
 
 	public UIPlayerInfo addPlayerInfo(Box2D box, String name, String info, Color color, Supplier<Float> healthGetter) {
 		return addComponent(new UIPlayerInfo(this, box, name, info, color, healthGetter));
+	}
+
+	public UIButtonList addButtonList(List<UIButtonList.ButtonInfo> buttons, Box2D box, int visibleButtons, float spacing) {
+		return addComponent(new UIButtonList(this, buttons, box, visibleButtons, spacing));
 	}
 }

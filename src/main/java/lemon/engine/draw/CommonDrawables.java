@@ -8,15 +8,24 @@ import lemon.engine.toolbox.Color;
 import org.lwjgl.opengl.GL11;
 
 public class CommonDrawables {
-	private static final FloatData[] QUAD_VERTICES =
-			{v(-1f, 1f, 0f), v(-1f, -1f, 0f), v(1f, 1f, 0f), v(1f, -1f, 0f)};
+	private static final FloatData[] TRIANGLE_VERTICES = {
+			v(-1f, -1f, 0f), v(1f, -1f, 0f), v(0f, 1f, 0f)
+	};
+	public static final Drawable COLORED_TRIANGLE = new UnindexedDrawable(new FloatData[][] {
+			// Positions
+			TRIANGLE_VERTICES,
+			// Colors
+			r(4, c(1f, 1f, 1f, 1f))
+	}, GL11.GL_TRIANGLES);
+	private static final FloatData[] QUAD_VERTICES = {
+			v(-1f, 1f, 0f), v(-1f, -1f, 0f), v(1f, 1f, 0f), v(1f, -1f, 0f)
+	};
 	public static final Drawable TEXTURED_QUAD = new UnindexedDrawable(new FloatData[][] {
 			// Positions
 			QUAD_VERTICES,
 			// Texture Coordinates
 			{v(0f, 1f), v(0f, 0f), v(1f, 1f), v(1f, 0f)}
 	}, GL11.GL_TRIANGLE_STRIP);
-
 	public static final Drawable COLORED_QUAD = new UnindexedDrawable(new FloatData[][] {
 			// Positions
 			QUAD_VERTICES,
