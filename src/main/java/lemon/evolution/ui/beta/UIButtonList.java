@@ -1,6 +1,5 @@
 package lemon.evolution.ui.beta;
 
-import lemon.engine.draw.CommonDrawables;
 import lemon.engine.font.CommonFonts;
 import lemon.engine.math.Box2D;
 import lemon.engine.math.GridLayout;
@@ -14,6 +13,7 @@ import lemon.futility.FSetWithEvents;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class UIButtonList extends AbstractUIChildComponent {
 	private final FSetWithEvents<UIComponent> mutableComponents = new FSetWithEvents<>();
@@ -54,26 +54,27 @@ public class UIButtonList extends AbstractUIChildComponent {
 				mutableComponents.add(UIText.ofHeightCenterAligned(this, CommonFonts.freeSansTightened(), buttonInfo.text(), buttonTextBox, Color.BLACK));
 			}
 			// Construct Scroll Bar
-			var scrollMiddlePercentage = ((1.0f - scrollBarHeight) * percentage) + scrollBarHeight / 2f;
+			var scrollMiddlePercentage = ((1.0f - scrollBarHeight) * (1.0f - percentage)) + scrollBarHeight / 2f;
 			var scrollBarBox = Box2D.ofVerticalBox(scrollBox, scrollMiddlePercentage, scrollBarHeight);
 			mutableComponents.add(new UIRenderable(this, () -> CommonRenderables.renderQuad2D(scrollBarBox, Color.WHITE)));
 			// Deconstruct components after update
 			disposeOnScroll.add(mutableComponents::clear);
 		}));
 		var disposeOnRelease = new Disposables();
-		Runnable onScrollBoxPress = () -> {
-			disposeOnRelease.add(input().cursorPositionEvent().add(cursorPositionEvent -> {
-				var mouseY = (float) (cursorPositionEvent.glfwWindow().getHeight() - cursorPositionEvent.y());
-				var scrollRangeHeight = scrollBox.height() - scrollBarHeight;
-				var newPercentage = (mouseY - scrollBox.y() - scrollBarHeight / 2.0f) / scrollRangeHeight;
-				scrollPercentage.setValue(MathUtil.saturate(newPercentage));
-			}));
+		Consumer<Float> scrollBarUpdater = mouseY -> {
+			var scrollRangeHeight = scrollBox.height() - scrollBarHeight;
+			var newPercentage = 1.0f - (mouseY - scrollBox.y() - scrollBarHeight / 2.0f) / scrollRangeHeight;
+			scrollPercentage.setValue(MathUtil.saturate(newPercentage));
 		};
 		disposables.add(input().mouseButtonEvent().add(mouseButtonEvent -> {
 			if (mouseButtonEvent.button() == GLFW.GLFW_MOUSE_BUTTON_1 && mouseButtonEvent.action() == GLFW.GLFW_PRESS) {
-				mouseButtonEvent.glfwWindow().pollMouse((mouseX, mouseY) -> {
-					if (scrollBox.intersect(mouseX, mouseY)) {
-						onScrollBoxPress.run();
+				mouseButtonEvent.glfwWindow().pollMouse((pressX, pressY) -> {
+					if (scrollBox.intersect(pressX, pressY)) {
+						disposeOnRelease.add(input().cursorPositionEvent().add(cursorPositionEvent -> {
+							var mouseY = (float) (cursorPositionEvent.glfwWindow().getHeight() - cursorPositionEvent.y());
+							scrollBarUpdater.accept(mouseY);
+						}));
+						scrollBarUpdater.accept(pressY);
 					}
 				});
 			}
