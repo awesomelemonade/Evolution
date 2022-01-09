@@ -61,7 +61,7 @@ public class UIButtonList extends AbstractUIChildComponent {
 			disposeOnScroll.add(mutableComponents::clear);
 		}));
 		// Scroll Bar mouse events
-		var disposeOnRelease = new Disposables();
+		var disposeOnRelease = disposables.add(new Disposables());
 		Consumer<Float> scrollBarUpdater = mouseY -> {
 			var scrollRangeHeight = scrollBox.height() - scrollBarHeight;
 			var newPercentage = 1.0f - (mouseY - scrollBox.y() - scrollBarHeight / 2.0f) / scrollRangeHeight;

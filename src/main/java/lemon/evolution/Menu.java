@@ -40,7 +40,8 @@ public enum Menu implements Screen {
 		orthoProjectionMatrix = MathUtil.getOrtho(windowWidth, windowHeight, -1, 1);
 
 		screen = disposables.add(new UIScreen(window.input()));
-		screen.addCenteredText(CommonFonts.freeSansTightened(), "EVOLUTION", Vector2D.of(windowWidth / 2f, windowHeight * 3f / 4f), 0.75f, Color.WHITE);
+		var titleTextScale = 0.75f * window.getHeight() / 600.0f;
+		screen.addCenteredText(CommonFonts.freeSansTightened(), "EVOLUTION", Vector2D.of(windowWidth / 2f, windowHeight * 3f / 4f), titleTextScale, Color.WHITE);
 
 		menuButtons = new ArrayList<>();
 		menuButtons.add(new MenuButton("Instructions", this::showInstructions));
@@ -60,10 +61,10 @@ public enum Menu implements Screen {
 				((float) windowWidth) / ((float) windowHeight), 0.01f, 1000f);
 		CommonProgramsSetup.setup3D(MathUtil.getPerspective(projection));
 
-		var menuButtonWidth = 300f;
-		var menuButtonHeight = 40f;
-		var spacing = 40f;
-		var menuButtonsBox = new Box2D(windowWidth / 2f - menuButtonWidth / 2f, 100f, menuButtonWidth, spacing * (NUM_VISIBLE_BUTTONS - 1) + menuButtonHeight * NUM_VISIBLE_BUTTONS);
+		var menuButtonWidth = 3.0f / 8.0f * window.getWidth();
+		var menuButtonHeight = 1.0f / 15.0f * window.getHeight();
+		var spacing = menuButtonHeight;
+		var menuButtonsBox = new Box2D(windowWidth / 2f - menuButtonWidth / 2f, 1.0f / 8.0f * window.getHeight(), menuButtonWidth, spacing * (NUM_VISIBLE_BUTTONS - 1) + menuButtonHeight * NUM_VISIBLE_BUTTONS);
 		screen.addButtonList(menuButtons.stream().map(x -> new UIButtonList.ButtonInfo(x.text(), x.action())).toList(), menuButtonsBox, NUM_VISIBLE_BUTTONS, spacing);
 	}
 

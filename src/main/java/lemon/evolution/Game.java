@@ -308,8 +308,9 @@ public class Game implements Screen {
 			benchmarker.put("totalMemory", new LineGraph(1000, 5000000000f));
 			benchmarker.put("worldRenderTime", new LineGraph(1000, 100000000));
 			benchmarker.put("particleTime", new LineGraph(1000, 100000000));
+			benchmarker.put("debugOverlayTime", new LineGraph(1000, 100000000));
 
-			debugOverlay = disposables.add(new DebugOverlay(window, benchmarker));
+			debugOverlay = disposables.add(new DebugOverlay(window, controls, benchmarker));
 
 			disposables.add(gameLoop.observableCurrentPlayer().onChange(player -> {
 				camera.interpolateTo(player.camera());
@@ -607,9 +608,7 @@ public class Game implements Screen {
 			}
 		});
 		uiScreen.render();
-		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
-			debugOverlay.render();
-		}
+		debugOverlay.render();
 	}
 
 	@Override

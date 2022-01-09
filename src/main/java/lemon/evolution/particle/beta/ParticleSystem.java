@@ -90,9 +90,11 @@ public class ParticleSystem implements Disposable {
 	private static final Vector3D GRAVITY = Vector3D.of(0f, -0.0005f, 0f);
 
 	public void addExplosionParticles(Vector3D position, float size) {
-		for (int i = 0; i < 50; i++) {
+		var numParticles = 50;
+		var particleSize = 5f * size / 3f; // Should scale linearly
+		for (int i = 0; i < numParticles; i++) {
 			var velocity = (float) (Math.random() * size / 5f);
-			particles.add(new Particle(ParticleType.FIRE, position, Vector3D.ofRandomUnitVector().multiply(velocity), GRAVITY, Duration.ofSeconds(1), new Color(226f / 255f, 88f / 255f, 34f / 255f), 5f));
+			particles.add(new Particle(ParticleType.FIRE, position, Vector3D.ofRandomUnitVector().multiply(velocity), GRAVITY, Duration.ofSeconds(1), new Color(226f / 255f, 88f / 255f, 34f / 255f), particleSize));
 		}
 	}
 
