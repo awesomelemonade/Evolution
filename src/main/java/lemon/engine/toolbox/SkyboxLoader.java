@@ -4,8 +4,13 @@ import lemon.engine.texture.CubeMapData;
 
 import javax.imageio.ImageIO;
 import java.io.*;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.StringTokenizer;
 
 public class SkyboxLoader {
@@ -17,8 +22,23 @@ public class SkyboxLoader {
 	}
 
 	private static String findConfigFilename(String directory) {
-		var file = new File(SkyboxLoader.class.getResource(directory).getPath());
-		return Arrays.stream(file.list())
+		try {
+			var uri = SkyboxLoader.class.getResource(directory).toURI();
+			if (uri.getScheme().equals("jar")) {
+				try (var fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
+					return findConfigFilename(fileSystem.getPath(directory));
+				}
+			} else {
+				return findConfigFilename(Paths.get(uri));
+			}
+		} catch (IOException | URISyntaxException e) {
+			e.printStackTrace();
+			throw new IllegalArgumentException(e);
+		}
+	}
+
+	private static String findConfigFilename(Path path) throws IOException {
+		return Files.walk(path).map(p -> p.getFileName().toString())
 				.filter(filename -> filename.endsWith(".cfg")).findAny().orElseThrow();
 	}
 
