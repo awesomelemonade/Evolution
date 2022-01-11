@@ -511,7 +511,7 @@ public class Game implements Screen {
 		if (controls.isActivated(EvolutionControls.DEBUG_TOGGLE)) {
 			var player = gameLoop.currentPlayer();
 			debugOverlay.update(
-					"FPS=%d, Player=%s, Pos=[%.02f, %.02f, %.02f], Vel=%f, Chunk=[%d, %d, %d], NumTasks=%d, %d, ChunkCount=%d, NumEntities=%d, PlayerSpeed=%f, isOnGround=%s",
+					"FPS=%d, Player=%s, Pos=[%.02f, %.02f, %.02f], Spd=%.02f, Chunk=[%d, %d, %d], NumTasks=%d, %d, ChunkCount=%d, NumEntities=%d, isOnGround=%s",
 					window.timeSync().getFps(),
 					player.name(),
 					player.position().x(),
