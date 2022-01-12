@@ -97,7 +97,8 @@ public enum Menu implements Screen {
 				"Toggle Minimap - M",
 				"Toggle UI - F1",
 				"Screenshot - F2",
-				"Debug - F3"
+				"Debug - F3",
+				"Escape - Exit Game"
 		), this));
 	}
 
