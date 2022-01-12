@@ -593,20 +593,22 @@ public class Game implements Screen {
 			CommonDrawables.TEXTURED_QUAD.draw();
 		});
 		viewModel.render();
-		CommonPrograms2D.COLOR.use(program -> {
-			// Render crosshair
-			try (var translationMatrix = MatrixPool.ofTranslation(window.getWidth() / 2f, window.getHeight() / 2f, 0f);
-				 var scalarMatrixA = MatrixPool.ofScalar(5f, 1f, 1f);
-				 var scalarMatrixB = MatrixPool.ofScalar(1f, 5f, 1f);
-				 var matrixA = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixA);
-				 var matrixB = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixB)) {
-				program.loadColor4f("filterColor", Color.WHITE);
-				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixA);
-				CommonDrawables.COLORED_QUAD.draw();
-				program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixB);
-				CommonDrawables.COLORED_QUAD.draw();
-			}
-		});
+		if (controls.isActivated(EvolutionControls.SHOW_UI)) {
+			CommonPrograms2D.COLOR.use(program -> {
+				// Render crosshair
+				try (var translationMatrix = MatrixPool.ofTranslation(window.getWidth() / 2f, window.getHeight() / 2f, 0f);
+					 var scalarMatrixA = MatrixPool.ofScalar(5f, 1f, 1f);
+					 var scalarMatrixB = MatrixPool.ofScalar(1f, 5f, 1f);
+					 var matrixA = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixA);
+					 var matrixB = MatrixPool.ofMultiplied(translationMatrix, scalarMatrixB)) {
+					program.loadColor4f("filterColor", Color.WHITE);
+					program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixA);
+					CommonDrawables.COLORED_QUAD.draw();
+					program.loadMatrix(MatrixType.TRANSFORMATION_MATRIX, matrixB);
+					CommonDrawables.COLORED_QUAD.draw();
+				}
+			});
+		}
 		uiScreen.render();
 		debugOverlay.render();
 	}
