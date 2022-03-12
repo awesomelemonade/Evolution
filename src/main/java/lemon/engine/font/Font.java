@@ -24,7 +24,6 @@ public class Font implements Disposable {
 	private final int additionalKerning;
 
 	public Font(Path path) {
-		this.texture = new Texture();
 		this.data = new HashMap<>();
 		this.kernings = new HashMap<>();
 		try {
@@ -41,7 +40,7 @@ public class Font implements Disposable {
 			scaleWidth = getValue(tokenizer.nextToken());
 			scaleHeight = getValue(tokenizer.nextToken());
 			int charCount = Integer.parseInt(chars.substring("chars count=".length()));
-			texture.load(new TextureData(ImageIO.read(Font.class.getResourceAsStream((path.getParent().toString() + "/" + filename).replaceAll("\\\\", "/"))), false));
+			this.texture = new Texture(new TextureData(ImageIO.read(Font.class.getResourceAsStream((path.getParent().toString() + "/" + filename).replaceAll("\\\\", "/"))), false));
 			for (int i = 0; i < charCount; ++i) {
 				processCharData(reader.readLine());
 			}

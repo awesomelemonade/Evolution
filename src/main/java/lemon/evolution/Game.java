@@ -195,15 +195,15 @@ public class Game implements Screen {
 								logger.warning("Not enough textures for " + materials[i] + " (" + (i + 1) + ")");
 							}
 						}
-						var textureArray = new Texture();
-						textureArray.load(Arrays.stream(materials)
+						var textureArray = disposables.add(
+								new Texture(Arrays.stream(materials)
 								.map(material -> "/res/block/" + material.textureFile().orElseGet(() -> {
 									logger.warning("No texture for " + material);
 									return "diamond_block.png";
 								}))
 								.map(path -> new TextureData(Toolbox.readImage(path)
 								.orElseThrow(() -> new IllegalStateException("Cannot find " + path)), true))
-								.toArray(TextureData[]::new));
+								.toArray(TextureData[]::new)));
 						TextureBank.TERRAIN.bind(() -> {
 							GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, textureArray.id());
 						});
@@ -360,8 +360,8 @@ public class Game implements Screen {
 				});
 			});
 			TextureBank.SKYBOX.bind(() -> {
-				Texture skyboxTexture = new Texture();
-				skyboxTexture.load(new SkyboxLoader("/res/" + map.skyboxInfo().directoryPath()).load());
+				Texture skyboxTexture = disposables.add(
+						new Texture(new SkyboxLoader("/res/" + map.skyboxInfo().directoryPath()).load()));
 				GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.id());
 			});
 			Map.of(
@@ -371,8 +371,8 @@ public class Game implements Screen {
 					TextureBank.BASE, "/res/base.png"
 			).forEach((textureBank, path) -> {
 				textureBank.bind(() -> {
-					var texture = new Texture();
-					texture.load(new TextureData(Toolbox.readImage(path).orElseThrow(), true));
+					var texture = disposables.add(
+							new Texture(new TextureData(Toolbox.readImage(path).orElseThrow(), true)));
 					GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.id());
 				});
 			});
@@ -380,8 +380,7 @@ public class Game implements Screen {
 
 			lightPosition = gameLoop.currentPlayer().position();
 
-			var texture = new Texture();
-			texture.load(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow(), true));
+			var texture = disposables.add(new Texture(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow(), true)));
 			particleSystem = disposables.add(new ParticleSystem(100000, texture));
 			disposables.add(world.onExplosion((position, radius) -> particleSystem.addExplosionParticles(position, radius)));
 
