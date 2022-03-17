@@ -19,11 +19,11 @@ public class Texture implements Disposable {
 	}
 
 	public Texture(String path, boolean inverted) {
-		this();
-		this.load(new TextureData(Toolbox.readImage(path).orElseThrow(), inverted));
+		this(new TextureData(Toolbox.readImage(path).orElseThrow(), inverted));
 	}
 
-	public void load(TextureData data) {
+	public Texture(TextureData data) {
+		this();
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, id);
 		// Wrap
 		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL11.GL_REPEAT);
@@ -37,7 +37,8 @@ public class Texture implements Disposable {
 		GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0);
 	}
 
-	public void load(CubeMapData data) {
+	public Texture(CubeMapData data) {
+		this();
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, id);
 		// Wrap
 		GL11.glTexParameteri(GL13.GL_TEXTURE_CUBE_MAP, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
@@ -52,11 +53,12 @@ public class Texture implements Disposable {
 		GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, 0);
 	}
 
-	public void load(TextureData[] dataArray) {
-		load(dataArray, GL11.GL_REPEAT);
+	public Texture(TextureData[] dataArray) {
+		this(dataArray, GL11.GL_REPEAT);
 	}
 
-	public void load(TextureData[] dataArray, int wrap) {
+	public Texture(TextureData[] dataArray, int wrap) {
+		this();
 		if (dataArray.length == 0) {
 			throw new IllegalArgumentException("Cannot load empty data array");
 		}

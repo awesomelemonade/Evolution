@@ -19,8 +19,8 @@ public class SkyboxBackground implements Disposable, Renderable {
 	private static final long LOOP_TIME_MILLIS = 30000;
 	public SkyboxBackground(SkyboxInfo info) {
 		TextureBank.SKYBOX.bind(() -> {
-			Texture skyboxTexture = disposables.add(new Texture());
-			skyboxTexture.load(new SkyboxLoader("/res/" + info.directoryPath()).load());
+			Texture skyboxTexture = disposables.add(
+					new Texture(new SkyboxLoader("/res/" + info.directoryPath()).load()));
 			GL11.glBindTexture(GL13.GL_TEXTURE_CUBE_MAP, skyboxTexture.id());
 		});
 	}

@@ -59,8 +59,9 @@ public class PerlinBackground implements Disposable, Renderable {
 			}
 			buffers[k].flip();
 		}
-		var texture = disposables.add(new Texture());
-		texture.load(Arrays.stream(buffers).map(buffer -> new TextureData(width, height, buffer)).toArray(TextureData[]::new), GL12.GL_CLAMP_TO_EDGE);
+		var texture = disposables.add(new Texture(
+				Arrays.stream(buffers).map(buffer -> new TextureData(width, height, buffer))
+						.toArray(TextureData[]::new), GL12.GL_CLAMP_TO_EDGE));
 		TextureBank.PERLIN_NOISE.bind(() -> {
 			GL11.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, texture.id());
 		});

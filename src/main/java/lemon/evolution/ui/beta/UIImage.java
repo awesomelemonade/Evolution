@@ -21,8 +21,8 @@ public class UIImage extends AbstractUIChildComponent {
 	}
 
 	public UIImage(UIComponent parent, Box2D box, String path) {
-		this(parent, box, new Texture());
-		texture.load(new TextureData(Toolbox.readImage(path).orElseThrow(), true));
+		this(parent, box, new Texture(new TextureData(Toolbox.readImage(path).orElseThrow(), true)));
+		disposables.add(texture);
 	}
 
 	// constructor for adding an event on click
