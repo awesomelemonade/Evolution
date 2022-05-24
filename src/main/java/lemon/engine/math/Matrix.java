@@ -1,5 +1,6 @@
 package lemon.engine.math;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
@@ -86,6 +87,7 @@ public class Matrix {
 		}
 	}
 
+	@CheckReturnValue
 	public Matrix multiply(Matrix matrix) {
 		if (this.getColumns() != matrix.getRows()) {
 			throw new IllegalArgumentException(String.format(ERROR_CANNOT_MULTIPLY,
@@ -96,11 +98,31 @@ public class Matrix {
 		return product;
 	}
 
+	@CheckReturnValue
 	public Vector3D multiply(Vector3D vector) {
 		return Vector3D.of(
 				data[0][0] * vector.x() + data[0][1] * vector.y() + data[0][2] * vector.z() + data[0][3],
 				data[1][0] * vector.x() + data[1][1] * vector.y() + data[1][2] * vector.z() + data[1][3],
 				data[2][0] * vector.x() + data[2][1] * vector.y() + data[2][2] * vector.z() + data[2][3]);
+	}
+
+	@CheckReturnValue
+	public Matrix transpose() {
+		float[][] newData = new float[data[0].length][data.length];
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[0].length; j++) {
+				newData[j][i] = data[i][j];
+			}
+		}
+		return new Matrix(newData);
+	}
+
+	public static void transpose(Matrix result, Matrix operand) {
+		for (int i = 0; i < operand.getRows(); i++) {
+			for (int j = 0; j < operand.getColumns(); j++) {
+				result.set(j, i, operand.get(i, j));
+			}
+		}
 	}
 
 	public static void multiply(Matrix result, Matrix left, Matrix right) {
@@ -138,6 +160,22 @@ public class Matrix {
 			return true;
 		}
 		return false;
+	}
+
+	public static boolean isEqual(Matrix a, Matrix b, float delta) {
+		var rows = a.getRows();
+		var columns = a.getColumns();
+		if (rows != b.getRows() || columns != b.getColumns()) {
+			return false;
+		}
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < columns; j++) {
+				if (Math.abs(a.get(i, j) - b.get(i, j)) > delta) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	public static Matrix unmodifiableMatrix(Matrix matrix) {

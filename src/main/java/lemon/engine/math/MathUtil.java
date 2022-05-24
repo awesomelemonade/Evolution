@@ -1,5 +1,6 @@
 package lemon.engine.math;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import lemon.evolution.pool.MatrixPool;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
@@ -101,24 +102,6 @@ public class MathUtil {
 		return matrix;
 	}
 
-	public static Supplier<Matrix> getTransformationSupplier(Supplier<Vector3D> translationSupplier, Supplier<Vector3D> rotationSupplier) {
-		Matrix a = new Matrix(4);
-		Matrix b = new Matrix(4);
-		Matrix c = new Matrix(4);
-		return () -> {
-			var translation = translationSupplier.get();
-			var rotation = rotationSupplier.get();
-			MathUtil.getRotationX(a, rotation.x());
-			MathUtil.getRotationY(b, rotation.y());
-			Matrix.multiply(c, a, b);
-			MathUtil.getRotationZ(a, rotation.z());
-			Matrix.multiply(b, c, a);
-			MathUtil.getTranslation(a, translation);
-			Matrix.multiply(c, b, a);
-			return c;
-		};
-	}
-
 	public static Matrix getTranslation(Vector3D vector) {
 		Matrix matrix = Matrix.getIdentity(4);
 		getTranslation(matrix, vector);
@@ -150,21 +133,7 @@ public class MathUtil {
 		}
 	}
 
-	public static Supplier<Matrix> getRotationSupplier(Supplier<Vector3D> rotationSupplier) {
-		Matrix a = new Matrix(4);
-		Matrix b = new Matrix(4);
-		Matrix c = new Matrix(4);
-		return () -> {
-			var rotation = rotationSupplier.get();
-			MathUtil.getRotationX(a, rotation.x());
-			MathUtil.getRotationY(b, rotation.y());
-			Matrix.multiply(c, a, b);
-			MathUtil.getRotationZ(a, rotation.z());
-			Matrix.multiply(b, c, a);
-			return b;
-		};
-	}
-
+	@CheckReturnValue
 	public static Matrix getRotationX(float angle) {
 		Matrix matrix = new Matrix(4);
 		getRotationX(matrix, angle);
@@ -183,6 +152,7 @@ public class MathUtil {
 		matrix.set(3, 3, 1);
 	}
 
+	@CheckReturnValue
 	public static Matrix getRotationY(float angle) {
 		Matrix matrix = new Matrix(4);
 		getRotationY(matrix, angle);
@@ -201,6 +171,7 @@ public class MathUtil {
 		matrix.set(3, 3, 1);
 	}
 
+	@CheckReturnValue
 	public static Matrix getRotationZ(float angle) {
 		Matrix matrix = new Matrix(4);
 		getRotationZ(matrix, angle);
@@ -212,10 +183,43 @@ public class MathUtil {
 		float sin = (float) Math.sin(angle);
 		float cos = (float) Math.cos(angle);
 		matrix.set(0, 0, cos);
-		matrix.set(0, 1, sin);
-		matrix.set(1, 0, -sin);
+		matrix.set(0, 1, -sin);
+		matrix.set(1, 0, sin);
 		matrix.set(1, 1, cos);
 		matrix.set(2, 2, 1);
+		matrix.set(3, 3, 1);
+	}
+
+	@CheckReturnValue
+	public static Matrix getAxisAngle(UnitVector3D axis, float angle) {
+		Matrix matrix = new Matrix(4);
+		getAxisAngle(matrix, axis, angle);
+		return matrix;
+	}
+
+	public static void getAxisAngle(Matrix matrix, UnitVector3D axis, float angle) {
+		matrix.clear();
+		float cos = (float) Math.cos(angle);
+		float sin = (float) Math.sin(angle);
+		float one_minus_cos = 1.0f - cos;
+		float x = axis.x();
+		float y = axis.y();
+		float z = axis.z();
+		float xx = x * x;
+		float xy = x * y;
+		float xz = x * z;
+		float yy = y * y;
+		float yz = y * z;
+		float zz = z * z;
+		matrix.set(0, 0, cos + xx * one_minus_cos);
+		matrix.set(0, 1, xy * one_minus_cos - z * sin);
+		matrix.set(0, 2, xz * one_minus_cos + y * sin);
+		matrix.set(1, 0, xy * one_minus_cos + z * sin);
+		matrix.set(1, 1, cos + yy * one_minus_cos);
+		matrix.set(1, 2, yz * one_minus_cos - x * sin);
+		matrix.set(2, 0, xz * one_minus_cos - y * sin);
+		matrix.set(2, 1, yz * one_minus_cos + x * sin);
+		matrix.set(2, 2, cos + +zz * one_minus_cos);
 		matrix.set(3, 3, 1);
 	}
 
@@ -247,9 +251,9 @@ public class MathUtil {
 		if (up.isZero()) {
 			throw new IllegalArgumentException("Up vector cannot be zero");
 		}
-		var f = direction.normalize();
-		var u = up.normalize();
-		var s = f.crossProduct(u);
+		Vector3D f = direction.normalize();
+		Vector3D u = up.normalize();
+		Vector3D s = f.crossProduct(u);
 		while (s.isZero()) {
 			// they're in the same or opposite directions
 			u = Vector3D.ofRandomUnitVector();
@@ -295,5 +299,9 @@ public class MathUtil {
 
 	public static <T> T randomChoice(List<T> list) {
 		return list.get((int) (Math.random() * list.size()));
+	}
+
+	public static float randomAngle() {
+		return (float) (Math.random() * MathUtil.TAU);
 	}
 }

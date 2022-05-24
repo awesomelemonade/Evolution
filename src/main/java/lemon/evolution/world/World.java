@@ -37,7 +37,7 @@ public class World implements Disposable {
 		players().forEach(player -> {
 			float strength = Math.min(radius / 3f, 3f * radius / player.position().distanceSquared(position));
 			var direction = player.position().subtract(position);
-			if (direction.equals(Vector3D.ZERO)) {
+			if (direction.isZero()) {
 				direction = Vector3D.ofRandomUnitVector();
 			}
 			player.mutableVelocity().add(direction.scaleToLength(strength));
