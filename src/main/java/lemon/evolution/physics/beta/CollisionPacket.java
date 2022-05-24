@@ -136,8 +136,8 @@ public class CollisionPacket {
 	public static void collideWithWorld(BiFunction<Vector3D, Vector3D, Collision> collisionChecker,
 									   MutableVector3D position, MutableVector3D velocity, MutableVector3D force,
 									   float dt, Function<Collision, CollisionResponse> responder) {
-		force.multiply(dt);
-		velocity.add(force.asImmutable());
+		//force.multiply(dt);
+		//velocity.add(force.asImmutable()); // Maybe this needs to be done in unhandledDt?
 		collideWithWorld(collisionChecker, position, velocity, force, dt, responder, 0, MAX_RECURSION_DEPTH);
 	}
 
@@ -150,7 +150,13 @@ public class CollisionPacket {
 		}
 		var position = mutablePosition.asImmutable();
 		var velocity = mutableVelocity.asImmutable();
-		var remainingVelocity = velocity.multiply(remainingDt);
+		var force = mutableForce.asImmutable();
+		var remainingForce = force.multiply(remainingDt);
+		// force has to be applied equally throughout time
+		// At time t = 0, velocity remains the same
+		// At time t = remainingDt, velocity += remainingForce
+		// remainingVelocity = integrate t = 0, remainingDt = average at t = 0 & t = remainingDt = remainingForce / 2.0f
+		var remainingVelocity = velocity.add(remainingForce.divide(2.0f)).multiply(remainingDt);
 		if (remainingVelocity.lengthSquared() < BUFFER_DISTANCE * BUFFER_DISTANCE) {
 			return;
 		}
@@ -160,13 +166,27 @@ public class CollisionPacket {
 			if (length > 0) {
 				mutablePosition.add(remainingVelocity.scaleToLength(length));
 			}
+			mutableVelocity.add(remainingForce);
 			return;
 		}
+		var usedDt = remainingDt * collision.t(); // Simplifying assumption
 		var usedVelocity = remainingVelocity.multiply(collision.t());
+		var usedForce = remainingForce.multiply(collision.t()); // Simplifying assumption
 		var negSlidePlaneNormal = collision.intersection().subtract(position.add(usedVelocity)).normalize();
-		collision.calc(usedVelocity, negSlidePlaneNormal);
+		collision.setNegSlidePlaneNormal(negSlidePlaneNormal); // Needed to apply responder for a response
 		var response = responder.apply(collision);
-		var unhandledDt = response.execute(collision, mutablePosition, mutableVelocity, mutableForce, remainingVelocity, remainingDt);
+		var unhandledDt = response.execute(
+				collision,
+				mutablePosition,
+				mutableVelocity,
+				mutableForce,
+				remainingVelocity,
+				remainingForce,
+				remainingDt,
+				usedVelocity,
+				usedForce,
+				usedDt
+		);
 		// recursive
 		collideWithWorld(collisionChecker, mutablePosition, mutableVelocity, mutableForce, unhandledDt, responder, collisionRecursionDepth + 1, maxRecursionDepth);
 	}
