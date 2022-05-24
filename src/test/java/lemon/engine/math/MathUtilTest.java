@@ -85,4 +85,37 @@ class MathUtilTest {
             assertTrue(assertion.getAsBoolean());
         }
     }
+
+    @Test
+    public void testTranspose() {
+        var data = new float[][] {
+                {0, 1, 2, 3},
+                {4, 5, 6, 7},
+                {8, 9, 10, 11},
+                {12, 13, 14, 15},
+        };
+        var transposed = new float[][] {
+                {0, 4, 8, 12},
+                {1, 5, 9, 13},
+                {2, 6, 10, 14},
+                {3, 7, 11, 15},
+        };
+        assertTrue(Matrix.isEqual(new Matrix(data).transpose(), new Matrix(transposed), TOLERANCE));
+    }
+
+    @Test
+    public void testTransposeRectangle() {
+        var data = new float[][] {
+                {0, 1, 2, 3},
+                {4, 5, 6, 7},
+                {8, 9, 10, 11},
+        };
+        var transposed = new float[][] {
+                {0, 4, 8},
+                {1, 5, 9},
+                {2, 6, 10},
+                {3, 7, 11},
+        };
+        assertTrue(Matrix.isEqual(new Matrix(data).transpose(), new Matrix(transposed), TOLERANCE));
+    }
 }

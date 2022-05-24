@@ -117,6 +117,7 @@ public interface Vector3D extends Vector<Vector3D> {
 	}
 
 	@CheckReturnValue
+	@Override
 	public default UnitVector3D normalize() {
 		return UnitVector3D.ofNormalized(this);
 	}
