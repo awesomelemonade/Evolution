@@ -1,5 +1,7 @@
 package lemon.engine.math;
 
+import com.google.errorprone.annotations.CheckReturnValue;
+
 import java.nio.FloatBuffer;
 import java.util.function.UnaryOperator;
 
@@ -25,12 +27,8 @@ public interface Vector3D extends Vector<Vector3D> {
 		return of(Float.parseFloat(x), Float.parseFloat(y), Float.parseFloat(z));
 	}
 
-	public static Vector3D ofRandomUnitVector() {
-		// https://math.stackexchange.com/questions/44689/how-to-find-a-random-axis-or-unit-vector-in-3d
-		var theta = Math.random() * MathUtil.TAU;
-		var z = Math.random() * 2 - 1;
-		var zFactor = Math.sqrt(1 - z * z);
-		return of((float) (zFactor * Math.cos(theta)), (float) (zFactor * Math.sin(theta)), (float) z);
+	public static UnitVector3D ofRandomUnitVector() {
+		return UnitVector3D.ofRandom();
 	}
 
 	record Impl(float x, float y, float z) implements Vector3D {
@@ -116,6 +114,11 @@ public interface Vector3D extends Vector<Vector3D> {
 	@Override
 	public default float dotProduct(Vector3D vector) {
 		return x() * vector.x() + y() * vector.y() + z() * vector.z();
+	}
+
+	@CheckReturnValue
+	public default UnitVector3D normalize() {
+		return UnitVector3D.ofNormalized(this);
 	}
 
 	public default float distanceSquared(float x, float y, float z) {

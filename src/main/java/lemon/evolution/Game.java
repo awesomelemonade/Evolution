@@ -96,8 +96,6 @@ public class Game implements Screen {
 	private World world;
 	private WorldRenderer worldRenderer;
 
-	private Vector3D lightPosition;
-
 	private ViewModel viewModel;
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
@@ -376,9 +374,6 @@ public class Game implements Screen {
 					GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture.id());
 				});
 			});
-
-
-			lightPosition = gameLoop.currentPlayer().position();
 
 			var texture = disposables.add(new Texture(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow(), true)));
 			particleSystem = disposables.add(new ParticleSystem(100000, texture));

@@ -103,6 +103,24 @@ public class Matrix {
 				data[2][0] * vector.x() + data[2][1] * vector.y() + data[2][2] * vector.z() + data[2][3]);
 	}
 
+	public Matrix transpose() {
+		float[][] newData = new float[data[0].length][data.length];
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[0].length; j++) {
+				newData[j][i] = data[i][j];
+			}
+		}
+		return new Matrix(newData);
+	}
+
+	public static void transpose(Matrix result, Matrix operand) {
+		for (int i = 0; i < operand.getRows(); i++) {
+			for (int j = 0; j < operand.getColumns(); j++) {
+				result.set(j, i, operand.get(i, j));
+			}
+		}
+	}
+
 	public static void multiply(Matrix result, Matrix left, Matrix right) {
 		for (int i = 0; i < left.getRows(); ++i) {
 			for (int j = 0; j < right.getColumns(); ++j) {
@@ -138,6 +156,22 @@ public class Matrix {
 			return true;
 		}
 		return false;
+	}
+
+	public static boolean isEqual(Matrix a, Matrix b, float delta) {
+		var rows = a.getRows();
+		var columns = a.getColumns();
+		if (rows != b.getRows() || columns != b.getColumns()) {
+			return false;
+		}
+		for (int i = 0; i < rows; i++) {
+			for (int j = 0; j < columns; j++) {
+				if (Math.abs(a.get(i, j) - b.get(i, j)) > delta) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	public static Matrix unmodifiableMatrix(Matrix matrix) {
