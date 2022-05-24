@@ -1,5 +1,6 @@
 package lemon.engine.math;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
@@ -86,6 +87,7 @@ public class Matrix {
 		}
 	}
 
+	@CheckReturnValue
 	public Matrix multiply(Matrix matrix) {
 		if (this.getColumns() != matrix.getRows()) {
 			throw new IllegalArgumentException(String.format(ERROR_CANNOT_MULTIPLY,
@@ -96,6 +98,7 @@ public class Matrix {
 		return product;
 	}
 
+	@CheckReturnValue
 	public Vector3D multiply(Vector3D vector) {
 		return Vector3D.of(
 				data[0][0] * vector.x() + data[0][1] * vector.y() + data[0][2] * vector.z() + data[0][3],
@@ -103,6 +106,7 @@ public class Matrix {
 				data[2][0] * vector.x() + data[2][1] * vector.y() + data[2][2] * vector.z() + data[2][3]);
 	}
 
+	@CheckReturnValue
 	public Matrix transpose() {
 		float[][] newData = new float[data[0].length][data.length];
 		for (int i = 0; i < data.length; i++) {
