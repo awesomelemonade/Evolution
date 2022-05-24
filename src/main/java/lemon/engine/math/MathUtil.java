@@ -102,24 +102,6 @@ public class MathUtil {
 		return matrix;
 	}
 
-	public static Supplier<Matrix> getTransformationSupplier(Supplier<Vector3D> translationSupplier, Supplier<Vector3D> rotationSupplier) {
-		Matrix a = new Matrix(4);
-		Matrix b = new Matrix(4);
-		Matrix c = new Matrix(4);
-		return () -> {
-			var translation = translationSupplier.get();
-			var rotation = rotationSupplier.get();
-			MathUtil.getRotationX(a, rotation.x());
-			MathUtil.getRotationY(b, rotation.y());
-			Matrix.multiply(c, a, b);
-			MathUtil.getRotationZ(a, rotation.z());
-			Matrix.multiply(b, c, a);
-			MathUtil.getTranslation(a, translation);
-			Matrix.multiply(c, b, a);
-			return c;
-		};
-	}
-
 	public static Matrix getTranslation(Vector3D vector) {
 		Matrix matrix = Matrix.getIdentity(4);
 		getTranslation(matrix, vector);
@@ -149,21 +131,6 @@ public class MathUtil {
 			MathUtil.getRotationZ(a, rotation.z());
 			Matrix.multiply(matrix, b, a);
 		}
-	}
-
-	public static Supplier<Matrix> getRotationSupplier(Supplier<Vector3D> rotationSupplier) {
-		Matrix a = new Matrix(4);
-		Matrix b = new Matrix(4);
-		Matrix c = new Matrix(4);
-		return () -> {
-			var rotation = rotationSupplier.get();
-			MathUtil.getRotationX(a, rotation.x());
-			MathUtil.getRotationY(b, rotation.y());
-			Matrix.multiply(c, a, b);
-			MathUtil.getRotationZ(a, rotation.z());
-			Matrix.multiply(b, c, a);
-			return b;
-		};
 	}
 
 	@CheckReturnValue
