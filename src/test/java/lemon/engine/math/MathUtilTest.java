@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MathUtilTest {
-    private static final float TOLERANCE = 0.0001f;
+    private static final float TOLERANCE = 0.001f;
 
     @Test
     public void testLookAtDirectionZero() {
@@ -100,7 +100,7 @@ class MathUtilTest {
         for (int i = 0; i < iterations; i++) {
             T random = randomSupplier.get();
             var x = a.apply(random);
-            assertTrue(Vector.isEqual(random, x, TOLERANCE));
+            assertTrue(Vector.isEqual(random, x, TOLERANCE), () -> random + " & " + x);
         }
     }
 

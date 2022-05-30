@@ -35,9 +35,27 @@ class QuaternionTest {
     }
 
     @Test
+    public void testFromToEulerAnglesRandomXY() {
+        MathUtilTest.assertAgreement(1000, () -> MathUtil.randomEulerAngles().withZeroZ(),
+                v -> Quaternion.fromEulerAngles(v).toEulerAngles().operate(MathUtil::normalizeRadians));
+    }
+
+    @Test
+    public void testFromToEulerAnglesRandomXZ() {
+        MathUtilTest.assertAgreement(1000, () -> MathUtil.randomEulerAngles().withZeroY(),
+                v -> Quaternion.fromEulerAngles(v).toEulerAngles().operate(MathUtil::normalizeRadians));
+    }
+
+    @Test
+    public void testFromToEulerAnglesRandomYZ() {
+        MathUtilTest.assertAgreement(1000, () -> MathUtil.randomEulerAngles().withZeroX(),
+                v -> Quaternion.fromEulerAngles(v).toEulerAngles().operate(MathUtil::normalizeRadians));
+    }
+
+    @Test
     public void testFromToEulerAnglesRandom() {
-        MathUtilTest.assertAgreement(1000, Vector3D::ofRandomUnitVector,
-                v -> Quaternion.fromEulerAngles(v).toEulerAngles());
+        MathUtilTest.assertAgreement(1000, MathUtil::randomEulerAngles,
+                v -> Quaternion.fromEulerAngles(v).toEulerAngles().operate(MathUtil::normalizeRadians));
     }
 
     @Test

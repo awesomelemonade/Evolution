@@ -194,21 +194,22 @@ public interface Quaternion extends Vector<Quaternion> {
         var x = quaternion.b();
         var y = quaternion.c();
         var z = quaternion.d();
+
+        // pitch (x-axis rotation)
         var sinr_cosp = 2f * (w * x + y * z);
         var cosr_cosp = 1f - 2f * (x * x + y * y);
-        var roll = Math.atan2(sinr_cosp, cosr_cosp);
+        var pitch = Math.atan2(sinr_cosp, cosr_cosp);
 
-        // pitch (y-axis rotation)
+        // yaw (y-axis rotation)
         var sinp = 2f * (w * y - z * x);
-        var pitch = Math.abs(sinp) >= 1f ? Math.copySign(Math.PI / 2, sinp) : Math.asin(sinp); // use 90 degrees if out of range
+        var yaw = Math.abs(sinp) >= 1f ? Math.copySign(Math.PI / 2, sinp) : Math.asin(sinp); // use 90 degrees if out of range
 
-        // yaw (z-axis rotation)
+        // roll (z-axis rotation)
         var siny_cosp = 2f * (w * z + x * y);
         var cosy_cosp = 1f - 2f * (y * y + z * z);
-        var yaw = Math.atan2(siny_cosp, cosy_cosp);
+        var roll = Math.atan2(siny_cosp, cosy_cosp);
 
-        //return Vector3D.of((float) yaw, (float) pitch, (float) roll);
-        return Vector3D.of((float) roll, (float) pitch, (float) yaw);
+        return Vector3D.of((float) pitch, (float) yaw, (float) roll);
     }
 
     public static Quaternion fromEulerAngles(Vector3D eulerAngles) {

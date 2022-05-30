@@ -301,6 +301,16 @@ public class MathUtil {
 	}
 
 	public static float randomAngle() {
-		return (float) (Math.random() * MathUtil.TAU);
+		return (float) (Math.random() * MathUtil.TAU - MathUtil.PI);
+	}
+
+	public static float normalizeRadians(float radians) {
+		var ret = ((radians % TAU) + TAU) % TAU;
+		return ret > PI ? ret - TAU : ret;
+	}
+
+	public static Vector3D randomEulerAngles() {
+		//return Vector3D.of((float) (Math.random() * PI - PI / 2.0), randomAngle(), randomAngle());
+		return Vector3D.of(randomAngle(), (float) (Math.random() * PI - PI / 2.0), randomAngle());
 	}
 }
