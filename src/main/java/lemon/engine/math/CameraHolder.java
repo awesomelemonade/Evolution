@@ -7,7 +7,7 @@ public interface CameraHolder extends Camera {
     }
 
     @Override
-    public default Vector3D rotation() {
+    public default Quaternion rotation() {
         return camera().rotation();
     }
 

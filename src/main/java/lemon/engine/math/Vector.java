@@ -58,7 +58,7 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 	}
 
 	@CheckReturnValue
-	public default T invert() {
+	public default T inverse() {
 		return this.multiply(-1);
 	}
 
@@ -90,7 +90,7 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 		return Float.isNaN(lengthSquared());
 	}
 
-	public static <T extends Vector<T>> boolean isEqual(Vector<T> a, Vector<T> b, float delta) {
-		return a.subtract((T) b).lengthSquared() <= delta * delta;
+	public static <T extends Vector<T>> boolean isEqual(T a, T b, float delta) {
+		return a.isWithinDistanceSquared(b, delta);
 	}
 }

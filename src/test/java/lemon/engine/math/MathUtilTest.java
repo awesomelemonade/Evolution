@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,12 +78,29 @@ class MathUtilTest {
                 () -> Matrix.isEqual(a, b, TOLERANCE));
     }
 
-    private static <T> void assertAgreement(int iterations, Supplier<T> randomSupplier, Consumer<T> a, Consumer<T> b, BooleanSupplier assertion) {
+    public static <T> void assertAgreement(int iterations, Supplier<T> randomSupplier, Consumer<T> a, Consumer<T> b, BooleanSupplier assertion) {
         for (int i = 0; i < iterations; i++) {
             T random = randomSupplier.get();
             a.accept(random);
             b.accept(random);
             assertTrue(assertion.getAsBoolean());
+        }
+    }
+
+    public static <T, U extends Vector<U>> void assertAgreement(int iterations, Supplier<T> randomSupplier, Function<T, U> a, Function<T, U> b) {
+        for (int i = 0; i < iterations; i++) {
+            T random = randomSupplier.get();
+            var x = a.apply(random);
+            var y = b.apply(random);
+            assertTrue(Vector.isEqual(x, y, TOLERANCE));
+        }
+    }
+
+    public static <T extends Vector<T>> void assertAgreement(int iterations, Supplier<T> randomSupplier, Function<T, T> a) {
+        for (int i = 0; i < iterations; i++) {
+            T random = randomSupplier.get();
+            var x = a.apply(random);
+            assertTrue(Vector.isEqual(random, x, TOLERANCE));
         }
     }
 

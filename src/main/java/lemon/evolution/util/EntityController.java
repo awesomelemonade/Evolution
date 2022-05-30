@@ -26,7 +26,7 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 			if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
 				float deltaY = (float) (-(event.x()) * MOUSE_SENSITIVITY);
 				float deltaX = (float) (-(event.y()) * MOUSE_SENSITIVITY);
-				current.getValue().mutableRotation().asXYVector().add(deltaX, deltaY)
+				current.getValue().mutableRotation().asEulerAngles().asXYVector().add(deltaX, deltaY)
 						.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
 			}
 		});
@@ -48,8 +48,8 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 	public void update() {
 		var entity = current.getValue();
 		var velocity = entity.velocity();
-		var mutableRotation = entity.mutableRotation();
-		var rotation = entity.rotation();
+		var mutableRotation = entity.mutableRotation().asEulerAngles();
+		var rotation = entity.rotation().toEulerAngles();
 		var mutableForce = current.getValue().mutableForce();
 		var playerForwardVector = entity.groundWatcher().groundParallel().orElseGet(entity::vectorDirectionFromYaw).multiply(playerSpeed);
 		var playerHorizontalVector = Vector3D.of(-playerForwardVector.z(), playerForwardVector.y(), playerForwardVector.x());

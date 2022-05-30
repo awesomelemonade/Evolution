@@ -40,14 +40,14 @@ public class InterpolatedCameraByTime implements Camera {
     }
 
     @Override
-    public Vector3D rotation() {
+    public Quaternion rotation() {
         if (done()) {
             return to.rotation();
         } else {
             var from = this.from.rotation();
             var to = this.to.rotation();
             var t = calcT();
-            return to.subtract(from).multiply(t).add(from);
+            return Quaternion.slerp(from, to, t);
         }
     }
 

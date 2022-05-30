@@ -1,5 +1,8 @@
 package lemon.engine.math;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 public interface MutableVector2D {
 	// construction
 	public static MutableVector2D of(Vector2D vector) {
@@ -52,6 +55,50 @@ public interface MutableVector2D {
 			@Override
 			public String toString() {
 				return String.format("MutableVector2D[x=%f, y=%f]", x, y);
+			}
+		};
+	}
+
+	public static MutableVector2D of(Consumer<Float> setX, Consumer<Float> setY,
+									 Supplier<Float> getX, Supplier<Float> getY) {
+		return new MutableVector2D() {
+			private final Vector2D immutable = new Vector2D() {
+				@Override
+				public float x() {
+					return getX.get();
+				}
+
+				@Override
+				public float y() {
+					return getY.get();
+				}
+			};
+
+			@Override
+			public MutableVector2D setX(float x) {
+				setX.accept(x);
+				return this;
+			}
+
+			@Override
+			public MutableVector2D setY(float y) {
+				setY.accept(y);
+				return this;
+			}
+
+			@Override
+			public float x() {
+				return getX.get();
+			}
+
+			@Override
+			public float y() {
+				return getY.get();
+			}
+
+			@Override
+			public Vector2D asImmutable() {
+				return immutable;
 			}
 		};
 	}

@@ -204,4 +204,11 @@ public class Matrix {
 		}
 		return matrix;
 	}
+
+	public void prettyPrint4x4() {
+		for (int i = 0; i < 4; i++) {
+			System.out.printf("[%.02f, %.02f, %.02f, %.02f]\n", data[i][0], data[i][1], data[i][2], data[i][3]);
+		}
+		System.out.println();
+	}
 }

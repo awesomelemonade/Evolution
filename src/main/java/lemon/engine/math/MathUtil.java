@@ -7,7 +7,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.nio.IntBuffer;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class MathUtil {
 	public static final float PI = (float) Math.PI;
