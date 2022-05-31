@@ -1,6 +1,7 @@
 package lemon.engine.math;
 
 import java.nio.FloatBuffer;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
 // based on https://web.mit.edu/2.998/www/QuaternionReport1.pdf
@@ -16,11 +17,44 @@ public interface Quaternion extends Vector<Quaternion> {
         return new Impl(a, b, c, d);
     }
 
+    public static Quaternion of(Supplier<Float> a, Supplier<Float> b, Supplier<Float> c, Supplier<Float> d) {
+        return new Quaternion() {
+            @Override
+            public float a() {
+                return a.get();
+            }
+
+            @Override
+            public float b() {
+                return b.get();
+            }
+
+            @Override
+            public float c() {
+                return c.get();
+            }
+
+            @Override
+            public float d() {
+                return d.get();
+            }
+
+            @Override
+            public String toString() {
+                return Quaternion.toString(this);
+            }
+        };
+    }
+
     record Impl(float a, float b, float c, float d) implements Quaternion {
         @Override
         public String toString() {
-            return String.format("Quaternion[a=%f, b=%f, c=%f, d=%f]", a, b, c, d);
+            return Quaternion.toString(this);
         }
+    }
+
+    public static String toString(Quaternion quaternion) {
+        return String.format("Quaternion[a=%f, b=%f, c=%f, d=%f]", quaternion.a(), quaternion.b(), quaternion.c(), quaternion.d());
     }
 
     @Override

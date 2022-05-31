@@ -16,27 +16,7 @@ public interface MutableQuaternion {
 			private float b = initialB;
 			private float c = initialC;
 			private float d = initialD;
-			private final Quaternion immutable = new Quaternion() {
-				@Override
-				public float a() {
-					return a;
-				}
-
-				@Override
-				public float b() {
-					return b;
-				}
-
-				@Override
-				public float c() {
-					return c;
-				}
-
-				@Override
-				public float d() {
-					return d;
-				}
-			};
+			private final Quaternion immutable = Quaternion.of(this::a, this::b, this::c, this::d);
 
 			@Override
 			public MutableQuaternion setA(float x) {
@@ -89,7 +69,7 @@ public interface MutableQuaternion {
 
 			@Override
 			public String toString() {
-				return String.format("MutableVector4D[x=%f, y=%f, z=%f, w=%f]", a, b, c, d);
+				return String.format("MutableQuaternion[a=%f, b=%f, c=%f, d=%f]", a, b, c, d);
 			}
 		};
 	}

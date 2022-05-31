@@ -37,6 +37,9 @@ public interface MutableVector3D {
 				}
 			};
 
+			private final MutableVector2D xy = MutableVector2D.of(setX, setY, getX, getY);
+			private final MutableVector2D xz = MutableVector2D.of(setX, setZ, getX, getZ);
+
 			@Override
 			public MutableVector3D setX(float x) {
 				setX.accept(x);
@@ -74,6 +77,16 @@ public interface MutableVector3D {
 			public Vector3D asImmutable() {
 				return immutable;
 			}
+
+			@Override
+			public MutableVector2D asXYVector() {
+				return xy;
+			}
+
+			@Override
+			public MutableVector2D asXZVector() {
+				return xz;
+			}
 		};
 	}
 
@@ -102,6 +115,9 @@ public interface MutableVector3D {
 				return Vector3D.toString(this);
 			}
 		};
+
+		private final MutableVector2D xy = MutableVector2D.of(this::setX, this::setY, this::x, this::y);
+		private final MutableVector2D xz = MutableVector2D.of(this::setX, this::setZ, this::x, this::z);
 
 		public Impl(float x, float y, float z) {
 			this.x = x;
@@ -145,6 +161,16 @@ public interface MutableVector3D {
 		@Override
 		public Vector3D asImmutable() {
 			return immutable;
+		}
+
+		@Override
+		public MutableVector2D asXYVector() {
+			return xy;
+		}
+
+		@Override
+		public MutableVector2D asXZVector() {
+			return xz;
 		}
 
 		@Override
@@ -259,10 +285,6 @@ public interface MutableVector3D {
 	}
 
 	// derivations
-	public default MutableVector2D asXYVector() {
-		return MutableVector2D.of(this::setX, this::setY, this::x, this::y);
-	}
-	public default MutableVector2D asXZVector() {
-		return MutableVector2D.of(this::setX, this::setZ, this::x, this::z);
-	}
+	public MutableVector2D asXYVector();
+	public MutableVector2D asXZVector();
 }

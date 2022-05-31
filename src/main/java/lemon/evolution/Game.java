@@ -528,7 +528,7 @@ public class Game implements Screen {
 		var position = camera.position();
 		var rotation = camera.rotation();
 		var translationMatrix = MathUtil.getTranslation(position.inverse());
-		var rotationMatrix = rotation.toRotationMatrix();
+		var rotationMatrix = rotation.inverse().toRotationMatrix();
 		var transformationMatrix = rotationMatrix.multiply(translationMatrix);
 		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, transformationMatrix);
 		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.projectionMatrix());
