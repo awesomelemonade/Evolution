@@ -249,24 +249,8 @@ public interface Quaternion extends Vector<Quaternion> {
         return new EulerAngles(vector, EulerAnglesConvention.YAW_PITCH_ROLL);
     }
 
-    public static Quaternion fromEulerAngles(EulerAngles eulerAngles) {
-        // TODO: use eulerAngles.convention()
-        var roll = eulerAngles.roll();
-        var yaw = eulerAngles.yaw();
-        var pitch = eulerAngles.pitch();
-        var cy = Math.cos(roll * 0.5);
-        var sy = Math.sin(roll * 0.5);
-        var cp = Math.cos(yaw * 0.5);
-        var sp = Math.sin(yaw * 0.5);
-        var cr = Math.cos(pitch * 0.5);
-        var sr = Math.sin(pitch * 0.5);
-
-        var a = cr * cp * cy + sr * sp * sy;
-        var b = sr * cp * cy - cr * sp * sy;
-        var c = cr * sp * cy + sr * cp * sy;
-        var d = cr * cp * sy - sr * sp * cy;
-        return of((float) a, (float) b, (float) c, (float) d);
-        // Guaranteed to be unit quaternion?
+    public static UnitQuaternion fromEulerAngles(EulerAngles eulerAngles) {
+        return UnitQuaternion.fromEulerAngles(eulerAngles);
     }
 
     public default EulerAngles toEulerAngles() {

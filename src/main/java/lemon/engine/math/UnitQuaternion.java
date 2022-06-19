@@ -1,6 +1,43 @@
 package lemon.engine.math;
 
 public interface UnitQuaternion extends Quaternion {
+    private static UnitQuaternion of(float a, float b, float c, float d) {
+        return new UnitQuaternion.Impl(a, b, c, d);
+    }
+
+    record Impl(float a, float b, float c, float d) implements UnitQuaternion {
+        public Impl(UnitQuaternion quaternion) {
+            this(quaternion.a(), quaternion.b(), quaternion.c(), quaternion.d());
+        }
+
+        @Override
+        public String toString() {
+            return Quaternion.toString(this);
+        }
+    }
+
+    public static UnitQuaternion fromEulerAngles(EulerAngles eulerAngles) {
+        var roll = eulerAngles.roll();
+        var yaw = eulerAngles.yaw();
+        var pitch = eulerAngles.pitch();
+        var cy = Math.cos(yaw * 0.5);
+        var sy = Math.sin(yaw * 0.5);
+        var cp = Math.cos(pitch * 0.5);
+        var sp = Math.sin(pitch * 0.5);
+        var cr = Math.cos(roll * 0.5);
+        var sr = Math.sin(roll * 0.5);
+        return switch (eulerAngles.convention()) {
+            case YAW_PITCH_ROLL -> {
+                var a = cy * cp * cr + sy * sp * sr;
+                var b = sp * cy * cr + cp * sy * sr;
+                var c = sy * cp * cr - cy * sp * sr;
+                var d = sr * cy * cp - cr * sy * sp;
+                yield of((float) a, (float) b, (float) c, (float) d);
+            }
+            default -> throw new IllegalArgumentException("Not yet supported");
+        };
+    }
+
     @Override
     public default Quaternion inverse() {
         return conjugate();
