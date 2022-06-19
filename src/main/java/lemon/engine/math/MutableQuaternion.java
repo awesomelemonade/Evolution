@@ -160,16 +160,16 @@ public interface MutableQuaternion {
 		// Optimizable
 		return MutableVector3D.of(x -> {
 					var eulerAngles = Quaternion.toEulerAngles(asImmutable());
-					set(Quaternion.fromEulerAngles(Vector3D.of(x, eulerAngles.y(), eulerAngles.z())));
+					set(Quaternion.fromEulerAngles(eulerAngles.withPitch(x)));
 				}, y -> {
 					var eulerAngles = Quaternion.toEulerAngles(asImmutable());
-					set(Quaternion.fromEulerAngles(Vector3D.of(eulerAngles.x(), y, eulerAngles.z())));
+					set(Quaternion.fromEulerAngles(eulerAngles.withYaw(y)));
 				}, z -> {
 					var eulerAngles = Quaternion.toEulerAngles(asImmutable());
-					set(Quaternion.fromEulerAngles(Vector3D.of(eulerAngles.x(), eulerAngles.y(), z)));
+					set(Quaternion.fromEulerAngles(eulerAngles.withRoll(z)));
 				},
-				() -> Quaternion.toEulerAngles(asImmutable()).x(),
-				() -> Quaternion.toEulerAngles(asImmutable()).y(),
-				() -> Quaternion.toEulerAngles(asImmutable()).z());
+				() -> Quaternion.toEulerAngles(asImmutable()).pitch(),
+				() -> Quaternion.toEulerAngles(asImmutable()).yaw(),
+				() -> Quaternion.toEulerAngles(asImmutable()).roll());
 	}
 }

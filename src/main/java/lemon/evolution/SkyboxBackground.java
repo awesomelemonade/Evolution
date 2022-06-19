@@ -1,6 +1,8 @@
 package lemon.evolution;
 
 import lemon.engine.draw.CommonDrawables;
+import lemon.engine.math.EulerAngles;
+import lemon.engine.math.EulerAnglesConvention;
 import lemon.engine.math.MathUtil;
 import lemon.engine.math.Vector3D;
 import lemon.engine.render.MatrixType;
@@ -32,7 +34,7 @@ public class SkyboxBackground implements Disposable, Renderable {
 		GL11.glDepthMask(false);
 		// render skybox
 		CommonPrograms3D.CUBEMAP.use(program -> {
-			var rotationMatrix = MathUtil.getRotation(rotation);
+			var rotationMatrix = MathUtil.getRotation(new EulerAngles(rotation, EulerAnglesConvention.YAW_PITCH_ROLL));
 			CommonPrograms3D.CUBEMAP.loadMatrix(MatrixType.VIEW_MATRIX, rotationMatrix);
 			CommonDrawables.SKYBOX.draw();
 		});

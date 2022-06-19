@@ -162,6 +162,7 @@ public class Matrix {
 		return false;
 	}
 
+	@CheckReturnValue
 	public static boolean isEqual(Matrix a, Matrix b, float delta) {
 		var rows = a.getRows();
 		var columns = a.getColumns();

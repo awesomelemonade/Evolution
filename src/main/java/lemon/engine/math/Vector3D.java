@@ -161,6 +161,18 @@ public interface Vector3D extends Vector<Vector3D> {
 		return of(x(), y(), z);
 	}
 
+	public default Vector3D withOnlyX() {
+		return of(x(), 0f, 0f);
+	}
+
+	public default Vector3D withOnlyY() {
+		return of(0f, y(), 0f);
+	}
+
+	public default Vector3D withOnlyZ() {
+		return of (0f, 0f, z());
+	}
+
 	public static String toString(Vector3D vector) {
 		return String.format("Vector3D[x=%f, y=%f, z=%f]", vector.x(), vector.y(), vector.z());
 	}

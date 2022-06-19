@@ -91,6 +91,7 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 		return Float.isNaN(lengthSquared());
 	}
 
+	@CheckReturnValue
 	public static <T extends Vector<T>> boolean isEqual(T a, T b, float delta) {
 		return a.isWithinDistanceSquared(b, delta);
 	}

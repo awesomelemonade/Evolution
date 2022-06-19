@@ -81,7 +81,7 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 					(float) Math.atan(velocity.y() / Math.hypot(velocity.x(), velocity.z())),
 					(float) (Math.PI + Math.atan2(velocity.x(), velocity.z())), 0f);
 			if (!targetRotation.hasNaN()) {
-				var diff = targetRotation.subtract(rotation)
+				var diff = targetRotation.subtract(rotation.vector())
 						.operate(x -> {
 							x %= MathUtil.TAU;
 							x += x < -MathUtil.PI ? MathUtil.TAU : 0f;

@@ -1,5 +1,7 @@
 package lemon.engine.math;
 
+import com.google.errorprone.annotations.CheckReturnValue;
+
 import java.nio.FloatBuffer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -223,7 +225,7 @@ public interface Quaternion extends Vector<Quaternion> {
     // Loosely based on
     // https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 
-    public static Vector3D toEulerAngles(Quaternion quaternion) {
+    public static EulerAngles toEulerAngles(Quaternion quaternion) {
         var w = quaternion.a();
         var x = quaternion.b();
         var y = quaternion.c();
@@ -243,13 +245,15 @@ public interface Quaternion extends Vector<Quaternion> {
         var cosy_cosp = 1f - 2f * (y * y + z * z);
         var roll = Math.atan2(siny_cosp, cosy_cosp);
 
-        return Vector3D.of((float) pitch, (float) yaw, (float) roll);
+        var vector = Vector3D.of((float) pitch, (float) yaw, (float) roll);
+        return new EulerAngles(vector, EulerAnglesConvention.YAW_PITCH_ROLL);
     }
 
-    public static Quaternion fromEulerAngles(Vector3D eulerAngles) {
-        var roll = eulerAngles.z();
-        var yaw = eulerAngles.y();
-        var pitch = eulerAngles.x();
+    public static Quaternion fromEulerAngles(EulerAngles eulerAngles) {
+        // TODO: use eulerAngles.convention()
+        var roll = eulerAngles.roll();
+        var yaw = eulerAngles.yaw();
+        var pitch = eulerAngles.pitch();
         var cy = Math.cos(roll * 0.5);
         var sy = Math.sin(roll * 0.5);
         var cp = Math.cos(yaw * 0.5);
@@ -265,7 +269,19 @@ public interface Quaternion extends Vector<Quaternion> {
         // Guaranteed to be unit quaternion?
     }
 
-    public default Vector3D toEulerAngles() {
+    public default EulerAngles toEulerAngles() {
         return Quaternion.toEulerAngles(this);
+    }
+
+    public default float angleBetween(Quaternion q) {
+        // Proposition 10: q dot q' = ||q|| * ||q'|| * cos(theta)
+        // theta = angle between q and q'
+        return (float) Math.acos(dotProduct(q) / length() / q.length());
+    }
+
+    @CheckReturnValue
+    public static boolean isEqual(Quaternion a, Quaternion b, float tolerance) {
+        // Optimizable: take out the Math.acos() call in a.angleBetween()
+        return a.angleBetween(b) <= tolerance;
     }
 }

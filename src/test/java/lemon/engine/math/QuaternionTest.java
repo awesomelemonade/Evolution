@@ -10,58 +10,66 @@ class QuaternionTest {
     @Test
     public void testFromToEulerAnglesX() {
         var angle = MathUtil.toRadians(90f);
-        var a = Vector3D.of(angle, 0f, 0f);
+        var v = Vector3D.of(angle, 0f, 0f);
+        var a = new EulerAngles(v, EulerAnglesConvention.YAW_PITCH_ROLL);
         Quaternion q = Quaternion.fromEulerAngles(a);
         var b = q.toEulerAngles();
-        assertTrue(Vector.isEqual(a, b, TOLERANCE));
+        assertTrue(EulerAngles.isEqual(a, b, TOLERANCE));
     }
 
     @Test
     public void testFromToEulerAnglesY() {
         var angle = MathUtil.toRadians(90f);
-        var a = Vector3D.of(0f, angle, 0f);
+        var v = Vector3D.of(0f, angle, 0f);
+        var a = new EulerAngles(v, EulerAnglesConvention.YAW_PITCH_ROLL);
         Quaternion q = Quaternion.fromEulerAngles(a);
         var b = q.toEulerAngles();
-        assertTrue(Vector.isEqual(a, b, TOLERANCE));
+        assertTrue(EulerAngles.isEqual(a, b, TOLERANCE));
     }
 
     @Test
     public void testFromToEulerAnglesZ() {
         var angle = MathUtil.toRadians(90f);
-        var a = Vector3D.of(0f, 0f, angle);
+        var v = Vector3D.of(0f, 0f, angle);
+        var a = new EulerAngles(v, EulerAnglesConvention.YAW_PITCH_ROLL);
         Quaternion q = Quaternion.fromEulerAngles(a);
         var b = q.toEulerAngles();
-        assertTrue(Vector.isEqual(a, b, TOLERANCE));
+        assertTrue(EulerAngles.isEqual(a, b, TOLERANCE));
     }
 
     @Test
     public void testFromToEulerAnglesRandomXY() {
-        MathUtilTest.assertAgreement(1000, () -> MathUtil.randomEulerAngles().withZeroZ(),
-                v -> Quaternion.fromEulerAngles(v).toEulerAngles().operate(MathUtil::normalizeRadians));
+        MathUtilTest.assertAgreementEulerAngles(1000,
+                () -> MathUtil.randomYawPitchRoll().withZeroRoll(),
+                v -> Quaternion.fromEulerAngles(v).toEulerAngles());
     }
 
     @Test
     public void testFromToEulerAnglesRandomXZ() {
-        MathUtilTest.assertAgreement(1000, () -> MathUtil.randomEulerAngles().withZeroY(),
-                v -> Quaternion.fromEulerAngles(v).toEulerAngles().operate(MathUtil::normalizeRadians));
+        MathUtilTest.assertAgreementEulerAngles(1000,
+                () -> MathUtil.randomYawPitchRoll().withZeroYaw(),
+                v -> Quaternion.fromEulerAngles(v).toEulerAngles());
     }
 
     @Test
     public void testFromToEulerAnglesRandomYZ() {
-        MathUtilTest.assertAgreement(1000, () -> MathUtil.randomEulerAngles().withZeroX(),
-                v -> Quaternion.fromEulerAngles(v).toEulerAngles().operate(MathUtil::normalizeRadians));
+        MathUtilTest.assertAgreementEulerAngles(1000,
+                () -> MathUtil.randomYawPitchRoll().withZeroPitch(),
+                v -> Quaternion.fromEulerAngles(v).toEulerAngles());
     }
 
     @Test
     public void testFromToEulerAnglesRandom() {
-        MathUtilTest.assertAgreement(1000, MathUtil::randomEulerAngles,
-                v -> Quaternion.fromEulerAngles(v).toEulerAngles().operate(MathUtil::normalizeRadians));
+        MathUtilTest.assertAgreementEulerAngles(1000,
+                MathUtil::randomYawPitchRoll,
+                v -> Quaternion.fromEulerAngles(v).toEulerAngles());
     }
 
     @Test
     public void testRotationMatrixX() {
         var angle = MathUtil.toRadians(90f);
-        Quaternion q = Quaternion.fromEulerAngles(Vector3D.of(angle, 0f, 0f));
+        var angles = new EulerAngles(Vector3D.of(angle, 0f, 0f), EulerAnglesConvention.YAW_PITCH_ROLL);
+        Quaternion q = Quaternion.fromEulerAngles(angles);
         Matrix a = q.toRotationMatrix();
         Matrix b = MathUtil.getRotationX(angle);
         assertTrue(Matrix.isEqual(a, b, TOLERANCE));
@@ -70,7 +78,8 @@ class QuaternionTest {
     @Test
     public void testRotationMatrixY() {
         var angle = MathUtil.toRadians(90f);
-        Quaternion q = Quaternion.fromEulerAngles(Vector3D.of(0f, angle, 0f));
+        var angles = new EulerAngles(Vector3D.of(0f, angle, 0f), EulerAnglesConvention.YAW_PITCH_ROLL);
+        Quaternion q = Quaternion.fromEulerAngles(angles);
         Matrix a = q.toRotationMatrix();
         Matrix b = MathUtil.getRotationY(angle);
         assertTrue(Matrix.isEqual(a, b, TOLERANCE));
@@ -79,9 +88,31 @@ class QuaternionTest {
     @Test
     public void testRotationMatrixZ() {
         var angle = MathUtil.toRadians(90f);
-        Quaternion q = Quaternion.fromEulerAngles(Vector3D.of(0f, 0f, angle));
+        var angles = new EulerAngles(Vector3D.of(0f, 0f, angle), EulerAnglesConvention.YAW_PITCH_ROLL);
+        Quaternion q = Quaternion.fromEulerAngles(angles);
         Matrix a = q.toRotationMatrix();
         Matrix b = MathUtil.getRotationZ(angle);
         assertTrue(Matrix.isEqual(a, b, TOLERANCE));
     }
+
+    @Test
+    public void testRotationMatrix() {
+        MathUtilTest.assertAgreementMatrix(1000,
+                MathUtil::randomYawPitchRoll,
+                MathUtil::getRotation,
+                angles -> Quaternion.fromEulerAngles(angles).toRotationMatrix());
+    }
+
+    @Test
+    public void testYawPitchRollConvention() {
+        var angle = MathUtil.randomYawPitchRoll();
+        var a = Quaternion.fromEulerAngles(angle);
+
+        var yaw = Quaternion.fromEulerAngles(angle.withOnlyYaw());
+        var pitch = Quaternion.fromEulerAngles(angle.withOnlyPitch());
+        var roll = Quaternion.fromEulerAngles(angle.withOnlyRoll());
+        var b = yaw.multiply(pitch.multiply(roll));
+        assertTrue(Quaternion.isEqual(a, b, TOLERANCE));
+    }
+
 }

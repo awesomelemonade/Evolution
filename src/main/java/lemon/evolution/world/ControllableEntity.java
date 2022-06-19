@@ -12,7 +12,7 @@ public interface ControllableEntity extends Entity {
 	}
 
 	public default Vector3D vectorDirectionFromYaw() {
-		return MathUtil.getVectorDirectionFromYaw(rotation().toEulerAngles().y());
+		return MathUtil.getVectorDirectionFromYaw(rotation().toEulerAngles().yaw());
 	}
 
 	public default Quaternion rotation() {

@@ -51,4 +51,13 @@ public interface UnitQuaternion extends Quaternion {
         result.set(1, 2, yz - sx);
         result.set(2, 1, yz + sx);
     }
+
+    @Override
+    public default float angleBetween(Quaternion q) {
+        return (float) Math.acos(dotProduct(q));
+    }
+
+    public static boolean isEqual(UnitQuaternion a, UnitQuaternion b, float tolerance) {
+        return Math.abs(a.dotProduct(b) - 1.0f) <= tolerance;
+    }
 }

@@ -115,7 +115,7 @@ public class GameResources {
                                 CommonPrograms3D.LIGHT.use(program -> {
                                     program.loadColor4f("filterColor", player.team().color());
                                     try (var translationMatrix = MatrixPool.ofTranslation(player.position());
-                                         var rotationMatrix = MatrixPool.ofRotationY(player.rotation().toEulerAngles().y() + MathUtil.PI);
+                                         var rotationMatrix = MatrixPool.ofRotationY(player.rotation().toEulerAngles().yaw() + MathUtil.PI);
                                          var scalarMatrix = MatrixPool.ofScalar(0.45f, 0.45f, 0.45f)) {
                                         program.loadMatrix(MatrixType.MODEL_MATRIX, translationMatrix.multiply(rotationMatrix).multiply(scalarMatrix));
                                         var sunlightDirection = Vector3D.of(0f, 1f, 0f).normalize();

@@ -24,7 +24,7 @@ public class FreeCamera implements CameraHolder {
 
     public void update() {
         float speed = .5f;
-        float angle = (camera.rotation().toEulerAngles().y() + MathUtil.PI / 2f);
+        float angle = (camera.rotation().toEulerAngles().yaw() + MathUtil.PI / 2f);
         float sin = (float) Math.sin(angle);
         float cos = (float) Math.cos(angle);
         var playerHorizontalVector = Vector2D.of(speed * sin, speed * cos);

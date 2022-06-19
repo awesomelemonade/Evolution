@@ -81,7 +81,7 @@ public class UIMinimap extends AbstractUIChildComponent {
 			CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, projectionMatrix);
 			try (var translationMatrix = MatrixPool.ofTranslation(currentPosition.add(Vector3D.of(0f, 100f, 0f)).inverse());
                  var pitchMatrix = MatrixPool.ofRotationX(MathUtil.PI / 2f);
-                 var rollMatrix = MatrixPool.ofRotationZ(-currentRotation.toEulerAngles().y());
+                 var rollMatrix = MatrixPool.ofRotationZ(-currentRotation.toEulerAngles().yaw());
                  var rotationMatrix = MatrixPool.ofMultiplied(rollMatrix, pitchMatrix);
                  var viewMatrix = MatrixPool.ofMultiplied(rotationMatrix, translationMatrix)) {
 				CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, viewMatrix);
