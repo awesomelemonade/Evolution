@@ -35,6 +35,11 @@ public interface MutableVector3D {
 				public float z() {
 					return getZ.get();
 				}
+
+				@Override
+				public String toString() {
+					return Vector3D.toString(this);
+				}
 			};
 
 			private final MutableVector2D xy = MutableVector2D.of(setX, setY, getX, getY);

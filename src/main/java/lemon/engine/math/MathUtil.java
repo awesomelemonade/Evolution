@@ -310,7 +310,7 @@ public class MathUtil {
 	}
 
 	public static Vector3D randomEulerAngles() {
-		//return Vector3D.of((float) (Math.random() * PI - PI / 2.0), randomAngle(), randomAngle());
-		return Vector3D.of(randomAngle(), (float) (Math.random() * PI - PI / 2.0), randomAngle());
+		// Pitch, Yaw, Roll
+		return Vector3D.of((float) (Math.random() * PI - PI / 2.0), randomAngle(), randomAngle());
 	}
 }

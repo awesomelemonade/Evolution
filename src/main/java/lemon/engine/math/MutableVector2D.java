@@ -1,6 +1,7 @@
 package lemon.engine.math;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public interface MutableVector2D {
@@ -115,6 +116,16 @@ public interface MutableVector2D {
 	public Vector2D asImmutable();
 
 	// default operations
+
+	public default MutableVector2D operateX(Function<Float, Float> function) {
+		setX(function.apply(x()));
+		return this;
+	}
+
+	public default MutableVector2D operateY(Function<Float, Float> function) {
+		setY(function.apply(y()));
+		return this;
+	}
 
 	public default MutableVector2D addX(float x) {
 		setX(x() + x);

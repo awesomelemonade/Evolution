@@ -262,6 +262,7 @@ public interface Quaternion extends Vector<Quaternion> {
         var c = cr * sp * cy + sr * cp * sy;
         var d = cr * cp * sy - sr * sp * cy;
         return of((float) a, (float) b, (float) c, (float) d);
+        // Guaranteed to be unit quaternion?
     }
 
     public default Vector3D toEulerAngles() {

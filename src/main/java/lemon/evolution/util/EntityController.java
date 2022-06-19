@@ -26,8 +26,15 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 			if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
 				float deltaY = (float) (-(event.x()) * MOUSE_SENSITIVITY);
 				float deltaX = (float) (-(event.y()) * MOUSE_SENSITIVITY);
-				current.getValue().mutableRotation().asEulerAngles().asXYVector().add(deltaX, deltaY)
-						.clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
+				current.getValue().mutableRotation().asEulerAngles().asXYVector()
+						.operateX(x -> {
+							x = MathUtil.mod(x, MathUtil.TAU);
+							x = x > MathUtil.PI ? x - MathUtil.TAU : x;
+							x += deltaX;
+							return MathUtil.clamp(x, -MathUtil.PI / 2f, MathUtil.PI / 2f);
+						})
+						.operateY(y -> y + deltaY);
+				System.out.println(current.getValue().mutableRotation().asEulerAngles().asImmutable());
 			}
 		});
 		controls.addCallback(GLFWInput::mouseScrollEvent, event -> {

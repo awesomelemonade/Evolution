@@ -136,4 +136,15 @@ class MathUtilTest {
         };
         assertTrue(Matrix.isEqual(new Matrix(data).transpose(), new Matrix(transposed), TOLERANCE));
     }
+
+    @Test
+    public void testEquivalentProjection() {
+        var forwardVector = Vector3D.of(0f, 0f, 1f);
+        // Roll should not impact the projection of the forward vector
+        assertAgreement(1000, () -> Vector3D.of(
+                (float) (Math.random() * MathUtil.PI - MathUtil.PI / 2f),
+                        MathUtil.randomAngle(), MathUtil.randomAngle()),
+                x -> MathUtil.getRotation(x).multiply(forwardVector),
+                x -> MathUtil.getRotation(x.withZ(MathUtil.randomAngle())).multiply(forwardVector));
+    }
 }
