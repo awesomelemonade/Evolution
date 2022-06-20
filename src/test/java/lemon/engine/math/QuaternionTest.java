@@ -115,4 +115,16 @@ class QuaternionTest {
         assertTrue(Quaternion.isEqual(a, b, TOLERANCE));
     }
 
+    @Test
+    public void testFromEulerAnglesNoNaN() {
+        var pi_over_2 = MathUtil.PI / 2f;
+        for (int i = 0; i < 1000; i++) {
+            var a = new EulerAngles(Vector3D.of(-pi_over_2, MathUtil.randomAngle(), MathUtil.randomAngle()), EulerAnglesConvention.YAW_PITCH_ROLL);
+            var b = new EulerAngles(Vector3D.of(pi_over_2, MathUtil.randomAngle(), MathUtil.randomAngle()), EulerAnglesConvention.YAW_PITCH_ROLL);
+            var v_a = Quaternion.fromEulerAngles(a).toEulerAngles().vector();
+            var v_b = Quaternion.fromEulerAngles(b).toEulerAngles().vector();
+            assertFalse(v_a.hasNaN(), v_a::toString);
+            assertFalse(v_b.hasNaN(), v_b::toString);
+        }
+    }
 }

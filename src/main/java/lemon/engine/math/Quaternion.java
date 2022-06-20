@@ -240,10 +240,8 @@ public interface Quaternion extends Vector<Quaternion> {
         var d = quaternion.d();
 
         // pitch (x-axis rotation)
-        var pitch = Math.asin(2.0 * (a * b - c * d));
-        if (Double.isNaN(pitch)) {
-            throw new IllegalStateException();
-        }
+        var sin_pitch = 2.0 * (a * b - c * d);
+        var pitch = Math.abs(sin_pitch) >= 1.0 ? Math.copySign(Math.PI / 2.0, sin_pitch) : Math.asin(sin_pitch);
 
         // yaw (y-axis rotation)
         var yaw = Math.atan2(2.0 * (b * d + a * c), 1.0 - 2.0 * (b * b + c * c));
