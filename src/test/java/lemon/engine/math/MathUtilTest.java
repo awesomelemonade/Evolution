@@ -2,14 +2,12 @@ package lemon.engine.math;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class MathUtilTest {
-    private static final float TOLERANCE = 0.0001f;
+    private static final float TOLERANCE = 0.001f;
 
     @Test
     public void testLookAtDirectionZero() {
@@ -77,12 +75,53 @@ class MathUtilTest {
                 () -> Matrix.isEqual(a, b, TOLERANCE));
     }
 
-    private static <T> void assertAgreement(int iterations, Supplier<T> randomSupplier, Consumer<T> a, Consumer<T> b, BooleanSupplier assertion) {
+    public static <T> void assertAgreement(int iterations, Supplier<T> randomSupplier, Consumer<T> a, Consumer<T> b, BooleanSupplier assertion) {
         for (int i = 0; i < iterations; i++) {
             T random = randomSupplier.get();
             a.accept(random);
             b.accept(random);
             assertTrue(assertion.getAsBoolean());
+        }
+    }
+
+    public static <T extends Vector<T>> void assertAgreementVector(int iterations, Supplier<T> randomSupplier, Function<T, T> a) {
+        assertAgreementVector(iterations, randomSupplier, a, Function.identity());
+    }
+
+    public static <T, U extends Vector<U>> void assertAgreementVector(int iterations, Supplier<T> randomSupplier, Function<T, U> a, Function<T, U> b) {
+        assertAgreement(iterations, randomSupplier, a, b, (x, y) -> Vector.assertEquals(x, y, TOLERANCE));
+    }
+
+    public static <T extends Matrix> void assertAgreementMatrix(int iterations, Supplier<T> randomSupplier, Function<T, T> a) {
+        assertAgreementMatrix(iterations, randomSupplier, a, Function.identity());
+    }
+
+    public static <T, U extends Matrix> void assertAgreementMatrix(int iterations, Supplier<T> randomSupplier, Function<T, U> a, Function<T, U> b) {
+        assertAgreement(iterations, randomSupplier, a, b, (x, y) -> Matrix.assertEquals(x, y, TOLERANCE));
+    }
+
+    public static <T extends EulerAngles> void assertAgreementEulerAngles(int iterations, Supplier<T> randomSupplier, Function<T, T> a) {
+        assertAgreementEulerAngles(iterations, randomSupplier, a, Function.identity());
+    }
+
+    public static <T, U extends EulerAngles> void assertAgreementEulerAngles(int iterations, Supplier<T> randomSupplier, Function<T, U> a, Function<T, U> b) {
+        assertAgreement(iterations, randomSupplier, a, b, (x, y) -> EulerAngles.assertEquals(x, y, TOLERANCE));
+    }
+
+    public static void assertAgreementFloat(int iterations, Supplier<Float> randomSupplier, Function<Float, Float> a) {
+        assertAgreementFloat(iterations, randomSupplier, a, Function.identity());
+    }
+
+    public static <T> void assertAgreementFloat(int iterations, Supplier<T> randomSupplier, Function<T, Float> a, Function<T, Float> b) {
+        assertAgreement(iterations, randomSupplier, a, b, (x, y) -> assertEquals(x, y, TOLERANCE));
+    }
+
+    public static <T, U> void assertAgreement(int iterations, Supplier<T> randomSupplier, Function<T, U> a, Function<T, U> b, BiConsumer<U, U> assertEqualsFunction) {
+        for (int i = 0; i < iterations; i++) {
+            T random = randomSupplier.get();
+            var x = a.apply(random);
+            var y = b.apply(random);
+            assertEqualsFunction.accept(x, y);
         }
     }
 
@@ -117,5 +156,50 @@ class MathUtilTest {
                 {3, 7, 11},
         };
         assertTrue(Matrix.isEqual(new Matrix(data).transpose(), new Matrix(transposed), TOLERANCE));
+    }
+
+    @Test
+    public void testEquivalentProjection() {
+        var forwardVector = Vector3D.of(0f, 0f, 1f);
+        // Roll should not impact the projection of the forward vector
+        assertAgreementVector(1000, MathUtil::randomYawPitchRoll,
+                x -> MathUtil.getRotation(x).multiply(forwardVector),
+                x -> MathUtil.getRotation(x.withRoll(MathUtil.randomAngle())).multiply(forwardVector));
+    }
+
+    @Test
+    public void testAngleBetween() {
+        var pi_over_2 = MathUtil.PI / 2f;
+        assertEquals(pi_over_2, MathUtil.angleBetween(0f, pi_over_2), TOLERANCE);
+        assertEquals(pi_over_2, MathUtil.angleBetween(0f, -pi_over_2), TOLERANCE);
+        assertEquals(pi_over_2, MathUtil.angleBetween(pi_over_2, 0f), TOLERANCE);
+        assertEquals(pi_over_2, MathUtil.angleBetween(-pi_over_2, 0f), TOLERANCE);
+
+        assertEquals(MathUtil.PI, MathUtil.angleBetween(-pi_over_2, pi_over_2), TOLERANCE);
+        assertEquals(MathUtil.PI, MathUtil.angleBetween(pi_over_2, -pi_over_2), TOLERANCE);
+
+        assertEquals(0f, MathUtil.angleBetween(-pi_over_2, -pi_over_2), TOLERANCE);
+        assertEquals(0f, MathUtil.angleBetween(pi_over_2, pi_over_2), TOLERANCE);
+        assertEquals(0f, MathUtil.angleBetween(0f, 0f), TOLERANCE);
+    }
+
+    @Test
+    public void testAngleBetweenLargeDifference() {
+        var pi_over_2 = MathUtil.PI / 2f;
+        assertEquals(0f, MathUtil.angleBetween(-MathUtil.TAU, MathUtil.TAU), TOLERANCE);
+        assertEquals(pi_over_2, MathUtil.angleBetween(-MathUtil.TAU, pi_over_2), TOLERANCE);
+        assertEquals(0f, MathUtil.angleBetween(MathUtil.TAU, 5f * MathUtil.TAU), TOLERANCE);
+        assertEquals(pi_over_2, MathUtil.angleBetween(MathUtil.TAU, 5f * MathUtil.TAU + pi_over_2), TOLERANCE);
+    }
+
+    @Test
+    public void testAngleBetweenBounds() {
+        for (int i = 0; i < 1000; i++) {
+            var a = MathUtil.randomAngle();
+            var b = MathUtil.randomAngle();
+            var angleBetween = MathUtil.angleBetween(a, b);
+            assertTrue(angleBetween >= 0f);
+            assertTrue(angleBetween <= MathUtil.PI);
+        }
     }
 }

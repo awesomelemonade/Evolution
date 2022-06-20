@@ -2,7 +2,7 @@ package lemon.engine.math;
 
 public class MutableCamera implements Camera {
 	private final MutableVector3D position;
-	private final MutableVector3D rotation;
+	private final MutableQuaternion rotation;
 	private final Matrix projectionMatrix;
 
 	public MutableCamera(Camera camera) {
@@ -10,22 +10,22 @@ public class MutableCamera implements Camera {
 	}
 
 	public MutableCamera(Projection projection) {
-		this(MutableVector3D.ofZero(), MutableVector3D.ofZero(), projection);
+		this(MutableVector3D.ofZero(), MutableQuaternion.ofZero(), projection);
 	}
 
-	public MutableCamera(Vector3D position, Vector3D rotation, Projection projection) {
-		this(MutableVector3D.of(position), MutableVector3D.of(rotation), projection);
+	public MutableCamera(Vector3D position, Quaternion rotation, Projection projection) {
+		this(MutableVector3D.of(position), MutableQuaternion.of(rotation), projection);
 	}
 
-	public MutableCamera(Vector3D position, Vector3D rotation, Matrix projectionMatrix) {
-		this(MutableVector3D.of(position), MutableVector3D.of(rotation), projectionMatrix);
+	public MutableCamera(Vector3D position, Quaternion rotation, Matrix projectionMatrix) {
+		this(MutableVector3D.of(position), MutableQuaternion.of(rotation), projectionMatrix);
 	}
 
-	public MutableCamera(MutableVector3D position, MutableVector3D rotation, Projection projection) {
+	public MutableCamera(MutableVector3D position, MutableQuaternion rotation, Projection projection) {
 		this(position, rotation, MathUtil.getPerspective(projection));
 	}
 
-	public MutableCamera(MutableVector3D position, MutableVector3D rotation, Matrix projectionMatrix) {
+	public MutableCamera(MutableVector3D position, MutableQuaternion rotation, Matrix projectionMatrix) {
 		this.position = position;
 		this.rotation = rotation;
 		this.projectionMatrix = projectionMatrix;
@@ -41,15 +41,15 @@ public class MutableCamera implements Camera {
 	}
 
 	@Override
-	public Vector3D rotation() {
+	public Quaternion rotation() {
 		return rotation.asImmutable();
 	}
 
-	public MutableVector3D mutableRotation() {
+	public MutableQuaternion mutableRotation() {
 		return rotation;
 	}
 
-	public void setPositionAndRotation(Vector3D position, Vector3D rotation) {
+	public void setPositionAndRotation(Vector3D position, Quaternion rotation) {
 		this.position.set(position);
 		this.rotation.set(rotation);
 	}

@@ -7,7 +7,6 @@ import org.lwjgl.glfw.GLFW;
 
 import java.nio.IntBuffer;
 import java.util.List;
-import java.util.function.Supplier;
 
 public class MathUtil {
 	public static final float PI = (float) Math.PI;
@@ -47,12 +46,17 @@ public class MathUtil {
 		return ((float) width.get()) / ((float) height.get());
 	}
 
-	public static Vector3D getVectorDirection(Vector3D rotation) {
-		var cosX = Math.cos(rotation.x());
-		return Vector3D.of(
-				(float) (-(Math.sin(rotation.y()) * cosX)),
-				(float) (Math.sin(rotation.x())),
-				(float) (-(cosX * Math.cos(rotation.y()))));
+	public static Vector3D getVectorDirection(EulerAngles angles) {
+		return switch (angles.convention()) {
+			case YAW_PITCH_ROLL -> {
+				var cosX = Math.cos(angles.pitch());
+				yield Vector3D.of(
+						(float) (-(Math.sin(angles.yaw()) * cosX)),
+						(float) (Math.sin(angles.pitch())),
+						(float) (-(cosX * Math.cos(angles.yaw()))));
+			}
+			default -> throw new IllegalArgumentException("Unsupported");
+		};
 	}
 
 	public static Vector3D getVectorDirectionFromYaw(float yaw) {
@@ -119,18 +123,15 @@ public class MathUtil {
 		matrix.set(2, 3, vector.z());
 	}
 
-	public static Matrix getRotation(Vector3D rotation) {
-		return MathUtil.getRotationX(rotation.x())
-				.multiply(MathUtil.getRotationY(rotation.y()).multiply(MathUtil.getRotationZ(rotation.z())));
-	}
-
-	public static void getRotation(Matrix matrix, Vector3D rotation) {
-		MathUtil.getRotationY(matrix, rotation.y());
-		try (var a = MatrixPool.ofRotationX(rotation.x());
-			 var b = MatrixPool.ofMultiplied(a, matrix)) {
-			MathUtil.getRotationZ(a, rotation.z());
-			Matrix.multiply(matrix, b, a);
-		}
+	public static Matrix getRotation(EulerAngles angles) {
+		var rotation = angles.vector();
+		var pitch = MathUtil.getRotationX(rotation.x());
+		var yaw = MathUtil.getRotationY(rotation.y());
+		var roll = MathUtil.getRotationZ(rotation.z());
+		return switch (angles.convention()) {
+			case YAW_PITCH_ROLL -> yaw.multiply(pitch.multiply(roll));
+			case ROLL_PITCH_YAW -> roll.multiply(pitch.multiply(yaw));
+		};
 	}
 
 	@CheckReturnValue
@@ -302,6 +303,26 @@ public class MathUtil {
 	}
 
 	public static float randomAngle() {
-		return (float) (Math.random() * MathUtil.TAU);
+		return (float) (Math.random() * MathUtil.TAU - MathUtil.PI);
+	}
+
+	public static float normalizeRadians(float radians) {
+		var ret = ((radians % TAU) + TAU) % TAU;
+		return ret > PI ? ret - TAU : ret;
+	}
+
+	public static float angleBetween(float a, float b) {
+		var angle = ((a - b) % TAU + TAU) % TAU;
+		return Math.min(angle, TAU - angle);
+	}
+
+	public static EulerAngles randomEulerAngles(EulerAnglesConvention convention) {
+		// [Pitch, Yaw, Roll]
+		var vector = Vector3D.of((float) (Math.random() * PI - PI / 2.0), randomAngle(), randomAngle());
+		return new EulerAngles(vector, convention);
+	}
+
+	public static EulerAngles randomYawPitchRoll() {
+		return randomEulerAngles(EulerAnglesConvention.YAW_PITCH_ROLL);
 	}
 }

@@ -47,7 +47,11 @@ public class Toolbox {
 
 	public static Optional<List<String>> getFileInLines(String path) {
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(Toolbox.class.getResourceAsStream(path)));
+			var resource = Toolbox.class.getResourceAsStream(path);
+			if (resource == null) {
+				return Optional.empty();
+			}
+			BufferedReader reader = new BufferedReader(new InputStreamReader(resource));
 			List<String> lines = new ArrayList<>();
 			String line;
 			while ((line = reader.readLine()) != null) {

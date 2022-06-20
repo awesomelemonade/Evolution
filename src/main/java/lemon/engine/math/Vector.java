@@ -1,6 +1,7 @@
 package lemon.engine.math;
 
 import com.google.errorprone.annotations.CheckReturnValue;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.function.UnaryOperator;
 
@@ -58,7 +59,7 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 	}
 
 	@CheckReturnValue
-	public default T invert() {
+	public default T inverse() {
 		return this.multiply(-1);
 	}
 
@@ -90,7 +91,12 @@ public interface Vector<T extends Vector<T>> extends FloatData {
 		return Float.isNaN(lengthSquared());
 	}
 
-	public static <T extends Vector<T>> boolean isEqual(Vector<T> a, Vector<T> b, float delta) {
-		return a.subtract((T) b).lengthSquared() <= delta * delta;
+	@CheckReturnValue
+	public static <T extends Vector<T>> boolean isEqual(T a, T b, float delta) {
+		return a.isWithinDistanceSquared(b, delta);
+	}
+
+	public static <T extends Vector<T>> void assertEquals(T a, T b, float delta) {
+		Assertions.assertTrue(a.isWithinDistanceSquared(b, delta), () -> String.format("%s =/= %s", a, b));
 	}
 }

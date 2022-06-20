@@ -1,5 +1,9 @@
 package lemon.engine.math;
 
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 public interface MutableVector2D {
 	// construction
 	public static MutableVector2D of(Vector2D vector) {
@@ -56,6 +60,50 @@ public interface MutableVector2D {
 		};
 	}
 
+	public static MutableVector2D of(Consumer<Float> setX, Consumer<Float> setY,
+									 Supplier<Float> getX, Supplier<Float> getY) {
+		return new MutableVector2D() {
+			private final Vector2D immutable = new Vector2D() {
+				@Override
+				public float x() {
+					return getX.get();
+				}
+
+				@Override
+				public float y() {
+					return getY.get();
+				}
+			};
+
+			@Override
+			public MutableVector2D setX(float x) {
+				setX.accept(x);
+				return this;
+			}
+
+			@Override
+			public MutableVector2D setY(float y) {
+				setY.accept(y);
+				return this;
+			}
+
+			@Override
+			public float x() {
+				return getX.get();
+			}
+
+			@Override
+			public float y() {
+				return getY.get();
+			}
+
+			@Override
+			public Vector2D asImmutable() {
+				return immutable;
+			}
+		};
+	}
+
 	// standard
 	public MutableVector2D setX(float x);
 
@@ -68,6 +116,16 @@ public interface MutableVector2D {
 	public Vector2D asImmutable();
 
 	// default operations
+
+	public default MutableVector2D operateX(Function<Float, Float> function) {
+		setX(function.apply(x()));
+		return this;
+	}
+
+	public default MutableVector2D operateY(Function<Float, Float> function) {
+		setY(function.apply(y()));
+		return this;
+	}
 
 	public default MutableVector2D addX(float x) {
 		setX(x() + x);

@@ -79,11 +79,11 @@ public class UIMinimap extends AbstractUIChildComponent {
 			terrainRenderer.setRenderDistance(world.terrain().getChunkDistance(zoom + 1f));
 			var projectionMatrix = MathUtil.getOrtho(-zoom, zoom, zoom, -zoom, 0f, 1000f);
 			CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, projectionMatrix);
-			try (var translationMatrix = MatrixPool.ofTranslation(currentPosition.add(Vector3D.of(0f, 100f, 0f)).invert());
-				 var pitchMatrix = MatrixPool.ofRotationX(MathUtil.PI / 2f);
-				 var rollMatrix = MatrixPool.ofRotationZ(-currentRotation.y());
-				 var rotationMatrix = MatrixPool.ofMultiplied(rollMatrix, pitchMatrix);
-				 var viewMatrix = MatrixPool.ofMultiplied(rotationMatrix, translationMatrix)) {
+			try (var translationMatrix = MatrixPool.ofTranslation(currentPosition.add(Vector3D.of(0f, 100f, 0f)).inverse());
+                 var pitchMatrix = MatrixPool.ofRotationX(MathUtil.PI / 2f);
+                 var rollMatrix = MatrixPool.ofRotationZ(-currentRotation.toEulerAngles().yaw());
+                 var rotationMatrix = MatrixPool.ofMultiplied(rollMatrix, pitchMatrix);
+                 var viewMatrix = MatrixPool.ofMultiplied(rotationMatrix, translationMatrix)) {
 				CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, viewMatrix);
 				terrainRenderer.render(currentPosition);
 

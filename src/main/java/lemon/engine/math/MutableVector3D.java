@@ -1,5 +1,8 @@
 package lemon.engine.math;
 
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+
 public interface MutableVector3D {
 	// construction
 	public static MutableVector3D ofZero() {
@@ -12,6 +15,84 @@ public interface MutableVector3D {
 
 	public static MutableVector3D of(float x, float y, float z) {
 		return new Impl(x, y, z);
+	}
+
+	public static MutableVector3D of(Consumer<Float> setX, Consumer<Float> setY, Consumer<Float> setZ,
+									 Supplier<Float> getX, Supplier<Float> getY, Supplier<Float> getZ) {
+		return new MutableVector3D() {
+			private final Vector3D immutable = new Vector3D() {
+				@Override
+				public float x() {
+					return getX.get();
+				}
+
+				@Override
+				public float y() {
+					return getY.get();
+				}
+
+				@Override
+				public float z() {
+					return getZ.get();
+				}
+
+				@Override
+				public String toString() {
+					return Vector3D.toString(this);
+				}
+			};
+
+			private final MutableVector2D xy = MutableVector2D.of(setX, setY, getX, getY);
+			private final MutableVector2D xz = MutableVector2D.of(setX, setZ, getX, getZ);
+
+			@Override
+			public MutableVector3D setX(float x) {
+				setX.accept(x);
+				return this;
+			}
+
+			@Override
+			public MutableVector3D setY(float y) {
+				setY.accept(y);
+				return this;
+			}
+
+			@Override
+			public MutableVector3D setZ(float z) {
+				setZ.accept(z);
+				return this;
+			}
+
+			@Override
+			public float x() {
+				return getX.get();
+			}
+
+			@Override
+			public float y() {
+				return getY.get();
+			}
+
+			@Override
+			public float z() {
+				return getZ.get();
+			}
+
+			@Override
+			public Vector3D asImmutable() {
+				return immutable;
+			}
+
+			@Override
+			public MutableVector2D asXYVector() {
+				return xy;
+			}
+
+			@Override
+			public MutableVector2D asXZVector() {
+				return xz;
+			}
+		};
 	}
 
 	public class Impl implements MutableVector3D {
@@ -39,86 +120,9 @@ public interface MutableVector3D {
 				return Vector3D.toString(this);
 			}
 		};
-		private final MutableVector2D xy = new MutableVector2D() {
-			private final Vector2D immutable = new Vector2D() {
-				@Override
-				public float x() {
-					return x;
-				}
 
-				@Override
-				public float y() {
-					return y;
-				}
-			};
-
-			@Override
-			public MutableVector2D setX(float x) {
-				Impl.this.setX(x);
-				return this;
-			}
-
-			@Override
-			public MutableVector2D setY(float y) {
-				Impl.this.setY(y);
-				return this;
-			}
-
-			@Override
-			public float x() {
-				return Impl.this.x();
-			}
-
-			@Override
-			public float y() {
-				return Impl.this.y();
-			}
-
-			@Override
-			public Vector2D asImmutable() {
-				return immutable;
-			}
-		};
-		private final MutableVector2D xz = new MutableVector2D() {
-			private final Vector2D immutable = new Vector2D() {
-				@Override
-				public float x() {
-					return x;
-				}
-
-				@Override
-				public float y() {
-					return z;
-				}
-			};
-
-			@Override
-			public MutableVector2D setX(float x) {
-				Impl.this.setX(x);
-				return this;
-			}
-
-			@Override
-			public MutableVector2D setY(float y) {
-				Impl.this.setZ(y);
-				return this;
-			}
-
-			@Override
-			public float x() {
-				return Impl.this.x();
-			}
-
-			@Override
-			public float y() {
-				return Impl.this.z();
-			}
-
-			@Override
-			public Vector2D asImmutable() {
-				return immutable;
-			}
-		};
+		private final MutableVector2D xy = MutableVector2D.of(this::setX, this::setY, this::x, this::y);
+		private final MutableVector2D xz = MutableVector2D.of(this::setX, this::setZ, this::x, this::z);
 
 		public Impl(float x, float y, float z) {
 			this.x = x;

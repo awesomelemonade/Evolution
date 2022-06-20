@@ -43,10 +43,6 @@ public class MatrixPool extends ObjectPool<MatrixPool.PooledMatrix> {
 		return MatrixPool.ofScalar(Vector3D.of(x, y, z));
 	}
 
-	public static PooledMatrix ofRotation(Vector3D vector) {
-		return MatrixPool.of(matrix -> MathUtil.getRotation(matrix, vector));
-	}
-
 	public static PooledMatrix ofRotationX(float x) {
 		return MatrixPool.of(matrix -> MathUtil.getRotationX(matrix, x));
 	}

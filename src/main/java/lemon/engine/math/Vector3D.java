@@ -137,6 +137,42 @@ public interface Vector3D extends Vector<Vector3D> {
 		return Vector2D.of(x(), z());
 	}
 
+	public default Vector3D withZeroX() {
+		return of(0f, y(), z());
+	}
+
+	public default Vector3D withZeroY() {
+		return of(x(), 0f, z());
+	}
+
+	public default Vector3D withZeroZ() {
+		return of(x(), y(), 0f);
+	}
+
+	public default Vector3D withX(float x) {
+		return of(x, y(), z());
+	}
+
+	public default Vector3D withY(float y) {
+		return of(x(), y, z());
+	}
+
+	public default Vector3D withZ(float z) {
+		return of(x(), y(), z);
+	}
+
+	public default Vector3D withOnlyX() {
+		return of(x(), 0f, 0f);
+	}
+
+	public default Vector3D withOnlyY() {
+		return of(0f, y(), 0f);
+	}
+
+	public default Vector3D withOnlyZ() {
+		return of (0f, 0f, z());
+	}
+
 	public static String toString(Vector3D vector) {
 		return String.format("Vector3D[x=%f, y=%f, z=%f]", vector.x(), vector.y(), vector.z());
 	}

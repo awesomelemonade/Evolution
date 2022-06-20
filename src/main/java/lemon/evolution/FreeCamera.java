@@ -16,7 +16,7 @@ public class FreeCamera implements CameraHolder {
             if (controls.isActivated(EvolutionControls.CAMERA_ROTATE)) {
                 float deltaY = (float) (-(event.x()) * MOUSE_SENSITIVITY);
                 float deltaX = (float) (-(event.y()) * MOUSE_SENSITIVITY);
-                this.camera.mutableRotation().asXYVector().add(deltaX, deltaY)
+                this.camera.mutableRotation().asEulerAngles().asXYVector().add(deltaX, deltaY)
                         .clampX(-MathUtil.PI / 2f, MathUtil.PI / 2f).modY(MathUtil.TAU);
             }
         });
@@ -24,7 +24,7 @@ public class FreeCamera implements CameraHolder {
 
     public void update() {
         float speed = .5f;
-        float angle = (camera.rotation().y() + MathUtil.PI / 2f);
+        float angle = (camera.rotation().toEulerAngles().yaw() + MathUtil.PI / 2f);
         float sin = (float) Math.sin(angle);
         float cos = (float) Math.cos(angle);
         var playerHorizontalVector = Vector2D.of(speed * sin, speed * cos);

@@ -223,7 +223,7 @@ public class Game implements Screen {
 				var cos = (float) Math.cos(angle);
 				var sin = (float) Math.sin(angle);
 				var player = disposables.add(new Player(namesList.random(), Team.values()[i % Team.values().length], new Location(world, Vector3D.of(distance * cos, 100f, distance * sin)), projection));
-				player.mutableRotation().setY(-angle + MathUtil.PI / 2);
+				player.mutableRotation().asEulerAngles().setY(-angle + MathUtil.PI / 2);
 				playersBuilder.add(player);
 			}
 			var players = playersBuilder.build();
@@ -527,8 +527,8 @@ public class Game implements Screen {
 	public void updateMatrices() {
 		var position = camera.position();
 		var rotation = camera.rotation();
-		var translationMatrix = MathUtil.getTranslation(position.invert());
-		var rotationMatrix = MathUtil.getRotation(rotation.invert());
+		var translationMatrix = MathUtil.getTranslation(position.inverse());
+		var rotationMatrix = rotation.inverse().toRotationMatrix();
 		var transformationMatrix = rotationMatrix.multiply(translationMatrix);
 		CommonPrograms3D.setMatrices(MatrixType.VIEW_MATRIX, transformationMatrix);
 		CommonPrograms3D.setMatrices(MatrixType.PROJECTION_MATRIX, camera.projectionMatrix());
