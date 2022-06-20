@@ -161,6 +161,9 @@ public interface Quaternion extends Vector<Quaternion> {
         var c = c();
         var d = d();
         var length_v = Math.sqrt(b * b + c * c + d * d);
+        if (length_v == 0.0) {
+            return of(1.0f, 0.0f, 0.0f, 0.0f);
+        }
         var newtheta = t * theta / Math.sin(theta) * length_v;
         // q ^ t = exp (t * log q) = [cos(newtheta), sin(newtheta) * v / length(v)]
         var sin_newtheta = Math.sin(newtheta);

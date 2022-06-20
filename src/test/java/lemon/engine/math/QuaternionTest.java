@@ -129,4 +129,17 @@ class QuaternionTest {
             assertFalse(v_b.hasNaN(), v_b::toString);
         }
     }
+
+    @Test
+    public void testSlerpFromEqualsTo() {
+        for (int i = 0; i < 1000; i++) {
+            var random = Quaternion.fromEulerAngles(MathUtil.randomYawPitchRoll());
+            var slerp = Quaternion.slerp(random, random, (float) (Math.random() * 2.0 - 0.5));
+            var x = random.conjugate().multiply(random);
+            var y = x.pow(0.5f);
+            var z = random.multiply(y); // Equation 6.4
+            assertFalse(slerp.hasNaN());
+            Quaternion.assertEquals(random, slerp, TOLERANCE);
+        }
+    }
 }
