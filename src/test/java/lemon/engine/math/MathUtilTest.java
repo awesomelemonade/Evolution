@@ -97,7 +97,7 @@ class MathUtilTest {
     }
 
     public static <T, U extends Matrix> void assertAgreementMatrix(int iterations, Supplier<T> randomSupplier, Function<T, U> a, Function<T, U> b) {
-        assertAgreement(iterations, randomSupplier, a, b, (x, y) -> assertTrue(Matrix.isEqual(x, y, TOLERANCE)));
+        assertAgreement(iterations, randomSupplier, a, b, (x, y) -> Matrix.assertEquals(x, y, TOLERANCE));
     }
 
     public static <T extends EulerAngles> void assertAgreementEulerAngles(int iterations, Supplier<T> randomSupplier, Function<T, T> a) {
@@ -105,7 +105,7 @@ class MathUtilTest {
     }
 
     public static <T, U extends EulerAngles> void assertAgreementEulerAngles(int iterations, Supplier<T> randomSupplier, Function<T, U> a, Function<T, U> b) {
-        assertAgreement(iterations, randomSupplier, a, b, (x, y) -> assertTrue(EulerAngles.isEqual(x, y, TOLERANCE)));
+        assertAgreement(iterations, randomSupplier, a, b, (x, y) -> EulerAngles.assertEquals(x, y, TOLERANCE));
     }
 
     public static void assertAgreementFloat(int iterations, Supplier<Float> randomSupplier, Function<Float, Float> a) {

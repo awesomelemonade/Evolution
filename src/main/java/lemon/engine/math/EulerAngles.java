@@ -1,6 +1,7 @@
 package lemon.engine.math;
 
 import com.google.errorprone.annotations.CheckReturnValue;
+import org.junit.jupiter.api.Assertions;
 
 public record EulerAngles(Vector3D vector, EulerAnglesConvention convention) {
     public float pitch() {
@@ -57,6 +58,10 @@ public record EulerAngles(Vector3D vector, EulerAnglesConvention convention) {
                 MathUtil.angleBetween(a.yaw(), b.yaw()) <= tolerance &&
                 MathUtil.angleBetween(a.roll(), b.roll()) <= tolerance &&
                 a.convention() == b.convention();
+    }
+
+    public static void assertEquals(EulerAngles a, EulerAngles b, float delta) {
+        Assertions.assertTrue(isEqual(a, b, delta), () -> String.format("%s =/= %s", a, b));
     }
 }
 

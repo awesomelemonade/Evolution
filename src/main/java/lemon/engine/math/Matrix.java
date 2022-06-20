@@ -1,6 +1,7 @@
 package lemon.engine.math;
 
 import com.google.errorprone.annotations.CheckReturnValue;
+import org.junit.jupiter.api.Assertions;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
@@ -177,6 +178,10 @@ public class Matrix {
 			}
 		}
 		return true;
+	}
+
+	public static void assertEquals(Matrix a, Matrix b, float delta) {
+		Assertions.assertTrue(isEqual(a, b, delta), () -> String.format("%s =/= %s", a, b));
 	}
 
 	public static Matrix unmodifiableMatrix(Matrix matrix) {

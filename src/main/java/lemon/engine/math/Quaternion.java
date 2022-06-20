@@ -184,6 +184,8 @@ public interface Quaternion extends Vector<Quaternion> {
     }
 
     public default void toRotationMatrix(Matrix result) {
+        // Not accurate for non-unit quaternions:
+        // https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation#Quaternion-derived_rotation_matrix
         var s = a();
         var x = b();
         var y = c();
@@ -226,24 +228,28 @@ public interface Quaternion extends Vector<Quaternion> {
     // https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
 
     public static EulerAngles toEulerAngles(Quaternion quaternion) {
-        var w = quaternion.a();
-        var x = quaternion.b();
-        var y = quaternion.c();
-        var z = quaternion.d();
+        // Potential Resource:
+        // https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToEuler/quat_2_euler_paper_ver2-1.pdf
+
+        // Derived with converting both euler angles and quaternions to rotation matrices
+        // then you solve the system of equations from equating the two rotation matrices
+        // note: only 5 equations were needed
+        var a = quaternion.a();
+        var b = quaternion.b();
+        var c = quaternion.c();
+        var d = quaternion.d();
 
         // pitch (x-axis rotation)
-        var sinr_cosp = 2f * (w * x + y * z);
-        var cosr_cosp = 1f - 2f * (x * x + y * y);
-        var pitch = Math.atan2(sinr_cosp, cosr_cosp);
+        var pitch = Math.asin(2.0 * (a * b - c * d));
+        if (Double.isNaN(pitch)) {
+            throw new IllegalStateException();
+        }
 
         // yaw (y-axis rotation)
-        var sinp = 2f * (w * y - z * x);
-        var yaw = Math.abs(sinp) >= 1f ? Math.copySign(Math.PI / 2, sinp) : Math.asin(sinp); // use 90 degrees if out of range
+        var yaw = Math.atan2(2.0 * (b * d + a * c), 1.0 - 2.0 * (b * b + c * c));
 
         // roll (z-axis rotation)
-        var siny_cosp = 2f * (w * z + x * y);
-        var cosy_cosp = 1f - 2f * (y * y + z * z);
-        var roll = Math.atan2(siny_cosp, cosy_cosp);
+        var roll = Math.atan2(2.0 * (b * c + a * d), 1.0 - 2.0 * (b * b + d * d));
 
         var vector = Vector3D.of((float) pitch, (float) yaw, (float) roll);
         return new EulerAngles(vector, EulerAnglesConvention.YAW_PITCH_ROLL);

@@ -34,7 +34,6 @@ public class EntityController<T extends ControllableEntity> implements Disposabl
 							return MathUtil.clamp(x, -MathUtil.PI / 2f, MathUtil.PI / 2f);
 						})
 						.operateY(y -> y + deltaY);
-				System.out.println(current.getValue().mutableRotation().asEulerAngles().asImmutable());
 			}
 		});
 		controls.addCallback(GLFWInput::mouseScrollEvent, event -> {
