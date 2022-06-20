@@ -105,14 +105,16 @@ class QuaternionTest {
 
     @Test
     public void testYawPitchRollConvention() {
-        var angle = MathUtil.randomYawPitchRoll();
-        var a = Quaternion.fromEulerAngles(angle);
+        for (int i = 0; i < 1000; i++) {
+            var angle = MathUtil.randomYawPitchRoll();
+            var a = Quaternion.fromEulerAngles(angle);
 
-        var yaw = Quaternion.fromEulerAngles(angle.withOnlyYaw());
-        var pitch = Quaternion.fromEulerAngles(angle.withOnlyPitch());
-        var roll = Quaternion.fromEulerAngles(angle.withOnlyRoll());
-        var b = yaw.multiply(pitch.multiply(roll));
-        assertTrue(Quaternion.isEqual(a, b, TOLERANCE));
+            var yaw = Quaternion.fromEulerAngles(angle.withOnlyYaw());
+            var pitch = Quaternion.fromEulerAngles(angle.withOnlyPitch());
+            var roll = Quaternion.fromEulerAngles(angle.withOnlyRoll());
+            var b = yaw.multiply(pitch.multiply(roll));
+            Quaternion.assertEquals(a, b, TOLERANCE);
+        }
     }
 
     @Test

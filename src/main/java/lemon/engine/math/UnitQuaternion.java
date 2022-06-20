@@ -91,7 +91,8 @@ public interface UnitQuaternion extends Quaternion {
 
     @Override
     public default float angleBetween(Quaternion q) {
-        return (float) Math.acos(dotProduct(q));
+        var a = dotProduct(q);
+        return (float) (a > 1.0 ? 0.0 : (a < -1.0 ? Math.PI : Math.acos(a)));
     }
 
     public static boolean isEqual(UnitQuaternion a, UnitQuaternion b, float tolerance) {

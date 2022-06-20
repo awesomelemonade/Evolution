@@ -1,6 +1,7 @@
 package lemon.engine.math;
 
 import com.google.errorprone.annotations.CheckReturnValue;
+import org.junit.jupiter.api.Assertions;
 
 import java.nio.FloatBuffer;
 import java.util.function.Supplier;
@@ -264,12 +265,17 @@ public interface Quaternion extends Vector<Quaternion> {
     public default float angleBetween(Quaternion q) {
         // Proposition 10: q dot q' = ||q|| * ||q'|| * cos(theta)
         // theta = angle between q and q'
-        return (float) Math.acos(dotProduct(q) / length() / q.length());
+        var a = dotProduct(q) / length() / q.length();
+        return (float) (a > 1.0 ? 0.0 : (a < -1.0 ? Math.PI : Math.acos(a)));
     }
 
     @CheckReturnValue
     public static boolean isEqual(Quaternion a, Quaternion b, float tolerance) {
         // Optimizable: take out the Math.acos() call in a.angleBetween()
         return a.angleBetween(b) <= tolerance;
+    }
+
+    public static void assertEquals(Quaternion a, Quaternion b, float delta) {
+        Assertions.assertTrue(isEqual(a, b, delta), () -> String.format("%s =/= %s (difference: %f)", a, b, a.angleBetween(b)));
     }
 }
