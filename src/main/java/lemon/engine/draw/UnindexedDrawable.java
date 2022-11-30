@@ -27,7 +27,7 @@ public class UnindexedDrawable implements Drawable {
 				for (int i = 0; i < vertices.length; i++) {
 					int dimensions = vertices[i][0].numDimensions();
 					GL20.glVertexAttribPointer(i, dimensions, GL11.GL_FLOAT, false,
-							stride * BYTES_PER_FLOAT, offset * BYTES_PER_FLOAT);
+							stride * Float.BYTES, offset * BYTES_PER_FLOAT);
 					offset += dimensions;
 				}
 			});

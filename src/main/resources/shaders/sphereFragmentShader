@@ -1,0 +1,26 @@
+#version 400 core
+
+in vec4 passColor;
+in vec3 passNormal;
+in vec3 fragPos;
+
+out vec4 outColor;
+
+uniform vec3 sunlightDirection;
+uniform vec3 viewPos;
+
+void main(void) {
+	//outColor = passColor;
+
+	vec3 lightColor = vec3(1, 1, 1);
+	float ambientStrength = 0.1;
+	vec3 ambient = ambientStrength * lightColor;
+	float diffuseStrength = max(dot(passNormal, sunlightDirection), 0);
+	vec3 diffuse = diffuseStrength * lightColor;
+	float specularStrength = 5;
+	vec3 viewDirection = normalize(viewPos - fragPos);
+	vec3 reflectDirection = reflect(-sunlightDirection, passNormal);
+	vec3 specular = specularStrength * pow(max(dot(viewDirection, reflectDirection), 0), 32) * lightColor;
+	vec3 result = (ambient + diffuse + specular) * passColor.rgb;
+	outColor = vec4(result, passColor.a);
+}

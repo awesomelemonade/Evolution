@@ -3,7 +3,7 @@ package lemon.evolution.destructible.beta;
 import com.google.common.collect.ImmutableList;
 import lemon.engine.draw.DrawableData;
 import lemon.engine.draw.DynamicIndexedDrawable;
-import lemon.engine.event.Computable;
+import lemon.engine.async.Computable;
 import lemon.engine.math.FloatData;
 import lemon.engine.math.Matrix;
 import lemon.engine.math.MutableVector3D;

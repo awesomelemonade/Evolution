@@ -76,7 +76,7 @@ public class World implements Disposable {
 					entity.scalar(),
 					dt,
 					entity.onCollide()::callListeners,
-					entity::getCollisionResponse
+					entity.getCollisionResponse()
 			);
 			entity.mutableForce().set(entity.getEnvironmentalForce());
 		});
