@@ -1,5 +1,6 @@
-package lemon.engine.event;
+package lemon.engine.async;
 
+import lemon.engine.event.OneTimeEventWith;
 import lemon.engine.toolbox.Lazy;
 
 import java.util.ArrayList;

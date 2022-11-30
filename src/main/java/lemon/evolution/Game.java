@@ -6,6 +6,8 @@ import lemon.engine.control.Loader;
 import lemon.engine.draw.CommonDrawables;
 import lemon.engine.draw.IndexedDrawable;
 import lemon.engine.draw.TextModel;
+import lemon.evolution.fastspheres.FastSphere;
+import lemon.evolution.fastspheres.FastSpheres;
 import lemon.futility.FObservable;
 import lemon.engine.font.CommonFonts;
 import lemon.engine.frameBuffer.FrameBuffer;
@@ -100,6 +102,7 @@ public class Game implements Screen {
 
 	private TaskQueue postLoadTasks = TaskQueue.ofConcurrent();
 
+	private FastSpheres fastSpheres;
 	private ParticleSystem particleSystem;
 
 	private UIScreen uiScreen;
@@ -375,12 +378,17 @@ public class Game implements Screen {
 				});
 			});
 
+			fastSpheres = disposables.add(new FastSpheres(1000000));
+
 			var texture = disposables.add(new Texture(new TextureData(Toolbox.readImage("/res/particles/fire_01.png").orElseThrow(), true)));
 			particleSystem = disposables.add(new ParticleSystem(100000, texture));
 			disposables.add(world.onExplosion((position, radius) -> particleSystem.addExplosionParticles(position, radius)));
 
 			disposables.add(window.input().keyEvent().add(event -> {
 				if (event.action() == GLFW.GLFW_RELEASE) {
+					if (event.key() == GLFW.GLFW_KEY_G) {
+						fastSpheres.spheres.add(new FastSphere(Vector3D.ofCopy(gameLoop.currentPlayer().position()), Color.GREEN));
+					}
 					if (event.key() == GLFW.GLFW_KEY_C) {
 						world.entities().removeIf(x -> x instanceof PuzzleBall || x instanceof ExplodeOnHitProjectile || x instanceof StaticEntity);
 					}
@@ -556,6 +564,8 @@ public class Game implements Screen {
 			particleSystem.render(gameLoop.currentPlayer().position());
 			particleTime = System.nanoTime() - particleTime;
 			benchmarker.getLineGraph("particleTime").add(particleTime);
+
+			fastSpheres.render(gameLoop.currentPlayer().position());
 
 			GL11.glEnable(GL11.GL_DEPTH_TEST);
 			for (var player : gameLoop.players()) {

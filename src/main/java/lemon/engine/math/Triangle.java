@@ -5,6 +5,12 @@ public interface Triangle {
 		return new ConstantTriangle(a, b, c);
 	}
 
+	public static Triangle of(float ax, float ay, float az,
+							  float bx, float by, float bz,
+							  float cx, float cy, float cz) {
+		return of(Vector3D.of(ax, ay, az), Vector3D.of(bx, by, bz), Vector3D.of(cx, cy, cz));
+	}
+
 	public record ConstantTriangle(Vector3D a, Vector3D b, Vector3D c, Vector3D normal,
 								   float area) implements Triangle {
 		public ConstantTriangle(Vector3D a, Vector3D b, Vector3D c, DerivedTriangleData data) {

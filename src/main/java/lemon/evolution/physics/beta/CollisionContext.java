@@ -12,8 +12,9 @@ import java.util.function.Supplier;
 public interface CollisionContext {
 	public void checkCollision(Vector3D position, Vector3D velocity, Consumer<Triangle> checker);
 
+	// TODO: Mutates force to something arbitrary when it's not supposed to
 	public default void collideWithWorld(MutableVector3D position, MutableVector3D velocity, MutableVector3D force,
-										 Vector3D scalar, float dt, BiConsumer<Vector3D, Vector3D> onCollide, Supplier<CollisionResponse> responder) {
+										 Vector3D scalar, float dt, BiConsumer<Vector3D, Vector3D> onCollide, CollisionResponse response) {
 		var scalarSquared = scalar.multiply(scalar);
 		var transformed = new MutableTriangle();
 		position.divide(scalar);
@@ -28,7 +29,7 @@ public interface CollisionContext {
 			return collision;
 		}, position, velocity, force, dt, collision -> {
 			onCollide.accept(collision.intersection().multiply(scalar), collision.negSlidePlaneNormal().multiply(scalar));
-			return responder.get();
+			return response;
 		});
 		position.multiply(scalar);
 		velocity.multiply(scalar);

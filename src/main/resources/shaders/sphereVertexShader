@@ -1,0 +1,29 @@
+#version 400 core
+
+in vec3 position;
+in vec4 particleCenter;
+in vec4 particleColor;
+
+out vec4 passColor;
+out vec3 passNormal;
+out vec3 fragPos;
+
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+
+void main(void) {
+    //mat4 inverted = inverse(viewMatrix);
+    //vec3 cameraPositiveX = inverted[0].xyz;
+    //vec3 cameraPositiveY = inverted[1].xyz;
+
+    //vec3 vertexPosition = particleCenter.a * (cameraPositiveX * position.x + cameraPositiveY * position.y);
+    vec3 vertexPosition = particleCenter.a * position.xyz;
+
+	vec4 worldPosition = modelMatrix * vec4(vertexPosition + particleCenter.xyz, 1.0);
+
+	gl_Position = projectionMatrix * viewMatrix * worldPosition;
+	passColor = particleColor;
+	passNormal = position;
+	fragPos = worldPosition.xyz;
+}
